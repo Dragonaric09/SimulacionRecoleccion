@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: simulacionem
+  profiles:
+    active: dev
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+server:
+  port: ${SERVER_PORT:8081}

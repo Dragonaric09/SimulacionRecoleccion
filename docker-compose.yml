@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:17.6-alpine
+    container_name: simulacionem-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: simulacionem
+      POSTGRES_USER: simulacionem_dev
+      POSTGRES_PASSWORD: dev_password_2026
+      TZ: America/La_Paz
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U simulacionem_dev -d simulacionem"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

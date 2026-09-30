@@ -1,0 +1,21 @@
+# Java / Maven
+target/
+*.class
+*.log
+
+# Spring static generado por el build
+src/main/resources/static/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Env
+.env
+.env.*
