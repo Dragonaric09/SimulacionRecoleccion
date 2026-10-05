@@ -4,10 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview --host 0.0.0.0",
+    "dev:db": "cd .. && docker compose up -d",
+    "dev:backend": "cd .. && .\\mvnw.cmd spring-boot:run -DskipFrontend",
+    "dev:all": "powershell -NoProfile -ExecutionPolicy Bypass -File ../start-dev.ps1"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

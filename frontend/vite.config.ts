@@ -9,10 +9,15 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   server: {
-    port: 5174,
+    host: '0.0.0.0',
+    port: 5173,
     strictPort: true,
     proxy: {
-      '/api': { target: `http://localhost:${process.env.SERVER_PORT ?? 8081}`, changeOrigin: true },
+      '/api': {
+        target: `http://localhost:${process.env.SERVER_PORT ?? 8081}`,
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   build: {
