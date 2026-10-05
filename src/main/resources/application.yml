@@ -14,4 +14,5 @@ spring:
 server:
   port: ${SERVER_PORT:8081}
 apps-script:
-  url: ${APPS_SCRIPT_URL:}
+  empleadores-url: ${APPS_SCRIPT_URL_EMPLEADORES:}
+  empleados-url: ${APPS_SCRIPT_URL_EMPLEADOS:}
