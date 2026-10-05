@@ -1,6 +1,8 @@
 spring:
   application:
     name: simulacionem
+  config:
+    import: optional:file:.env[.properties]
   profiles:
     active: dev
   jpa:
@@ -11,3 +13,5 @@ spring:
       hibernate.jdbc.time_zone: UTC
 server:
   port: ${SERVER_PORT:8081}
+apps-script:
+  url: ${APPS_SCRIPT_URL:}
