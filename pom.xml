@@ -62,12 +62,13 @@
     </dependencies>
 
     <profiles>
-        <!-- Activo por defecto; desactivar con -DskipFrontend para builds solo-backend -->
+        <!--
+            El frontend se construye solo cuando se solicita -Pfrontend.
+            Esto mantiene rapido el build normal del backend y evita ejecutar
+            npm ci en cada compilacion desde el IDE.
+        -->
         <profile>
             <id>frontend</id>
-            <activation>
-                <property><name>!skipFrontend</name></property>
-            </activation>
             <build>
                 <plugins>
                     <plugin>
