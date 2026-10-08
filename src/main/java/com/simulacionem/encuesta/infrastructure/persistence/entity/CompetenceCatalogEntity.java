@@ -19,4 +19,6 @@ public class CompetenceCatalogEntity {
     protected CompetenceCatalogEntity() { }
     public Long getId() { return id; }
     public String getCode() { return code; }
+    public String getName() { return name; }
+    public String getCompetenceGroup() { return competenceGroup; }
 }

@@ -54,5 +54,6 @@ public class SurveyResponseEntity {
     public DatasetImportEntity getDataset() { return dataset; }
     public int getSourceRowNumber() { return sourceRowNumber; }
     public String getResponseStatus() { return responseStatus; }
+    public String getSurveyType() { return surveyType; }
     public Map<String, Object> getNormalizedPayload() { return normalizedPayload; }
 }

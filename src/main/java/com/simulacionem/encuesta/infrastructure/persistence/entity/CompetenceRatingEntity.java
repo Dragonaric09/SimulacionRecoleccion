@@ -30,4 +30,8 @@ public class CompetenceRatingEntity {
         this.notObserved = notObserved;
         this.originalLabel = originalLabel;
     }
+    public SurveyResponseEntity getResponse() { return response; }
+    public CompetenceCatalogEntity getCompetence() { return competence; }
+    public Short getNumericValue() { return numericValue; }
+    public boolean isNotObserved() { return notObserved; }
 }

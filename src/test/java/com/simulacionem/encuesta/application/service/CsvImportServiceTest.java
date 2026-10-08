@@ -1,6 +1,8 @@
 package com.simulacionem.encuesta.application.service;
 
 import com.simulacionem.SimulacionEmApplication;
+import com.simulacionem.analitica.application.dto.AnalyticsSummaryDto;
+import com.simulacionem.analitica.application.service.AnalyticsService;
 import com.simulacionem.encuesta.application.dto.ImportReportDto;
 import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetImportRepository;
 import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetColumnMappingRepository;
@@ -33,6 +35,9 @@ class CsvImportServiceTest {
     @Autowired
     private SurveyResponseRepository responses;
 
+    @Autowired
+    private AnalyticsService analytics;
+
     @Test
     void validaEImportaLosDosCsvRealesSinGuardarDatosPersonales() throws IOException {
         Path data = Path.of("data");
@@ -45,9 +50,17 @@ class CsvImportServiceTest {
         assertThat(titulados.warnings()).isGreaterThan(0);
         assertThat(responses.countByDataset_Id(titulados.datasetId())).isEqualTo(8);
         assertThat(mappings.countByDataset_Id(titulados.datasetId())).isEqualTo(85);
+        AnalyticsSummaryDto summary = analytics.summary(titulados.datasetId(), "TITULADOS", java.util.List.of("sector_trabajo"));
+        assertThat(summary.totalResponses()).isEqualTo(8);
+        assertThat(summary.distributions().get("sector_trabajo").validCount()).isEqualTo(8);
         assertThat(empleadores.surveyType()).isEqualTo("EMPLEADORES");
         assertThat(empleadores.rowsRead()).isEqualTo(3);
         assertThat(empleadores.rowsValid()).isEqualTo(3);
+        AnalyticsSummaryDto valuation = analytics.summary(empleadores.datasetId(), "EMPLEADORES", java.util.List.of("valoracion_formacion_1", "valoracion_formacion_5", "valoracion_relacion_3"));
+        assertThat(valuation.distributions()).containsKey("valoracion_formacion_1");
+        assertThat(valuation.distributions().get("valoracion_formacion_1").counts()).containsKeys("Parcialmente de acuerdo", "Totalmente de acuerdo");
+        assertThat(valuation.distributions().get("valoracion_formacion_5").counts()).containsKey("No sabe");
+        assertThat(valuation.smallSample()).isTrue();
 
         datasets.deleteById(titulados.datasetId());
         datasets.deleteById(empleadores.datasetId());

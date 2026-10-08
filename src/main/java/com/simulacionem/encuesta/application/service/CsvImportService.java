@@ -205,6 +205,7 @@ public class CsvImportService {
         putKnown(values, headers, record, "rubro_organizacion", "rubro o sector principal");
         putKnown(values, headers, record, "situacion_laboral_actual", "situación laboral actual");
         normalizeBoolean(values, headers, record, "tiene_formacion_complementaria", "ha realizado o se encuentra realizando");
+        normalizeBoolean(values, headers, record, "interes_posgrado", "estaría interesado en realizar estudios");
         normalizeBoolean(values, headers, record, "contrato_titulados_ultimos_5_anios", "ha contratado ingenieros");
         normalizeBoolean(values, headers, record, "primera_experiencia_laboral", "primer empleo");
         normalizeNumber(values, headers, record, "anio_titulacion", "año de titulación", rowIssues);
@@ -219,6 +220,15 @@ public class CsvImportService {
                 String value = clean(record.get(i));
                 if (value != null) values.put("competence:" + competenceCode(marker), value);
             }
+        }
+        for (int i = 0; i < headers.size(); i++) {
+            String header = clean(headers.get(i));
+            if (i < 14 || i > 31 || header == null || !header.contains("[") || header.toLowerCase(Locale.ROOT).contains("competencias")) continue;
+            int valuationIndex = i - 13;
+            String value = i < record.size() ? clean(record.get(i)) : null;
+            if (value == null) continue;
+            String group = valuationIndex <= 10 ? "formacion" : "relacion";
+            values.put("valoracion_" + group + "_" + (valuationIndex <= 10 ? valuationIndex : valuationIndex - 10), value);
         }
         return values;
     }

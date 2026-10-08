@@ -545,9 +545,23 @@ GET /api/analytics/titulados/education
 GET /api/analytics/employers/summary
 GET /api/analytics/competencies/gaps
 GET /api/analytics/crosses
+POST /api/analitica/chi-cuadrado
 ```
 
 Cada endpoint debe documentar parámetros como `datasetId`, `periodo`, filtros y formato de respuesta.
+
+### Reglas implementadas en la primera versión
+
+| Indicador | Fórmula / fuente | Valores vacíos | Redondeo |
+|---|---|---|---|
+| Total de respuestas | Conteo de `survey_response` con estado `VALIDA` | No se cuentan | Entero |
+| Distribución por categoría | `n(categoría) / n(válido) * 100` | Se excluyen del denominador | 2 decimales |
+| Promedio numérico | Suma de valores válidos / cantidad válida | Se excluyen valores no convertibles | 2 decimales |
+| Desviación estándar | Desviación muestral: `sqrt(sum((x - media)^2) / (n - 1))` | Se excluyen `No observado`, `No sabe` y valores no numéricos; si `n < 2`, se informa como no disponible | 2 decimales |
+| Promedio de competencias | Suma de `numeric_value` excluyendo `not_observed` / cantidad válida | `No observado` no participa | 2 decimales |
+| Cruce | Conteo por combinación de dos campos; porcentaje dentro de cada fila | Se excluye cualquier fila incompleta | 2 decimales |
+
+Los endpoints reciben `datasetId`. Si se omite en los resúmenes por tipo, se utiliza el último dataset importado de ese tipo. La respuesta incluye `smallSample: true` cuando el `n` válido es menor que 5, según la especificación UI. La API no genera conclusiones ni interpretaciones narrativas.
 
 ### Puerta de aceptación
 
@@ -763,6 +777,8 @@ Esta fase puede desarrollarse en paralelo después de estabilizar el modelo de f
 
 ### Exportación
 
+Esta fase debe agregar la exportación de las matrices cruzadas y visualizaciones en CSV, Excel y PNG. La Fase 4 solo entrega la tabla agregada por API; no implementa todavía esos formatos de descarga.
+
 Definir primero si se exportan:
 
 - datos originales;
@@ -774,6 +790,8 @@ Definir primero si se exportan:
 La exportación debe respetar permisos y no exponer datos personales innecesarios.
 
 ### Simulación
+
+La simulación de escenarios queda en esta fase posterior. Debe exponer una API y una regla matemática documentada antes de conectarse a la pantalla `/titulados/simulacion-escenarios`.
 
 Antes de implementarla, documentar:
 
@@ -970,6 +988,37 @@ API disponible:
 Pendientes no bloqueantes: ampliar progresivamente el mapeo semántico de todas las preguntas del diccionario y aprobar catálogos de categorías de negocio; estos cambios se incorporarán antes de activar indicadores específicos en producción
 Bloqueos: ninguno para iniciar la Fase 4
 Siguiente paso: Fase 4 - reglas estadísticas y API analítica
+```
+
+### Fase 4: reglas estadísticas y API analítica completada con limitación documentada
+
+```text
+Fecha: 2026-10-07
+Fase: 4 - reglas estadísticas y API analítica
+Estado: COMPLETADA CON LIMITACIÓN DOCUMENTADA
+Completado: contratos DTO; conteos de respuestas válidas; distribuciones con porcentajes; promedios numéricos; valoración Likert de empleadores; resumen de titulados; empleo; formación; resumen de empleadores; promedios de competencias; cruces entre dos campos; filtros por datasetId
+Archivos afectados: src/main/java/com/simulacionem/analitica/application/dto/; src/main/java/com/simulacionem/analitica/application/service/AnalyticsService.java; src/main/java/com/simulacionem/analitica/presentation/rest/AnalyticsController.java; src/main/java/com/simulacionem/encuesta/application/service/CsvImportService.java; src/test/java/com/simulacionem/encuesta/application/service/CsvImportServiceTest.java; este plan
+Validaciones:
+  - Resumen de titulados sobre CSV real → 8 respuestas válidas y distribución de sector calculada
+  - Valoración de empleadores → categorías originales de 3 niveles más `No sabe`, con conteos y porcentajes; no se inventa una escala 1–5
+  - Desviación estándar muestral → calculada con `n - 1`; no disponible cuando `n < 2`
+  - Muestra pequeña → `smallSample` se activa cuando `n < 5`
+  - Suite Maven → 5 pruebas, 0 fallos
+  - Fórmulas y tratamiento de vacíos documentados en esta fase
+API disponible:
+  - GET /api/analytics/titulados/summary
+  - GET /api/analytics/titulados/employment
+  - GET /api/analytics/titulados/education
+  - GET /api/analytics/employers/summary
+  - GET /api/analytics/employers/valuation
+  - GET /api/analytics/competencies/gaps
+  - GET /api/analytics/crosses
+  - POST /api/analitica/chi-cuadrado
+Limitación documentada: no se implementa una brecha numérica del tipo expectativa menos valoración porque los CSV actuales no contienen una expectativa estructurada comparable; las necesidades esperadas aparecen en texto libre. Esto no impide mostrar medias, desviaciones estándar ni resultados separados por encuesta.
+Extensión posible: puede calcularse una comparación titulados-empleadores por competencia cuando ambos datasets tengan la misma escala y catálogo; no debe confundirse con la brecha expectativa-valoración.
+Pendientes no bloqueantes: agregar pruebas unitarias aisladas para porcentajes y cruces; incorporar al resultado Chi-cuadrada el aviso de celdas con frecuencia esperada menor que 5; la regla de muestra pequeña ya queda fijada en `n < 5`; `No sabe` y `No observado` deben permanecer separados de medias y desviaciones
+Bloqueos: ninguno para iniciar la Fase 5; la brecha expectativa-valoración permanece pendiente del contrato de datos
+Siguiente paso: Fase 5 - base técnica del frontend
 ```
 
 ## Resultado final esperado
