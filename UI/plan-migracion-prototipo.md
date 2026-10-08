@@ -1141,6 +1141,25 @@ Bloqueos: ninguno para iniciar la Fase 10; las limitaciones de financiamiento, e
 Siguiente paso: Fase 10 - formularios dinámicos
 ```
 
+### Fase 10: formularios de captura externos al analizador
+
+```text
+Fecha: 2026-10-08
+Fase: 10 - formularios dinámicos
+Estado: NO APLICA COMO PANTALLA REACT; FLUJO EXTERNO DEFINIDO
+Decisión: los formularios de captura se construirán y administrarán en Google Forms; este repositorio no renderiza ni persiste las respuestas del formulario
+Flujo oficial: Google Forms → exportación de respuestas a CSV → carga en `/cargar-datos` → validación, normalización y persistencia en PostgreSQL → análisis
+Archivos de referencia: form/form_export_titulados00.json; form/form_export_empleadores00.json; form/form_flujo_titulados00.mermaid; form/form_flujo_empleadores00.mermaid
+Validaciones:
+  - Los JSON y diagramas de `form/` quedan como especificación de referencia para construir los formularios en Google Forms
+  - `npm run build` → TypeScript y Vite completan correctamente después de retirar el renderer interno no utilizado
+  - La pantalla `/cargar-datos` acepta el CSV exportado y lo envía al flujo oficial de importación
+Decisiones: la lógica de saltos y obligatoriedad pertenece a Google Forms; el backend solo recibe el CSV exportado y no depende de una sesión de captura
+Pendientes no bloqueantes: documentar en Google Forms la correspondencia entre preguntas y encabezados CSV; verificar periódicamente que cambios en el formulario no rompan el diccionario de datos; añadir soporte XLSX únicamente si se aprueba en el contrato de importación
+Bloqueos: ninguno para iniciar la Fase 11; no se requiere una base de datos de respuestas de captura aparte de los datasets importados
+Siguiente paso: Fase 11 - exportación y simulación
+```
+
 ## Resultado final esperado
 
 Una aplicación React mantenible, conectada a Spring Boot y PostgreSQL, que importe CSV reales, informe problemas de calidad, guarde datos normalizados, calcule indicadores reproducibles y muestre las pantallas analíticas mediante un layout compartido.

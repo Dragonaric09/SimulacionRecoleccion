@@ -25,7 +25,7 @@ export function TituladosSummaryPage() {
       setDatasets(titulados)
       if (!datasetId || !titulados.some((item) => item.id === datasetId)) setDatasetId(titulados.at(-1)?.id)
     }).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setDatasetsReady(true))
-  }, [])
+  }, [datasetId])
 
   useEffect(() => {
     if (!datasetsReady) return
