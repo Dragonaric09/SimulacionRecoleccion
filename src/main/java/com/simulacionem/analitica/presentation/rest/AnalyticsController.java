@@ -38,7 +38,9 @@ public class AnalyticsController {
 
     @GetMapping("/titulados/employment")
     public AnalyticsSummaryDto tituladosEmployment(@RequestParam(required = false) UUID datasetId) {
-        return analytics.summary(datasetId, "TITULADOS", List.of("situacion_laboral_actual", "sector_trabajo"));
+        return analytics.summary(datasetId, "TITULADOS", List.of(
+                "anio_titulacion", "anios_vida_profesional", "anios_desempleo",
+                "situacion_laboral_actual", "sector_trabajo", "primera_experiencia_laboral"));
     }
 
     @GetMapping("/titulados/education")

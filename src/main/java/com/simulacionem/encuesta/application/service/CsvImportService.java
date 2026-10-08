@@ -206,7 +206,7 @@ public class CsvImportService {
         putKnown(values, headers, record, "tipo_organizacion", "tipo de organización");
         putKnown(values, headers, record, "tamano_organizacion", "tamaño de la organización");
         putKnown(values, headers, record, "rubro_organizacion", "rubro o sector principal");
-        putKnown(values, headers, record, "situacion_laboral_actual", "situación laboral actual");
+        normalizeLaborStatus(values, headers, record, "situación laboral actual");
         normalizeBoolean(values, headers, record, "tiene_formacion_complementaria", "ha realizado o se encuentra realizando");
         normalizeBoolean(values, headers, record, "interes_posgrado", "estaría interesado en realizar estudios");
         normalizeBoolean(values, headers, record, "contrato_titulados_ultimos_5_anios", "ha contratado ingenieros");
@@ -295,6 +295,23 @@ public class CsvImportService {
         if (normalized.equals("si") || normalized.equals("sí")) values.put(key, true);
         else if (normalized.equals("no")) values.put(key, false);
         else values.put(key, value);
+    }
+
+    private void normalizeLaborStatus(Map<String, Object> values, List<String> headers, CSVRecord record, String fragment) {
+        String value = firstValue(headers, record, fragment);
+        if (value == null) return;
+        String normalized = clean(value).toLowerCase(Locale.ROOT)
+                .replace("á", "a").replace("é", "e").replace("í", "i")
+                .replace("ó", "o").replace("ú", "u");
+        if (normalized.contains("trabaj") && (normalized.contains("organizacion") || normalized.contains("empresa"))) {
+            values.put("situacion_laboral_actual", "Trabaja en una organización");
+        } else if (normalized.contains("emprend")) {
+            values.put("situacion_laboral_actual", "Emprendimiento propio");
+        } else if (normalized.contains("busqueda") || normalized.contains("desemple") || normalized.contains("no trabaja")) {
+            values.put("situacion_laboral_actual", "En búsqueda laboral");
+        } else {
+            values.put("situacion_laboral_actual", value);
+        }
     }
 
     private void normalizeNumber(Map<String, Object> values, List<String> headers, CSVRecord record, String key, String fragment, List<Issue> rowIssues) {
