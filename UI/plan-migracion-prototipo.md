@@ -15,7 +15,7 @@
 | Backend Spring Boot | Base inicial disponible; pruebas OK |
 | PostgreSQL | Configurado mediante Docker Compose; configuración válida |
 | Importación CSV | Pendiente |
-| Modelo de datos definitivo | Pendiente |
+| Modelo de datos definitivo | En preparación mediante `data/data-dictionary.md` |
 | API analítica | Parcial; pendiente de ampliar |
 | Migración de pantallas | Pendiente |
 
@@ -893,21 +893,21 @@ Bloqueos: el lint debe corregirse antes de cerrar la Fase 13
 Siguiente paso: Fase 1 - contrato funcional y diccionario de datos
 ```
 
+### Fase 1: contrato funcional y diccionario de datos completada
+
+```text
+Fecha: 2026-10-07
+Fase: 1 - contrato funcional y diccionario de datos
+Estado: COMPLETADA CON REGLAS INICIALES DOCUMENTADAS
+Completado: comparación entre form/*.json, form/*.mermaid y data/*.csv; mapa de campos; reglas de normalización; exclusión de datos personales; resolución inicial de duplicados
+Archivos afectados: data/data-dictionary.md y este plan
+Validaciones: 60 preguntas de titulados; 32 preguntas de empleadores; 85 columnas y 8 registros de titulados; 60 columnas y 3 registros de empleadores
+Bloqueos: confirmar formalmente el periodo 2026, política de almacenamiento de CSV originales y fórmulas finales de indicadores antes de producción
+Decisiones: UUID + dataset_id + fila de origen; vacíos como null; Sí/No como boolean; escalas como categorías ordenadas; encabezados largos no serán nombres internos
+Siguiente paso: Fase 2 - modelo de PostgreSQL y migraciones
+```
+
 ## Resultado final esperado
 
 Una aplicación React mantenible, conectada a Spring Boot y PostgreSQL, que importe CSV reales, informe problemas de calidad, guarde datos normalizados, calcule indicadores reproducibles y muestre las pantallas analíticas mediante un layout compartido.
 
-## Bitácora de actualización
-
-### Estado inicial del plan reorganizado
-
-```text
-Fecha: 2026-10-07
-Fase: planificación
-Completado: revisión del prototipo, repositorio, formularios y CSV; reorganización del orden de trabajo
-Archivos afectados: UI/plan-migracion-prototipo.md
-Validaciones: revisión estructural del frontend, backend, form/ y data/
-Bloqueos: falta definir el diccionario de datos y el modelo relacional definitivo
-Decisiones: el backend y los datos preceden a las pantallas analíticas completas; el frontend base comienza antes para preparar rutas y layout
-Siguiente paso: ejecutar la Fase 0 y registrar la línea base técnica
-```

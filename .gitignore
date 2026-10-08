@@ -20,4 +20,5 @@ frontend/.vite/
 .env
 .env.*
 
-/data
+/data/*
+!/data/data-dictionary.md
