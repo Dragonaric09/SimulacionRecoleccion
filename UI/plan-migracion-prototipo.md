@@ -1085,6 +1085,28 @@ Bloqueos: ninguno para iniciar la Fase 8
 Siguiente paso: Fase 8 - pantalla analítica piloto de resumen de titulados
 ```
 
+### Fase 8: pantalla analítica piloto de resumen de titulados completada
+
+```text
+Fecha: 2026-10-08
+Fase: 8 - pantalla analítica piloto
+Estado: COMPLETADA CON ESTADOS DE DATOS IMPLEMENTADOS
+Completado: consulta de datasets de titulados; selección del dataset activo; consumo de /api/analytics/titulados/summary; cuatro KPI; distribuciones de estado laboral y formación/interés en posgrado; conteos y porcentajes; aviso de muestra pequeña; estados de carga, vacío y error; selector persistente del dataset
+Archivos afectados: src/main/java/com/simulacionem/analitica/application/dto/AnalyticsSummaryDto.java; src/main/java/com/simulacionem/analitica/application/service/AnalyticsService.java; frontend/src/features/analitica/api.ts; frontend/src/features/analitica/TituladosSummaryPage.tsx; frontend/src/app/PlaceholderPage.tsx; este plan
+Contrato ampliado: el resumen analítico incluye `numericMedians` para que la interfaz pueda mostrar la mediana de año de titulación sin calcularla a partir de datos crudos en el navegador
+Validaciones:
+  - npm run build → TypeScript y Vite completan correctamente
+  - .\mvnw.cmd -q -DskipFrontend test → BUILD SUCCESS; 6 pruebas, 0 fallos
+  - La vista no muestra valores ficticios cuando no existe un dataset; presenta estado vacío
+  - Los errores HTTP se muestran como estado de error y la consulta muestra estado de carga
+  - `smallSample` activa un aviso cuando el dataset tiene menos de 5 respuestas válidas
+  - Los KPI mantienen conteos junto con porcentajes y muestran `n` de la variable utilizada
+Limitación documentada: la API actual entrega el año de titulación y la interfaz muestra la mediana transformada a años desde titulación usando el año calendario del navegador; una fecha de corte histórica configurable podrá agregarse si el análisis requiere reproducibilidad temporal
+Pendientes no bloqueantes: sustituir las barras CSS por los gráficos definitivos del sistema; agregar filtros reales de periodo cuando exista el campo en el contrato; ampliar las pruebas de componente y la comparación visual con el HTML de referencia
+Bloqueos: ninguno para iniciar la Fase 9
+Siguiente paso: Fase 9 - migración del resto del analizador
+```
+
 ## Resultado final esperado
 
 Una aplicación React mantenible, conectada a Spring Boot y PostgreSQL, que importe CSV reales, informe problemas de calidad, guarde datos normalizados, calcule indicadores reproducibles y muestre las pantallas analíticas mediante un layout compartido.

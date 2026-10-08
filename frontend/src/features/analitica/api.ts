@@ -8,6 +8,19 @@ export interface ResultadoChiCuadrado {
   rechazaIndependencia: boolean
 }
 
+export type CategoryDistribution = { validCount: number; counts: Record<string, number>; percentages: Record<string, number> }
+export type AnalyticsSummary = {
+  datasetId: string
+  surveyType: string
+  totalResponses: number
+  validResponses: number
+  distributions: Record<string, CategoryDistribution>
+  numericAverages: Record<string, number>
+  numericMedians: Record<string, number>
+  numericStandardDeviations: Record<string, number | null>
+  smallSample: boolean
+}
+
 export function ejecutarChiCuadrado(frecuencias: number[][], alfa: number) {
   return apiRequest<ResultadoChiCuadrado>('/analitica/chi-cuadrado', {
     method: 'POST',

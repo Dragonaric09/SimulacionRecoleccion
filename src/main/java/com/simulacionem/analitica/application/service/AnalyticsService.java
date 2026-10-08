@@ -42,6 +42,7 @@ public class AnalyticsService {
         if (fields == null || fields.isEmpty()) fields = defaultFields(dataset.getSurveyType());
         Map<String, CategoryDistributionDto> distributions = new LinkedHashMap<>();
         Map<String, Double> averages = new LinkedHashMap<>();
+        Map<String, Double> medians = new LinkedHashMap<>();
         Map<String, Double> standardDeviations = new LinkedHashMap<>();
         for (String field : fields) {
             List<String> values = rows.stream().map(r -> value(r, field)).filter(v -> v != null && !v.isBlank()).toList();
@@ -49,13 +50,14 @@ public class AnalyticsService {
                 List<Double> numbers = values.stream().map(this::number).filter(java.util.Objects::nonNull).toList();
                 if (!numbers.isEmpty()) {
                     averages.put(field, round(numbers.stream().mapToDouble(Double::doubleValue).average().orElse(0)));
+                    medians.put(field, median(numbers));
                     standardDeviations.put(field, sampleStandardDeviation(numbers));
                 }
             } else {
                 distributions.put(field, distribution(values));
             }
         }
-        return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), rows.size(), rows.size(), distributions, averages, standardDeviations,
+        return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), rows.size(), rows.size(), distributions, averages, medians, standardDeviations,
                 rows.size() < MINIMUM_SAMPLE_SIZE);
     }
 
@@ -134,6 +136,12 @@ public class AnalyticsService {
         double average = values.stream().mapToDouble(Double::doubleValue).average().orElse(0);
         double variance = values.stream().mapToDouble(value -> Math.pow(value - average, 2)).sum() / (values.size() - 1);
         return round(Math.sqrt(variance));
+    }
+    private Double median(List<Double> values) {
+        List<Double> sorted = values.stream().sorted().toList();
+        int middle = sorted.size() / 2;
+        double result = sorted.size() % 2 == 0 ? (sorted.get(middle - 1) + sorted.get(middle)) / 2 : sorted.get(middle);
+        return round(result);
     }
     private double round(double value) { return Math.round(value * 100.0) / 100.0; }
 }

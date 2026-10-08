@@ -6,11 +6,15 @@ import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { CargarDatosPage } from '@/features/encuesta/CargarDatosPage'
+import { TituladosSummaryPage } from '@/features/analitica/TituladosSummaryPage'
 import type { NavigationItem } from './navigation'
 
 export function PlaceholderPage({ route }: { route: NavigationItem }) {
   if (route.path === '/cargar-datos') {
     return <CargarDatosPage />
+  }
+  if (route.path === '/titulados/resumen') {
+    return <TituladosSummaryPage />
   }
 
   return (
