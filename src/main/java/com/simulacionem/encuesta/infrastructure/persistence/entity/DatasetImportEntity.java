@@ -52,6 +52,17 @@ public class DatasetImportEntity {
     public String getSourceFileName() { return sourceFileName; }
     public String getStatus() { return status; }
     public int getRowsRead() { return rowsRead; }
+    public int getRowsValid() { return rowsValid; }
+    public int getRowsRejected() { return rowsRejected; }
+    public int getWarningsCount() { return warningsCount; }
+    public int getErrorsCount() { return errorsCount; }
+    public Short getPeriod() { return period; }
     public void setRowsRead(int rowsRead) { this.rowsRead = rowsRead; }
     public void setRowsValid(int rowsValid) { this.rowsValid = rowsValid; }
+    public void setSourceFileSha256(String sourceFileSha256) { this.sourceFileSha256 = sourceFileSha256; }
+    public void setPeriod(Short period) { this.period = period; }
+    public void setStatus(String status) { this.status = status; }
+    public void setRowsRejected(int rowsRejected) { this.rowsRejected = rowsRejected; }
+    public void setWarningsCount(int warningsCount) { this.warningsCount = warningsCount; }
+    public void setErrorsCount(int errorsCount) { this.errorsCount = errorsCount; }
 }

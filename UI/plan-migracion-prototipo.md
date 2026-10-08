@@ -14,8 +14,8 @@
 | Frontend React | Base inicial disponible; `build` OK; `lint` con 2 errores preexistentes |
 | Backend Spring Boot | Base inicial disponible; pruebas OK |
 | PostgreSQL | Configurado mediante Docker Compose; configuración válida |
-| Importación CSV | Pendiente |
-| Modelo de datos definitivo | V1 creada; persistencia de aplicación y pruebas de dataset pendientes |
+| Importación CSV | Backend inicial implementado; pendiente de ampliaciones de normalización |
+| Modelo de datos definitivo | V1 y V2 creadas; persistencia núcleo validada |
 | API analítica | Parcial; pendiente de ampliar |
 | Migración de pantallas | Pendiente |
 
@@ -425,7 +425,7 @@ Registrar fila, columna, valor original, tipo de problema, mensaje, severidad y 
 - [x] Existe un fixture pequeño, anónimo y reproducible dentro de la prueba.
 - [x] Una prueba de integración guarda y consulta un dataset sin depender del frontend.
 - [x] La relación dataset-respuesta y la eliminación en cascada quedan respaldadas por las claves foráneas de la migración.
-- [ ] Las entidades auxiliares de mapeos, competencias e incidencias se ampliarán al implementar el importador y la validación de Fase 3.
+- [x] Las entidades auxiliares de mapeos, competencias, respuestas específicas e incidencias están disponibles para el importador.
 
 ### Puerta de aceptación
 
@@ -942,6 +942,34 @@ Decisiones: Flyway será el mecanismo de migraciones; el esquema usa dataset_imp
 Pendientes no bloqueantes: ampliar las entidades auxiliares de mapeos, competencias e incidencias conforme se implemente el importador; agregar pruebas específicas de duplicados y validación en Fase 3
 Bloqueos: ninguno para iniciar la Fase 3
 Siguiente paso: Fase 3 - importación, validación y normalización de CSV
+```
+
+### Fase 3: importación, validación y normalización de CSV completada
+
+```text
+Fecha: 2026-10-07
+Fase: 3 - importación, validación y normalización de CSV
+Estado: COMPLETADA
+Completado: parser CSV UTF-8; eliminación de BOM; validación de extensión, encabezados, cantidad mínima de columnas, filas desalineadas y tipo de encuesta; detección de encabezados duplicados; normalización inicial de espacios, booleanos, números y valores vacíos; exclusión de datos personales del payload analítico; cálculo de SHA-256; persistencia transaccional de datasets, respuestas, mapeos, competencias, respuestas específicas e incidencias; endpoints REST iniciales
+Archivos afectados: pom.xml; src/main/java/com/simulacionem/encuesta/application/dto/; src/main/java/com/simulacionem/encuesta/application/service/CsvImportService.java; src/main/java/com/simulacionem/encuesta/presentation/rest/DatasetController.java; src/main/java/com/simulacionem/encuesta/infrastructure/persistence/entity/; src/main/java/com/simulacionem/encuesta/infrastructure/persistence/repository/; src/test/java/com/simulacionem/encuesta/application/service/CsvImportServiceTest.java
+Validaciones:
+  - CSV de titulados real → tipo TITULADOS, 8 filas leídas y 8 filas procesables
+  - CSV de empleadores real → tipo EMPLEADORES, 3 filas leídas y 3 filas procesables
+  - .\mvnw.cmd -q -DskipFrontend test → 5 pruebas, 0 fallos
+  - Flyway validó el esquema en versión 2 y la prueba persistió ambos datasets en PostgreSQL
+  - CSV de titulados → 85 mapeos y 8 respuestas persistidas; duplicados reportados como advertencias
+  - CSV de empleadores → 60 mapeos y 3 respuestas persistidas; valoraciones de competencias normalizadas cuando corresponden
+  - Archivo con extensión inválida → rechazado con `EXTENSION_INVALIDA`
+  - Los campos personales no se copian al payload analítico normalizado
+API disponible:
+  - POST /api/datasets/validate
+  - POST /api/datasets/import
+  - GET /api/datasets
+  - GET /api/datasets/{id}
+  - GET /api/datasets/{id}/quality
+Pendientes no bloqueantes: ampliar progresivamente el mapeo semántico de todas las preguntas del diccionario y aprobar catálogos de categorías de negocio; estos cambios se incorporarán antes de activar indicadores específicos en producción
+Bloqueos: ninguno para iniciar la Fase 4
+Siguiente paso: Fase 4 - reglas estadísticas y API analítica
 ```
 
 ## Resultado final esperado

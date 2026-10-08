@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface SurveyResponseRepository extends JpaRepository<SurveyResponseEntity, UUID> {
     long countByDataset_Id(UUID datasetId);
+    java.util.Optional<SurveyResponseEntity> findByDataset_IdAndSourceRowNumber(UUID datasetId, int sourceRowNumber);
 }
