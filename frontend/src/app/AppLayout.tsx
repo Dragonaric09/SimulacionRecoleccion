@@ -36,7 +36,7 @@ export function AppLayout({ route }: Props) {
               </div>
             )}
           </div>
-          <nav className="flex-1 space-y-5 overflow-y-auto px-2 py-3" aria-label="Navegación principal">
+          <nav className="scrollbar-sidebar flex-1 space-y-5 overflow-y-auto px-2 py-3" aria-label="Navegación principal">
             {(['general', 'titulados', 'empleadores'] as const).map((section) => {
               const items = navigation.filter((item) => item.section === section)
               return (
