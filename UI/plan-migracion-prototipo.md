@@ -1,206 +1,596 @@
-# Plan de migración del prototipo al frontend React
+# Plan reorganizado para construir el analizador
 
-## Objetivo
+> **Documento vivo:** este plan debe actualizarse durante el desarrollo. No es un documento cerrado. Cada decisión técnica, cambio de alcance, bloqueo, endpoint creado, tabla añadida o fase completada debe reflejarse aquí.
 
-Trasladar progresivamente el prototipo visual de `UI/` al frontend React ubicado en `frontend/`, conservando la apariencia general, la navegación lateral y la organización funcional de las pantallas, pero adaptando la implementación a la arquitectura existente.
+## 0. Control de cambios del plan
 
-La migración debe evitar convertir cada archivo HTML en una página aislada. El resultado esperado es una aplicación React con un layout compartido, componentes reutilizables, rutas internas y datos preparados para conectarse con la API del backend.
+### Estado actual
 
-## Cómo utilizar este plan
+| Elemento | Estado |
+|---|---|
+| Prototipo HTML | Disponible en `UI/` |
+| Definición de formularios | Disponible en `form/` |
+| CSV de respuestas | Disponible en `data/` |
+| Frontend React | Base inicial disponible |
+| Backend Spring Boot | Base inicial disponible |
+| PostgreSQL | Configurado mediante Docker Compose |
+| Importación CSV | Pendiente |
+| Modelo de datos definitivo | Pendiente |
+| API analítica | Parcial; pendiente de ampliar |
+| Migración de pantallas | Pendiente |
 
-Este documento debe ejecutarse de arriba hacia abajo. Cada fase tiene una dependencia: no se debe saltar a la siguiente solamente porque una parte de la interfaz ya sea visible.
+### Regla de actualización
 
-Para cada tarea, la IA o desarrollador debe:
+Después de cada sesión de trabajo, actualizar como mínimo:
 
-1. leer primero los archivos relacionados;
-2. comprobar el estado actual del repositorio;
-3. realizar el cambio más pequeño que cumpla el objetivo;
-4. ejecutar las validaciones indicadas;
-5. revisar el diff antes de continuar;
-6. dejar documentados los bloqueos o decisiones pendientes.
+- estado de la fase actual;
+- tareas completadas;
+- archivos creados o modificados;
+- pruebas ejecutadas;
+- problemas encontrados;
+- decisiones nuevas;
+- siguiente tarea concreta.
 
-Una fase no se considera terminada porque el código compile parcialmente. Debe cumplir sus entregables y criterios de aceptación.
+Se recomienda mantener una bitácora breve al final de este archivo:
 
-### Regla de no regresión
+```text
+Fecha:
+Fase:
+Completado:
+Archivos afectados:
+Validaciones:
+Bloqueos:
+Decisiones:
+Siguiente paso:
+```
 
-Antes de modificar una fase ya completada, verificar que no se rompan:
+Si cambia el alcance del proyecto, no se debe borrar silenciosamente el plan anterior. Se debe registrar qué cambió, por qué cambió y qué fases quedan afectadas.
 
-- `npm run lint`;
-- `npm run build`;
-- las rutas existentes;
-- el menú lateral;
-- el contrato de la API;
-- los tipos compartidos.
+## 1. Decisión principal sobre el orden
 
-### Límites de la migración
+El proyecto no debe comenzar trasladando todas las pantallas HTML a React. El analizador depende de datos importados, reglas de normalización, cálculos estadísticos y consultas consistentes. Si se construye primero toda la interfaz, existe el riesgo de diseñar pantallas basadas en datos ficticios que después no puedan alimentarse correctamente.
 
-- No copiar HTML completo dentro de componentes React.
-- No leer CSV directamente desde las vistas analíticas.
-- No modificar los CSV originales durante la importación.
-- No crear un componente diferente para cada tarjeta si la estructura puede parametrizarse.
-- No inventar endpoints sin revisar primero los controladores y casos de uso existentes.
-- No eliminar archivos del prototipo hasta que la pantalla React equivalente haya sido validada.
+El orden recomendado es:
 
-## Estado actual
+```text
+Definición funcional
+        ↓
+Contrato de datos
+        ↓
+Base de datos
+        ↓
+Importación y normalización de CSV
+        ↓
+Cálculos analíticos y API
+        ↓
+Base técnica del frontend
+        ↓
+Pantalla piloto conectada a la API
+        ↓
+Resto de pantallas
+        ↓
+Exportación y simulación
+        ↓
+Pruebas, seguridad y entrega
+```
+
+La respuesta a “¿el frontend va al final?” es: no completamente.
+
+- El frontend base debe comenzar temprano para validar rutas, layout y componentes.
+- Las pantallas analíticas completas deben construirse después de definir los datos y la API.
+- La conexión del frontend con datos reales ocurre después de que exista una primera API funcional.
+
+## 2. Objetivo del proyecto
+
+Construir un analizador web para las encuestas de titulados y empleadores de Ingeniería de Sistemas de la UMSS.
+
+El sistema deberá permitir:
+
+- importar archivos CSV de respuestas;
+- identificar si corresponden a titulados o empleadores;
+- validar la estructura y calidad de los datos;
+- normalizar las respuestas;
+- guardar los datos en PostgreSQL;
+- calcular indicadores y brechas;
+- mostrar resultados mediante un frontend React;
+- filtrar por periodo y tipo de encuesta;
+- exportar resultados;
+- ejecutar simulaciones de escenarios cuando se haya definido el modelo correspondiente.
+
+## 3. Estado actual del repositorio
 
 ### Prototipo visual
 
-- Está compuesto por pantallas HTML independientes.
-- Cada pantalla repite su propio menú lateral, encabezado y estructura visual.
-- Utiliza Tailwind CSS mediante CDN.
-- Utiliza Material Symbols para iconos.
-- Contiene datos ficticios y valores estáticos.
-- La navegación funciona mediante enlaces relativos entre archivos HTML.
-
-### Frontend del repositorio
-
-- React 19 y TypeScript.
-- Vite como herramienta de desarrollo y construcción.
-- Tailwind CSS 4.
-- shadcn configurado con estilo `new-york`.
-- Componentes reutilizables en `frontend/src/components/ui/`.
-- Iconos mediante `lucide-react`.
-- Gráficos mediante `recharts`.
-- Alias `@/` configurado para `frontend/src/`.
-- Actualmente existe una vista principal en `App.tsx`, sin un sistema de rutas completo.
+La carpeta `UI/` contiene las pantallas HTML que sirven como referencia visual y funcional del analizador. Sus datos son estáticos o ficticios y no deben trasladarse literalmente como páginas aisladas.
 
 ### Definición de formularios
 
-La carpeta `form/` contiene la definición funcional de las encuestas que alimentarán el sistema:
+La carpeta `form/` contiene:
 
-- encuesta de titulados: 11 secciones y 60 preguntas;
-- encuesta de empleadores: 4 secciones y 32 preguntas;
-- tipos de pregunta, validaciones y opciones de respuesta;
-- ramificaciones condicionales;
-- diagramas Mermaid con el flujo de cada encuesta.
+- `form_export_titulados00.json`;
+- `form_export_empleadores00.json`;
+- dos diagramas Mermaid de flujo.
 
-Esta información debe utilizarse como contrato funcional para las pantallas de captura y mantenerse separada de las pantallas analíticas del prototipo.
+La encuesta de titulados tiene 11 secciones y 60 preguntas. La de empleadores tiene 4 secciones y 32 preguntas. Estos archivos son la referencia para relacionar preguntas, tipos de respuesta y columnas de los CSV.
 
-### Datos de entrada del analizador
+### Datos de entrada
 
-La carpeta `data/` contiene los CSV que serán importados al analizador. Estos archivos deben considerarse datos originales de entrada, no archivos que el frontend deba leer directamente.
+La carpeta `data/` contiene los CSV que serán importados al analizador. Son archivos exportados de formularios y presentan encabezados largos, saltos de línea, posibles duplicados, valores vacíos y distintas formas de escribir respuestas.
 
-El flujo esperado es:
+Los CSV deben conservarse como fuente original. No deben ser modificados manualmente para que el proceso de importación sea reproducible.
+
+### Frontend
+
+El frontend se encuentra en `frontend/` y utiliza:
+
+- React 19;
+- TypeScript;
+- Vite;
+- Tailwind CSS 4;
+- shadcn estilo `new-york`;
+- `lucide-react`;
+- `recharts`;
+- `react-hook-form`;
+- componentes reutilizables en `frontend/src/components/ui/`.
+
+Actualmente existe una vista inicial en `frontend/src/App.tsx`, pero todavía no hay un router ni las pantallas del analizador.
+
+### Backend y base de datos
+
+El backend es Spring Boot y PostgreSQL ya está contemplado en Docker Compose. Actualmente existe infraestructura inicial y un endpoint de salud, además de una operación de chi-cuadrado, pero todavía deben construirse la importación, persistencia y consultas analíticas.
+
+## 3.1. Requisitos obligatorios del frontend documentados en `UI/*.md`
+
+Los archivos `UI/especificacion-ui.md` y `UI/sistema-de-diseno.md` son parte del contrato del frontend. No son solamente material de inspiración.
+
+### Alcance de producto
+
+- La aplicación es un dashboard de análisis, no un informe narrativo.
+- La interfaz muestra cifras, gráficos, tablas, filtros y exportaciones.
+- No debe escribir conclusiones, recomendaciones, hallazgos ni dictámenes.
+- No debe mostrar referencias a criterios de acreditación ni jerga interna del proyecto.
+- Las preguntas abiertas y el texto libre no se grafican automáticamente.
+- El alcance inicial es escritorio, aproximadamente entre 1366 y 1440 px.
+- No se implementan inicialmente inicio de sesión, roles, modo oscuro, móvil, tablet ni historial visible de cargas.
+- El historial técnico de datasets puede existir en la base de datos para trazabilidad, pero no debe convertirse automáticamente en una pantalla de historial si está fuera del alcance.
+
+### Reglas de datos visibles
+
+- Cada gráfico debe mostrar su `n` real, es decir, cuántas personas respondieron esa pregunta.
+- Con muestras de 5 a 20 personas, los conteos deben acompañar a los porcentajes.
+- Debe mostrarse una alerta cuando queden menos de 5 respuestas.
+- `No sabe`, `No observado` y `Sin respuesta` deben diferenciarse visualmente.
+- Datos personales de titulados y organizaciones nunca deben aparecer en gráficos, cruces, tablas analíticas o exportaciones analíticas.
+- Las escalas ordinales deben respetar su orden natural.
+- Las categorías nominales deben ordenarse por frecuencia cuando la especificación lo indique.
+- Las preguntas de selección múltiple deben indicar `Varias respuestas posibles` y calcular porcentajes sobre las personas que respondieron.
+
+### Requisitos visuales obligatorios
+
+- Sidebar fija de 240 px en azul marino.
+- Área principal fluida con máximo aproximado de 1200 px.
+- Fondo `#F1F5F9` y tarjetas blancas.
+- Titulados en azul `#1F6FB5` y empleadores en verde azulado `#14A39A`.
+- Inter como tipografía principal y cifras tabulares para datos numéricos.
+- Ritmo de espaciado basado en 8 px.
+- Bordes de 8 px, sombras suaves y controles con estados normal, hover, foco y deshabilitado.
+- No comunicar información exclusivamente por color.
+- Heatmaps con el número dentro de cada celda.
+- Avisos de muestra pequeña y Chi-cuadrada en ámbar.
+- Botón o tooltip `¿Cómo leer esto?` para explicar brevemente cada visualización.
+
+### Pantallas que el frontend debe cubrir
+
+1. Cargar datos.
+2. Resumen de titulados.
+3. Perfil y empleabilidad.
+4. Formación continua.
+5. Financiamiento.
+6. Brechas de competencias de titulados.
+7. Cruces y exportación de titulados.
+8. Resumen y contratación de empleadores.
+9. Valoración de la carrera.
+10. Brechas de competencias de empleadores.
+11. Cruces y exportación de empleadores.
+12. Simulación de escenarios de titulados.
+
+Cada pantalla debe implementarse desde la especificación correspondiente, no solo desde una copia visual del HTML.
+
+## 4. Reglas generales para ejecutar el plan
+
+1. Leer primero el código y los archivos de referencia relacionados con la tarea.
+2. No asumir que un dato del HTML es una regla real de negocio.
+3. No modificar los CSV originales durante la importación.
+4. No conectar las vistas directamente a archivos CSV.
+5. No crear endpoints sin definir primero su entrada y salida.
+6. No duplicar el menú lateral en cada pantalla React.
+7. No copiar HTML completo dentro de componentes React.
+8. Reutilizar shadcn antes de crear componentes nuevos.
+9. Ejecutar `npm run lint` y `npm run build` después de cambios frontend.
+10. Ejecutar pruebas backend después de cambios en persistencia o API.
+11. Revisar el diff antes de continuar con otra fase.
+12. No eliminar el prototipo HTML hasta validar su equivalente React.
+
+Cada fase debe producir archivos, decisiones y pruebas verificables. Si una decisión no está definida, debe registrarse como pendiente y no inventarse silenciosamente.
+
+## 4.1. Plantilla obligatoria para cada fase
+
+Cada fase debe documentarse con estos elementos, aunque inicialmente alguno indique `Pendiente`:
 
 ```text
-CSV original → validación → mapeo de columnas → normalización → almacenamiento → indicadores → vistas analíticas
+Estado: PENDIENTE | EN CURSO | BLOQUEADA | COMPLETADA
+Objetivo:
+Depende de:
+Entradas:
+Actividades:
+Archivos afectados:
+Entregables:
+Validaciones:
+Criterio de aceptación:
+Bloqueos:
+Siguiente fase:
 ```
 
-Los CSV presentan encabezados largos, preguntas con saltos de línea, posibles columnas duplicadas, respuestas vacías y valores escritos de distintas formas. Por eso se necesita una etapa de importación y calidad de datos antes de consumirlos en las pantallas.
+Una fase `COMPLETADA` debe tener evidencia: prueba ejecutada, endpoint probado, migración aplicada, pantalla revisada o documento aprobado, según corresponda.
 
-### Persistencia
+## 4.2. Matriz detallada de fases
 
-El analizador debe utilizar PostgreSQL para conservar los conjuntos de datos importados, las respuestas normalizadas, los errores de calidad y los metadatos de cada importación. La base de datos PostgreSQL ya forma parte de la infraestructura del repositorio mediante Docker Compose.
+| Fase | Objetivo concreto | Depende de | Entregable principal | Evidencia de cierre |
+|---|---|---|---|---|
+| 0 | Conocer el estado real del repositorio | Ninguna | Línea base | Lint, build y pruebas registrados |
+| 1 | Relacionar formularios, CSV, BD y vistas | Fase 0 | Diccionario de datos | Campos críticos mapeados |
+| 2 | Crear persistencia versionada | Fase 1 | Esquema y migraciones | Dataset de prueba guardado |
+| 3 | Procesar CSV de forma reproducible | Fase 2 | Importador y reporte de calidad | CSV de prueba importado |
+| 4 | Definir cálculos y respuestas de API | Fase 3 | Servicios y contratos analíticos | Resultados manuales coinciden |
+| 5 | Preparar navegación SPA | Fase 0 | Router y layout | Rutas abren directamente |
+| 6 | Centralizar diseño y componentes | Fase 5 | Tokens y componentes | Layout reutilizado |
+| 7 | Permitir importar desde la interfaz | Fases 3 y 5 | Pantalla de carga | Dataset queda disponible |
+| 8 | Validar el patrón analítico | Fases 4, 6 y 7 | Resumen de titulados | Vista usa API real |
+| 9 | Completar las vistas del analizador | Fase 8 | Pantallas restantes | Cada ruta tiene estados y datos |
+| 10 | Renderizar formularios definidos en JSON | Fases 1 y 6 | Renderer dinámico | Flujos coinciden con Mermaid |
+| 11 | Implementar salida y escenarios | Fases 4 y 9 | Exportaciones y simulación | Reglas documentadas |
+| 12 | Proteger y operar el sistema | Todas las anteriores | Seguridad y configuración | Datos sensibles controlados |
+| 13 | Verificar y cerrar la migración | Todas las anteriores | Informe final | Lint, build y pruebas pasan |
 
-El CSV debe ser la fuente de entrada y respaldo original, pero las vistas analíticas no deben leerlo directamente. El flujo debe terminar en datos estructurados consultables mediante la API.
+## 5. Fase 0: inventario y línea base
 
-## Principios de la migración
+### Objetivo
 
-1. Migrar primero la estructura y la navegación, y después el contenido específico de cada pantalla.
-2. Crear una sola fuente de verdad para el menú lateral y evitar copiarlo en cada vista.
-3. Reutilizar los componentes shadcn existentes antes de crear componentes nuevos.
-4. Separar layout, componentes visuales, datos de ejemplo y llamadas a la API.
-5. Mantener el prototipo funcional durante toda la migración.
-6. Migrar una pantalla completa como referencia antes de replicar el patrón en las demás.
-7. No conectar datos reales hasta que la estructura visual y las rutas estén estabilizadas.
-8. Mantener la lógica de negocio fuera de los componentes puramente visuales.
-9. Tratar los JSON de `form/` como definiciones de formularios y no como datos incrustados directamente en las vistas.
-10. Mantener los CSV originales sin alterarlos y producir los datos normalizados mediante un proceso reproducible.
-11. Guardar en PostgreSQL los datos procesados y sus metadatos antes de construir indicadores dependientes de ellos.
-
-## Convenciones de trabajo
-
-### Ubicación de archivos
-
-- Código React: `frontend/src/`.
-- Componentes shadcn: `frontend/src/components/ui/`.
-- Funcionalidades de titulados y empleadores: `frontend/src/features/`.
-- Cliente HTTP: `frontend/src/api/`.
-- Formatos de encuestas: `form/`.
-- CSV originales: `data/`.
-- Prototipo de referencia: `UI/`.
-- Backend Spring Boot: `src/main/java/`.
-
-### Separación de responsabilidades
-
-| Responsabilidad | Lugar recomendado |
-|---|---|
-| Layout y navegación | `frontend/src/components/layout/` y `app/` |
-| Componentes visuales básicos | `frontend/src/components/ui/` |
-| Pantallas de titulados | `frontend/src/features/titulados/` |
-| Pantallas de empleadores | `frontend/src/features/empleadores/` |
-| Definiciones de formularios | `form/` o un módulo de dominio equivalente |
-| Importación y normalización CSV | Backend Spring Boot |
-| Llamadas HTTP | `frontend/src/api/` o `features/*/api.ts` |
-| Datos temporales de prueba | `frontend/src/shared/mock-data/` |
-
-### Entregable mínimo por tarea
-
-Cada tarea debe terminar con:
-
-- archivos creados o modificados claramente identificados;
-- comportamiento esperado descrito en una frase;
-- validación ejecutada;
-- errores conocidos documentados;
-- ningún cambio no relacionado incluido en el diff.
-
-## Fase 1: Preparación y línea base
+Conocer el estado real del repositorio antes de agregar funcionalidades.
 
 ### Actividades
 
-- Ejecutar el frontend actual y confirmar que compila correctamente.
-- Ejecutar `npm run lint` y `npm run build` desde `frontend/`.
-- Revisar los componentes shadcn ya disponibles y determinar cuáles se pueden reutilizar.
-- Registrar los colores, tipografías, tamaños y espaciados principales del prototipo.
-- Identificar qué elementos son comunes a todas las pantallas:
-  - menú lateral;
-  - encabezado superior;
-  - selector de periodo;
-  - indicador de datos cargados;
-  - botones de definiciones y exportación;
-  - tarjetas, tablas, indicadores y gráficos.
+- Ejecutar el frontend actual.
+- Ejecutar `npm run lint` desde `frontend/`.
+- Ejecutar `npm run build` desde `frontend/`.
+- Ejecutar las pruebas existentes del backend.
+- Revisar `pom.xml`, `docker-compose.yml` y los archivos `application*.yml`.
+- Revisar entidades, repositorios, casos de uso y controladores existentes.
+- Inventariar las pantallas HTML, JSON, CSV y componentes shadcn.
+- Registrar cualquier error existente antes de iniciar la migración.
 
-### Resultado esperado
+### Entregables
 
-Una línea base verificable del frontend actual y una lista clara de elementos compartidos y específicos.
+- informe breve de línea base;
+- lista de errores previos;
+- inventario de módulos y archivos relevantes.
 
-## Fase 2: Definición de rutas y navegación
+### Puerta de aceptación
 
-Antes de trasladar todas las pantallas, se debe establecer la navegación de la SPA.
+No se continúa si no se sabe si los errores de lint, build o pruebas ya existían antes del trabajo.
 
-### Rutas sugeridas
+## 6. Fase 1: contrato funcional y diccionario de datos
 
-| Ruta | Pantalla |
-|---|---|
-| `/cargar-datos` | Carga y descripción de datos |
-| `/titulados/resumen` | Resumen de titulados |
-| `/titulados/perfil-empleabilidad` | Perfil y empleabilidad |
-| `/titulados/formacion-continua` | Formación continua |
-| `/titulados/financiamiento` | Financiamiento |
-| `/titulados/brechas-competencias` | Brechas de competencias |
-| `/titulados/cruces-exportacion` | Cruces y exportación |
-| `/titulados/simulacion-escenarios` | Simulación de escenarios |
-| `/empleadores/resumen-contratacion` | Resumen y contratación |
-| `/empleadores/valoracion-carrera` | Valoración de la carrera |
-| `/empleadores/brechas-competencias` | Brechas de competencias |
-| `/empleadores/cruces-exportacion` | Cruces y exportación |
+Esta fase debe ir antes de diseñar tablas o endpoints.
+
+### Objetivo
+
+Definir qué representa cada respuesta y cómo se relacionan `form/`, `data/`, la base de datos y las vistas.
 
 ### Actividades
 
-- Incorporar un router para React si el proyecto aún no lo incluye.
-- Definir las rutas anteriores en un único módulo.
-- Crear una página temporal o componente de carga para rutas todavía no migradas.
-- Configurar el estado activo del menú a partir de la ruta actual.
-- Verificar que el `SpaForwardController` permita acceder directamente a las rutas de la SPA.
-- Evitar que el menú dependa de enlaces a archivos `.html`.
+Crear un diccionario que conecte:
+
+```text
+pregunta del formulario
+→ columna original del CSV
+→ identificador interno
+→ tipo de dato
+→ regla de normalización
+→ tabla/campo de PostgreSQL
+→ indicador o pantalla que lo utiliza
+```
+
+Para cada campo se debe definir:
+
+- identificador estable;
+- encuesta de origen;
+- número de pregunta;
+- nombre original de la columna;
+- tipo lógico;
+- si es obligatorio;
+- valores permitidos;
+- representación de vacío;
+- regla de normalización;
+- si contiene información personal;
+- destino en la base de datos.
+
+### Identificadores internos
+
+No se deben usar como nombres de código los encabezados completos del CSV. Ejemplos de nombres internos:
+
+```text
+edad
+anio_titulacion
+situacion_laboral_actual
+interes_posgrado
+tipo_organizacion
+contratacion_ultimos_5_anios
+competencia_programacion
+competencia_bases_datos
+```
+
+### Decisiones que deben quedar escritas
+
+- significado de cada escala;
+- tratamiento de `No observado`;
+- diferencia entre respuesta vacía y respuesta no aplicable;
+- categorías equivalentes;
+- preguntas que se excluyen del análisis;
+- datos personales que no deben mostrarse;
+- periodo al que pertenece cada archivo.
+
+### Entregables
+
+- `data-dictionary.md` o equivalente;
+- primer mapa de columnas de titulados;
+- primer mapa de columnas de empleadores;
+- lista de ambigüedades detectadas.
+
+### Puerta de aceptación
+
+Una persona que no conoce el proyecto debe poder saber qué significa cada campo analizado sin leer el CSV completo.
+
+## 7. Fase 2: modelo de PostgreSQL y migraciones
+
+### Objetivo
+
+Diseñar la persistencia antes de implementar la carga de archivos.
+
+### Entidades mínimas
+
+#### Dataset
+
+Representa una importación concreta:
+
+```text
+id
+tipo_encuesta
+nombre_archivo
+hash_archivo
+periodo
+fecha_importacion
+filas_leidas
+filas_validas
+filas_rechazadas
+advertencias
+estado
+```
+
+#### Respuestas
+
+Las respuestas de titulados y empleadores pueden tener tablas separadas porque sus campos no son iguales. Ambas deben relacionarse con `dataset`.
+
+#### Preguntas y competencias
+
+Las preguntas y competencias deben tener identificadores estables. Las valoraciones de competencias deben relacionar:
+
+```text
+respuesta
+competencia
+valor_numérico
+no_observado
+```
+
+#### Problemas de calidad
+
+Registrar fila, columna, valor original, tipo de problema, mensaje, severidad y dataset.
+
+### Reglas
+
+- Una importación anterior no debe sobrescribirse automáticamente.
+- El mismo archivo puede detectarse por un hash.
+- Una importación debe confirmarse dentro de una transacción.
+- Los datos personales deben separarse o limitarse cuando no sean necesarios para el análisis.
+- Las migraciones de base de datos deben estar versionadas.
+
+### Actividades
+
+1. Revisar si ya existe una estrategia de migraciones.
+2. Elegir Flyway o Liquibase si todavía no existe una.
+3. Crear el esquema mínimo.
+4. Crear entidades JPA, repositorios y migraciones.
+5. Crear datos de prueba pequeños y anónimos.
+6. Probar inserción y consulta de un dataset.
+
+### Puerta de aceptación
+
+Se puede guardar y consultar un dataset de prueba sin depender todavía del frontend.
+
+## 8. Fase 3: importación, validación y normalización
+
+### Objetivo
+
+Convertir un CSV original en un dataset válido y persistible.
+
+### Validación del archivo
+
+Validar:
+
+- extensión y tipo de archivo;
+- codificación y BOM;
+- separador;
+- comillas y saltos de línea internos;
+- encabezados duplicados;
+- columnas mínimas;
+- filas incompletas;
+- tipo de encuesta;
+- valores permitidos.
+
+### Normalización
+
+Contemplar:
+
+- espacios iniciales y finales;
+- `SI`, `Sí` y `si`;
+- escalas como `4 - Suficiente`;
+- celdas vacías;
+- respuestas múltiples;
+- fechas;
+- departamentos;
+- categorías de organización;
+- correos inválidos;
+- campos no observados.
+
+Conservar el valor original cuando una transformación sea importante para auditoría.
+
+### Estados
+
+```text
+CARGADO
+VALIDANDO
+CON_ADVERTENCIAS
+LISTO
+CON_ERRORES
+```
+
+### API inicial
+
+```text
+POST /api/datasets/validate
+POST /api/datasets/import
+GET  /api/datasets
+GET  /api/datasets/{id}
+GET  /api/datasets/{id}/quality
+```
+
+### Entregables
+
+- servicio de lectura de CSV;
+- validador;
+- normalizador;
+- reporte de calidad;
+- persistencia transaccional;
+- pruebas con un CSV de titulados y uno de empleadores.
+
+### Puerta de aceptación
+
+La importación informa cuántas filas son válidas, qué advertencias existen y qué errores impiden continuar. Los datos válidos quedan guardados en PostgreSQL.
+
+## 9. Fase 4: reglas estadísticas y API analítica
+
+Esta fase debe preceder a las pantallas analíticas.
+
+### Objetivo
+
+Definir y probar los cálculos que utilizarán las vistas React.
+
+### Reglas que deben especificarse
+
+Para cada indicador documentar:
+
+- fórmula;
+- campos utilizados;
+- filtros;
+- tratamiento de valores vacíos;
+- tratamiento de `No observado`;
+- tamaño mínimo de muestra;
+- redondeo;
+- periodo;
+- interpretación.
+
+### Indicadores iniciales
+
+- total de respuestas;
+- distribución laboral;
+- sectores de inserción;
+- formación complementaria;
+- interés en posgrado;
+- valoración de empleadores;
+- promedio de competencias;
+- brecha entre valoración y expectativa;
+- cantidad de respuestas válidas;
+- distribución por categorías.
+
+### API analítica sugerida
+
+```text
+GET /api/analytics/titulados/summary
+GET /api/analytics/titulados/employment
+GET /api/analytics/titulados/education
+GET /api/analytics/employers/summary
+GET /api/analytics/competencies/gaps
+GET /api/analytics/crosses
+```
+
+Cada endpoint debe documentar parámetros como `datasetId`, `periodo`, filtros y formato de respuesta.
+
+### Puerta de aceptación
+
+Los resultados de los cálculos pueden probarse con datos pequeños donde el resultado esperado se conozca manualmente.
+
+## 10. Fase 5: base técnica del frontend
+
+Esta es la primera fase frontend, pero todavía no migra todas las pantallas.
+
+### Objetivo
+
+Preparar una SPA capaz de navegar y alojar las vistas futuras.
+
+### Actividades
+
+- incorporar un router;
+- crear `AppLayout`;
+- crear `AppSidebar`;
+- crear `AppHeader`;
+- definir la configuración única de navegación;
+- definir rutas protegidas o abiertas según corresponda;
+- configurar estados de página no implementada;
+- verificar acceso directo a rutas con `SpaForwardController`.
+
+### Rutas objetivo
+
+```text
+/cargar-datos
+/titulados/resumen
+/titulados/perfil-empleabilidad
+/titulados/formacion-continua
+/titulados/financiamiento
+/titulados/brechas-competencias
+/titulados/cruces-exportacion
+/titulados/simulacion-escenarios
+/empleadores/resumen-contratacion
+/empleadores/valoracion-carrera
+/empleadores/brechas-competencias
+/empleadores/cruces-exportacion
+```
 
 ### Resultado esperado
 
-La aplicación puede desplazarse entre todas las secciones mediante rutas React, aunque algunas vistas todavía muestren contenido provisional.
+El usuario puede recorrer todas las rutas aunque algunas todavía muestren una página provisional.
 
-## Fase 3: Layout compartido
+## 11. Fase 6: sistema visual y componentes compartidos
 
-### Componentes sugeridos
+### Actividades
+
+- trasladar colores del prototipo a variables CSS/Tailwind;
+- mantener separados los colores de titulados y empleadores;
+- usar `lucide-react` en lugar de Material Symbols;
+- adaptar `Button`, `Card`, `Badge`, `Table`, `Select`, `Dialog` y `Chart`;
+- crear componentes para KPI, estado de datos, filtros y exportación;
+- evitar colores arbitrarios repetidos en JSX.
+
+### Estructura sugerida
 
 ```text
 frontend/src/
@@ -209,567 +599,291 @@ frontend/src/
 │   └── AppLayout.tsx
 ├── components/
 │   ├── layout/
-│   │   ├── AppSidebar.tsx
-│   │   ├── AppHeader.tsx
-│   │   └── PageContainer.tsx
-│   └── navigation/
-│       ├── navigation-config.ts
-│       └── NavigationSection.tsx
-```
-
-### Menú lateral
-
-El menú debe construirse desde una configuración tipada, por ejemplo:
-
-```ts
-type NavigationItem = {
-  label: string
-  path: string
-  group: 'titulados' | 'empleadores' | 'general'
-}
-```
-
-La configuración debe contener:
-
-- nombre visible;
-- ruta;
-- grupo al que pertenece;
-- icono opcional;
-- indicador de datos, como `N=14` o `N=8`;
-- estado activo calculado por la ruta actual.
-
-### Encabezado
-
-El encabezado debe recibir mediante props o contexto:
-
-- periodo seleccionado;
-- cantidad de titulados;
-- cantidad de empleadores;
-- título o subtítulo de la vista;
-- acciones disponibles.
-
-### Resultado esperado
-
-Todas las pantallas comparten el mismo lateral y encabezado. Una modificación visual se realiza una sola vez.
-
-## Fase 4: Sistema visual
-
-### Actividades
-
-- Trasladar los colores principales del prototipo a variables CSS o tokens de Tailwind.
-- Comparar los tokens actuales de shadcn con la paleta del prototipo.
-- Definir tokens para:
-  - azul principal;
-  - azul de titulados;
-  - turquesa de empleadores;
-  - superficies;
-  - bordes;
-  - estados de éxito, advertencia y error;
-  - colores de gráficos.
-- Mantener la tipografía consistente en todo el frontend.
-- Sustituir Material Symbols por iconos equivalentes de `lucide-react`.
-- Crear variantes de botones, badges y tarjetas cuando el estilo se repita.
-
-### Componentes que probablemente conviene ampliar
-
-- `Badge` para etiquetas de grupo y estados.
-- `Button` para acciones primarias y secundarias.
-- `Card` para bloques de indicadores y secciones.
-- `Table` para datos tabulares.
-- `Chart` para gráficos estadísticos.
-- `Select` para el periodo y filtros.
-- `Dialog` o `Sheet` para definiciones y explicaciones.
-
-### Resultado esperado
-
-El diseño visual se expresa mediante tokens y componentes React, sin depender de estilos embebidos repetidos.
-
-## Fase 5: Migración de una pantalla piloto
-
-Se recomienda comenzar por `resumen-titulados.html`, porque representa la estructura general del analizador y permite validar el layout completo.
-
-### Orden de implementación
-
-1. Crear la ruta `/titulados/resumen`.
-2. Montar `AppLayout`.
-3. Implementar el encabezado y el lateral.
-4. Crear los indicadores principales.
-5. Migrar las tarjetas y tablas de resumen.
-6. Migrar los gráficos con `recharts`.
-7. Sustituir los datos escritos en el HTML por datos tipados de ejemplo.
-8. Comparar visualmente con el HTML original.
-9. Verificar el comportamiento en escritorio y resoluciones menores.
-
-### Resultado esperado
-
-Una primera pantalla React completa que sirva como patrón para las demás.
-
-## Fase 6: Importación y calidad de datos
-
-Esta fase debe completarse antes de conectar las vistas analíticas con datos reales.
-
-### Organización de los archivos
-
-Conservar los CSV originales sin modificarlos y separar los resultados procesados:
-
-```text
-data/
-├── raw/
-│   ├── titulados.csv
-│   └── empleadores.csv
-├── processed/
-└── README.md
-```
-
-### Validación del archivo
-
-El backend debe validar:
-
-- que el archivo sea CSV y no esté vacío;
-- que corresponda a titulados o empleadores;
-- que las columnas mínimas existan;
-- que no haya encabezados ambiguos;
-- que las filas tengan una estructura válida;
-- que las respuestas respeten los tipos definidos en `form/`.
-
-### Mapeo y normalización
-
-No se deben utilizar directamente los textos completos de las preguntas como nombres internos. Cada columna debe mapearse a un identificador estable relacionado con la pregunta del formulario.
-
-La normalización debe contemplar:
-
-- espacios innecesarios;
-- valores equivalentes como `SI`, `Sí` y `si`;
-- escalas como `4 - Suficiente` convertidas a valores numéricos;
-- celdas vacías convertidas a `null`;
-- respuestas múltiples;
-- fechas;
-- departamentos y categorías;
-- correos inválidos y advertencias de calidad.
-
-El sistema debe conservar el valor original cuando aplique y registrar advertencias sin alterar silenciosamente la fuente.
-
-### Resultado de la importación
-
-Cada importación debe registrar:
-
-- nombre del archivo;
-- tipo de encuesta;
-- periodo;
-- fecha de importación;
-- filas leídas, válidas y rechazadas;
-- cantidad de advertencias y errores;
-- estado del conjunto de datos.
-
-Estados sugeridos: `CARGADO`, `VALIDANDO`, `CON_ADVERTENCIAS`, `LISTO` y `CON_ERRORES`.
-
-### API inicial sugerida
-
-```text
-POST /api/datasets/validate
-POST /api/datasets/import
-GET  /api/datasets
-GET  /api/datasets/{id}
-GET  /api/datasets/{id}/quality
-```
-
-La carga y transformación deben ejecutarse en Spring Boot. React debe encargarse de seleccionar el archivo, mostrar el resultado y confirmar la importación.
-
-## Fase 7: Persistencia en PostgreSQL
-
-Esta fase convierte una importación validada en un conjunto de datos persistente y reutilizable por todas las vistas del analizador.
-
-### Tablas o entidades mínimas
-
-#### Dataset importado
-
-Debe registrar:
-
-- identificador;
-- tipo de encuesta: `TITULADOS` o `EMPLEADORES`;
-- nombre del archivo original;
-- periodo;
-- fecha de importación;
-- cantidad de filas leídas;
-- cantidad de filas válidas;
-- cantidad de filas rechazadas;
-- cantidad de advertencias;
-- estado de la importación.
-
-#### Respuestas normalizadas
-
-Las respuestas de titulados y empleadores pueden tener entidades separadas cuando sus campos sean diferentes. Ambas deben relacionarse con el dataset que las originó.
-
-#### Competencias
-
-Las competencias deben almacenarse con un identificador estable, grupo y orden. Las valoraciones deben relacionar la respuesta, la competencia, el valor numérico y si fue marcada como `No observado`.
-
-#### Errores de importación
-
-Cada advertencia o error debe conservar:
-
-- fila;
-- columna;
-- valor original;
-- tipo de problema;
-- mensaje;
-- severidad;
-- dataset relacionado.
-
-### Reglas de persistencia
-
-- No sobrescribir automáticamente una importación anterior.
-- No eliminar el CSV original cuando se procese correctamente.
-- No guardar encabezados completos de preguntas como nombres de columnas internas.
-- Mantener una relación clara entre preguntas de `form/` y campos persistidos.
-- Usar transacciones para evitar datasets parcialmente importados.
-- Permitir consultar el dataset activo por tipo y periodo.
-
-### Actividades
-
-1. Revisar las entidades, repositorios y migraciones existentes del backend.
-2. Definir el modelo relacional mínimo.
-3. Crear las entidades JPA y sus migraciones.
-4. Implementar el caso de uso de importación.
-5. Guardar respuestas normalizadas y errores.
-6. Crear consultas de conteo y resumen.
-7. Probar una importación pequeña de titulados y otra de empleadores.
-
-### API mínima
-
-```text
-POST /api/datasets/validate
-POST /api/datasets/import
-GET  /api/datasets
-GET  /api/datasets/{id}
-GET  /api/datasets/{id}/quality
-```
-
-### Resultado esperado
-
-Una importación confirmada queda almacenada en PostgreSQL y puede ser consultada mediante su `datasetId`, sin volver a leer el CSV desde las vistas React.
-
-## Fase 8: Modelo de datos de presentación
-
-Antes de conectar la API completa, se deben definir tipos para los datos que consumen las vistas.
-
-### Ejemplos de tipos
-
-```ts
-type Periodo = {
-  id: string
-  label: string
-}
-
-type ResumenTitulados = {
-  total: number
-  empleados: number
-  desempleados: number
-  promedioInsercion: number
-}
-
-type Competencia = {
-  nombre: string
-  valorActual: number
-  valorEsperado: number
-  brecha: number
-}
-```
-
-### Organización sugerida
-
-```text
-frontend/src/
+│   ├── navigation/
+│   └── analytics/
 ├── features/
 │   ├── titulados/
-│   │   ├── types.ts
-│   │   ├── api.ts
-│   │   └── pages/
 │   └── empleadores/
-│       ├── types.ts
-│       ├── api.ts
-│       └── pages/
 └── shared/
     ├── types/
     └── mock-data/
 ```
 
-Los datos ficticios deben permanecer separados de los componentes para poder reemplazarlos posteriormente por llamadas HTTP sin rehacer la interfaz.
+### Puerta de aceptación
 
-## Fase 9: Modelado de formularios dinámicos
+El layout, el menú y los componentes visuales pueden utilizarse desde más de una pantalla sin duplicar código.
 
-La información existente en `form/` requiere una fase propia antes de implementar las pantallas reales de captura.
+### Verificación contra el sistema de diseño
 
-### Modelo recomendado
+Antes de migrar una pantalla, comprobar que utiliza:
 
-Definir tipos para representar los JSON de titulados y empleadores:
+- los tokens de color definidos en `UI/sistema-de-diseno.md`;
+- la escala tipográfica Inter de 28/18/14/12 px;
+- el espaciado modular de 8 px;
+- tarjetas con borde, radio y sombra definidos;
+- controles con estados normal, hover, foco y deshabilitado;
+- cifras con numerales tabulares;
+- colores semánticos consistentes: azul para titulados, verde azulado para empleadores, ámbar para alertas y gris para valores no disponibles.
 
-```ts
-type FormDefinition = {
-  titulo: string
-  descripcion?: string
-  secciones: FormSection[]
-  preguntas: FormQuestion[]
-}
+No se deben agregar colores, tamaños, radios o variantes arbitrarias sin actualizar primero el sistema de diseño.
 
-type FormQuestion = {
-  orden: number
-  seccion: number
-  tipo: QuestionType
-  titulo: string
-  ayuda?: string
-  requerida?: boolean
-  opciones?: FormOption[] | string[]
-  ramifica?: boolean
-}
-```
+## 12. Fase 7: pantalla de carga de datos
 
-### Componentes de captura
+### Objetivo
 
-Crear un renderer que seleccione el componente según el campo `tipo`:
+Crear la primera pantalla funcional conectada con el proceso de importación.
 
-- `TEXT`: input de texto;
-- `PARAGRAPH_TEXT`: textarea;
-- `MULTIPLE_CHOICE`: radio group;
-- `CHECKBOX`: selección múltiple;
-- `LIST`: select;
-- `GRID`: matriz de opciones;
-- `SECTION_HEADER`: encabezado de sección;
-- `IMAGE`: contenido visual informativo.
+### Flujo de usuario
 
-Estos componentes deben reutilizar shadcn y `react-hook-form`, que ya están incluidos en el frontend.
+1. Seleccionar un CSV.
+2. Elegir o detectar el tipo de encuesta.
+3. Enviar el archivo a validación.
+4. Mostrar filas, columnas, advertencias y errores.
+5. Permitir confirmar solo si las condiciones mínimas se cumplen.
+6. Importar y mostrar el `datasetId`.
+7. Permitir seleccionar el dataset activo.
 
-### Ramificaciones y validaciones
+### Reglas
 
-- Interpretar `SIGUE_A_LA_SIGUIENTE_SECCION`.
-- Interpretar `IR_A_SECCION`.
-- Interpretar `ENVIAR_FORMULARIO`.
-- Mostrar u ocultar secciones según las respuestas.
-- Conservar las respuestas al avanzar y retroceder.
-- Validar preguntas obligatorias antes de avanzar.
-- Mostrar el progreso de la encuesta.
-- Verificar que el flujo coincida con los diagramas Mermaid.
+- No enviar datos directamente a las vistas analíticas.
+- No ocultar errores de calidad.
+- No sobrescribir otro dataset.
+- Mostrar claramente si existen datos personales en el archivo.
 
-### Orden de implementación
+### Puerta de aceptación
 
-1. Cargar y validar un JSON.
-2. Mostrar secciones lineales.
-3. Implementar preguntas simples.
-4. Implementar matrices `GRID`.
-5. Implementar validaciones.
-6. Implementar ramificaciones.
-7. Implementar revisión y envío.
+Una persona puede importar un CSV de prueba, revisar su calidad y dejarlo disponible para las consultas analíticas.
 
-El resultado debe ser una pantalla de encuesta reutilizable que reciba la definición de titulados o empleadores sin duplicar todo el formulario.
+La pantalla debe respetar la especificación de carga de datos: tarjetas separadas para titulados y empleadores, carga de estructura JSON y respuestas CSV/XLSX, resumen de filas leídas, preguntas detectadas, completitud, avisos de valores inválidos y botón `Procesar`.
 
-## Fase 10: Migración de las pantallas restantes
+## 13. Fase 8: pantalla analítica piloto
 
-Después de validar la pantalla piloto, migrar en este orden:
+Migrar primero `UI/resumen-titulados.html`.
 
-1. `cargar-datos.html`.
-2. Resto de pantallas de resumen.
-3. Perfil y empleabilidad.
-4. Formación continua y financiamiento.
-5. Valoración de la carrera.
-6. Brechas de competencias.
-7. Cruces y exportación.
-8. Simulación de escenarios.
+### Orden
+
+1. Crear la ruta React.
+2. Consumir el endpoint de resumen.
+3. Mostrar estado de carga.
+4. Mostrar estado vacío.
+5. Mostrar estado de error.
+6. Migrar KPI, tablas y gráficos.
+7. Agregar filtros de periodo y dataset.
+8. Comparar visualmente con el HTML original.
+
+### Puerta de aceptación
+
+La pantalla muestra información real del dataset importado y sus resultados coinciden con cálculos de prueba conocidos.
+
+La pantalla piloto debe respetar la especificación de resumen: cuatro KPI, estado laboral y áreas de posgrado, conteos visibles y títulos descriptivos sin conclusiones.
+
+## 14. Fase 9: migración del resto del analizador
+
+Migrar en el siguiente orden:
+
+1. perfil y empleabilidad;
+2. formación continua;
+3. financiamiento;
+4. resumen de empleadores;
+5. valoración de la carrera;
+6. brechas de competencias;
+7. cruces y exportación;
+8. simulación de escenarios.
 
 Para cada pantalla:
 
-- crear su ruta;
-- crear una página dentro de su feature;
-- reutilizar el layout existente;
-- identificar tarjetas, tablas, filtros y gráficos;
-- extraer componentes específicos solo cuando se repitan;
-- definir los tipos de datos necesarios;
-- incluir estados de carga, vacío y error;
-- comparar con el HTML original antes de marcarla como terminada.
+- identificar el endpoint necesario;
+- definir el tipo de respuesta;
+- implementar primero datos mock compatibles;
+- implementar estados de carga, vacío y error;
+- reutilizar el layout;
+- comparar con el HTML de referencia;
+- probar con más de un dataset o filtro.
 
-## Fase 11: Integración con el backend
+No se debe marcar una pantalla como terminada si solo reproduce el diseño con valores escritos manualmente.
 
-La integración con la API debe hacerse después de estabilizar cada vista con datos de ejemplo.
+### Requisitos visuales y funcionales por pantalla
+
+Al migrar cada pantalla, revisar la sección equivalente de `UI/especificacion-ui.md`:
+
+- perfil y empleabilidad: pestañas Perfil, Trabajo actual, Sin empleo, Primer empleo y Emprendimiento;
+- formación continua: separar posgrado cursado, interés en posgrado y opinión sobre posgrado;
+- financiamiento: selectores de filas/columnas, tabla de contingencia, mapa de calor y aviso de Chi-cuadrada;
+- brechas: heatmap, tabla, radar y exclusión de `No observado` en los promedios;
+- cruces: configuración, vista previa y exportaciones CSV, Excel y PNG;
+- empleadores: resumen, contratación, valoración y brechas con la paleta correspondiente;
+- simulación: variable, N, repeticiones, semilla, probabilidades ajustables, promedio simulado y rango del 95 %.
+
+La pantalla solo se considera completa cuando estos elementos están conectados a datos o tienen un estado explícito de “no disponible”.
+
+## 15. Fase 10: formularios dinámicos
+
+Esta fase corresponde a las pantallas de captura basadas en `form/`. Es distinta de la importación de CSV del analizador.
+
+### Tipos a soportar
+
+- `TEXT`;
+- `PARAGRAPH_TEXT`;
+- `MULTIPLE_CHOICE`;
+- `CHECKBOX`;
+- `LIST`;
+- `GRID`;
+- `SECTION_HEADER`;
+- `IMAGE`.
 
 ### Actividades
 
-- Revisar los endpoints existentes en `src/main/java`.
-- Definir DTOs de respuesta compatibles con el frontend.
-- Crear funciones `api.ts` por feature.
-- Reutilizar `apiRequest` para las llamadas HTTP.
-- Manejar estados de carga, error y ausencia de datos.
-- Evitar llamadas directas a `fetch` dentro de componentes visuales.
-- Confirmar el comportamiento del proxy `/api` en Vite.
-- Añadir endpoints nuevos solo cuando una pantalla realmente los necesite.
+- definir tipos TypeScript para los JSON;
+- crear un renderer por tipo de pregunta;
+- reutilizar `react-hook-form` y shadcn;
+- validar preguntas obligatorias;
+- conservar respuestas al avanzar y retroceder;
+- interpretar `SIGUE_A_LA_SIGUIENTE_SECCION`;
+- interpretar `IR_A_SECCION`;
+- interpretar `ENVIAR_FORMULARIO`;
+- comparar el flujo con los diagramas Mermaid.
 
-### Resultado esperado
+Esta fase puede desarrollarse en paralelo después de estabilizar el modelo de formularios, pero no debe bloquear la primera versión del analizador basado en CSV si la captura no forma parte del primer entregable.
 
-Cada pantalla consume datos desde una capa de API definida, sin mezclar transporte HTTP con presentación visual.
+## 16. Fase 11: exportación y simulación
 
-## Fase 12: Exportación, filtros y acciones
+### Exportación
 
-Las acciones del prototipo deben migrarse gradualmente:
+Definir primero si se exportan:
 
-- filtros por periodo;
-- selección de variables;
-- cambio entre cantidades y porcentajes;
-- exportación de tablas o vistas;
-- modales de definiciones;
-- simulación de escenarios.
+- datos originales;
+- datos normalizados;
+- tablas agregadas;
+- gráficos;
+- resultados filtrados.
 
-Cada acción debe tener un estado explícito y una respuesta visual clara. Las acciones que todavía no tengan backend pueden comenzar con datos locales, pero deben quedar identificadas como provisionales.
+La exportación debe respetar permisos y no exponer datos personales innecesarios.
 
-## Fase 13: Validación visual y funcional
+### Simulación
 
-### Validación por pantalla
+Antes de implementarla, documentar:
 
-- La ruta abre directamente sin errores.
-- El menú lateral muestra la sección activa correcta.
-- Todos los enlaces navegan a una ruta válida.
-- El encabezado mantiene el mismo comportamiento.
-- Los datos se muestran correctamente.
-- Las tablas no desbordan el contenido.
-- Los gráficos se adaptan al contenedor.
-- Los estados de carga, vacío y error son comprensibles.
-- La vista funciona en diferentes anchos de ventana.
+- variables modificables;
+- escenario base;
+- fórmula o modelo;
+- fuentes de datos;
+- límites de interpretación;
+- diferencia entre simulación descriptiva y predicción.
+
+No implementar una simulación que solo cambie valores visualmente sin una regla matemática documentada.
+
+## 17. Fase 12: seguridad, privacidad y operación
+
+### Actividades
+
+- decidir qué datos personales se almacenan;
+- excluirlos de respuestas analíticas cuando no sean necesarios;
+- proteger carga y descarga de archivos;
+- registrar quién importó cada dataset;
+- evitar incluir CSV reales sensibles en el repositorio;
+- revisar `.gitignore`;
+- definir retención y eliminación;
+- verificar configuración de PostgreSQL fuera de desarrollo;
+- manejar errores sin exponer información interna.
+
+## 18. Fase 13: pruebas y cierre
+
+### Pruebas de backend
+
+- parser CSV;
+- mapeo de columnas;
+- normalización;
+- validación;
+- persistencia;
+- cálculos estadísticos;
+- endpoints;
+- importaciones de titulados y empleadores.
+
+### Pruebas de frontend
+
+- rutas;
+- navegación lateral;
+- carga de CSV;
+- estados de carga, vacío y error;
+- filtros;
+- tablas y gráficos;
+- exportación;
+- formularios y ramificaciones.
 
 ### Validación técnica
 
-Ejecutar desde `frontend/`:
+Desde `frontend/`:
 
 ```powershell
 npm run lint
 npm run build
 ```
 
-Además, comprobar:
+Además:
 
-- ausencia de errores en la consola del navegador;
-- ausencia de rutas rotas;
-- ausencia de imports innecesarios;
-- tipos TypeScript sin errores;
-- componentes sin duplicación injustificada.
+- ejecutar pruebas del backend;
+- probar acceso directo a rutas;
+- revisar errores de consola;
+- revisar el diff;
+- confirmar que no haya dependencias de HTML original en producción.
 
-## Criterio para considerar una pantalla migrada
+## 19. Criterios para considerar el analizador terminado
 
-Una pantalla se considera migrada cuando:
+- Los CSV se pueden validar e importar.
+- Las importaciones tienen un identificador y estado.
+- Los datos procesados se guardan en PostgreSQL.
+- Los errores de calidad son visibles.
+- Las reglas de indicadores están documentadas y probadas.
+- La API entrega datos agregados al frontend.
+- El frontend tiene rutas React y layout compartido.
+- Todas las pantallas principales consumen datos reales o estados explícitos de no disponibilidad.
+- Los filtros utilizan un dataset y periodo definidos.
+- Las exportaciones respetan los filtros y permisos.
+- La simulación tiene un modelo documentado o permanece marcada como pendiente.
+- `lint`, `build` y las pruebas backend pasan.
 
-- existe como ruta React;
-- utiliza el layout compartido;
-- no depende del HTML original;
-- usa componentes shadcn o componentes propios reutilizables;
-- tiene datos tipados, aunque inicialmente sean datos de ejemplo;
-- conserva la intención visual del prototipo;
-- tiene estados básicos de carga, vacío y error;
-- pasa `lint` y `build`;
-- fue revisada visualmente frente al prototipo.
+Además, la revisión visual final debe confirmar:
 
-En las pantallas de captura también debe verificarse que:
+- que no hay texto narrativo de informe en la interfaz;
+- que cada visualización muestra título descriptivo, `n` y ayuda `¿Cómo leer esto?` cuando corresponda;
+- que los porcentajes no aparecen sin sus conteos en muestras pequeñas;
+- que los datos personales no aparecen en la interfaz ni en exportaciones analíticas;
+- que se respetan los órdenes naturales de las escalas;
+- que `No sabe`, `No observado` y `Sin respuesta` permanecen separados;
+- que el color de la sección es consistente en el menú, títulos, botones y gráficos;
+- que todas las pantallas mantienen la cuadrícula, márgenes y espaciado definidos.
 
-- la definición JSON se cargue sin errores;
-- las preguntas obligatorias se validen;
-- las ramificaciones coincidan con los diagramas Mermaid;
-- las respuestas no se pierdan al cambiar de sección;
-- el envío produzca una estructura compatible con la API.
+## 20. Secuencia resumida de entregas
 
-## Riesgos y decisiones pendientes
-
-### Router
-
-Actualmente no se observó un router instalado. Se debe decidir si se incorpora React Router o si se implementa una solución mínima basada en el historial del navegador. Para este número de pantallas, un router dedicado resulta más mantenible.
-
-### Estado global
-
-El periodo seleccionado, los conteos de datos y los filtros podrían compartirse entre varias pantallas. Primero conviene mantenerlos en el layout o en hooks locales; incorporar un estado global solo cuando exista una necesidad real.
-
-### Datos del prototipo
-
-Los valores ficticios deben tratarse como datos de muestra y no como lógica definitiva. Conviene centralizarlos para facilitar su reemplazo por la API.
-
-### Diferencias visuales
-
-El prototipo usa una paleta y dimensiones propias, mientras que shadcn trae tokens genéricos. La adaptación debe hacerse sobre los tokens del sistema, evitando llenar los componentes con colores arbitrarios en línea.
-
-## Secuencia recomendada de entregas
-
-1. Rutas y layout compartido.
-2. Menú lateral funcional.
-3. Pantalla piloto de resumen de titulados.
-4. Tokens visuales y componentes compartidos.
-5. Flujo de importación, validación y calidad de datos.
-6. Mapeo y normalización de los CSV.
-7. Persistencia de datasets, respuestas y errores en PostgreSQL.
-8. Modelo común de formularios basado en `form/`.
-9. Renderer de preguntas y validaciones básicas.
-10. Ramificaciones de titulados y empleadores.
-11. Pantallas restantes con datos de ejemplo.
-12. Integración progresiva con la API.
-13. Filtros, exportación y simulación.
-14. Validación final y limpieza del prototipo HTML.
+1. Línea base del repositorio.
+2. Diccionario y contrato de datos.
+3. Modelo PostgreSQL y migraciones.
+4. Importador, validador y normalizador.
+5. Reglas estadísticas y API analítica.
+6. Router, layout y navegación React.
+7. Sistema visual compartido.
+8. Pantalla de carga de datos.
+9. Resumen de titulados conectado a la API.
+10. Resto de pantallas analíticas.
+11. Formularios dinámicos, si forman parte del alcance.
+12. Exportación y simulación.
+13. Seguridad, pruebas y cierre.
 
 ## Resultado final esperado
 
-El frontend React debe contener una aplicación navegable y mantenible, con una estructura compartida para todas las secciones, componentes shadcn adaptados al diseño del prototipo, datos tipados y una integración progresiva con el backend Spring Boot.
+Una aplicación React mantenible, conectada a Spring Boot y PostgreSQL, que importe CSV reales, informe problemas de calidad, guarde datos normalizados, calcule indicadores reproducibles y muestre las pantallas analíticas mediante un layout compartido.
 
-## Lista de aceptación por fase
+## Bitácora de actualización
 
-### Fases 1 a 4: base técnica y visual
+### Estado inicial del plan reorganizado
 
-- [ ] El frontend actual compila antes de iniciar la migración.
-- [ ] Las rutas no dependen de archivos HTML.
-- [ ] El layout se renderiza una sola vez.
-- [ ] El elemento activo del menú cambia según la ruta.
-- [ ] Los tokens visuales están definidos en CSS/Tailwind.
-- [ ] Los iconos migrados utilizan `lucide-react`.
-
-### Fase 5: pantalla piloto
-
-- [ ] `/titulados/resumen` abre directamente.
-- [ ] La pantalla usa el layout compartido.
-- [ ] Sus datos están tipados.
-- [ ] Sus tablas y gráficos no dependen de datos escritos dentro del JSX.
-- [ ] La comparación con `UI/resumen-titulados.html` fue realizada.
-
-### Fase 6: importación de datos
-
-- [ ] El CSV original se conserva sin cambios.
-- [ ] El backend identifica el tipo de encuesta.
-- [ ] Las columnas se mapean a nombres internos estables.
-- [ ] Se separan errores de advertencias.
-- [ ] Se informa cuántas filas fueron aceptadas y rechazadas.
-- [ ] Una importación validada puede identificarse por un `datasetId`.
-
-### Fase 7: persistencia en PostgreSQL
-
-- [ ] Existe una entidad o tabla para cada importación.
-- [ ] Las respuestas normalizadas se relacionan con su dataset.
-- [ ] Las competencias tienen identificadores estables.
-- [ ] Los errores y advertencias se conservan por fila y columna.
-- [ ] Una importación no sobrescribe otra automáticamente.
-- [ ] La importación se confirma dentro de una transacción.
-- [ ] El dataset puede consultarse mediante la API.
-
-### Fase 8: datos de presentación
-
-- [ ] Cada vista tiene tipos de respuesta definidos.
-- [ ] Los datos mock pueden reemplazarse por datos de API sin cambiar la vista.
-- [ ] Los cálculos de indicadores no están duplicados en varios componentes.
-
-### Fase 9: formularios dinámicos
-
-- [ ] Los dos JSON pueden cargarse con el mismo renderer.
-- [ ] Cada tipo de pregunta tiene una representación visual.
-- [ ] Las preguntas obligatorias se validan.
-- [ ] Las ramas de titulados funcionan según el Mermaid.
-- [ ] El flujo de empleadores funciona de forma lineal.
-- [ ] El envío produce una estructura verificable.
-
-### Fases 10 a 13: vistas, API y cierre
-
-- [ ] Cada pantalla tiene una ruta propia.
-- [ ] Cada pantalla tiene estados de carga, vacío y error.
-- [ ] Las respuestas de API tienen DTOs o tipos equivalentes.
-- [ ] Los filtros afectan los indicadores correspondientes.
-- [ ] Las exportaciones muestran los datos del conjunto seleccionado.
-- [ ] `npm run lint` termina correctamente.
-- [ ] `npm run build` termina correctamente.
-- [ ] No quedan rutas rotas ni imports de la implementación HTML.
+```text
+Fecha: 2026-10-07
+Fase: planificación
+Completado: revisión del prototipo, repositorio, formularios y CSV; reorganización del orden de trabajo
+Archivos afectados: UI/plan-migracion-prototipo.md
+Validaciones: revisión estructural del frontend, backend, form/ y data/
+Bloqueos: falta definir el diccionario de datos y el modelo relacional definitivo
+Decisiones: el backend y los datos preceden a las pantallas analíticas completas; el frontend base comienza antes para preparar rutas y layout
+Siguiente paso: ejecutar la Fase 0 y registrar la línea base técnica
+```
