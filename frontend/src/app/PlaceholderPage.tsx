@@ -7,7 +7,7 @@ import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { CargarDatosPage } from '@/features/encuesta/CargarDatosPage'
 import { TituladosSummaryPage } from '@/features/analitica/TituladosSummaryPage'
-import { CompetencePage, CrossExportPage, DatasetAnalyticsPage, EmploymentProfilePage, SimulationPage, UnavailableAnalyticPage } from '@/features/analitica/RestAnalyticPages'
+import { CompetencePage, CrossExportPage, DatasetAnalyticsPage, EducationProfilePage, EmploymentProfilePage, SimulationPage, UnavailableAnalyticPage } from '@/features/analitica/RestAnalyticPages'
 import type { NavigationItem } from './navigation'
 
 export function PlaceholderPage({ route }: { route: NavigationItem }) {
@@ -18,7 +18,7 @@ export function PlaceholderPage({ route }: { route: NavigationItem }) {
     return <TituladosSummaryPage />
   }
   if (route.path === '/titulados/perfil-empleabilidad') return <EmploymentProfilePage />
-  if (route.path === '/titulados/formacion-continua') return <DatasetAnalyticsPage title="Formación continua" description="Formación complementaria e interés en posgrado." domain="TITULADOS" endpoint="/analytics/titulados/education" cards={[{ key: 'tiene_formacion_complementaria', label: 'Formación complementaria' }, { key: 'interes_posgrado', label: 'Interés en posgrado' }]} />
+  if (route.path === '/titulados/formacion-continua') return <EducationProfilePage />
   if (route.path === '/titulados/brechas-competencias') return <CompetencePage domain="TITULADOS" />
   if (route.path === '/titulados/cruces-exportacion') return <CrossExportPage domain="TITULADOS" />
   if (route.path === '/titulados/financiamiento') return <UnavailableAnalyticPage title="Financiamiento" description="Cruces entre fuente de financiamiento e interés en posgrado." domain="TITULADOS" items={['Selectores de filas y columnas: no disponible hasta contar con el endpoint de financiamiento.', 'Tabla de contingencia y mapa de calor: pendientes de contrato.', 'Chi-cuadrada y aviso de frecuencias esperadas: pendiente de integración.']} />
