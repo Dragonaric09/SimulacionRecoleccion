@@ -1041,6 +1041,25 @@ Bloqueos: ninguno para iniciar la Fase 6
 Siguiente paso: Fase 6 - sistema visual y componentes compartidos
 ```
 
+### Fase 6: sistema visual y componentes compartidos completada
+
+```text
+Fecha: 2026-10-08
+Fase: 6 - sistema visual y componentes compartidos
+Estado: COMPLETADA CON DEUDA TÉCNICA REGISTRADA
+Completado: tokens visuales del sistema de diseño; tipografía y numerales tabulares; colores separados para titulados y empleadores; superficies, bordes, radios y estados; componentes compartidos Badge, KpiCard, StatusPanel, FilterToolbar y ExportActions; aplicación de la paleta institucional al layout y a las pantallas provisionales
+Archivos afectados: frontend/src/index.css; frontend/src/app/AppLayout.tsx; frontend/src/app/PlaceholderPage.tsx; frontend/src/components/analytics/Badge.tsx; frontend/src/components/analytics/KpiCard.tsx; frontend/src/components/analytics/StatusPanel.tsx; frontend/src/components/analytics/FilterToolbar.tsx; frontend/src/components/analytics/ExportActions.tsx
+Validaciones:
+  - npm run build → TypeScript y Vite completan correctamente
+  - git diff --check → sin errores de whitespace
+  - npm run lint → los componentes nuevos no agregan errores; permanecen únicamente los 2 errores preexistentes de react-refresh/only-export-components en components/ui/button.tsx y components/ui/form.tsx
+  - Los componentes compartidos se utilizan desde más de una pantalla provisional a través de PlaceholderPage
+Decisiones: los colores, tipografías y dimensiones principales se expresan mediante tokens CSS; las pantallas distinguen el dominio de titulados con azul y empleadores con verde azulado; las exportaciones se presentan como controles reutilizables hasta que la Fase 11 implemente sus endpoints
+Pendientes no bloqueantes: revisar los componentes shadcn generados para eliminar la deuda de lint; conectar controles de filtro y exportación con datos reales en las fases analíticas; añadir Dialog y mejoras específicas de Chart cuando se migren las pantallas
+Bloqueos: ninguno para iniciar la Fase 7
+Siguiente paso: Fase 7 - pantalla de carga de datos
+```
+
 ## Resultado final esperado
 
 Una aplicación React mantenible, conectada a Spring Boot y PostgreSQL, que importe CSV reales, informe problemas de calidad, guarde datos normalizados, calcule indicadores reproducibles y muestre las pantallas analíticas mediante un layout compartido.

@@ -11,7 +11,7 @@ export function AppLayout({ route }: Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
+    <div className="min-h-screen bg-background text-ink-900">
       <div className="flex min-h-screen">
         {mobileMenuOpen && (
           <button
@@ -21,7 +21,7 @@ export function AppLayout({ route }: Props) {
           />
         )}
         <aside
-          className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r bg-white transition-transform lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-primary-container bg-primary text-white transition-transform lg:static lg:translate-x-0 ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           } ${sidebarOpen ? '' : 'lg:w-[76px]'}`}
         >
@@ -32,7 +32,7 @@ export function AppLayout({ route }: Props) {
             {sidebarOpen && (
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">SimulacionEM</p>
-                <p className="truncate text-xs text-slate-500">Analizador de encuestas</p>
+                <p className="truncate text-xs text-on-primary-container">Analizador de encuestas</p>
               </div>
             )}
           </div>
@@ -42,7 +42,7 @@ export function AppLayout({ route }: Props) {
               return (
                 <div key={section} className="space-y-1">
                   {sidebarOpen && (
-                    <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-on-primary-container">
                       {sectionLabels[section]}
                     </p>
                   )}
@@ -63,7 +63,7 @@ export function AppLayout({ route }: Props) {
                         className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                           active
                             ? 'bg-slate-900 text-white shadow-sm'
-                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                            : 'text-on-primary-container hover:bg-white/10 hover:text-white'
                         } ${sidebarOpen ? '' : 'justify-center'}`}
                       >
                         <Icon className="size-4 shrink-0" />
@@ -89,7 +89,7 @@ export function AppLayout({ route }: Props) {
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white/95 px-4 backdrop-blur sm:px-6">
+          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border-line bg-white/95 px-4 backdrop-blur sm:px-6">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -101,11 +101,11 @@ export function AppLayout({ route }: Props) {
                 <Menu />
               </Button>
               <div>
-                <p className="text-sm font-medium text-slate-900">{route.label}</p>
-                <p className="hidden text-xs text-slate-500 sm:block">{route.description}</p>
+                <p className="text-sm font-medium text-ink-900">{route.label}</p>
+                <p className="hidden text-xs text-ink-600 sm:block">{route.description}</p>
               </div>
             </div>
-            <span className="rounded-full border bg-slate-50 px-3 py-1 text-xs text-slate-500">Modo analizador</span>
+            <span className="rounded-full border border-border-line bg-slate-50 px-3 py-1 text-xs text-ink-600">Modo analizador</span>
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
             <PlaceholderPage route={route} />
