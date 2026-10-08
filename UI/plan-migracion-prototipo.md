@@ -88,6 +88,12 @@ CSV original → validación → mapeo de columnas → normalización → almace
 
 Los CSV presentan encabezados largos, preguntas con saltos de línea, posibles columnas duplicadas, respuestas vacías y valores escritos de distintas formas. Por eso se necesita una etapa de importación y calidad de datos antes de consumirlos en las pantallas.
 
+### Persistencia
+
+El analizador debe utilizar PostgreSQL para conservar los conjuntos de datos importados, las respuestas normalizadas, los errores de calidad y los metadatos de cada importación. La base de datos PostgreSQL ya forma parte de la infraestructura del repositorio mediante Docker Compose.
+
+El CSV debe ser la fuente de entrada y respaldo original, pero las vistas analíticas no deben leerlo directamente. El flujo debe terminar en datos estructurados consultables mediante la API.
+
 ## Principios de la migración
 
 1. Migrar primero la estructura y la navegación, y después el contenido específico de cada pantalla.
@@ -100,6 +106,7 @@ Los CSV presentan encabezados largos, preguntas con saltos de línea, posibles c
 8. Mantener la lógica de negocio fuera de los componentes puramente visuales.
 9. Tratar los JSON de `form/` como definiciones de formularios y no como datos incrustados directamente en las vistas.
 10. Mantener los CSV originales sin alterarlos y producir los datos normalizados mediante un proceso reproducible.
+11. Guardar en PostgreSQL los datos procesados y sus metadatos antes de construir indicadores dependientes de ellos.
 
 ## Convenciones de trabajo
 
@@ -368,7 +375,81 @@ GET  /api/datasets/{id}/quality
 
 La carga y transformación deben ejecutarse en Spring Boot. React debe encargarse de seleccionar el archivo, mostrar el resultado y confirmar la importación.
 
-## Fase 7: Modelo de datos de presentación
+## Fase 7: Persistencia en PostgreSQL
+
+Esta fase convierte una importación validada en un conjunto de datos persistente y reutilizable por todas las vistas del analizador.
+
+### Tablas o entidades mínimas
+
+#### Dataset importado
+
+Debe registrar:
+
+- identificador;
+- tipo de encuesta: `TITULADOS` o `EMPLEADORES`;
+- nombre del archivo original;
+- periodo;
+- fecha de importación;
+- cantidad de filas leídas;
+- cantidad de filas válidas;
+- cantidad de filas rechazadas;
+- cantidad de advertencias;
+- estado de la importación.
+
+#### Respuestas normalizadas
+
+Las respuestas de titulados y empleadores pueden tener entidades separadas cuando sus campos sean diferentes. Ambas deben relacionarse con el dataset que las originó.
+
+#### Competencias
+
+Las competencias deben almacenarse con un identificador estable, grupo y orden. Las valoraciones deben relacionar la respuesta, la competencia, el valor numérico y si fue marcada como `No observado`.
+
+#### Errores de importación
+
+Cada advertencia o error debe conservar:
+
+- fila;
+- columna;
+- valor original;
+- tipo de problema;
+- mensaje;
+- severidad;
+- dataset relacionado.
+
+### Reglas de persistencia
+
+- No sobrescribir automáticamente una importación anterior.
+- No eliminar el CSV original cuando se procese correctamente.
+- No guardar encabezados completos de preguntas como nombres de columnas internas.
+- Mantener una relación clara entre preguntas de `form/` y campos persistidos.
+- Usar transacciones para evitar datasets parcialmente importados.
+- Permitir consultar el dataset activo por tipo y periodo.
+
+### Actividades
+
+1. Revisar las entidades, repositorios y migraciones existentes del backend.
+2. Definir el modelo relacional mínimo.
+3. Crear las entidades JPA y sus migraciones.
+4. Implementar el caso de uso de importación.
+5. Guardar respuestas normalizadas y errores.
+6. Crear consultas de conteo y resumen.
+7. Probar una importación pequeña de titulados y otra de empleadores.
+
+### API mínima
+
+```text
+POST /api/datasets/validate
+POST /api/datasets/import
+GET  /api/datasets
+GET  /api/datasets/{id}
+GET  /api/datasets/{id}/quality
+```
+
+### Resultado esperado
+
+Una importación confirmada queda almacenada en PostgreSQL y puede ser consultada mediante su `datasetId`, sin volver a leer el CSV desde las vistas React.
+
+## Fase 8: Modelo de datos de presentación
 
 Antes de conectar la API completa, se deben definir tipos para los datos que consumen las vistas.
 
@@ -415,7 +496,7 @@ frontend/src/
 
 Los datos ficticios deben permanecer separados de los componentes para poder reemplazarlos posteriormente por llamadas HTTP sin rehacer la interfaz.
 
-## Fase 8: Modelado de formularios dinámicos
+## Fase 9: Modelado de formularios dinámicos
 
 La información existente en `form/` requiere una fase propia antes de implementar las pantallas reales de captura.
 
@@ -481,7 +562,7 @@ Estos componentes deben reutilizar shadcn y `react-hook-form`, que ya están inc
 
 El resultado debe ser una pantalla de encuesta reutilizable que reciba la definición de titulados o empleadores sin duplicar todo el formulario.
 
-## Fase 9: Migración de las pantallas restantes
+## Fase 10: Migración de las pantallas restantes
 
 Después de validar la pantalla piloto, migrar en este orden:
 
@@ -505,7 +586,7 @@ Para cada pantalla:
 - incluir estados de carga, vacío y error;
 - comparar con el HTML original antes de marcarla como terminada.
 
-## Fase 10: Integración con el backend
+## Fase 11: Integración con el backend
 
 La integración con la API debe hacerse después de estabilizar cada vista con datos de ejemplo.
 
@@ -524,7 +605,7 @@ La integración con la API debe hacerse después de estabilizar cada vista con d
 
 Cada pantalla consume datos desde una capa de API definida, sin mezclar transporte HTTP con presentación visual.
 
-## Fase 11: Exportación, filtros y acciones
+## Fase 12: Exportación, filtros y acciones
 
 Las acciones del prototipo deben migrarse gradualmente:
 
@@ -537,7 +618,7 @@ Las acciones del prototipo deben migrarse gradualmente:
 
 Cada acción debe tener un estado explícito y una respuesta visual clara. Las acciones que todavía no tengan backend pueden comenzar con datos locales, pero deben quedar identificadas como provisionales.
 
-## Fase 12: Validación visual y funcional
+## Fase 13: Validación visual y funcional
 
 ### Validación por pantalla
 
@@ -616,13 +697,14 @@ El prototipo usa una paleta y dimensiones propias, mientras que shadcn trae toke
 4. Tokens visuales y componentes compartidos.
 5. Flujo de importación, validación y calidad de datos.
 6. Mapeo y normalización de los CSV.
-7. Modelo común de formularios basado en `form/`.
-8. Renderer de preguntas y validaciones básicas.
-9. Ramificaciones de titulados y empleadores.
-10. Pantallas restantes con datos de ejemplo.
-11. Integración progresiva con la API.
-12. Filtros, exportación y simulación.
-13. Validación final y limpieza del prototipo HTML.
+7. Persistencia de datasets, respuestas y errores en PostgreSQL.
+8. Modelo común de formularios basado en `form/`.
+9. Renderer de preguntas y validaciones básicas.
+10. Ramificaciones de titulados y empleadores.
+11. Pantallas restantes con datos de ejemplo.
+12. Integración progresiva con la API.
+13. Filtros, exportación y simulación.
+14. Validación final y limpieza del prototipo HTML.
 
 ## Resultado final esperado
 
@@ -656,13 +738,23 @@ El frontend React debe contener una aplicación navegable y mantenible, con una 
 - [ ] Se informa cuántas filas fueron aceptadas y rechazadas.
 - [ ] Una importación validada puede identificarse por un `datasetId`.
 
-### Fase 7: datos de presentación
+### Fase 7: persistencia en PostgreSQL
+
+- [ ] Existe una entidad o tabla para cada importación.
+- [ ] Las respuestas normalizadas se relacionan con su dataset.
+- [ ] Las competencias tienen identificadores estables.
+- [ ] Los errores y advertencias se conservan por fila y columna.
+- [ ] Una importación no sobrescribe otra automáticamente.
+- [ ] La importación se confirma dentro de una transacción.
+- [ ] El dataset puede consultarse mediante la API.
+
+### Fase 8: datos de presentación
 
 - [ ] Cada vista tiene tipos de respuesta definidos.
 - [ ] Los datos mock pueden reemplazarse por datos de API sin cambiar la vista.
 - [ ] Los cálculos de indicadores no están duplicados en varios componentes.
 
-### Fase 8: formularios dinámicos
+### Fase 9: formularios dinámicos
 
 - [ ] Los dos JSON pueden cargarse con el mismo renderer.
 - [ ] Cada tipo de pregunta tiene una representación visual.
@@ -671,7 +763,7 @@ El frontend React debe contener una aplicación navegable y mantenible, con una 
 - [ ] El flujo de empleadores funciona de forma lineal.
 - [ ] El envío produce una estructura verificable.
 
-### Fases 9 a 12: vistas, API y cierre
+### Fases 10 a 13: vistas, API y cierre
 
 - [ ] Cada pantalla tiene una ruta propia.
 - [ ] Cada pantalla tiene estados de carga, vacío y error.
