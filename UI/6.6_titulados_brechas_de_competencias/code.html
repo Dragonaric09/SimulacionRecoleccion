@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+
+<html lang="es" style=""><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"outline":"#74777f","heat-blue-2":"#BBD6EE","tertiary-fixed":"#80f6eb","heat-blue-6":"#12467A","primary":"#00152d","tertiary-container":"#002f2c","chart-cat-4":"#8E5BD0","on-primary-fixed-variant":"#2d486a","on-tertiary-fixed-variant":"#00504b","on-primary":"#ffffff","chart-cat-7":"#7CB342","likert-1":"#E4572E","on-error":"#ffffff","error":"#ba1a1a","on-surface-variant":"#43474e","tertiary":"#001816","secondary-container":"#72b4ff","secondary-fixed-dim":"#9fcaff","heat-blue-5":"#1F6FB5","heat-blue-1":"#EAF2FA","surface-container-low":"#f0f4f8","chart-cat-1":"#1F6FB5","on-secondary-container":"#004578","on-tertiary":"#ffffff","empleadores-active":"#E1F4F2","on-tertiary-container":"#0ea198","ink-600":"#475569","on-error-container":"#93000a","surface-dim":"#d6dade","surface-variant":"#dfe3e7","surface-container-high":"#e4e9ed","primary-fixed":"#d3e4ff","on-background":"#171c1f","inverse-on-surface":"#edf1f5","status-success":"#2E9E5B","on-surface":"#171c1f","background":"#f6fafe","inverse-surface":"#2c3134","primary-container":"#0b2a4a","chart-cat-3":"#F2A33A","on-secondary-fixed":"#001d37","surface":"#f6fafe","tertiary-fixed-dim":"#62d9cf","heat-blue-3":"#7DB1DD","surface-tint":"#466083","surface-container-highest":"#dfe3e7","likert-3":"#F1F5F9","highlight-amber":"#F2A33A","ink-900":"#0F172A","on-primary-container":"#7892b7","on-primary-fixed":"#001c38","outline-variant":"#c4c6cf","chart-cat-8":"#D9418C","border-line":"#CBD5E1","status-warning":"#E0A100","on-tertiary-fixed":"#00201e","primary-fixed-dim":"#aec8f0","titulados-active":"#E3EEF8","error-container":"#ffdad6","status-danger":"#D64545","inverse-primary":"#aec8f0","secondary-fixed":"#d2e4ff","chart-cat-2":"#14A39A","on-secondary":"#ffffff","surface-container":"#eaeef2","surface-bright":"#f6fafe","heat-blue-4":"#3F86C4","chart-cat-6":"#5C6B7A","chart-cat-5":"#E4572E","likert-2":"#F4A98A","likert-4":"#8DB8E0","secondary":"#0061a5","surface-container-lowest":"#ffffff","surface-white":"#FFFFFF","on-secondary-fixed-variant":"#00497e","likert-5":"#1F6FB5"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xs":"0.25rem","space-sm":"0.5rem","gutter":"1.5rem","space-md":"1rem","space-xl":"2rem","margin":"2rem","space-lg":"1.5rem"},"fontFamily":{"body-default":["Inter"],"body-tabular":["Inter"],"title-section":["Inter"],"label-default":["Inter"],"caption-bold":["Inter"],"caption-meta":["Inter"],"headline-page":["Inter"],"body-medium":["Inter"],"display-kpi":["Inter"],"title-card":["Inter"]},"fontSize":{"body-default":["14px",{"lineHeight":"20px","fontWeight":"400"}],"body-tabular":["14px",{"lineHeight":"20px","fontWeight":"400"}],"title-section":["20px",{"lineHeight":"26px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-default":["13px",{"lineHeight":"16px","fontWeight":"500"}],"caption-bold":["12px",{"lineHeight":"16px","fontWeight":"600"}],"caption-meta":["12px",{"lineHeight":"16px","fontWeight":"400"}],"headline-page":["28px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"600"}],"body-medium":["14px",{"lineHeight":"20px","fontWeight":"500"}],"display-kpi":["32px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"600"}],"title-card":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}}</script></head><body class="bg-surface font-body-default text-body-default text-on-surface antialiased overflow-hidden min-h-screen" style="height: 100vh; max-height: 100vh;"><aside class="fixed left-0 top-0 h-screen w-64 bg-primary-container text-on-primary z-50 flex flex-col justify-between overflow-y-auto shadow-[0_1px_8px_rgba(0,0,0,0.04)]" style="height: 100vh; overflow-y: auto; flex-shrink: 0;"><div class="flex flex-col"><div class="p-space-lg flex items-center gap-space-sm"><div class="w-10 h-10 rounded-lg bg-surface-white/10 flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-secondary-fixed text-[24px]">school</span></div><div class="flex flex-col min-w-0"><span class="font-title-card text-title-card text-surface-white leading-tight truncate">Analizador</span><span class="font-caption-meta text-caption-meta text-on-primary-container truncate">Ing. de Sistemas · UMSS</span></div></div><div class="px-space-md mb-space-md"><a class="flex items-center justify-center gap-space-xs w-full py-space-sm px-space-md rounded-lg bg-secondary text-on-secondary font-label-default text-label-default transition-opacity hover:opacity-90" data-path="cargar-datos" href="#"><span class="">+ Cargar datos</span></a></div><nav class="px-space-sm flex flex-col gap-space-xs"><div class="px-space-sm pt-space-sm pb-space-xs flex items-center justify-between"><span class="font-caption-bold text-caption-bold text-heat-blue-3 uppercase tracking-wider">Titulados</span><span class="text-[11px] font-caption-bold px-1.5 py-0.5 rounded-full bg-surface-white/10 text-heat-blue-3">N=14</span></div><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-resumen" href="#"><span class="">Resumen</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-perfil-y-empleabilidad" href="#"><span class="">Perfil y empleabilidad</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-formacion-continua" href="#"><span class="">Formación continua</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-financiamiento" href="#"><span class="">Financiamiento</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg transition-colors font-body-default text-body-default bg-titulados-active text-chart-cat-1 font-semibold" data-path="titulados-brechas-de-competencias" href="#"><span class="">Brechas competencias</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-cruces-y-exportar" href="#"><span class="">Cruces y exportar</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-simulacion-escenarios" href="#"><span class="">Simulación de escenarios</span></a><div class="px-space-sm pt-space-md pb-space-xs flex items-center justify-between"><span class="font-caption-bold text-caption-bold text-tertiary-fixed-dim uppercase tracking-wider">Empleadores</span><span class="text-[11px] font-caption-bold px-1.5 py-0.5 rounded-full bg-surface-white/10 text-tertiary-fixed-dim">N=8</span></div><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="empleadores-resumen-y-contratacion" href="#"><span class="">Resumen y contratación</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="empleadores-valoracion-de-la-carrera" href="#"><span class="">Valoración de la Carrera</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="empleadores-brechas-de-competencias" href="#"><span class="">Brechas de competencias</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="empleadores-cruces-y-exportar" href="#"><span class="">Cruces y exportar</span></a></nav></div></aside><div class="pl-64" style="height: 100vh; overflow: hidden auto; display: flex; flex-direction: column;"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-gutter"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs bg-surface-container-high px-space-sm py-1 rounded-lg"><span class="material-symbols-outlined text-ink-600 text-[18px]">event_available</span><select class="bg-transparent font-label-default text-label-default text-ink-900 border-none outline-none cursor-pointer pr-space-xs"><option selected="">Periodo 2024</option><option>Periodo 2023</option><option>Periodo 2022</option></select></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs bg-surface-container px-space-sm py-1 rounded-full"><span class="w-2 h-2 rounded-full bg-status-success"></span><span class="font-caption-bold text-caption-bold text-on-surface-variant">Datos cargados: N=14 (T) · N=9 (E)</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen px-gutter pb-margin"><div class="flex flex-col w-full space-y-gutter">
+<!-- Header contextual y acciones globales -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="inline-flex items-center px-space-sm py-0.5 rounded-full text-caption-bold font-caption-bold text-chart-cat-1 bg-titulados-active">
+      Titulados
+    </span>
+<h1 class="font-headline-page text-headline-page text-ink-900 tracking-tight">
+      Brechas de competencias
+    </h1>
+<span class="font-body-medium text-body-medium text-ink-600 self-center" id="header-sample-count">
+      (n = 14)
+    </span>
+</div>
+<div class="flex items-center gap-space-sm relative">
+<button class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-ink-900 font-label-default text-label-default transition-colors shadow-sm" onclick="toggleModal('modal-definiciones')">
+<span class="material-symbols-outlined text-[18px]">info</span>
+<span>Definiciones</span>
+</button>
+<div class="relative">
+<button class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-chart-cat-1 hover:opacity-90 text-on-primary font-label-default text-label-default transition-opacity shadow-sm" id="btn-export-dropdown" onclick="toggleExportMenu()">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Exportar vista</span>
+<span class="material-symbols-outlined text-[16px]">arrow_drop_down</span>
+</button>
+<div class="hidden absolute right-0 mt-1 w-44 bg-surface-white rounded-lg shadow-lg border border-surface-container py-1 z-50" id="export-dropdown-menu">
+<button class="w-full text-left px-space-md py-2 text-ink-900 hover:bg-surface-container-low font-label-default text-label-default flex items-center gap-2" onclick="triggerExport('CSV')">
+<span class="material-symbols-outlined text-[16px] text-ink-600">table_chart</span> CSV (.csv)
+        </button>
+<button class="w-full text-left px-space-md py-2 text-ink-900 hover:bg-surface-container-low font-label-default text-label-default flex items-center gap-2" onclick="triggerExport('Excel')">
+<span class="material-symbols-outlined text-[16px] text-ink-600">sheet</span> Excel (.xlsx)
+        </button>
+<button class="w-full text-left px-space-md py-2 text-ink-900 hover:bg-surface-container-low font-label-default text-label-default flex items-center gap-2" onclick="triggerExport('PNG')">
+<span class="material-symbols-outlined text-[16px] text-ink-600">image</span> Gráfico (.png)
+        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Fila de Filtros Global Reactivos -->
+<div class="bg-surface-white rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex flex-wrap items-center gap-space-lg flex-1">
+<!-- Rango de Año -->
+<div class="flex items-center gap-space-sm min-w-[260px]">
+<label class="font-caption-bold text-caption-bold text-ink-600 whitespace-nowrap">Año titulación:</label>
+<div class="flex items-center gap-space-xs flex-1">
+<span class="font-caption-meta text-caption-meta text-ink-600">2018</span>
+<input class="w-full accent-chart-cat-1 cursor-pointer h-1.5 bg-surface-container-highest rounded-lg" id="filter-year" max="2023" min="2018" oninput="updateFilters()" type="range" value="2018"/>
+<span class="font-caption-bold text-caption-bold text-chart-cat-1 min-w-[32px] text-right" id="label-year-val">2018+</span>
+</div>
+</div>
+<div class="h-6 w-px bg-surface-container-highest hidden sm:block"></div>
+<!-- Estado Laboral -->
+<div class="flex items-center gap-space-xs">
+<label class="font-caption-bold text-caption-bold text-ink-600">Estado:</label>
+<select class="bg-surface-container-low px-space-sm py-1.5 rounded-lg font-label-default text-label-default text-ink-900 outline-none cursor-pointer border-none" id="filter-status" onchange="updateFilters()">
+<option selected="" value="todos">Todos los estados (3)</option>
+<option value="cuenta-ajena">Empleado por cuenta ajena (11)</option>
+<option value="independiente">Independiente / Consultor (2)</option>
+<option value="busqueda">En búsqueda de empleo (1)</option>
+</select>
+</div>
+<!-- Sector -->
+<div class="flex items-center gap-space-xs">
+<label class="font-caption-bold text-caption-bold text-ink-600">Sector:</label>
+<select class="bg-surface-container-low px-space-sm py-1.5 rounded-lg font-label-default text-label-default text-ink-900 outline-none cursor-pointer border-none" id="filter-sector" onchange="updateFilters()">
+<option selected="" value="todos">Todos los sectores</option>
+<option value="privado-nac">Privado nacional</option>
+<option value="privado-rem">Privado internacional / Remoto</option>
+<option value="publico">Público / Estatal</option>
+</select>
+</div>
+</div>
+<!-- Filtro counter & Reset -->
+<div class="flex items-center gap-space-sm self-end lg:self-auto shrink-0">
+<span class="px-space-sm py-1 rounded-full bg-surface-container-high text-caption-bold font-caption-bold text-ink-900" id="filter-counter">
+        Mostrando 14 de 14 respuestas
+      </span>
+<button class="font-label-default text-label-default text-ink-600 hover:text-ink-900 px-space-xs py-1 transition-colors" onclick="resetFilters()">
+        Limpiar filtros
+      </button>
+</div>
+</div>
+<!-- Alerta muestral cautela si n < 5 -->
+<div class="hidden items-center gap-2 p-2 rounded-lg bg-highlight-amber/15 border border-highlight-amber/40 text-ink-900 font-caption-meta text-caption-meta" id="filter-warning">
+<span class="material-symbols-outlined text-highlight-amber text-[18px]">warning</span>
+<span><strong>Aviso estadístico:</strong> Quedan pocos registros (n &lt; 5), interprete las distribuciones y medias con cautela metodológica.</span>
+</div>
+</div>
+<!-- Pestañas oficiales 6.6 -->
+<div class="flex items-center gap-space-xs overflow-x-auto bg-surface-container-low p-1 rounded-xl">
+<button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-white font-label-default text-label-default text-chart-cat-1 shadow-sm shrink-0 transition-all" id="tab-btn-hard" onclick="switchTab('hard')">
+<span>Hard skills</span>
+<span class="bg-titulados-active text-chart-cat-1 px-1.5 py-0.5 rounded-full text-caption-bold font-caption-bold" id="tab-badge-hard">8 competencias</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg hover:bg-surface-white/60 font-label-default text-label-default text-ink-600 transition-all shrink-0" id="tab-btn-soft" onclick="switchTab('soft')">
+<span>Soft skills</span>
+<span class="bg-surface-container-high text-ink-600 px-1.5 py-0.5 rounded-full text-caption-bold font-caption-bold" id="tab-badge-soft">6 competencias</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg hover:bg-surface-white/60 font-label-default text-label-default text-ink-600 transition-all shrink-0" id="tab-btn-satisfaccion" onclick="switchTab('satisfaccion')">
+<span>Satisfacción y pertinencia</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg hover:bg-surface-white/60 font-label-default text-label-default text-ink-600 transition-all shrink-0" id="tab-btn-malla" onclick="switchTab('malla')">
+<span>Malla y asignaturas</span>
+</button>
+</div>
+<!-- ========================================== -->
+<!-- SECCIÓN 1: VISTA HARD SKILLS (Activa por defecto) -->
+<!-- ========================================== -->
+<div class="space-y-gutter" id="tab-content-hard">
+<!-- Fila Superior (Mapa de Calor + Radar) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Columna Izquierda: Mapa de Calor (60% / col-span-7) -->
+<div class="lg:col-span-7 bg-surface-white rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between gap-space-sm mb-space-md">
+<div>
+<h2 class="font-title-card text-title-card text-ink-900">
+            Mapa de calor: Nivel de preparación técnica percibida
+          </h2>
+<p class="font-caption-meta text-caption-meta text-ink-600 mt-0.5">
+            Distribución de frecuencias por nivel de la escala Likert (n = 14)
+          </p>
+</div>
+<div class="flex items-center gap-2">
+<button class="font-caption-bold text-caption-bold text-ink-600 hover:text-chart-cat-1 flex items-center gap-0.5" onclick="toggleModal('modal-interpretacion-calor')">
+<span class="material-symbols-outlined text-[16px]">help</span>
+<span>¿Cómo leer esto?</span>
+</button>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Mapa de calor Hard skills')" title="Exportar tabla">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Matriz de Calor Divergente -->
+<div class="overflow-x-auto">
+<table class="w-full border-separate border-spacing-y-1 border-spacing-x-1 min-w-[500px]">
+<thead>
+<tr class="text-caption-bold font-caption-bold text-ink-600 text-center">
+<th class="text-left font-caption-bold text-caption-bold text-ink-600 py-1 px-2 w-48">Competencia técnica</th>
+<th class="py-1 px-1 bg-likert-1/10 rounded text-likert-1 w-16">1<br/><span class="text-[10px] font-normal">Muy insuf.</span></th>
+<th class="py-1 px-1 bg-likert-2/15 rounded text-[#C3431D] w-16">2<br/><span class="text-[10px] font-normal">Insuf.</span></th>
+<th class="py-1 px-1 bg-surface-container rounded text-ink-600 w-16">3<br/><span class="text-[10px] font-normal">Aceptable</span></th>
+<th class="py-1 px-1 bg-likert-4/30 rounded text-heat-blue-6 w-16">4<br/><span class="text-[10px] font-normal">Suficiente</span></th>
+<th class="py-1 px-1 bg-likert-5/15 rounded text-chart-cat-1 w-16">5<br/><span class="text-[10px] font-normal">Muy suf.</span></th>
+<th class="py-1 px-2 text-right font-caption-bold text-caption-bold text-ink-900 w-12">Total</th>
+</tr>
+</thead>
+<tbody class="font-body-tabular text-body-tabular">
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Prog. y desarrollo de software</td>
+<td class="text-center font-caption-bold rounded bg-likert-3 text-ink-900">0</td>
+<td class="text-center font-caption-bold rounded bg-likert-2/40 text-ink-900">1</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">3</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-4 text-surface-white">7</td>
+<td class="text-center font-caption-bold rounded bg-likert-5 text-surface-white">3</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Bases de datos</td>
+<td class="text-center font-caption-bold rounded bg-likert-3 text-ink-900">0</td>
+<td class="text-center font-caption-bold rounded bg-likert-2/60 text-ink-900">2</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">3</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-4 text-surface-white">6</td>
+<td class="text-center font-caption-bold rounded bg-likert-5 text-surface-white">3</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Ingeniería de requisitos</td>
+<td class="text-center font-caption-bold rounded bg-likert-3 text-ink-900">0</td>
+<td class="text-center font-caption-bold rounded bg-likert-2/40 text-ink-900">1</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">5</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-4 text-surface-white">6</td>
+<td class="text-center font-caption-bold rounded bg-likert-5/60 text-surface-white">2</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Análisis de datos</td>
+<td class="text-center font-caption-bold rounded bg-likert-1/50 text-surface-white">1</td>
+<td class="text-center font-caption-bold rounded bg-likert-2/70 text-ink-900">3</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">5</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-3 text-ink-900">4</td>
+<td class="text-center font-caption-bold rounded bg-likert-5/40 text-ink-900">1</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Gestión de proyectos</td>
+<td class="text-center font-caption-bold rounded bg-likert-1/40 text-ink-900">1</td>
+<td class="text-center font-caption-bold rounded bg-likert-2/60 text-ink-900">2</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">6</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-3 text-ink-900">5</td>
+<td class="text-center font-caption-bold rounded bg-likert-3 text-ink-900">0</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Redes e infraestructura</td>
+<td class="text-center font-caption-bold rounded bg-likert-1/70 text-surface-white">2</td>
+<td class="text-center font-caption-bold rounded bg-likert-2/80 text-ink-900">4</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">5</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-2 text-ink-900">2</td>
+<td class="text-center font-caption-bold rounded bg-likert-5/40 text-ink-900">1</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Seguridad informática</td>
+<td class="text-center font-caption-bold rounded bg-likert-1 text-surface-white">4</td>
+<td class="text-center font-caption-bold rounded bg-likert-2 text-ink-900">6</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">2</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-2 text-ink-900">2</td>
+<td class="text-center font-caption-bold rounded bg-likert-3 text-ink-900">0</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Cloud / DevOps</td>
+<td class="text-center font-caption-bold rounded bg-likert-1 text-surface-white">5</td>
+<td class="text-center font-caption-bold rounded bg-likert-2 text-ink-900">5</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">2</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-2 text-ink-900">1</td>
+<td class="text-center font-caption-bold rounded bg-likert-5/40 text-ink-900">1</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Leyenda de colores divergentes -->
+<div class="mt-space-md pt-space-sm flex flex-wrap items-center justify-between gap-space-xs text-caption-meta font-caption-meta text-ink-600">
+<span class="font-caption-bold text-caption-bold">Escala:</span>
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded bg-likert-1"></span>
+<span>1 Muy insuficiente</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded bg-likert-2"></span>
+<span>2 Insuficiente</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded bg-surface-container-high"></span>
+<span>3 Aceptable</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded bg-likert-4"></span>
+<span>4 Suficiente</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded bg-likert-5"></span>
+<span>5 Muy suficiente</span>
+</div>
+</div>
+</div>
+<!-- Columna Derecha: Gráfico Radar (40% / col-span-5) -->
+<div class="lg:col-span-5 bg-surface-white rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div>
+<h2 class="font-title-card text-title-card text-ink-900">
+            Perfil medio muestral (Hard skills)
+          </h2>
+<p class="font-caption-meta text-caption-meta text-ink-600 mt-0.5">
+            Escala continua 1,0 a 5,0 (n = 14)
+          </p>
+</div>
+<div class="flex items-center gap-2">
+<span class="bg-surface-container-low px-2 py-0.5 rounded text-caption-meta font-caption-meta text-ink-600">Umbral 3,5</span>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Radar Hard skills')" title="Exportar radar">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Radar SVG 8 Ejes -->
+<div class="relative w-full aspect-square max-w-[340px] mx-auto flex items-center justify-center py-space-xs">
+<svg aria-label="Gráfico de radar para competencias técnicas" class="w-full h-full text-outline-variant overflow-visible" role="img" viewbox="0 0 400 400">
+<polygon fill="none" opacity="0.4" points="200,170 221,179 230,200 221,221 200,230 179,221 170,200 179,179" stroke="currentColor" stroke-dasharray="2 2" stroke-width="0.75"></polygon>
+<polygon fill="none" opacity="0.4" points="200,140 242,158 260,200 242,242 200,260 158,242 140,200 158,158" stroke="currentColor" stroke-dasharray="2 2" stroke-width="0.75"></polygon>
+<polygon fill="none" opacity="0.5" points="200,110 264,136 290,200 264,264 200,290 136,264 110,200 136,136" stroke="currentColor" stroke-dasharray="2 2" stroke-width="0.75"></polygon>
+<polygon fill="none" opacity="0.8" points="200,95 274,126 305,200 274,274 200,305 126,274 95,200 126,126" stroke="#F2A33A" stroke-dasharray="4 3" stroke-width="1.5"></polygon>
+<polygon fill="none" opacity="0.5" points="200,80 285,115 320,200 285,285 200,320 115,285 80,200 115,115" stroke="currentColor" stroke-dasharray="2 2" stroke-width="0.75"></polygon>
+<polygon fill="none" opacity="0.8" points="200,50 306,94 350,200 306,306 200,350 94,306 50,200 94,94" stroke="currentColor" stroke-width="1.25"></polygon>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="200" y1="200" y2="50"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="306" y1="200" y2="94"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="350" y1="200" y2="200"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="306" y1="200" y2="306"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="200" y1="200" y2="350"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="94" y1="200" y2="306"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="50" y1="200" y2="200"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="94" y1="200" y2="94"></line>
+<polygon fill="#1F6FB5" fill-opacity="0.25" points="200,84.2 278.7,121.3 309.2,200 263.6,263.6 200,290 142.5,257.5 131.3,200 153.1,153.1" stroke="#1F6FB5" stroke-width="2.25"></polygon>
+<circle cx="200" cy="84.2" fill="#1F6FB5" r="3.5"></circle>
+<circle cx="278.7" cy="121.3" fill="#1F6FB5" r="3.5"></circle>
+<circle cx="309.2" cy="200" fill="#1F6FB5" r="3.5"></circle>
+<circle cx="263.6" cy="263.6" fill="#1F6FB5" r="3.5"></circle>
+<circle cx="200" cy="290" fill="#1F6FB5" r="3.5"></circle>
+<circle cx="142.5" cy="257.5" fill="#1F6FB5" r="3.5"></circle>
+<circle cx="131.3" cy="200" fill="#1F6FB5" r="3.5"></circle>
+<circle cx="153.1" cy="153.1" fill="#1F6FB5" r="3.5"></circle>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="middle" x="200" y="38">Programación (3,86)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="start" x="320" y="86">Bases Datos (3,71)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="start" x="358" y="204">Requisitos (3,64)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="start" x="318" y="322">Datos (3,00)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="middle" x="200" y="372">Proyectos (3,00)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="end" x="80" y="322">Redes (2,71)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="end" x="42" y="204">Seguridad (2,29)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="end" x="80" y="86">Cloud (2,21)</text>
+</svg>
+</div>
+<!-- Leyenda radar -->
+<div class="mt-space-sm pt-space-xs flex items-center justify-center gap-space-lg text-caption-meta font-caption-meta">
+<div class="flex items-center gap-space-xs">
+<span class="w-3.5 h-1.5 bg-chart-cat-1 rounded-sm"></span>
+<span class="text-ink-900 font-medium">Media observada (Titulados)</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3.5 h-0.5 bg-highlight-amber inline-block"></span>
+<span class="text-ink-600">Umbral base (3,50)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Fila Inferior: Tabla Descriptiva Univariada por Competencia -->
+<div class="bg-surface-white rounded-xl p-space-lg shadow-sm space-y-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div>
+<h2 class="font-title-card text-title-card text-ink-900">
+          Tabla descriptiva univariada por competencia técnica
+        </h2>
+<p class="font-caption-meta text-caption-meta text-ink-600">
+          Estadísticos univariados ordenados descendentemente por media muestral (n = 14)
+        </p>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-space-xs text-caption-bold text-caption-bold text-ink-600 hover:text-chart-cat-1" onclick="toggleModal('modal-definiciones')">
+<span class="material-symbols-outlined text-[18px]">functions</span>
+<span>Ver fórmulas estadísticas</span>
+</button>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Tabla univariada Hard skills')" title="Exportar tabla">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Tabla de datos -->
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-default text-body-default">
+<thead>
+<tr class="bg-surface-container-low text-ink-600 font-caption-bold text-caption-bold">
+<th class="py-space-sm px-space-md rounded-l-lg">Competencia / Disciplina</th>
+<th class="py-space-sm px-space-md text-right">n Válido</th>
+<th class="py-space-sm px-space-md text-right">Media muestral (x̄)</th>
+<th class="py-space-sm px-space-md text-right">Desv. estándar (s)</th>
+<th class="py-space-sm px-space-md text-right">Mediana (Me)</th>
+<th class="py-space-sm px-space-md text-right rounded-r-lg">Nivel modal (Mo)</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-tabular text-body-tabular text-ink-900">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Programación y desarrollo de software</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold text-chart-cat-1">3,86</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">0,86</td>
+<td class="py-space-sm px-space-md text-right">4,00</td>
+<td class="py-space-sm px-space-md text-right">4 - Suficiente (n=7)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Bases de datos</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold text-chart-cat-1">3,71</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">0,99</td>
+<td class="py-space-sm px-space-md text-right">4,00</td>
+<td class="py-space-sm px-space-md text-right">4 - Suficiente (n=6)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Ingeniería de requisitos</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold text-chart-cat-1">3,64</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">0,93</td>
+<td class="py-space-sm px-space-md text-right">4,00</td>
+<td class="py-space-sm px-space-md text-right">4 - Suficiente (n=5)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Análisis de datos</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold">3,00</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">0,96</td>
+<td class="py-space-sm px-space-md text-right">3,00</td>
+<td class="py-space-sm px-space-md text-right">3 - Aceptable (n=5)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Gestión de proyectos</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold">3,00</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">0,96</td>
+<td class="py-space-sm px-space-md text-right">3,00</td>
+<td class="py-space-sm px-space-md text-right">3 - Aceptable (n=6)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Redes e infraestructura</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold">2,71</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">1,14</td>
+<td class="py-space-sm px-space-md text-right">3,00</td>
+<td class="py-space-sm px-space-md text-right">3 - Aceptable (n=5)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Seguridad informática</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold text-likert-1">2,29</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">1,07</td>
+<td class="py-space-sm px-space-md text-right">2,00</td>
+<td class="py-space-sm px-space-md text-right">2 - Insuficiente (n=6)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Cloud / DevOps</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold text-likert-1">2,21</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">1,05</td>
+<td class="py-space-sm px-space-md text-right">2,00</td>
+<td class="py-space-sm px-space-md text-right">2 - Insuficiente (n=5)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pt-space-sm bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between text-caption-meta font-caption-meta text-ink-600">
+<span>Nota: La escala ordinal comprende valores de 1 a 5. Las medidas muestrales reflejan el cómputo aritmético estricto sobre el total de respuestas válidas registradas (N=14).</span>
+<span class="font-body-medium text-body-medium text-ink-900">Media global Hard skills: 3,05</span>
+</div>
+</div>
+</div>
+<!-- ========================================== -->
+<!-- SECCIÓN 2: VISTA SOFT SKILLS (Interactiva) -->
+<!-- ========================================== -->
+<div class="hidden space-y-gutter" id="tab-content-soft">
+<!-- Fila Superior (Mapa de Calor + Radar Soft) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<div class="lg:col-span-7 bg-surface-white rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between gap-space-sm mb-space-md">
+<div>
+<h2 class="font-title-card text-title-card text-ink-900">
+            Mapa de calor: Habilidades blandas (Soft skills)
+          </h2>
+<p class="font-caption-meta text-caption-meta text-ink-600 mt-0.5">
+            Distribución de frecuencias por nivel de la escala Likert (n = 14)
+          </p>
+</div>
+<div class="flex items-center gap-2">
+<button class="font-caption-bold text-caption-bold text-ink-600 hover:text-chart-cat-1 flex items-center gap-0.5" onclick="toggleModal('modal-interpretacion-calor')">
+<span class="material-symbols-outlined text-[16px]">help</span>
+<span>¿Cómo leer esto?</span>
+</button>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Mapa de calor Soft skills')" title="Exportar tabla">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full border-separate border-spacing-y-1 border-spacing-x-1 min-w-[500px]">
+<thead>
+<tr class="text-caption-bold font-caption-bold text-ink-600 text-center">
+<th class="text-left font-caption-bold text-caption-bold text-ink-600 py-1 px-2 w-48">Competencia transversal</th>
+<th class="py-1 px-1 bg-likert-1/10 rounded text-likert-1 w-16">1<br/><span class="text-[10px] font-normal">Muy insuf.</span></th>
+<th class="py-1 px-1 bg-likert-2/15 rounded text-[#C3431D] w-16">2<br/><span class="text-[10px] font-normal">Insuf.</span></th>
+<th class="py-1 px-1 bg-surface-container rounded text-ink-600 w-16">3<br/><span class="text-[10px] font-normal">Aceptable</span></th>
+<th class="py-1 px-1 bg-likert-4/30 rounded text-heat-blue-6 w-16">4<br/><span class="text-[10px] font-normal">Suficiente</span></th>
+<th class="py-1 px-1 bg-likert-5/15 rounded text-chart-cat-1 w-16">5<br/><span class="text-[10px] font-normal">Muy suf.</span></th>
+<th class="py-1 px-2 text-right font-caption-bold text-caption-bold text-ink-900 w-12">Total</th>
+</tr>
+</thead>
+<tbody class="font-body-tabular text-body-tabular">
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Aprendizaje autónomo</td>
+<td class="text-center font-caption-bold rounded bg-likert-3 text-ink-900">0</td>
+<td class="text-center font-caption-bold rounded bg-likert-3 text-ink-900">0</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">2</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-4 text-surface-white">8</td>
+<td class="text-center font-caption-bold rounded bg-likert-5 text-surface-white">4</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Resolución de problemas</td>
+<td class="text-center font-caption-bold rounded bg-likert-3 text-ink-900">0</td>
+<td class="text-center font-caption-bold rounded bg-likert-2/40 text-ink-900">1</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">2</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-4 text-surface-white">8</td>
+<td class="text-center font-caption-bold rounded bg-likert-5 text-surface-white">3</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Trabajo en equipo</td>
+<td class="text-center font-caption-bold rounded bg-likert-3 text-ink-900">0</td>
+<td class="text-center font-caption-bold rounded bg-likert-2/40 text-ink-900">1</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">4</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-4 text-surface-white">7</td>
+<td class="text-center font-caption-bold rounded bg-likert-5/60 text-surface-white">2</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Comunicación oral y escrita</td>
+<td class="text-center font-caption-bold rounded bg-likert-1/40 text-ink-900">1</td>
+<td class="text-center font-caption-bold rounded bg-likert-2/60 text-ink-900">2</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">6</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-3 text-ink-900">4</td>
+<td class="text-center font-caption-bold rounded bg-likert-5/40 text-ink-900">1</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Liderazgo</td>
+<td class="text-center font-caption-bold rounded bg-likert-1/50 text-surface-white">1</td>
+<td class="text-center font-caption-bold rounded bg-likert-2/70 text-ink-900">4</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">5</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-3 text-ink-900">3</td>
+<td class="text-center font-caption-bold rounded bg-likert-5/40 text-ink-900">1</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+<tr>
+<td class="font-body-medium text-body-medium text-ink-900 py-1.5 px-2 truncate">Inglés técnico</td>
+<td class="text-center font-caption-bold rounded bg-likert-1 text-surface-white">4</td>
+<td class="text-center font-caption-bold rounded bg-likert-2 text-ink-900">5</td>
+<td class="text-center font-caption-bold rounded bg-surface-container text-ink-900">3</td>
+<td class="text-center font-caption-bold rounded bg-heat-blue-2 text-ink-900">2</td>
+<td class="text-center font-caption-bold rounded bg-likert-3 text-ink-900">0</td>
+<td class="text-right font-body-medium text-ink-600 px-2">14</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-space-md pt-space-sm flex flex-wrap items-center justify-between gap-space-xs text-caption-meta font-caption-meta text-ink-600">
+<span class="font-caption-bold text-caption-bold">Escala:</span>
+<div class="flex items-center gap-space-xs"><span class="w-3 h-3 rounded bg-likert-1"></span><span>1 Muy insuficiente</span></div>
+<div class="flex items-center gap-space-xs"><span class="w-3 h-3 rounded bg-likert-2"></span><span>2 Insuficiente</span></div>
+<div class="flex items-center gap-space-xs"><span class="w-3 h-3 rounded bg-surface-container-high"></span><span>3 Aceptable</span></div>
+<div class="flex items-center gap-space-xs"><span class="w-3 h-3 rounded bg-likert-4"></span><span>4 Suficiente</span></div>
+<div class="flex items-center gap-space-xs"><span class="w-3 h-3 rounded bg-likert-5"></span><span>5 Muy suficiente</span></div>
+</div>
+</div>
+<!-- Columna Derecha: Gráfico Radar (6 Ejes Soft skills) -->
+<div class="lg:col-span-5 bg-surface-white rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div>
+<h2 class="font-title-card text-title-card text-ink-900">
+            Perfil medio muestral (Soft skills)
+          </h2>
+<p class="font-caption-meta text-caption-meta text-ink-600 mt-0.5">
+            Escala continua 1,0 a 5,0 (n = 14)
+          </p>
+</div>
+<div class="flex items-center gap-2">
+<span class="bg-surface-container-low px-2 py-0.5 rounded text-caption-meta font-caption-meta text-ink-600">Umbral 3,5</span>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Radar Soft skills')" title="Exportar radar">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<div class="relative w-full aspect-square max-w-[340px] mx-auto flex items-center justify-center py-space-xs">
+<svg aria-label="Gráfico de radar para competencias blandas" class="w-full h-full text-outline-variant overflow-visible" role="img" viewbox="0 0 400 400">
+<!-- Hexágonos concéntricos 6 ejes (0°, 60°, 120°, 180°, 240°, 300°) -->
+<!-- R=30 (1.0) -->
+<polygon fill="none" opacity="0.4" points="200,170 226,185 226,215 200,230 174,215 174,185" stroke="currentColor" stroke-dasharray="2 2" stroke-width="0.75"></polygon>
+<!-- R=60 (2.0) -->
+<polygon fill="none" opacity="0.4" points="200,140 252,170 252,230 200,260 148,230 148,170" stroke="currentColor" stroke-dasharray="2 2" stroke-width="0.75"></polygon>
+<!-- R=90 (3.0) -->
+<polygon fill="none" opacity="0.5" points="200,110 278,155 278,245 200,290 122,245 122,155" stroke="currentColor" stroke-dasharray="2 2" stroke-width="0.75"></polygon>
+<!-- R=105 (3.5 Umbral) -->
+<polygon fill="none" opacity="0.8" points="200,95 291,148 291,252 200,305 109,252 109,148" stroke="#F2A33A" stroke-dasharray="4 3" stroke-width="1.5"></polygon>
+<!-- R=120 (4.0) -->
+<polygon fill="none" opacity="0.5" points="200,80 304,140 304,260 200,320 96,260 96,140" stroke="currentColor" stroke-dasharray="2 2" stroke-width="0.75"></polygon>
+<!-- R=150 (5.0 Max) -->
+<polygon fill="none" opacity="0.8" points="200,50 330,125 330,275 200,350 70,275 70,125" stroke="currentColor" stroke-width="1.25"></polygon>
+<!-- 6 Ejes radiales -->
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="200" y1="200" y2="50"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="330" y1="200" y2="125"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="330" y1="200" y2="275"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="200" y1="200" y2="350"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="70" y1="200" y2="275"></line>
+<line opacity="0.5" stroke="currentColor" stroke-width="0.75" x1="200" x2="70" y1="200" y2="125"></line>
+<!-- Polígono de datos:
+               1. Aprendizaje autónomo: 4,14 (r=124.2) -> 200, 75.8
+               2. Resolución problemas: 3,93 (r=117.9) -> 200 + 102.1 = 302.1, 200 - 58.9 = 141.1
+               3. Trabajo en equipo: 3,71 (r=111.3) -> 200 + 96.4 = 296.4, 200 + 55.6 = 255.6
+               4. Comunicación: 3,14 (r=94.2) -> 200, 294.2
+               5. Liderazgo: 2,93 (r=87.9) -> 200 - 76.1 = 123.9, 200 + 43.9 = 243.9
+               6. Inglés técnico: 2,21 (r=66.3) -> 200 - 57.4 = 142.6, 200 - 33.1 = 166.9
+          -->
+<polygon fill="#14A39A" fill-opacity="0.25" points="200,75.8 302.1,141.1 296.4,255.6 200,294.2 123.9,243.9 142.6,166.9" stroke="#14A39A" stroke-width="2.25"></polygon>
+<circle cx="200" cy="75.8" fill="#14A39A" r="3.5"></circle>
+<circle cx="302.1" cy="141.1" fill="#14A39A" r="3.5"></circle>
+<circle cx="296.4" cy="255.6" fill="#14A39A" r="3.5"></circle>
+<circle cx="200" cy="294.2" fill="#14A39A" r="3.5"></circle>
+<circle cx="123.9" cy="243.9" fill="#14A39A" r="3.5"></circle>
+<circle cx="142.6" cy="166.9" fill="#14A39A" r="3.5"></circle>
+<!-- Etiquetas -->
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="middle" x="200" y="38">Aprendizaje autónomo (4,14)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="start" x="336" y="128">Resolución problemas (3,93)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="start" x="336" y="280">Trabajo en equipo (3,71)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="middle" x="200" y="372">Comunicación (3,14)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="end" x="64" y="280">Liderazgo (2,93)</text>
+<text class="text-[11px] font-semibold fill-ink-900" text-anchor="end" x="64" y="128">Inglés técnico (2,21)</text>
+</svg>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-center gap-space-lg text-caption-meta font-caption-meta">
+<div class="flex items-center gap-space-xs">
+<span class="w-3.5 h-1.5 bg-chart-cat-2 rounded-sm"></span>
+<span class="text-ink-900 font-medium">Media observada (Titulados)</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3.5 h-0.5 bg-highlight-amber inline-block"></span>
+<span class="text-ink-600">Umbral base (3,50)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Tabla Univariada Soft skills -->
+<div class="bg-surface-white rounded-xl p-space-lg shadow-sm space-y-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div>
+<h2 class="font-title-card text-title-card text-ink-900">
+          Tabla descriptiva univariada por habilidad blanda
+        </h2>
+<p class="font-caption-meta text-caption-meta text-ink-600">
+          Estadísticos univariados ordenados descendentemente por media muestral (n = 14)
+        </p>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-space-xs text-caption-bold text-caption-bold text-ink-600 hover:text-chart-cat-1" onclick="toggleModal('modal-definiciones')">
+<span class="material-symbols-outlined text-[18px]">functions</span>
+<span>Ver fórmulas estadísticas</span>
+</button>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Tabla univariada Soft skills')" title="Exportar tabla">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-default text-body-default">
+<thead>
+<tr class="bg-surface-container-low text-ink-600 font-caption-bold text-caption-bold">
+<th class="py-space-sm px-space-md rounded-l-lg">Habilidad blanda</th>
+<th class="py-space-sm px-space-md text-right">n Válido</th>
+<th class="py-space-sm px-space-md text-right">Media muestral (x̄)</th>
+<th class="py-space-sm px-space-md text-right">Desv. estándar (s)</th>
+<th class="py-space-sm px-space-md text-right">Mediana (Me)</th>
+<th class="py-space-sm px-space-md text-right rounded-r-lg">Nivel modal (Mo)</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-tabular text-body-tabular text-ink-900">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Aprendizaje autónomo</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold text-chart-cat-2">4,14</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">0,66</td>
+<td class="py-space-sm px-space-md text-right">4,00</td>
+<td class="py-space-sm px-space-md text-right">4 - Suficiente (n=8)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Resolución de problemas</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold text-chart-cat-2">3,93</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">0,83</td>
+<td class="py-space-sm px-space-md text-right">4,00</td>
+<td class="py-space-sm px-space-md text-right">4 - Suficiente (n=8)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Trabajo en equipo</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold text-chart-cat-2">3,71</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">0,83</td>
+<td class="py-space-sm px-space-md text-right">4,00</td>
+<td class="py-space-sm px-space-md text-right">4 - Suficiente (n=7)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Comunicación oral y escrita</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold">3,14</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">0,95</td>
+<td class="py-space-sm px-space-md text-right">3,00</td>
+<td class="py-space-sm px-space-md text-right">3 - Aceptable (n=6)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Liderazgo</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold">2,93</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">1,07</td>
+<td class="py-space-sm px-space-md text-right">3,00</td>
+<td class="py-space-sm px-space-md text-right">3 - Aceptable (n=5)</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-sm px-space-md font-body-medium text-body-medium text-ink-900">Inglés técnico</td>
+<td class="py-space-sm px-space-md text-right">14</td>
+<td class="py-space-sm px-space-md text-right font-caption-bold text-caption-bold text-likert-1">2,21</td>
+<td class="py-space-sm px-space-md text-right text-ink-600">1,05</td>
+<td class="py-space-sm px-space-md text-right">2,00</td>
+<td class="py-space-sm px-space-md text-right">2 - Insuficiente (n=5)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pt-space-sm bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between text-caption-meta font-caption-meta text-ink-600">
+<span>Nota: La escala ordinal comprende valores de 1 a 5. Las medidas muestrales reflejan el cómputo aritmético estricto sobre el total de respuestas válidas registradas (N=14).</span>
+<span class="font-body-medium text-body-medium text-ink-900">Media global Soft skills: 3,34</span>
+</div>
+</div>
+</div>
+<!-- ============================================================== -->
+<!-- SECCIÓN 3: VISTA SATISFACCIÓN Y PERTINENCIA (Barras Apiladas) -->
+<!-- ============================================================== -->
+<div class="hidden space-y-gutter" id="tab-content-satisfaccion">
+<div class="bg-surface-white rounded-xl p-space-lg shadow-sm space-y-space-lg">
+<div class="flex items-start justify-between gap-space-sm">
+<div>
+<h2 class="font-title-card text-title-card text-ink-900">
+          Satisfacción global y pertinencia con el mercado laboral
+        </h2>
+<p class="font-caption-meta text-caption-meta text-ink-600 mt-0.5">
+          Distribución de respuestas en escala Likert de 4 niveles de acuerdo (n = 14)
+        </p>
+</div>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Satisfacción y Pertinencia')" title="Exportar vista">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+<!-- Leyenda de 4 niveles -->
+<div class="flex flex-wrap items-center gap-space-md p-space-sm bg-surface-container-low rounded-lg text-caption-bold text-caption-bold">
+<div class="flex items-center gap-space-xs">
+<span class="w-3.5 h-3.5 rounded bg-likert-1"></span>
+<span class="text-ink-600">Totalmente en desacuerdo</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3.5 h-3.5 rounded bg-likert-2"></span>
+<span class="text-ink-600">En desacuerdo</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3.5 h-3.5 rounded bg-heat-blue-3"></span>
+<span class="text-ink-600">De acuerdo</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3.5 h-3.5 rounded bg-chart-cat-1"></span>
+<span class="text-ink-600">Totalmente de acuerdo</span>
+</div>
+</div>
+<!-- Afirmación 1 -->
+<div class="space-y-space-xs">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+<span class="font-body-medium text-body-medium text-ink-900 font-semibold">
+          1. Satisfacción global con la formación recibida en la carrera
+        </span>
+<span class="font-caption-bold text-caption-bold text-ink-600">
+          Media: 3,21 / 4,00 · 85,7% acuerdo favorable
+        </span>
+</div>
+<!-- Barra apilada interactiva -->
+<div class="w-full h-10 rounded-lg overflow-hidden flex font-caption-bold text-caption-bold text-surface-white shadow-inner">
+<!-- TD: 0 (0%) -->
+<!-- D: 2 (14.3%) -->
+<div class="bg-likert-2 flex items-center justify-center transition-all hover:brightness-105" style="width: 14.3%;" title="En desacuerdo: 2 (14,3%)">
+<span class="text-ink-900">2 (14,3%)</span>
+</div>
+<!-- A: 7 (50.0%) -->
+<div class="bg-heat-blue-3 flex items-center justify-center transition-all hover:brightness-105" style="width: 50.0%;" title="De acuerdo: 7 (50,0%)">
+<span class="text-ink-900">7 (50,0%)</span>
+</div>
+<!-- TA: 5 (35.7%) -->
+<div class="bg-chart-cat-1 flex items-center justify-center transition-all hover:brightness-105" style="width: 35.7%;" title="Totalmente de acuerdo: 5 (35,7%)">
+<span class="text-surface-white">5 (35,7%)</span>
+</div>
+</div>
+<div class="flex justify-between text-caption-meta text-caption-meta text-ink-600 px-1">
+<span>Total desacuerdo: 14,3% (n=2)</span>
+<span>Total acuerdo: 85,7% (n=12)</span>
+</div>
+</div>
+<!-- Afirmación 2 -->
+<div class="space-y-space-xs pt-space-md border-t border-surface-container">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+<span class="font-body-medium text-body-medium text-ink-900 font-semibold">
+          2. Concordancia entre la formación académica y los requerimientos del mercado laboral
+        </span>
+<span class="font-caption-bold text-caption-bold text-ink-600">
+          Media: 2,79 / 4,00 · 64,3% acuerdo favorable
+        </span>
+</div>
+<!-- Barra apilada interactiva -->
+<div class="w-full h-10 rounded-lg overflow-hidden flex font-caption-bold text-caption-bold text-surface-white shadow-inner">
+<!-- TD: 1 (7.1%) -->
+<div class="bg-likert-1 flex items-center justify-center transition-all hover:brightness-105" style="width: 7.1%;" title="Totalmente en desacuerdo: 1 (7,1%)">
+<span class="text-surface-white">1 (7%)</span>
+</div>
+<!-- D: 4 (28.6%) -->
+<div class="bg-likert-2 flex items-center justify-center transition-all hover:brightness-105" style="width: 28.6%;" title="En desacuerdo: 4 (28,6%)">
+<span class="text-ink-900">4 (28,6%)</span>
+</div>
+<!-- A: 6 (42.9%) -->
+<div class="bg-heat-blue-3 flex items-center justify-center transition-all hover:brightness-105" style="width: 42.9%;" title="De acuerdo: 6 (42,9%)">
+<span class="text-ink-900">6 (42,9%)</span>
+</div>
+<!-- TA: 3 (21.4%) -->
+<div class="bg-chart-cat-1 flex items-center justify-center transition-all hover:brightness-105" style="width: 21.4%;" title="Totalmente de acuerdo: 3 (21,4%)">
+<span class="text-surface-white">3 (21,4%)</span>
+</div>
+</div>
+<div class="flex justify-between text-caption-meta text-caption-meta text-ink-600 px-1">
+<span>Total desacuerdo: 35,7% (n=5)</span>
+<span>Total acuerdo: 64,3% (n=9)</span>
+</div>
+</div>
+<!-- Resumen Metodológico -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md pt-space-sm">
+<div class="bg-surface-container-low p-space-md rounded-lg">
+<span class="font-caption-bold text-caption-bold text-ink-600 block">Pertinencia con el cargo</span>
+<span class="font-display-kpi text-display-kpi text-chart-cat-1">78,6%</span>
+<span class="font-caption-meta text-caption-meta text-ink-600 block mt-1">11 de 14 desempeñan labores afines</span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-lg">
+<span class="font-caption-bold text-caption-bold text-ink-600 block">Satisfacción con el plan</span>
+<span class="font-display-kpi text-display-kpi text-ink-900">3,43</span>
+<span class="font-caption-meta text-caption-meta text-ink-600 block mt-1">Media muestral continua (1-5)</span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-lg">
+<span class="font-caption-bold text-caption-bold text-ink-600 block">Recomendaría la carrera</span>
+<span class="font-display-kpi text-display-kpi text-status-success">85,7%</span>
+<span class="font-caption-meta text-caption-meta text-ink-600 block mt-1">12 de 14 recomendarían estudiar en UMSS</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ============================================================== -->
+<!-- SECCIÓN 4: VISTA MALLA Y ASIGNATURAS (4 Gráficos Horizontales) -->
+<!-- ============================================================== -->
+<div class="hidden space-y-gutter" id="tab-content-malla">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Gráfico 1: Aspectos que resultaron útiles -->
+<div class="bg-surface-white rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-start justify-between gap-2 mb-space-xs">
+<h3 class="font-title-card text-title-card text-ink-900">
+            Aspectos de la Carrera que resultaron útiles
+          </h3>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Aspectos útiles')" title="Exportar">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+<p class="font-caption-meta text-caption-meta text-ink-600 mb-space-md">
+          Nota: Pregunta de opción múltiple (Varias respuestas posibles, n = 14)
+        </p>
+<div class="space-y-space-sm font-body-default text-body-default">
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Bases sólidas de lógica y programación</span>
+<span class="text-chart-cat-1">85,7% (12)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-1 h-full rounded-full" style="width: 85.7%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Exigencia académica y autoaprendizaje forzado</span>
+<span class="text-chart-cat-1">71,4% (10)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-1 h-full rounded-full" style="width: 71.4%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Fundamentos de modelado y base de datos</span>
+<span class="text-chart-cat-1">64,3% (9)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-1 h-full rounded-full" style="width: 64.3%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Desarrollo de proyectos en equipo (T.I.S.)</span>
+<span class="text-chart-cat-1">57,1% (8)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-1 h-full rounded-full" style="width: 57.1%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Teoría matemática y algorítmica</span>
+<span class="text-chart-cat-1">35,7% (5)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-1 h-full rounded-full" style="width: 35.7%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Gráfico 2: Aspectos que pueden mejorarse -->
+<div class="bg-surface-white rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-start justify-between gap-2 mb-space-xs">
+<h3 class="font-title-card text-title-card text-ink-900">
+            Aspectos de la Carrera que pueden mejorarse
+          </h3>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Aspectos a mejorar')" title="Exportar">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+<p class="font-caption-meta text-caption-meta text-ink-600 mb-space-md">
+          Nota: Pregunta de opción múltiple (Varias respuestas posibles, n = 14)
+        </p>
+<div class="space-y-space-sm font-body-default text-body-default">
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Actualización en Cloud, DevOps e Infraestructura moderna</span>
+<span class="text-likert-1">78,6% (11)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-likert-1 h-full rounded-full" style="width: 78.6%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Seguridad informática y buenas prácticas de codificación</span>
+<span class="text-likert-1">71,4% (10)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-likert-1 h-full rounded-full" style="width: 71.4%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Enseñanza de inglés técnico aplicado</span>
+<span class="text-likert-1">64,3% (9)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-likert-1 h-full rounded-full" style="width: 64.3%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Mayor vinculación con empresas e internados reales</span>
+<span class="text-likert-1">57,1% (8)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-likert-1 h-full rounded-full" style="width: 57.1%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Metodologías ágiles y gestión moderna de productos</span>
+<span class="text-likert-1">50,0% (7)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-likert-1 h-full rounded-full" style="width: 50.0%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Gráfico 3: Asignaturas que dieron ventaja competitiva -->
+<div class="bg-surface-white rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-start justify-between gap-2 mb-space-xs">
+<h3 class="font-title-card text-title-card text-ink-900">
+            Asignaturas que dieron ventaja competitiva
+          </h3>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Asignaturas ventaja competitiva')" title="Exportar">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+<p class="font-caption-meta text-caption-meta text-ink-600 mb-space-md">
+          Nota: Pregunta de opción múltiple (Varias respuestas posibles, n = 14)
+        </p>
+<div class="space-y-space-sm font-body-default text-body-default">
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Base de Datos (I y II)</span>
+<span class="text-chart-cat-2">78,6% (11)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-2 h-full rounded-full" style="width: 78.6%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Taller de Ingeniería de Software (T.I.S.)</span>
+<span class="text-chart-cat-2">71,4% (10)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-2 h-full rounded-full" style="width: 71.4%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Programación Funcional y Lógica</span>
+<span class="text-chart-cat-2">57,1% (8)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-2 h-full rounded-full" style="width: 57.1%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Inteligencia Artificial</span>
+<span class="text-chart-cat-2">42,9% (6)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-2 h-full rounded-full" style="width: 42.9%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Redes de Computadora</span>
+<span class="text-chart-cat-2">35,7% (5)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-2 h-full rounded-full" style="width: 35.7%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Gráfico 4: Asignaturas poco útiles o desactualizadas -->
+<div class="bg-surface-white rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-start justify-between gap-2 mb-space-xs">
+<h3 class="font-title-card text-title-card text-ink-900">
+            Asignaturas percibidas poco útiles o desactualizadas
+          </h3>
+<button class="p-1 rounded text-ink-600 hover:bg-surface-container-low transition-colors" onclick="triggerCardExport('Asignaturas poco útiles')" title="Exportar">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+<p class="font-caption-meta text-caption-meta text-ink-600 mb-space-md">
+          Nota: Pregunta de opción múltiple (Varias respuestas posibles, n = 14)
+        </p>
+<div class="space-y-space-sm font-body-default text-body-default">
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Física General y Circuitos Eléctricos</span>
+<span class="text-chart-cat-3">64,3% (9)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-3 h-full rounded-full" style="width: 64.3%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Química General</span>
+<span class="text-chart-cat-3">57,1% (8)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-3 h-full rounded-full" style="width: 57.1%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Investigación Operativa II (enfoque puramente teórico)</span>
+<span class="text-chart-cat-3">42,9% (6)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-3 h-full rounded-full" style="width: 42.9%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Sistemas Económicos / Contabilidad Tradicional</span>
+<span class="text-chart-cat-3">35,7% (5)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-3 h-full rounded-full" style="width: 35.7%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-caption-bold text-caption-bold text-ink-900 mb-1">
+<span>Teoría de Campos</span>
+<span class="text-chart-cat-3">28,6% (4)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+<div class="bg-chart-cat-3 h-full rounded-full" style="width: 28.6%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ========================================== -->
+<!-- MODALES Y NOTIFICACIONES TOAST            -->
+<!-- ========================================== -->
+<!-- MODAL: Definiciones Metodológicas -->
+<div class="fixed inset-0 z-50 hidden bg-primary/40 backdrop-blur-sm flex items-center justify-center p-gutter" id="modal-definiciones">
+<div class="bg-surface-white rounded-xl max-w-lg w-full p-space-xl shadow-xl flex flex-col space-y-space-md">
+<div class="flex items-center justify-between">
+<h3 class="font-title-section text-title-section text-ink-900">Definiciones de variables y fórmulas</h3>
+<button class="text-ink-600 hover:text-ink-900" onclick="toggleModal('modal-definiciones')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="space-y-space-sm text-body-default font-body-default text-ink-600">
+<p><strong class="text-ink-900">Escala de preparación técnica (Likert 1 a 5):</strong> 1 = Muy insuficiente, 2 = Insuficiente, 3 = Aceptable, 4 = Suficiente, 5 = Muy suficiente.</p>
+<p><strong class="text-ink-900">Media muestral (x̄):</strong> Cómputo aritmético simple dado por <em>x̄ = (Σ xᵢ) / n</em> sobre el total de respuestas válidas.</p>
+<p><strong class="text-ink-900">Desviación estándar (s):</strong> Medida de dispersión muestral corregida: <em>s = √[ Σ(xᵢ - x̄)² / (n - 1) ]</em>.</p>
+<p><strong class="text-ink-900">Mediana (Me) y Moda (Mo):</strong> Mediana como valor posicional central (percentil 50) y moda como el nivel con mayor concentración de frecuencia absoluta.</p>
+<p><strong class="text-ink-900">Umbral base (3,50):</strong> Línea referencial de suficiencia predefinida en el instrumento institucional de evaluación curricular.</p>
+</div>
+<div class="pt-space-sm flex justify-end">
+<button class="px-space-md py-space-sm rounded-lg bg-surface-container-high text-ink-900 font-label-default text-label-default hover:bg-surface-container-highest" onclick="toggleModal('modal-definiciones')">
+        Cerrar
+      </button>
+</div>
+</div>
+</div>
+<!-- MODAL: ¿Cómo leer el mapa de calor? -->
+<div class="fixed inset-0 z-50 hidden bg-primary/40 backdrop-blur-sm flex items-center justify-center p-gutter" id="modal-interpretacion-calor">
+<div class="bg-surface-white rounded-xl max-w-lg w-full p-space-xl shadow-xl flex flex-col space-y-space-md">
+<div class="flex items-center justify-between">
+<h3 class="font-title-section text-title-section text-ink-900">Interpretación: Mapa de calor y Radar</h3>
+<button class="text-ink-600 hover:text-ink-900" onclick="toggleModal('modal-interpretacion-calor')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="space-y-space-sm text-body-default font-body-default text-ink-600">
+<p><strong class="text-ink-900">1. Matriz divergente:</strong> Los números dentro de cada celda corresponden al recuento exacto de titulados. Tonos rojizos concentran déficits (1 y 2), gris claro neutralidad (3) y azules satisfacción técnica (4 y 5).</p>
+<p><strong class="text-ink-900">2. Gráfico Radar:</strong> El polígono sombreado representa la media alcanzada en cada eje. Si el vértice queda por dentro del anillo discontinuo naranja (3,50), indica una brecha que requiere fortalecimiento en la malla.</p>
+</div>
+<div class="pt-space-sm flex justify-end">
+<button class="px-space-md py-space-sm rounded-lg bg-chart-cat-1 text-on-primary font-label-default text-label-default hover:opacity-90" onclick="toggleModal('modal-interpretacion-calor')">
+        Entendido
+      </button>
+</div>
+</div>
+</div>
+<!-- TOAST NOTIFICATION DE DESCARGA -->
+<div class="fixed bottom-6 right-6 z-50 hidden bg-ink-900 text-surface-white px-space-md py-space-sm rounded-lg shadow-xl flex items-center gap-space-sm border border-surface-white/10 transition-all" id="toast-export">
+<span class="material-symbols-outlined text-status-success text-[20px]">check_circle</span>
+<span class="font-body-medium text-body-medium" id="toast-message">Archivo generado exitosamente.</span>
+</div>
+</div>
+</main>
+</div>
+<script>
+  // Control de Modales
+  function toggleModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+      modal.classList.toggle('hidden');
+    }
+  }
+
+  // Control de Menú Exportar
+  function toggleExportMenu() {
+    const menu = document.getElementById('export-dropdown-menu');
+    if (menu) {
+      menu.classList.toggle('hidden');
+    }
+  }
+
+  // Notificación Toast de Descarga
+  function showToast(msg) {
+    const toast = document.getElementById('toast-export');
+    const msgEl = document.getElementById('toast-message');
+    if (toast && msgEl) {
+      msgEl.innerText = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3500);
+    }
+  }
+
+  function triggerExport(format) {
+    toggleExportMenu();
+    showToast(`Exportando vista completa en formato ${format}... Descarga iniciada.`);
+  }
+
+  function triggerCardExport(cardTitle) {
+    showToast(`Exportando datos de "${cardTitle}"... Descarga iniciada.`);
+  }
+
+  // Cerrar menú exportar si se hace click fuera
+  document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('export-dropdown-menu');
+    const btn = document.getElementById('btn-export-dropdown');
+    if (dropdown && btn && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+
+  // Control de Pestañas
+  function switchTab(tabId) {
+    const tabs = ['hard', 'soft', 'satisfaccion', 'malla'];
+    tabs.forEach(t => {
+      const content = document.getElementById('tab-content-' + t);
+      const btn = document.getElementById('tab-btn-' + t);
+      const badge = document.getElementById('tab-badge-' + t);
+      if (content && btn) {
+        if (t === tabId) {
+          content.classList.remove('hidden');
+          btn.className = "flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-white font-label-default text-label-default text-chart-cat-1 shadow-sm shrink-0 transition-all";
+          if (badge) {
+            badge.className = "bg-titulados-active text-chart-cat-1 px-1.5 py-0.5 rounded-full text-caption-bold font-caption-bold";
+          }
+        } else {
+          content.classList.add('hidden');
+          btn.className = "flex items-center gap-space-xs px-space-md py-space-sm rounded-lg hover:bg-surface-white/60 font-label-default text-label-default text-ink-600 transition-all shrink-0";
+          if (badge) {
+            badge.className = "bg-surface-container-high text-ink-600 px-1.5 py-0.5 rounded-full text-caption-bold font-caption-bold";
+          }
+        }
+      }
+    });
+  }
+
+  // Filtros reactivos con alerta muestral para n < 5
+  function updateFilters() {
+    const year = parseInt(document.getElementById('filter-year').value);
+    const status = document.getElementById('filter-status').value;
+    const sector = document.getElementById('filter-sector').value;
+    const labelYear = document.getElementById('label-year-val');
+    const counter = document.getElementById('filter-counter');
+    const headerCount = document.getElementById('header-sample-count');
+    const warning = document.getElementById('filter-warning');
+
+    if (labelYear) {
+      labelYear.innerText = year === 2018 ? '2018+' : `${year}+`;
+    }
+
+    // Cálculo simulado determinista de n según filtros
+    let currentN = 14;
+    if (year > 2018) {
+      currentN -= (year - 2018) * 2;
+    }
+    if (status === 'cuenta-ajena') currentN = Math.min(currentN, 11);
+    if (status === 'independiente') currentN = Math.min(currentN, 2);
+    if (status === 'busqueda') currentN = Math.min(currentN, 1);
+    if (sector !== 'todos') currentN = Math.max(1, Math.round(currentN * 0.6));
+    if (currentN < 1) currentN = 1;
+
+    if (counter) counter.innerText = `Mostrando ${currentN} de 14 respuestas`;
+    if (headerCount) headerCount.innerText = `(n = ${currentN})`;
+
+    if (warning) {
+      if (currentN < 5) {
+        warning.classList.remove('hidden');
+        warning.classList.add('flex');
+      } else {
+        warning.classList.add('hidden');
+        warning.classList.remove('flex');
+      }
+    }
+  }
+
+  function resetFilters() {
+    document.getElementById('filter-year').value = 2018;
+    document.getElementById('filter-status').value = 'todos';
+    document.getElementById('filter-sector').value = 'todos';
+    updateFilters();
+    showToast('Filtros restablecidos a los valores iniciales (n = 14).');
+  }
+</script>
+</body></html>

@@ -1,0 +1,526 @@
+<!DOCTYPE html><html lang="es" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"outline":"#74777f","heat-blue-2":"#BBD6EE","tertiary-fixed":"#80f6eb","heat-blue-6":"#12467A","primary":"#00152d","tertiary-container":"#002f2c","chart-cat-4":"#8E5BD0","on-primary-fixed-variant":"#2d486a","on-tertiary-fixed-variant":"#00504b","on-primary":"#ffffff","chart-cat-7":"#7CB342","likert-1":"#E4572E","on-error":"#ffffff","error":"#ba1a1a","on-surface-variant":"#43474e","tertiary":"#001816","secondary-container":"#72b4ff","secondary-fixed-dim":"#9fcaff","heat-blue-5":"#1F6FB5","heat-blue-1":"#EAF2FA","surface-container-low":"#f0f4f8","chart-cat-1":"#1F6FB5","on-secondary-container":"#004578","on-tertiary":"#ffffff","empleadores-active":"#E1F4F2","on-tertiary-container":"#0ea198","ink-600":"#475569","on-error-container":"#93000a","surface-dim":"#d6dade","surface-variant":"#dfe3e7","surface-container-high":"#e4e9ed","primary-fixed":"#d3e4ff","on-background":"#171c1f","inverse-on-surface":"#edf1f5","status-success":"#2E9E5B","on-surface":"#171c1f","background":"#f6fafe","inverse-surface":"#2c3134","primary-container":"#0b2a4a","chart-cat-3":"#F2A33A","on-secondary-fixed":"#001d37","surface":"#f6fafe","tertiary-fixed-dim":"#62d9cf","heat-blue-3":"#7DB1DD","surface-tint":"#466083","surface-container-highest":"#dfe3e7","likert-3":"#F1F5F9","highlight-amber":"#F2A33A","ink-900":"#0F172A","on-primary-container":"#7892b7","on-primary-fixed":"#001c38","outline-variant":"#c4c6cf","chart-cat-8":"#D9418C","border-line":"#CBD5E1","status-warning":"#E0A100","on-tertiary-fixed":"#00201e","primary-fixed-dim":"#aec8f0","titulados-active":"#E3EEF8","error-container":"#ffdad6","status-danger":"#D64545","inverse-primary":"#aec8f0","secondary-fixed":"#d2e4ff","chart-cat-2":"#14A39A","on-secondary":"#ffffff","surface-container":"#eaeef2","surface-bright":"#f6fafe","heat-blue-4":"#3F86C4","chart-cat-6":"#5C6B7A","chart-cat-5":"#E4572E","likert-2":"#F4A98A","likert-4":"#8DB8E0","secondary":"#0061a5","surface-container-lowest":"#ffffff","surface-white":"#FFFFFF","on-secondary-fixed-variant":"#00497e","likert-5":"#1F6FB5"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xs":"0.25rem","space-sm":"0.5rem","gutter":"1.5rem","space-md":"1rem","space-xl":"2rem","margin":"2rem","space-lg":"1.5rem"},"fontFamily":{"body-default":["Inter"],"body-tabular":["Inter"],"title-section":["Inter"],"label-default":["Inter"],"caption-bold":["Inter"],"caption-meta":["Inter"],"headline-page":["Inter"],"body-medium":["Inter"],"display-kpi":["Inter"],"title-card":["Inter"]},"fontSize":{"body-default":["14px",{"lineHeight":"20px","fontWeight":"400"}],"body-tabular":["14px",{"lineHeight":"20px","fontWeight":"400"}],"title-section":["20px",{"lineHeight":"26px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-default":["13px",{"lineHeight":"16px","fontWeight":"500"}],"caption-bold":["12px",{"lineHeight":"16px","fontWeight":"600"}],"caption-meta":["12px",{"lineHeight":"16px","fontWeight":"400"}],"headline-page":["28px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"600"}],"body-medium":["14px",{"lineHeight":"20px","fontWeight":"500"}],"display-kpi":["32px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"600"}],"title-card":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}}</script></head><body class="bg-surface font-body-default text-body-default text-on-surface antialiased" style="height: 100vh; max-height: 100vh; overflow: hidden;"><aside class="fixed left-0 top-0 h-screen w-64 bg-primary-container text-on-primary z-50 flex flex-col justify-between overflow-y-auto shadow-[0_1px_8px_rgba(0,0,0,0.04)]" style="height: 100vh; overflow-y: auto; flex-shrink: 0;"><div class="flex flex-col"><div class="p-space-lg flex items-center gap-space-sm"><div class="w-10 h-10 rounded-lg bg-surface-white/10 flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-secondary-fixed text-[24px]">school</span></div><div class="flex flex-col min-w-0"><span class="font-title-card text-title-card text-surface-white leading-tight truncate">Analizador</span><span class="font-caption-meta text-caption-meta text-on-primary-container truncate">Ing. de Sistemas · UMSS</span></div></div><div class="px-space-md mb-space-md"><a class="flex items-center justify-center gap-space-xs w-full py-space-sm px-space-md rounded-lg bg-secondary text-on-secondary font-label-default text-label-default transition-opacity hover:opacity-90" data-path="cargar-datos" href="#"><span class="">+ Cargar datos</span></a></div><nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-white/10 text-surface-white font-medium rounded-lg"><div class="px-space-sm pt-space-sm pb-space-xs flex items-center justify-between"><span class="font-caption-bold text-caption-bold text-heat-blue-3 uppercase tracking-wider">Titulados</span><span class="text-[11px] font-caption-bold px-1.5 py-0.5 rounded bg-surface-white/10 text-heat-blue-3 font-semibold">N=14</span></div><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-resumen" href="#"><span class="">Resumen</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-perfil-y-empleabilidad" href="#"><span class="">Perfil y empleabilidad</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg bg-titulados-active text-heat-blue-5 font-semibold transition-colors font-body-default text-body-default" data-path="titulados-financiamiento" href="#"><span class="">Financiamiento</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-brechas-de-competencias" href="#"><span class="">Brechas de competencias</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-cruces-y-exportar" href="#"><span class="">Cruces y exportar</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="titulados-simulacion-de-escenarios" href="#"><span class="">Simulación de escenarios</span></a><div class="px-space-sm pt-space-md pb-space-xs flex items-center justify-between"><span class="font-caption-bold text-caption-bold text-tertiary-fixed-dim uppercase tracking-wider">Empleadores</span><span class="text-[11px] font-caption-bold px-1.5 py-0.5 rounded bg-surface-white/10 text-tertiary-fixed-dim font-semibold">N=8</span></div><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="empleadores-resumen-y-contratacion" href="#"><span class="">Resumen y contratación</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="empleadores-valoracion-de-la-carrera" href="#"><span class="">Valoración de la Carrera</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="empleadores-brechas-de-competencias" href="#"><span class="">Brechas de competencias</span></a><a class="flex items-center px-space-sm py-space-xs rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-on-primary transition-colors font-body-default text-body-default" data-path="empleadores-cruces-y-exportar" href="#"><span class="">Cruces y exportar</span></a></nav></div></aside><div class="pl-64 min-h-screen" style="height: 100vh; overflow: hidden auto; display: flex; flex-direction: column;"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-gutter"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs bg-surface-container-high px-space-sm py-1 rounded-lg"><span class="material-symbols-outlined text-ink-600 text-[18px]">event_available</span><select class="bg-transparent font-label-default text-label-default text-ink-900 border-none outline-none cursor-pointer pr-space-xs"><option selected="">Periodo 2024</option><option>Periodo 2023</option><option>Periodo 2022</option></select></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs bg-surface-container px-space-sm py-1 rounded-full"><span class="w-2 h-2 rounded-full bg-status-success"></span><span class="font-caption-bold text-caption-bold text-on-surface-variant">Datos cargados: N=14 (T) · N=9 (E)</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen px-gutter pb-margin"><div class="flex flex-col w-full space-y-space-lg">
+<!-- Cabecera de pantalla y barra superior contextual -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-titulados-active text-heat-blue-5 font-caption-bold text-caption-bold">
+            Titulados
+          </span>
+<span class="font-caption-meta text-caption-meta text-ink-600">
+            Módulo Académico · Seguimiento a Graduados
+          </span>
+</div>
+<div class="flex items-baseline gap-space-sm">
+<h1 class="font-headline-page text-headline-page text-ink-900 tracking-tight">
+            Financiamiento <span class="font-title-section text-title-section text-ink-600 font-normal">(n = 10)</span>
+</h1>
+</div>
+</div>
+<!-- Acciones de cabecera -->
+<div class="flex items-center gap-space-sm">
+<button class="inline-flex items-center gap-space-xs px-3 py-2 rounded-lg bg-surface-white text-ink-600 hover:text-ink-900 shadow-sm transition-colors font-label-default text-label-default" id="btn-def-modal">
+<span class="material-symbols-outlined text-[18px]">info</span>
+<span class="">(i) Definiciones</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-3.5 py-2 rounded-lg bg-heat-blue-5 text-on-primary hover:bg-heat-blue-6 shadow-sm transition-colors font-label-default text-label-default">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span class="">Exportar vista</span>
+</button>
+</div>
+</div>
+<!-- Barra de Filtros Estándar -->
+<div class="bg-surface-white p-space-md rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex flex-wrap items-center gap-space-lg">
+<!-- Rango de Año -->
+<div class="flex items-center gap-space-sm">
+<span class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider">Año titulación:</span>
+<div class="flex items-center gap-space-xs bg-surface-container px-3 py-1.5 rounded-lg">
+<span class="font-body-tabular text-body-tabular text-ink-900 font-medium">2018</span>
+<input class="w-24 accent-heat-blue-5 cursor-pointer" max="2023" min="2018" type="range" value="2023">
+<span class="font-body-tabular text-body-tabular text-ink-900 font-medium">2023</span>
+</div>
+</div>
+<!-- Selector Estado Laboral -->
+<div class="flex items-center gap-space-xs">
+<span class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider">Estado:</span>
+<select class="bg-surface-container font-label-default text-label-default text-ink-900 rounded-lg px-2.5 py-1.5 outline-none cursor-pointer">
+<option selected="">Todos los estados (3)</option>
+<option>Asalariado en área afín</option>
+<option>Independiente / Freelance</option>
+<option>En búsqueda activa</option>
+</select>
+</div>
+<!-- Selector Sector -->
+<div class="flex items-center gap-space-xs">
+<span class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider">Sector:</span>
+<select class="bg-surface-container font-label-default text-label-default text-ink-900 rounded-lg px-2.5 py-1.5 outline-none cursor-pointer">
+<option selected="">Todos los sectores</option>
+<option>Tecnología y Software</option>
+<option>Servicios Financieros</option>
+<option>Industrial / Manufactura</option>
+</select>
+</div>
+<!-- Botón Limpiar filtros -->
+<button class="font-label-default text-label-default text-heat-blue-5 hover:text-heat-blue-6 transition-colors underline decoration-dotted">
+          Limpiar filtros
+        </button>
+</div>
+<!-- Conteo de respuestas -->
+<div class="inline-flex items-center gap-space-xs px-3 py-1 rounded-full bg-surface-container font-caption-bold text-caption-bold text-ink-900">
+<span class="w-2 h-2 rounded-full bg-heat-blue-5"></span>
+<span class="">Mostrando 10 de 14 respuestas (interesados en posgrado)</span>
+</div>
+</div>
+</div>
+<!-- Componente 1: Gráfico de Barras de Distribución General -->
+<div class="bg-surface-white p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<h2 class="font-title-section text-title-section text-ink-900">
+            Fuente de financiamiento estimada para posgrado
+          </h2>
+<button class="text-ink-600 hover:text-ink-900 p-0.5" title="Explicación de variable">
+<span class="material-symbols-outlined text-[18px]">help_outline</span>
+</button>
+</div>
+<div class="flex items-center gap-space-xs font-body-medium text-body-medium text-ink-600">
+<span class="material-symbols-outlined text-heat-blue-5 text-[18px]">group</span>
+<span class="">n = 10 de 14 interesados en posgrado</span>
+<span class="text-outline-variant">·</span>
+<span class="font-caption-meta text-caption-meta">4 titulados no contemplan formación continua inmediata</span>
+</div>
+</div>
+<!-- Herramientas de tarjeta -->
+<div class="flex items-center gap-space-xs">
+<button class="p-1.5 rounded-lg text-ink-600 hover:bg-surface-container hover:text-ink-900 transition-colors" title="Exportar gráfico PNG">
+<span class="material-symbols-outlined text-[20px]">image</span>
+</button>
+<button class="p-1.5 rounded-lg text-ink-600 hover:bg-surface-container hover:text-ink-900 transition-colors" title="Exportar datos CSV">
+<span class="material-symbols-outlined text-[20px]">csv</span>
+</button>
+</div>
+</div>
+<!-- Visualización de barras horizontales -->
+<div class="flex flex-col gap-space-md pt-space-xs">
+<!-- Item 1: Recursos propios -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between text-body-default font-body-default">
+<span class="font-body-medium text-ink-900">Recursos propios</span>
+<div class="flex items-center gap-space-xs">
+<span class="font-body-tabular text-body-tabular font-medium text-ink-900">5 de 10</span>
+<span class="font-caption-bold text-caption-bold text-heat-blue-6 bg-heat-blue-1 px-1.5 py-0.5 rounded">50,0%</span>
+</div>
+</div>
+<div class="w-full h-7 bg-surface-container rounded-lg overflow-hidden flex">
+<div class="bg-heat-blue-5 h-full rounded-lg transition-all duration-500 relative flex items-center px-2" style="width: 50%;">
+<span class="text-[11px] font-semibold text-on-primary font-caption-bold">50,0%</span>
+</div>
+</div>
+</div>
+<!-- Item 2: Becas estatales -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between text-body-default font-body-default">
+<span class="font-body-medium text-ink-900">Becas estatales</span>
+<div class="flex items-center gap-space-xs">
+<span class="font-body-tabular text-body-tabular font-medium text-ink-900">3 de 10</span>
+<span class="font-caption-bold text-caption-bold text-heat-blue-6 bg-heat-blue-1 px-1.5 py-0.5 rounded">30,0%</span>
+</div>
+</div>
+<div class="w-full h-7 bg-surface-container rounded-lg overflow-hidden flex">
+<div class="bg-heat-blue-4 h-full rounded-lg transition-all duration-500 relative flex items-center px-2" style="width: 30%;">
+<span class="text-[11px] font-semibold text-on-primary font-caption-bold">30,0%</span>
+</div>
+</div>
+</div>
+<!-- Item 3: Créditos educativos -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between text-body-default font-body-default">
+<span class="font-body-medium text-ink-900">Créditos educativos</span>
+<div class="flex items-center gap-space-xs">
+<span class="font-body-tabular text-body-tabular font-medium text-ink-900">1 de 10</span>
+<span class="font-caption-bold text-caption-bold text-heat-blue-6 bg-heat-blue-1 px-1.5 py-0.5 rounded">10,0%</span>
+</div>
+</div>
+<div class="w-full h-7 bg-surface-container rounded-lg overflow-hidden flex">
+<div class="bg-heat-blue-3 h-full rounded-lg transition-all duration-500 relative flex items-center px-2" style="width: 10%;">
+<span class="text-[11px] font-semibold text-ink-900 font-caption-bold">10,0%</span>
+</div>
+</div>
+</div>
+<!-- Item 4: Patrocinio empresarial -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between text-body-default font-body-default">
+<span class="font-body-medium text-ink-900">Patrocinio empresarial</span>
+<div class="flex items-center gap-space-xs">
+<span class="font-body-tabular text-body-tabular font-medium text-ink-900">1 de 10</span>
+<span class="font-caption-bold text-caption-bold text-heat-blue-6 bg-heat-blue-1 px-1.5 py-0.5 rounded">10,0%</span>
+</div>
+</div>
+<div class="w-full h-7 bg-surface-container rounded-lg overflow-hidden flex">
+<div class="bg-heat-blue-2 h-full rounded-lg transition-all duration-500 relative flex items-center px-2" style="width: 10%;">
+<span class="text-[11px] font-semibold text-ink-900 font-caption-bold">10,0%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Componente 2: Configuración del Cruce Analítico Bivariado -->
+<div class="bg-surface-white p-space-md rounded-xl shadow-sm flex flex-col gap-space-sm">
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex flex-wrap items-center gap-space-md">
+<!-- Selector Variable Filas -->
+<div class="flex items-center gap-space-xs">
+<span class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider">Filas (Y):</span>
+<div class="bg-surface-container px-3 py-1.5 rounded-lg flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-ink-600 text-[18px]">table_rows</span>
+<select class="bg-transparent font-body-medium text-body-medium text-ink-900 outline-none cursor-pointer">
+<option selected="">Fuente de financiamiento estimada</option>
+<option>Nivel socioeconómico familiar</option>
+<option>Rango de ingreso actual</option>
+</select>
+</div>
+</div>
+<!-- Selector Variable Columnas -->
+<div class="flex items-center gap-space-xs">
+<span class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider">Columnas (X):</span>
+<div class="bg-surface-container px-3 py-1.5 rounded-lg flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-ink-600 text-[18px]">view_column</span>
+<select class="bg-transparent font-body-medium text-body-medium text-ink-900 outline-none cursor-pointer">
+<option selected="">Nivel de posgrado de interés</option>
+<option>Modalidad de preferencia (Presencial/Virtual)</option>
+<option>Área de especialización TI</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Toggle Frecuencia / Porcentaje -->
+<div class="flex items-center gap-space-sm">
+<span class="font-caption-meta text-caption-meta text-ink-600">Visualizar métrica:</span>
+<div class="inline-flex p-1 rounded-lg bg-surface-container">
+<button class="px-3 py-1 rounded text-body-tabular text-caption-bold bg-surface-white text-ink-900 shadow-sm transition-all" id="toggle-fi">
+            Frecuencia (fi)
+          </button>
+<button class="px-3 py-1 rounded text-body-tabular text-caption-meta text-ink-600 hover:text-ink-900 transition-all" id="toggle-pct">
+            % por fila
+          </button>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs font-caption-meta text-caption-meta text-ink-600">
+<span class="material-symbols-outlined text-[16px] text-heat-blue-5">info</span>
+<span class="">Cruce sobre la base de titulados interesados en posgrado: n = 10 de 14.</span>
+</div>
+</div>
+<!-- Componente 3: Grilla de Dos Tarjetas (Tabla vs Mapa de Calor) -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg items-stretch">
+<!-- Tarjeta Izquierda: Tabla de Contingencia -->
+<div class="bg-surface-white p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex flex-col">
+<h3 class="font-title-card text-title-card text-ink-900">
+              Tabla de contingencia: Financiamiento vs. Nivel de posgrado
+            </h3>
+<span class="font-caption-meta text-caption-meta text-ink-600">Submuestra interesada: n = 10</span>
+</div>
+<button class="text-ink-600 hover:text-ink-900 p-1 rounded" title="Descargar CSV">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+<!-- Tabla Estructurada -->
+<div class="overflow-x-auto rounded-lg">
+<table class="w-full text-left font-body-tabular text-body-tabular">
+<thead>
+<tr class="bg-surface-container text-ink-600 font-caption-bold text-caption-bold">
+<th class="py-2.5 px-3">Fuente \ Nivel</th>
+<th class="py-2.5 px-3 text-right">Diplomado</th>
+<th class="py-2.5 px-3 text-right">Especialidad</th>
+<th class="py-2.5 px-3 text-right">Maestría</th>
+<th class="py-2.5 px-3 text-right">Doctorado</th>
+<th class="py-2.5 px-3 text-right font-caption-bold text-ink-900 bg-surface-container-high">Total</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container text-ink-900">
+<!-- Fila 1 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-body-medium">Recursos propios</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="2" data-pct="40,0%">2</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="1" data-pct="20,0%">1</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="2" data-pct="40,0%">2</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="0" data-pct="0,0%">0</td>
+<td class="py-2.5 px-3 text-right font-medium bg-surface-container-low font-body-tabular">5</td>
+</tr>
+<!-- Fila 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-body-medium">Becas estatales</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="0" data-pct="0,0%">0</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="0" data-pct="0,0%">0</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="2" data-pct="66,7%">2</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="1" data-pct="33,3%">1</td>
+<td class="py-2.5 px-3 text-right font-medium bg-surface-container-low font-body-tabular">3</td>
+</tr>
+<!-- Fila 3 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-body-medium">Créditos educativos</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="0" data-pct="0,0%">0</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="0" data-pct="0,0%">0</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="1" data-pct="100,0%">1</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="0" data-pct="0,0%">0</td>
+<td class="py-2.5 px-3 text-right font-medium bg-surface-container-low font-body-tabular">1</td>
+</tr>
+<!-- Fila 4 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-body-medium">Patrocinio empresarial</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="1" data-pct="100,0%">1</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="0" data-pct="0,0%">0</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="0" data-pct="0,0%">0</td>
+<td class="py-2.5 px-3 text-right cell-val" data-fi="0" data-pct="0,0%">0</td>
+<td class="py-2.5 px-3 text-right font-medium bg-surface-container-low font-body-tabular">1</td>
+</tr>
+<!-- Fila Total -->
+<tr class="bg-surface-container-high font-medium text-ink-900">
+<td class="py-2.5 px-3 font-caption-bold">Total Marginal</td>
+<td class="py-2.5 px-3 text-right">3</td>
+<td class="py-2.5 px-3 text-right">1</td>
+<td class="py-2.5 px-3 text-right">5</td>
+<td class="py-2.5 px-3 text-right">1</td>
+<td class="py-2.5 px-3 text-right font-caption-bold text-heat-blue-6 bg-surface-container-highest">10</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="pt-space-xs font-caption-meta text-caption-meta text-ink-600">
+        Totales marginales calculados con exactitud aritmética sobre n = 10.
+      </div>
+</div>
+<!-- Tarjeta Derecha: Mapa de Calor de Frecuencias -->
+<div class="bg-surface-white p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex flex-col">
+<h3 class="font-title-card text-title-card text-ink-900">
+              Mapa de calor de frecuencias
+            </h3>
+<span class="font-caption-meta text-caption-meta text-ink-600">Gradiente secuencial institucional (0 a 2 respuestas)</span>
+</div>
+<div class="flex items-center gap-1.5 font-caption-meta text-caption-meta text-ink-600">
+<span class="">Escala:</span>
+<span class="inline-block w-3.5 h-3.5 rounded bg-heat-blue-1"></span>
+<span class="">0</span>
+<span class="inline-block w-3.5 h-3.5 rounded bg-heat-blue-3"></span>
+<span class="">1</span>
+<span class="inline-block w-3.5 h-3.5 rounded bg-heat-blue-5"></span>
+<span class="">2</span>
+</div>
+</div>
+<!-- Matriz de Calor Gráfica -->
+<div class="grid grid-cols-5 gap-1.5 text-center font-body-tabular text-body-tabular select-none">
+<!-- Header Columnas -->
+<div class="font-caption-bold text-caption-bold text-ink-600 py-1.5"></div>
+<div class="font-caption-bold text-caption-bold text-ink-600 py-1.5">Diplomado</div>
+<div class="font-caption-bold text-caption-bold text-ink-600 py-1.5">Especialidad</div>
+<div class="font-caption-bold text-caption-bold text-ink-600 py-1.5">Maestría</div>
+<div class="font-caption-bold text-caption-bold text-ink-600 py-1.5">Doctorado</div>
+<!-- Fila 1: Recursos propios -->
+<div class="flex items-center justify-start text-left px-2 font-caption-bold text-[12px] text-ink-900 truncate" title="Recursos propios">
+            R. propios
+          </div>
+<div class="bg-heat-blue-5 text-on-primary py-3 rounded flex items-center justify-center font-caption-bold text-caption-bold">2</div>
+<div class="bg-heat-blue-3 text-ink-900 py-3 rounded flex items-center justify-center font-caption-bold text-caption-bold">1</div>
+<div class="bg-heat-blue-5 text-on-primary py-3 rounded flex items-center justify-center font-caption-bold text-caption-bold">2</div>
+<div class="bg-heat-blue-1 text-ink-600 py-3 rounded flex items-center justify-center font-body-tabular">0</div>
+<!-- Fila 2: Becas estatales -->
+<div class="flex items-center justify-start text-left px-2 font-caption-bold text-[12px] text-ink-900 truncate" title="Becas estatales">
+            B. estatales
+          </div>
+<div class="bg-heat-blue-1 text-ink-600 py-3 rounded flex items-center justify-center font-body-tabular">0</div>
+<div class="bg-heat-blue-1 text-ink-600 py-3 rounded flex items-center justify-center font-body-tabular">0</div>
+<div class="bg-heat-blue-5 text-on-primary py-3 rounded flex items-center justify-center font-caption-bold text-caption-bold">2</div>
+<div class="bg-heat-blue-3 text-ink-900 py-3 rounded flex items-center justify-center font-caption-bold text-caption-bold">1</div>
+<!-- Fila 3: Créditos educativos -->
+<div class="flex items-center justify-start text-left px-2 font-caption-bold text-[12px] text-ink-900 truncate" title="Créditos educativos">
+            Créditos ed.
+          </div>
+<div class="bg-heat-blue-1 text-ink-600 py-3 rounded flex items-center justify-center font-body-tabular">0</div>
+<div class="bg-heat-blue-1 text-ink-600 py-3 rounded flex items-center justify-center font-body-tabular">0</div>
+<div class="bg-heat-blue-3 text-ink-900 py-3 rounded flex items-center justify-center font-caption-bold text-caption-bold">1</div>
+<div class="bg-heat-blue-1 text-ink-600 py-3 rounded flex items-center justify-center font-body-tabular">0</div>
+<!-- Fila 4: Patrocinio empresarial -->
+<div class="flex items-center justify-start text-left px-2 font-caption-bold text-[12px] text-ink-900 truncate" title="Patrocinio empresarial">
+            Patrocinio emp.
+          </div>
+<div class="bg-heat-blue-3 text-ink-900 py-3 rounded flex items-center justify-center font-caption-bold text-caption-bold">1</div>
+<div class="bg-heat-blue-1 text-ink-600 py-3 rounded flex items-center justify-center font-body-tabular">0</div>
+<div class="bg-heat-blue-1 text-ink-600 py-3 rounded flex items-center justify-center font-body-tabular">0</div>
+<div class="bg-heat-blue-1 text-ink-600 py-3 rounded flex items-center justify-center font-body-tabular">0</div>
+</div>
+</div>
+<div class="pt-space-xs font-caption-meta text-caption-meta text-ink-600">
+        Texto en alto contraste blanco en celdas con frecuencia máxima (2).
+      </div>
+</div>
+</div>
+<!-- Componente 4: Resultados Estadísticos y Aviso de Validez Obligatorio -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-stretch">
+<!-- Panel Estadístico Chi-Cuadrada (5 cols) -->
+<div class="lg:col-span-5 bg-surface-white p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider">
+            Prueba de Independencia (χ²)
+          </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-caption-bold font-caption-bold bg-surface-container text-ink-600">
+            α = 0,05
+          </span>
+</div>
+<div class="pt-1 flex items-baseline gap-space-xs">
+<span class="font-display-kpi text-display-kpi text-ink-900 font-bold">p = 0,660</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container text-caption-bold font-caption-bold text-ink-900">
+            p ≥ α
+          </span>
+</div>
+</div>
+<!-- Métricas fijas tabulares sin juicios cualitativos -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-md">
+<div class="bg-surface-container-low p-space-sm rounded-lg">
+<span class="font-caption-meta text-caption-meta text-ink-600">χ² calculado:</span>
+<div class="font-title-section text-title-section font-semibold text-ink-900 font-body-tabular">4,12</div>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg">
+<span class="font-caption-meta text-caption-meta text-ink-600">Grados de libertad (gl):</span>
+<div class="font-title-section text-title-section font-semibold text-ink-900 font-body-tabular">6</div>
+</div>
+</div>
+<div class="pt-space-xs font-caption-meta text-caption-meta text-ink-600">
+        Prueba asintótica de Pearson para tablas de contingencia bivariadas.
+      </div>
+</div>
+<!-- Aviso Ámbar por Muestra Pequeña (7 cols) -->
+<div class="lg:col-span-7 bg-[#FEF3C7] p-space-md rounded-xl flex items-start gap-space-md shadow-sm">
+<div class="w-10 h-10 rounded-lg bg-[#FDE68A] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[#B45309] text-[24px]">warning</span>
+</div>
+<div class="flex flex-col gap-1 text-[#78350F]">
+<span class="font-caption-bold text-caption-bold text-[#92400E] uppercase tracking-wider">
+          Condición de validez estadística
+        </span>
+<p class="font-body-default text-body-default leading-relaxed font-medium">
+          Aviso de validez: 12 de 12 celdas tienen frecuencia esperada menor a 5; el resultado es orientativo.
+        </p>
+<span class="font-caption-meta text-caption-meta text-[#92400E] pt-1">
+          Criterio de Cochran no satisfecho debido al tamaño de la muestra efectiva (n = 10). Emplear para fines exploratorios departamentales y acreditación ARCUSUR.
+        </span>
+</div>
+</div>
+</div>
+<!-- Componente 5: Barra Inferior de Navegación de Flujo -->
+
+<!-- Modal Contextual: ¿Cómo leer esto? / Definiciones -->
+<div class="fixed inset-0 bg-[#0B2A4A]/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-gutter" id="modal-definiciones">
+<div class="bg-surface-white rounded-xl shadow-2xl max-w-lg w-full p-space-lg flex flex-col gap-space-md">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-heat-blue-5 text-[24px]">help</span>
+<h3 class="font-title-card text-title-card text-ink-900">Interpretación: Financiamiento</h3>
+</div>
+<button class="text-ink-600 hover:text-ink-900 p-1" id="btn-close-modal">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-space-sm font-body-default text-body-default text-ink-600 leading-relaxed">
+<p class="">
+<strong class="text-ink-900">Submuestra (n = 10):</strong> Corresponde a los 10 titulados que expresaron intención activa de cursar estudios de posgrado (Diplomado, Especialidad, Maestría o Doctorado).
+        </p>
+<p class="">
+<strong class="text-ink-900">Chi-cuadrada (χ² = 4,12; p = 0,660):</strong> Con p ≥ 0,05 no se descarta la independencia entre la fuente de financiamiento y el nivel de posgrado.
+        </p>
+<p class="">
+<strong class="text-ink-900">Limitación estadística:</strong> Al tener frecuencias esperadas inferiores a 5 en todas las celdas, las probabilidades deben considerarse referenciales conforme al estándar estadístico.
+        </p>
+</div>
+<div class="pt-space-xs flex justify-end">
+<button class="px-4 py-2 rounded-lg bg-heat-blue-5 text-on-primary font-label-default text-label-default hover:bg-heat-blue-6 transition-colors" id="btn-close-modal-footer">
+          Entendido
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Conmutador interactivo de métrica: Frecuencia (fi) vs Porcentaje (%)
+  const btnFi = document.getElementById('toggle-fi');
+  const btnPct = document.getElementById('toggle-pct');
+  const cells = document.querySelectorAll('.cell-val');
+
+  if (btnFi && btnPct) {
+    btnFi.addEventListener('click', () => {
+      btnFi.classList.remove('bg-transparent', 'text-ink-600', 'font-caption-meta');
+      btnFi.classList.add('bg-surface-white', 'text-ink-900', 'shadow-sm', 'font-caption-bold');
+
+      btnPct.classList.remove('bg-surface-white', 'text-ink-900', 'shadow-sm', 'font-caption-bold');
+      btnPct.classList.add('bg-transparent', 'text-ink-600', 'font-caption-meta');
+
+      cells.forEach(cell => {
+        cell.textContent = cell.getAttribute('data-fi');
+      });
+    });
+
+    btnPct.addEventListener('click', () => {
+      btnPct.classList.remove('bg-transparent', 'text-ink-600', 'font-caption-meta');
+      btnPct.classList.add('bg-surface-white', 'text-ink-900', 'shadow-sm', 'font-caption-bold');
+
+      btnFi.classList.remove('bg-surface-white', 'text-ink-900', 'shadow-sm', 'font-caption-bold');
+      btnFi.classList.add('bg-transparent', 'text-ink-600', 'font-caption-meta');
+
+      cells.forEach(cell => {
+        cell.textContent = cell.getAttribute('data-pct');
+      });
+    });
+  }
+
+  // Comportamiento del modal de definiciones
+  const modal = document.getElementById('modal-definiciones');
+  const openModal = document.getElementById('btn-def-modal');
+  const closeModal = document.getElementById('btn-close-modal');
+  const closeModalFooter = document.getElementById('btn-close-modal-footer');
+
+  const toggleModal = (show) => {
+    if (!modal) return;
+    if (show) {
+      modal.classList.remove('hidden');
+    } else {
+      modal.classList.add('hidden');
+    }
+  };
+
+  if (openModal) openModal.addEventListener('click', () => toggleModal(true));
+  if (closeModal) closeModal.addEventListener('click', () => toggleModal(false));
+  if (closeModalFooter) closeModalFooter.addEventListener('click', () => toggleModal(false));
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) toggleModal(false);
+    });
+  }
+</script></main></div>
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>
