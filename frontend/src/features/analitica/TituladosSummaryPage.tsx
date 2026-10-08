@@ -17,21 +17,31 @@ export function TituladosSummaryPage() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [datasetsReady, setDatasetsReady] = useState(false)
 
   useEffect(() => {
     apiRequest<DatasetSummary[]>('/datasets').then((items) => {
       const titulados = items.filter((item) => item.surveyType === 'TITULADOS')
       setDatasets(titulados)
       if (!datasetId || !titulados.some((item) => item.id === datasetId)) setDatasetId(titulados.at(-1)?.id)
-    }).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)))
-  }, [datasetId])
+    }).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setDatasetsReady(true))
+  }, [])
 
   useEffect(() => {
+    if (!datasetsReady) return
     if (!datasetId) { setLoading(false); return }
     setLoading(true); setError(null)
     apiRequest<AnalyticsSummary>(`/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=${encodeURIComponent(fields)}`)
-      .then(setSummary).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setLoading(false))
-  }, [datasetId])
+      .then(setSummary).catch((cause) => {
+        const message = cause instanceof Error ? cause.message : String(cause)
+        if (message.includes('HTTP 404')) {
+          localStorage.removeItem('simulacionem.activeDatasetId')
+          setDatasetId(undefined)
+          setSummary(null)
+        }
+        setError(message)
+      }).finally(() => setLoading(false))
+  }, [datasetId, datasetsReady])
 
   const laboral = summary?.distributions.situacion_laboral_actual
   const posgrado = summary?.distributions.interes_posgrado

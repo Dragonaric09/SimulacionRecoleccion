@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.NoSuchElementException;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @RestController
 @RequestMapping("/api/analytics")
@@ -60,6 +65,12 @@ public class AnalyticsController {
                                       @RequestParam String rowField,
                                       @RequestParam String columnField) {
         return analytics.cross(datasetId, rowField, columnField);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> datasetNotFound(NoSuchElementException ex) {
+        return Map.of("error", "El dataset solicitado no existe o fue eliminado");
     }
 
     private List<String> split(String fields) {
