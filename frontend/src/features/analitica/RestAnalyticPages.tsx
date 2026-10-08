@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Download, FlaskConical, Grid2X2, SlidersHorizontal } from 'lucide-react'
+import { BriefcaseBusiness, Building2, Download, FlaskConical, Grid2X2, SlidersHorizontal, Users } from 'lucide-react'
 import { apiRequest } from '@/api/client'
 import { Badge } from '@/components/analytics/Badge'
 import { FilterToolbar } from '@/components/analytics/FilterToolbar'
@@ -15,6 +15,26 @@ type Tone = 'titulados' | 'empleadores'
 type Competence = { code: string; name: string; group: string; validCount: number; average: number; standardDeviation: number | null }
 type Cross = { validCount: number; rowCategories: string[]; columnCategories: string[]; counts: Record<string, Record<string, number>>; percentages: Record<string, Record<string, number>>; smallSample: boolean }
 type Simulation = { sampleSize: number; repetitions: number; seed: number; categories: { category: string; observedPercentage: number; simulatedMean: number; lower95: number; upper95: number }[] }
+
+export function EmploymentProfilePage() {
+  const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets('TITULADOS')
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null)
+  useEffect(() => { if (!datasetId) { setSummary(null); return }; setLoading(true); setError(null); apiRequest<AnalyticsSummary>(`/analytics/titulados/employment?datasetId=${encodeURIComponent(datasetId)}`).then(setSummary).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setLoading(false)) }, [datasetId])
+  const labor = summary?.distributions.situacion_laboral_actual; const sectors = summary?.distributions.sector_trabajo; const employed = labor ? countMatching(labor, ['trabaja', 'organización', 'empresa', 'emprend'], ['no trabaja', 'búsqueda', 'desemple']) : null; const unemployed = labor ? countMatching(labor, ['no trabaja', 'búsqueda', 'desemple']) : null
+  return <div className="mx-auto w-full max-w-7xl space-y-6"><PageHeading title="Perfil y empleabilidad" description="Situación laboral y sectores de inserción de las personas tituladas." tone="titulados" /><DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} />{summary && <FilterToolbar count={`${summary.validResponses} de ${summary.totalResponses} respuestas`} />}{loading && <StatusPanel kind="loading" title="Cargando perfil" description="Consultando la situación laboral y el sector de trabajo." />}{error && <StatusPanel kind="warning" title="No se pudo cargar el perfil" description={error} />}{!loading && !error && !summary && <StatusPanel kind="info" title="Sin dataset de titulados" description="Importa un CSV de titulados desde Cargar datos para ver este perfil." />}{summary && <><div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4"><KpiCard label="Titulados encuestados" value={String(summary.validResponses)} detail="Respuestas válidas" note={`n = ${summary.validResponses}`} icon={UsersIcon} tone="titulados" /><KpiCard label="Con trabajo" value={employed === null ? '—' : String(employed)} detail={employed === null ? 'No disponible' : `${formatPercentage(employed, summary.validResponses)} de la muestra`} note={`n = ${summary.validResponses}`} icon={WorkIcon} tone="titulados" /><KpiCard label="Sin empleo" value={unemployed === null ? '—' : String(unemployed)} detail={unemployed === null ? 'No disponible' : `${formatPercentage(unemployed, summary.validResponses)} de la muestra`} note={`n = ${summary.validResponses}`} icon={UsersIcon} tone="titulados" /><KpiCard label="Sectores registrados" value={sectors ? String(Object.keys(sectors.counts).length) : '—'} detail="Categorías observadas" note={`n = ${sectors?.validCount ?? 0}`} icon={BuildingIcon} tone="titulados" /></div><div className="grid items-start gap-6 lg:grid-cols-12"><ProfileDistributionCard title="Situación laboral" description="Distribución de inserción en el mercado laboral" distribution={labor} className="lg:col-span-5" /><ProfileDistributionCard title="Sector de trabajo" description="Sectores declarados por las personas tituladas" distribution={sectors} className="lg:col-span-7" /></div></>}</div>
+}
+
+const UsersIcon = Users
+const WorkIcon = BriefcaseBusiness
+const BuildingIcon = Building2
+
+function ProfileDistributionCard({ title, description, distribution, className = '' }: { title: string; description: string; distribution?: CategoryDistribution; className?: string }) {
+  const entries = useMemo(() => Object.entries(distribution?.counts ?? {}), [distribution])
+  return <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}><CardHeader><CardTitle className="title-card">{title}</CardTitle><CardDescription>{description} <span className="whitespace-nowrap">· n = {distribution?.validCount ?? 0}</span></CardDescription></CardHeader><CardContent>{entries.length ? <div className="space-y-4">{entries.map(([label, count], index) => { const percent = distribution?.percentages[label] ?? 0; return <div key={label} className="space-y-1"><div className="flex items-start justify-between gap-4 text-sm"><span className="min-w-0 break-words font-medium">{label}</span><span className="tabular-nums whitespace-nowrap font-medium">{count} <span className="caption-meta text-ink-600">({percent}%)</span></span></div><div className="h-2.5 overflow-hidden rounded-full bg-surface-container-high"><div className="h-full rounded-full transition-all duration-500" style={{ width: `${percent}%`, backgroundColor: index === 0 ? '#1f6fb5' : index === 1 ? '#14a39a' : '#94a3b8' }} /></div></div>})}</div> : <p className="text-sm text-ink-600">Sin respuestas disponibles para esta variable.</p>}</CardContent></Card>
+}
+
+function countMatching(distribution: CategoryDistribution, fragments: string[], excluded: string[] = []) { return Object.entries(distribution.counts).filter(([label]) => { const normalized = label.toLowerCase(); return fragments.some((fragment) => normalized.includes(fragment)) && !excluded.some((fragment) => normalized.includes(fragment)) }).reduce((total, [, count]) => total + count, 0) }
+function formatPercentage(value: number, total: number) { return `${total ? ((value / total) * 100).toFixed(1) : 0}%` }
 
 export function DatasetAnalyticsPage({ title, description, domain, endpoint, fields, cards }: { title: string; description: string; domain: Domain; endpoint: string; fields?: string; cards: { key: string; label: string }[] }) {
   const tone: Tone = domain === 'TITULADOS' ? 'titulados' : 'empleadores'

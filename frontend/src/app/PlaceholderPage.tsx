@@ -7,7 +7,7 @@ import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { CargarDatosPage } from '@/features/encuesta/CargarDatosPage'
 import { TituladosSummaryPage } from '@/features/analitica/TituladosSummaryPage'
-import { CompetencePage, CrossExportPage, DatasetAnalyticsPage, SimulationPage, UnavailableAnalyticPage } from '@/features/analitica/RestAnalyticPages'
+import { CompetencePage, CrossExportPage, DatasetAnalyticsPage, EmploymentProfilePage, SimulationPage, UnavailableAnalyticPage } from '@/features/analitica/RestAnalyticPages'
 import type { NavigationItem } from './navigation'
 
 export function PlaceholderPage({ route }: { route: NavigationItem }) {
@@ -17,7 +17,7 @@ export function PlaceholderPage({ route }: { route: NavigationItem }) {
   if (route.path === '/titulados/resumen') {
     return <TituladosSummaryPage />
   }
-  if (route.path === '/titulados/perfil-empleabilidad') return <DatasetAnalyticsPage title="Perfil de empleabilidad" description="Distribuciones de situación laboral y sector de trabajo." domain="TITULADOS" endpoint="/analytics/titulados/employment" cards={[{ key: 'situacion_laboral_actual', label: 'Situación laboral' }, { key: 'sector_trabajo', label: 'Sector de trabajo' }]} />
+  if (route.path === '/titulados/perfil-empleabilidad') return <EmploymentProfilePage />
   if (route.path === '/titulados/formacion-continua') return <DatasetAnalyticsPage title="Formación continua" description="Formación complementaria e interés en posgrado." domain="TITULADOS" endpoint="/analytics/titulados/education" cards={[{ key: 'tiene_formacion_complementaria', label: 'Formación complementaria' }, { key: 'interes_posgrado', label: 'Interés en posgrado' }]} />
   if (route.path === '/titulados/brechas-competencias') return <CompetencePage domain="TITULADOS" />
   if (route.path === '/titulados/cruces-exportacion') return <CrossExportPage domain="TITULADOS" />

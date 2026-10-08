@@ -4,7 +4,7 @@ import { cn } from 'cn'
 
 export function KpiCard({ label, value, detail, note, icon: Icon, tone = 'neutral' }: { label: string; value: string; detail?: string; note?: string; icon?: LucideIcon; tone?: 'neutral' | 'titulados' | 'empleadores' }) {
   return (
-    <Card className="kpi-card">
+    <Card className="kpi-card h-fit gap-0 py-0">
       <CardContent className="space-y-2 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="caption-bold text-ink-600">{label}</p>
