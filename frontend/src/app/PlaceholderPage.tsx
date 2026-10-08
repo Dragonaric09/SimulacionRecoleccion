@@ -7,6 +7,7 @@ import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { CargarDatosPage } from '@/features/encuesta/CargarDatosPage'
 import { TituladosSummaryPage } from '@/features/analitica/TituladosSummaryPage'
+import { CompetencePage, CrossExportPage, DatasetAnalyticsPage, UnavailableAnalyticPage } from '@/features/analitica/RestAnalyticPages'
 import type { NavigationItem } from './navigation'
 
 export function PlaceholderPage({ route }: { route: NavigationItem }) {
@@ -16,6 +17,16 @@ export function PlaceholderPage({ route }: { route: NavigationItem }) {
   if (route.path === '/titulados/resumen') {
     return <TituladosSummaryPage />
   }
+  if (route.path === '/titulados/perfil-empleabilidad') return <DatasetAnalyticsPage title="Perfil de empleabilidad" description="Distribuciones de situación laboral y sector de trabajo." domain="TITULADOS" endpoint="/analytics/titulados/employment" cards={[{ key: 'situacion_laboral_actual', label: 'Situación laboral' }, { key: 'sector_trabajo', label: 'Sector de trabajo' }]} />
+  if (route.path === '/titulados/formacion-continua') return <DatasetAnalyticsPage title="Formación continua" description="Formación complementaria e interés en posgrado." domain="TITULADOS" endpoint="/analytics/titulados/education" cards={[{ key: 'tiene_formacion_complementaria', label: 'Formación complementaria' }, { key: 'interes_posgrado', label: 'Interés en posgrado' }]} />
+  if (route.path === '/titulados/brechas-competencias') return <CompetencePage domain="TITULADOS" />
+  if (route.path === '/titulados/cruces-exportacion') return <CrossExportPage domain="TITULADOS" />
+  if (route.path === '/titulados/financiamiento') return <UnavailableAnalyticPage title="Financiamiento" description="Cruces entre fuente de financiamiento e interés en posgrado." domain="TITULADOS" items={['Selectores de filas y columnas: no disponible hasta contar con el endpoint de financiamiento.', 'Tabla de contingencia y mapa de calor: pendientes de contrato.', 'Chi-cuadrada y aviso de frecuencias esperadas: pendiente de integración.']} />
+  if (route.path === '/titulados/simulacion-escenarios') return <UnavailableAnalyticPage title="Simulación de escenarios" description="Escenarios descriptivos sobre las frecuencias observadas." domain="TITULADOS" items={['Variable, N, repeticiones y semilla: pendientes de API.', 'Probabilidades ajustables y rango del 95 %: requieren regla matemática documentada.', 'No se muestran resultados hasta implementar el modelo en la fase 11.']} />
+  if (route.path === '/empleadores/resumen-contratacion') return <DatasetAnalyticsPage title="Resumen de contratación" description="Indicadores descriptivos de tipo, tamaño y contratación." domain="EMPLEADORES" endpoint="/analytics/employers/summary" fields="tipo_organizacion,tamano_organizacion,contrato_titulados_ultimos_5_anios" cards={[{ key: 'tipo_organizacion', label: 'Tipo de organización' }, { key: 'contrato_titulados_ultimos_5_anios', label: 'Contratación reciente' }]} />
+  if (route.path === '/empleadores/valoracion-carrera') return <DatasetAnalyticsPage title="Valoración de la carrera" description="Distribuciones categóricas por afirmación de la encuesta." domain="EMPLEADORES" endpoint="/analytics/employers/valuation" cards={[{ key: 'valoracion_formacion_1', label: 'Valoración de formación' }, { key: 'valoracion_relacion_1', label: 'Relación con la carrera' }]} />
+  if (route.path === '/empleadores/brechas-competencias') return <CompetencePage domain="EMPLEADORES" />
+  if (route.path === '/empleadores/cruces-exportacion') return <CrossExportPage domain="EMPLEADORES" />
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">

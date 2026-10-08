@@ -1107,6 +1107,38 @@ Bloqueos: ninguno para iniciar la Fase 9
 Siguiente paso: Fase 9 - migración del resto del analizador
 ```
 
+### Fase 9: migración del resto del analizador completada con pendientes de contrato
+
+```text
+Fecha: 2026-10-08
+Fase: 9 - migración del resto del analizador
+Estado: COMPLETADA CON LIMITACIONES DOCUMENTADAS
+Completado: perfil y empleabilidad conectado a /api/analytics/titulados/employment; formación continua conectada a /api/analytics/titulados/education; resumen de empleadores conectado a /api/analytics/employers/summary; valoración de carrera conectada a /api/analytics/employers/valuation; brechas de titulados y empleadores conectadas a /api/analytics/competencies/gaps; cruces de titulados y empleadores conectados a /api/analytics/crosses; estados de carga, vacío y error en las pantallas conectadas; selección de dataset por dominio; pantallas de financiamiento y simulación con estados explícitos de no disponibilidad
+Archivos afectados: frontend/src/features/analitica/RestAnalyticPages.tsx; frontend/src/app/PlaceholderPage.tsx; este plan
+Rutas migradas:
+  - /titulados/perfil-empleabilidad
+  - /titulados/formacion-continua
+  - /titulados/financiamiento
+  - /titulados/brechas-competencias
+  - /titulados/cruces-exportacion
+  - /titulados/simulacion-escenarios
+  - /empleadores/resumen-contratacion
+  - /empleadores/valoracion-carrera
+  - /empleadores/brechas-competencias
+  - /empleadores/cruces-exportacion
+Validaciones:
+  - npm run build → TypeScript y Vite completan correctamente
+  - npm run lint → permanecen únicamente los 2 errores preexistentes de react-refresh/only-export-components en components/ui/button.tsx y components/ui/form.tsx
+  - Las pantallas conectadas muestran conteos, porcentajes, medias y desviaciones desde respuestas de API; no incorporan valores escritos manualmente
+  - Las brechas excluyen No observado porque el endpoint ya entrega solo valoraciones válidas para el promedio
+  - Los cruces muestran filas, columnas, frecuencias y n; la exportación se mantiene deshabilitada hasta la Fase 11
+Decisiones: se reutiliza un componente analítico común para selección de dataset, estados y distribuciones; empleadores conserva la paleta verde azulado; las pantallas sin endpoint no fingen resultados y enumeran los datos/operaciones que faltan
+Limitaciones: financiamiento requiere un endpoint de tabla de contingencia y Chi-cuadrada; simulación requiere modelo matemático y API; exportaciones CSV/Excel/PNG se implementarán en Fase 11; perfil y formación usan las distribuciones disponibles y no agregan pestañas de ramas que todavía no tienen endpoints específicos
+Pendientes no bloqueantes: ampliar endpoints por rama del formulario, reemplazar entradas libres de variables de cruce por catálogos permitidos, agregar radar/heatmap y pruebas de componentes, implementar exportaciones y simulación en su fase asignada
+Bloqueos: ninguno para iniciar la Fase 10; las limitaciones de financiamiento, exportación y simulación están documentadas y no se presentan como completadas
+Siguiente paso: Fase 10 - formularios dinámicos
+```
+
 ## Resultado final esperado
 
 Una aplicación React mantenible, conectada a Spring Boot y PostgreSQL, que importe CSV reales, informe problemas de calidad, guarde datos normalizados, calcule indicadores reproducibles y muestre las pantallas analíticas mediante un layout compartido.
