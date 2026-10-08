@@ -201,8 +201,10 @@ public class CsvImportService {
             values.put("column_" + (i + 1), value);
         }
         putKnown(values, headers, record, "edad_rango", "edad que tiene actualmente");
+        putKnown(values, headers, record, "genero", "género");
         putKnown(values, headers, record, "anio_titulacion", "año de titulación");
         putKnown(values, headers, record, "sector_trabajo", "sector en el que trabaja");
+        putKnown(values, headers, record, "antiguedad_trabajo", "antiguedad tiene en su actual trabajo");
         putKnown(values, headers, record, "tipo_organizacion", "tipo de organización");
         putKnown(values, headers, record, "tamano_organizacion", "tamaño de la organización");
         putKnown(values, headers, record, "rubro_organizacion", "rubro o sector principal");

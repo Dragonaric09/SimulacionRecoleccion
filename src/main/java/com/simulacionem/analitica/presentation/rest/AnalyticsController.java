@@ -3,6 +3,7 @@ package com.simulacionem.analitica.presentation.rest;
 import com.simulacionem.analitica.application.dto.AnalyticsSummaryDto;
 import com.simulacionem.analitica.application.dto.CompetenceAverageDto;
 import com.simulacionem.analitica.application.dto.CrossTabulationDto;
+import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
 import com.simulacionem.analitica.application.service.AnalyticsService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,7 +41,13 @@ public class AnalyticsController {
     public AnalyticsSummaryDto tituladosEmployment(@RequestParam(required = false) UUID datasetId) {
         return analytics.summary(datasetId, "TITULADOS", List.of(
                 "anio_titulacion", "anios_vida_profesional", "anios_desempleo",
-                "situacion_laboral_actual", "sector_trabajo", "primera_experiencia_laboral"));
+                "situacion_laboral_actual", "sector_trabajo", "primera_experiencia_laboral",
+                "edad_rango", "genero"));
+    }
+
+    @GetMapping("/titulados/employment/profile")
+    public EmploymentProfileDto tituladosEmploymentProfile(@RequestParam(required = false) UUID datasetId) {
+        return analytics.employmentProfile(datasetId);
     }
 
     @GetMapping("/titulados/education")

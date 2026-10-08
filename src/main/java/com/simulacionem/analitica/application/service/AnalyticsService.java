@@ -4,6 +4,7 @@ import com.simulacionem.analitica.application.dto.AnalyticsSummaryDto;
 import com.simulacionem.analitica.application.dto.CategoryDistributionDto;
 import com.simulacionem.analitica.application.dto.CompetenceAverageDto;
 import com.simulacionem.analitica.application.dto.CrossTabulationDto;
+import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.CompetenceRatingEntity;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.DatasetImportEntity;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.SurveyResponseEntity;
@@ -59,6 +60,24 @@ public class AnalyticsService {
         }
         return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), rows.size(), rows.size(), distributions, averages, medians, standardDeviations,
                 rows.size() < MINIMUM_SAMPLE_SIZE);
+    }
+
+    @Transactional(readOnly = true)
+    public EmploymentProfileDto employmentProfile(UUID datasetId) {
+        DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
+        List<SurveyResponseEntity> validRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<EmploymentProfileDto.CohortPointDto> points = validRows
+                .stream()
+                .map(response -> {
+                    Double year = number(value(response, "anio_titulacion"));
+                    Double professionalYears = number(value(response, "anios_vida_profesional"));
+                    return year == null || professionalYears == null
+                            ? null
+                            : new EmploymentProfileDto.CohortPointDto(year, professionalYears);
+                })
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        return new EmploymentProfileDto(dataset.getId(), validRows.size(), points);
     }
 
     @Transactional(readOnly = true)
@@ -130,7 +149,10 @@ public class AnalyticsService {
     }
 
     private boolean numericField(String field) { return field.equals("anio_titulacion") || field.equals("anios_vida_profesional") || field.equals("anios_desempleo") || field.endsWith("_puntaje"); }
-    private Double number(String value) { try { return Double.valueOf(value); } catch (NumberFormatException ex) { return null; } }
+    private Double number(String value) {
+        if (value == null || value.isBlank()) return null;
+        try { return Double.valueOf(value.trim()); } catch (NumberFormatException ex) { return null; }
+    }
     private Double sampleStandardDeviation(List<Double> values) {
         if (values.size() < 2) return null;
         double average = values.stream().mapToDouble(Double::doubleValue).average().orElse(0);
