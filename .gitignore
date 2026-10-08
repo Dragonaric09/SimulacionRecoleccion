@@ -19,3 +19,5 @@ frontend/.vite/
 # Env
 .env
 .env.*
+
+/data

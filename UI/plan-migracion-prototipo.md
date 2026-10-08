@@ -6,6 +6,41 @@ Trasladar progresivamente el prototipo visual de `UI/` al frontend React ubicado
 
 La migración debe evitar convertir cada archivo HTML en una página aislada. El resultado esperado es una aplicación React con un layout compartido, componentes reutilizables, rutas internas y datos preparados para conectarse con la API del backend.
 
+## Cómo utilizar este plan
+
+Este documento debe ejecutarse de arriba hacia abajo. Cada fase tiene una dependencia: no se debe saltar a la siguiente solamente porque una parte de la interfaz ya sea visible.
+
+Para cada tarea, la IA o desarrollador debe:
+
+1. leer primero los archivos relacionados;
+2. comprobar el estado actual del repositorio;
+3. realizar el cambio más pequeño que cumpla el objetivo;
+4. ejecutar las validaciones indicadas;
+5. revisar el diff antes de continuar;
+6. dejar documentados los bloqueos o decisiones pendientes.
+
+Una fase no se considera terminada porque el código compile parcialmente. Debe cumplir sus entregables y criterios de aceptación.
+
+### Regla de no regresión
+
+Antes de modificar una fase ya completada, verificar que no se rompan:
+
+- `npm run lint`;
+- `npm run build`;
+- las rutas existentes;
+- el menú lateral;
+- el contrato de la API;
+- los tipos compartidos.
+
+### Límites de la migración
+
+- No copiar HTML completo dentro de componentes React.
+- No leer CSV directamente desde las vistas analíticas.
+- No modificar los CSV originales durante la importación.
+- No crear un componente diferente para cada tarjeta si la estructura puede parametrizarse.
+- No inventar endpoints sin revisar primero los controladores y casos de uso existentes.
+- No eliminar archivos del prototipo hasta que la pantalla React equivalente haya sido validada.
+
 ## Estado actual
 
 ### Prototipo visual
@@ -41,6 +76,18 @@ La carpeta `form/` contiene la definición funcional de las encuestas que alimen
 
 Esta información debe utilizarse como contrato funcional para las pantallas de captura y mantenerse separada de las pantallas analíticas del prototipo.
 
+### Datos de entrada del analizador
+
+La carpeta `data/` contiene los CSV que serán importados al analizador. Estos archivos deben considerarse datos originales de entrada, no archivos que el frontend deba leer directamente.
+
+El flujo esperado es:
+
+```text
+CSV original → validación → mapeo de columnas → normalización → almacenamiento → indicadores → vistas analíticas
+```
+
+Los CSV presentan encabezados largos, preguntas con saltos de línea, posibles columnas duplicadas, respuestas vacías y valores escritos de distintas formas. Por eso se necesita una etapa de importación y calidad de datos antes de consumirlos en las pantallas.
+
 ## Principios de la migración
 
 1. Migrar primero la estructura y la navegación, y después el contenido específico de cada pantalla.
@@ -52,6 +99,43 @@ Esta información debe utilizarse como contrato funcional para las pantallas de 
 7. No conectar datos reales hasta que la estructura visual y las rutas estén estabilizadas.
 8. Mantener la lógica de negocio fuera de los componentes puramente visuales.
 9. Tratar los JSON de `form/` como definiciones de formularios y no como datos incrustados directamente en las vistas.
+10. Mantener los CSV originales sin alterarlos y producir los datos normalizados mediante un proceso reproducible.
+
+## Convenciones de trabajo
+
+### Ubicación de archivos
+
+- Código React: `frontend/src/`.
+- Componentes shadcn: `frontend/src/components/ui/`.
+- Funcionalidades de titulados y empleadores: `frontend/src/features/`.
+- Cliente HTTP: `frontend/src/api/`.
+- Formatos de encuestas: `form/`.
+- CSV originales: `data/`.
+- Prototipo de referencia: `UI/`.
+- Backend Spring Boot: `src/main/java/`.
+
+### Separación de responsabilidades
+
+| Responsabilidad | Lugar recomendado |
+|---|---|
+| Layout y navegación | `frontend/src/components/layout/` y `app/` |
+| Componentes visuales básicos | `frontend/src/components/ui/` |
+| Pantallas de titulados | `frontend/src/features/titulados/` |
+| Pantallas de empleadores | `frontend/src/features/empleadores/` |
+| Definiciones de formularios | `form/` o un módulo de dominio equivalente |
+| Importación y normalización CSV | Backend Spring Boot |
+| Llamadas HTTP | `frontend/src/api/` o `features/*/api.ts` |
+| Datos temporales de prueba | `frontend/src/shared/mock-data/` |
+
+### Entregable mínimo por tarea
+
+Cada tarea debe terminar con:
+
+- archivos creados o modificados claramente identificados;
+- comportamiento esperado descrito en una frase;
+- validación ejecutada;
+- errores conocidos documentados;
+- ningún cambio no relacionado incluido en el diff.
 
 ## Fase 1: Preparación y línea base
 
@@ -213,7 +297,78 @@ Se recomienda comenzar por `resumen-titulados.html`, porque representa la estruc
 
 Una primera pantalla React completa que sirva como patrón para las demás.
 
-## Fase 6: Modelo de datos de presentación
+## Fase 6: Importación y calidad de datos
+
+Esta fase debe completarse antes de conectar las vistas analíticas con datos reales.
+
+### Organización de los archivos
+
+Conservar los CSV originales sin modificarlos y separar los resultados procesados:
+
+```text
+data/
+├── raw/
+│   ├── titulados.csv
+│   └── empleadores.csv
+├── processed/
+└── README.md
+```
+
+### Validación del archivo
+
+El backend debe validar:
+
+- que el archivo sea CSV y no esté vacío;
+- que corresponda a titulados o empleadores;
+- que las columnas mínimas existan;
+- que no haya encabezados ambiguos;
+- que las filas tengan una estructura válida;
+- que las respuestas respeten los tipos definidos en `form/`.
+
+### Mapeo y normalización
+
+No se deben utilizar directamente los textos completos de las preguntas como nombres internos. Cada columna debe mapearse a un identificador estable relacionado con la pregunta del formulario.
+
+La normalización debe contemplar:
+
+- espacios innecesarios;
+- valores equivalentes como `SI`, `Sí` y `si`;
+- escalas como `4 - Suficiente` convertidas a valores numéricos;
+- celdas vacías convertidas a `null`;
+- respuestas múltiples;
+- fechas;
+- departamentos y categorías;
+- correos inválidos y advertencias de calidad.
+
+El sistema debe conservar el valor original cuando aplique y registrar advertencias sin alterar silenciosamente la fuente.
+
+### Resultado de la importación
+
+Cada importación debe registrar:
+
+- nombre del archivo;
+- tipo de encuesta;
+- periodo;
+- fecha de importación;
+- filas leídas, válidas y rechazadas;
+- cantidad de advertencias y errores;
+- estado del conjunto de datos.
+
+Estados sugeridos: `CARGADO`, `VALIDANDO`, `CON_ADVERTENCIAS`, `LISTO` y `CON_ERRORES`.
+
+### API inicial sugerida
+
+```text
+POST /api/datasets/validate
+POST /api/datasets/import
+GET  /api/datasets
+GET  /api/datasets/{id}
+GET  /api/datasets/{id}/quality
+```
+
+La carga y transformación deben ejecutarse en Spring Boot. React debe encargarse de seleccionar el archivo, mostrar el resultado y confirmar la importación.
+
+## Fase 7: Modelo de datos de presentación
 
 Antes de conectar la API completa, se deben definir tipos para los datos que consumen las vistas.
 
@@ -260,7 +415,7 @@ frontend/src/
 
 Los datos ficticios deben permanecer separados de los componentes para poder reemplazarlos posteriormente por llamadas HTTP sin rehacer la interfaz.
 
-## Fase 7: Modelado de formularios dinámicos
+## Fase 8: Modelado de formularios dinámicos
 
 La información existente en `form/` requiere una fase propia antes de implementar las pantallas reales de captura.
 
@@ -326,7 +481,7 @@ Estos componentes deben reutilizar shadcn y `react-hook-form`, que ya están inc
 
 El resultado debe ser una pantalla de encuesta reutilizable que reciba la definición de titulados o empleadores sin duplicar todo el formulario.
 
-## Fase 8: Migración de las pantallas restantes
+## Fase 9: Migración de las pantallas restantes
 
 Después de validar la pantalla piloto, migrar en este orden:
 
@@ -350,7 +505,7 @@ Para cada pantalla:
 - incluir estados de carga, vacío y error;
 - comparar con el HTML original antes de marcarla como terminada.
 
-## Fase 9: Integración con el backend
+## Fase 10: Integración con el backend
 
 La integración con la API debe hacerse después de estabilizar cada vista con datos de ejemplo.
 
@@ -369,7 +524,7 @@ La integración con la API debe hacerse después de estabilizar cada vista con d
 
 Cada pantalla consume datos desde una capa de API definida, sin mezclar transporte HTTP con presentación visual.
 
-## Fase 10: Exportación, filtros y acciones
+## Fase 11: Exportación, filtros y acciones
 
 Las acciones del prototipo deben migrarse gradualmente:
 
@@ -382,7 +537,7 @@ Las acciones del prototipo deben migrarse gradualmente:
 
 Cada acción debe tener un estado explícito y una respuesta visual clara. Las acciones que todavía no tengan backend pueden comenzar con datos locales, pero deben quedar identificadas como provisionales.
 
-## Fase 11: Validación visual y funcional
+## Fase 12: Validación visual y funcional
 
 ### Validación por pantalla
 
@@ -459,14 +614,70 @@ El prototipo usa una paleta y dimensiones propias, mientras que shadcn trae toke
 2. Menú lateral funcional.
 3. Pantalla piloto de resumen de titulados.
 4. Tokens visuales y componentes compartidos.
-5. Modelo común de formularios basado en `form/`.
-6. Renderer de preguntas y validaciones básicas.
-7. Ramificaciones de titulados y empleadores.
-8. Pantallas restantes con datos de ejemplo.
-9. Integración progresiva con la API.
-10. Filtros, exportación y simulación.
-11. Validación final y limpieza del prototipo HTML.
+5. Flujo de importación, validación y calidad de datos.
+6. Mapeo y normalización de los CSV.
+7. Modelo común de formularios basado en `form/`.
+8. Renderer de preguntas y validaciones básicas.
+9. Ramificaciones de titulados y empleadores.
+10. Pantallas restantes con datos de ejemplo.
+11. Integración progresiva con la API.
+12. Filtros, exportación y simulación.
+13. Validación final y limpieza del prototipo HTML.
 
 ## Resultado final esperado
 
 El frontend React debe contener una aplicación navegable y mantenible, con una estructura compartida para todas las secciones, componentes shadcn adaptados al diseño del prototipo, datos tipados y una integración progresiva con el backend Spring Boot.
+
+## Lista de aceptación por fase
+
+### Fases 1 a 4: base técnica y visual
+
+- [ ] El frontend actual compila antes de iniciar la migración.
+- [ ] Las rutas no dependen de archivos HTML.
+- [ ] El layout se renderiza una sola vez.
+- [ ] El elemento activo del menú cambia según la ruta.
+- [ ] Los tokens visuales están definidos en CSS/Tailwind.
+- [ ] Los iconos migrados utilizan `lucide-react`.
+
+### Fase 5: pantalla piloto
+
+- [ ] `/titulados/resumen` abre directamente.
+- [ ] La pantalla usa el layout compartido.
+- [ ] Sus datos están tipados.
+- [ ] Sus tablas y gráficos no dependen de datos escritos dentro del JSX.
+- [ ] La comparación con `UI/resumen-titulados.html` fue realizada.
+
+### Fase 6: importación de datos
+
+- [ ] El CSV original se conserva sin cambios.
+- [ ] El backend identifica el tipo de encuesta.
+- [ ] Las columnas se mapean a nombres internos estables.
+- [ ] Se separan errores de advertencias.
+- [ ] Se informa cuántas filas fueron aceptadas y rechazadas.
+- [ ] Una importación validada puede identificarse por un `datasetId`.
+
+### Fase 7: datos de presentación
+
+- [ ] Cada vista tiene tipos de respuesta definidos.
+- [ ] Los datos mock pueden reemplazarse por datos de API sin cambiar la vista.
+- [ ] Los cálculos de indicadores no están duplicados en varios componentes.
+
+### Fase 8: formularios dinámicos
+
+- [ ] Los dos JSON pueden cargarse con el mismo renderer.
+- [ ] Cada tipo de pregunta tiene una representación visual.
+- [ ] Las preguntas obligatorias se validan.
+- [ ] Las ramas de titulados funcionan según el Mermaid.
+- [ ] El flujo de empleadores funciona de forma lineal.
+- [ ] El envío produce una estructura verificable.
+
+### Fases 9 a 12: vistas, API y cierre
+
+- [ ] Cada pantalla tiene una ruta propia.
+- [ ] Cada pantalla tiene estados de carga, vacío y error.
+- [ ] Las respuestas de API tienen DTOs o tipos equivalentes.
+- [ ] Los filtros afectan los indicadores correspondientes.
+- [ ] Las exportaciones muestran los datos del conjunto seleccionado.
+- [ ] `npm run lint` termina correctamente.
+- [ ] `npm run build` termina correctamente.
+- [ ] No quedan rutas rotas ni imports de la implementación HTML.
