@@ -13,4 +13,5 @@ async function sendFile(path: '/datasets/validate' | '/datasets/import', file: F
 export const validateDataset = (file: File) => sendFile('/datasets/validate', file)
 export const importDataset = (file: File) => sendFile('/datasets/import', file)
 export const listDatasets = () => apiRequest<DatasetSummary[]>('/datasets')
+export const deleteDataset = (id: string) => apiRequest<void>(`/datasets/${encodeURIComponent(id)}`, { method: 'DELETE' })
 

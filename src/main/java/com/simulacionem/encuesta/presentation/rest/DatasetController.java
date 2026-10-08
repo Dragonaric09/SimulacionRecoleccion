@@ -9,6 +9,7 @@ import com.simulacionem.encuesta.infrastructure.persistence.repository.ImportIss
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,6 +61,15 @@ public class DatasetController {
         DatasetImportEntity dataset = datasets.findById(id).orElseThrow();
         return new QualitySummary(dataset.getId(), dataset.getRowsRead(), dataset.getRowsValid(), dataset.getRowsRejected(),
                 dataset.getWarningsCount(), dataset.getErrorsCount(), issues.countByDataset_Id(id));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID id) {
+        if (!datasets.existsById(id)) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND, "Dataset no encontrado");
+        }
+        datasets.deleteById(id);
     }
 
     public record DatasetSummary(UUID id, String surveyType, String sourceFileName, Short period, String status,

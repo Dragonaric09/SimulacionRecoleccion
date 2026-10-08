@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, CheckCircle2, FileUp, RefreshCw, UploadCloud } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, FileUp, RefreshCw, Trash2, UploadCloud } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { Badge } from '@/components/analytics/Badge'
-import { importDataset, listDatasets, validateDataset, type DatasetSummary, type ImportReport } from './api'
+import { deleteDataset, importDataset, listDatasets, validateDataset, type DatasetSummary, type ImportReport } from './api'
 
 type SurveyType = 'TITULADOS' | 'EMPLEADORES'
 
@@ -14,6 +14,7 @@ export function CargarDatosPage() {
   const [report, setReport] = useState<ImportReport | null>(null)
   const [datasets, setDatasets] = useState<DatasetSummary[]>([])
   const [loading, setLoading] = useState<'validate' | 'import' | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -48,6 +49,18 @@ export function CargarDatosPage() {
     finally { setLoading(null) }
   }
 
+  async function removeDataset(dataset: DatasetSummary) {
+    if (!window.confirm(`¿Eliminar el dataset "${dataset.sourceFileName}"? También se eliminarán sus respuestas e incidencias.`)) return
+    setDeletingId(dataset.id); setError(null)
+    try {
+      await deleteDataset(dataset.id)
+      setDatasets((current) => current.filter((item) => item.id !== dataset.id))
+      if (localStorage.getItem('simulacionem.activeDatasetId') === dataset.id) localStorage.removeItem('simulacionem.activeDatasetId')
+      if (report?.datasetId === dataset.id) setReport(null)
+    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)) }
+    finally { setDeletingId(null) }
+  }
+
   const surveyLabel = surveyType === 'TITULADOS' ? 'Titulados' : 'Empleadores'
   const canProcess = Boolean(file && report && report.errors === 0 && report.rowsValid > 0 && report.surveyType === surveyType)
 
@@ -69,7 +82,7 @@ export function CargarDatosPage() {
 
     {error && <StatusPanel kind="warning" title="No se pudo completar la operación" description={error} />}
     {report && <ImportReportView report={report} expectedType={surveyType} />}
-    <DatasetList datasets={datasets} />
+    <DatasetList datasets={datasets} deletingId={deletingId} onDelete={removeDataset} />
   </div>
 }
 
@@ -78,7 +91,7 @@ function ImportReportView({ report, expectedType }: { report: ImportReport; expe
   return <Card><CardHeader><CardTitle className="flex items-center gap-2">{report.errors === 0 ? <CheckCircle2 className="text-status-success" /> : <AlertTriangle className="text-status-warning" />}Resultado de validación</CardTitle><CardDescription>{typeMismatch ? `El archivo fue detectado como ${report.surveyType}, pero se esperaba ${expectedType}.` : `Tipo detectado: ${report.surveyType}`}</CardDescription></CardHeader><CardContent className="space-y-4"><div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{[['Leídas', report.rowsRead], ['Válidas', report.rowsValid], ['Rechazadas', report.rowsRejected], ['Avisos', report.warnings]].map(([label, value]) => <div key={String(label)} className="rounded-lg bg-slate-50 p-3"><p className="caption-meta text-ink-600">{label}</p><p className="display-kpi tabular-nums text-ink-900">{value}</p></div>)}</div>{report.issues.length > 0 && <div className="space-y-2"><p className="label-default text-ink-600">Incidencias detectadas</p><div className="max-h-64 space-y-2 overflow-y-auto">{report.issues.map((issue, index) => <div key={`${issue.code}-${index}`} className={`rounded-lg border p-3 text-sm ${issue.severity === 'ERROR' ? 'border-red-200 bg-red-50 text-red-900' : 'border-amber-200 bg-amber-50 text-amber-900'}`}><p className="font-medium">{issue.severity} · {issue.code}</p><p>{issue.message}{issue.row ? ` (fila ${issue.row})` : ''}</p></div>)}</div></div>}{report.datasetId && <StatusPanel kind="success" title="Dataset disponible" description={`Identificador: ${report.datasetId}`} />}</CardContent></Card>
 }
 
-function DatasetList({ datasets }: { datasets: DatasetSummary[] }) {
-  return <Card><CardHeader><CardTitle>Datasets disponibles</CardTitle><CardDescription>{datasets.length ? 'Selecciona el identificador activo para usarlo en las vistas analíticas.' : 'Todavía no hay datasets importados en el backend.'}</CardDescription></CardHeader><CardContent>{datasets.length > 0 && <div className="space-y-2">{datasets.slice().reverse().map((dataset) => <label key={dataset.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border-line p-3 hover:bg-slate-50"><input type="radio" name="activeDataset" defaultChecked={localStorage.getItem('simulacionem.activeDatasetId') === dataset.id} onChange={() => localStorage.setItem('simulacionem.activeDatasetId', dataset.id)} /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{dataset.sourceFileName}</span><span className="block text-xs text-ink-600">{dataset.surveyType} · {dataset.rowsValid} válidas · {dataset.status}</span></span><span className="hidden text-xs text-ink-600 md:block">{dataset.id}</span></label>)}</div>}</CardContent></Card>
+function DatasetList({ datasets, deletingId, onDelete }: { datasets: DatasetSummary[]; deletingId: string | null; onDelete: (dataset: DatasetSummary) => void }) {
+  return <Card><CardHeader><CardTitle>Datasets disponibles</CardTitle><CardDescription>{datasets.length ? 'Selecciona el identificador activo o elimina un dataset que ya no necesites.' : 'Todavía no hay datasets importados en el backend.'}</CardDescription></CardHeader><CardContent>{datasets.length > 0 && <div className="space-y-2">{datasets.slice().reverse().map((dataset) => <div key={dataset.id} className="flex items-center gap-3 rounded-lg border border-border-line p-3 hover:bg-slate-50"><label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3"><input type="radio" name="activeDataset" defaultChecked={localStorage.getItem('simulacionem.activeDatasetId') === dataset.id} onChange={() => localStorage.setItem('simulacionem.activeDatasetId', dataset.id)} /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{dataset.sourceFileName}</span><span className="block text-xs text-ink-600">{dataset.surveyType} · {dataset.rowsValid} válidas · {dataset.status}</span></span><span className="hidden text-xs text-ink-600 md:block">{dataset.id}</span></label><Button variant="destructive" size="sm" onClick={() => onDelete(dataset)} disabled={deletingId !== null} aria-label={`Eliminar ${dataset.sourceFileName}`}><Trash2 />{deletingId === dataset.id ? 'Eliminando…' : 'Eliminar'}</Button></div>)}</div>}</CardContent></Card>
 }
 
