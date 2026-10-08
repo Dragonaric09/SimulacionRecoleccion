@@ -1003,7 +1003,7 @@ Validaciones:
   - Valoración de empleadores → categorías originales de 3 niveles más `No sabe`, con conteos y porcentajes; no se inventa una escala 1–5
   - Desviación estándar muestral → calculada con `n - 1`; no disponible cuando `n < 2`
   - Muestra pequeña → `smallSample` se activa cuando `n < 5`
-  - Suite Maven → 5 pruebas, 0 fallos
+  - Suite Maven → 6 pruebas, 0 fallos
   - Fórmulas y tratamiento de vacíos documentados en esta fase
 API disponible:
   - GET /api/analytics/titulados/summary
@@ -1019,6 +1019,26 @@ Extensión posible: puede calcularse una comparación titulados-empleadores por 
 Pendientes no bloqueantes: agregar pruebas unitarias aisladas para porcentajes y cruces; incorporar al resultado Chi-cuadrada el aviso de celdas con frecuencia esperada menor que 5; la regla de muestra pequeña ya queda fijada en `n < 5`; `No sabe` y `No observado` deben permanecer separados de medias y desviaciones
 Bloqueos: ninguno para iniciar la Fase 5; la brecha expectativa-valoración permanece pendiente del contrato de datos
 Siguiente paso: Fase 5 - base técnica del frontend
+```
+
+### Fase 5: base técnica del frontend completada
+
+```text
+Fecha: 2026-10-07
+Fase: 5 - base técnica del frontend
+Estado: COMPLETADA
+Completado: router SPA basado en History API; configuración única de navegación; AppLayout; sidebar responsive con estado activo y menú móvil; header común; rutas provisionales para titulados y empleadores; redirección de rutas desconocidas; acceso directo a rutas mediante SpaForwardController existente
+Archivos afectados: frontend/src/App.tsx; frontend/src/app/navigation.ts; frontend/src/app/router.tsx; frontend/src/app/AppLayout.tsx; frontend/src/app/PlaceholderPage.tsx; este plan
+Rutas verificadas en la configuración: /cargar-datos; /titulados/resumen; /titulados/perfil-empleabilidad; /titulados/formacion-continua; /titulados/financiamiento; /titulados/brechas-competencias; /titulados/cruces-exportacion; /titulados/simulacion-escenarios; /empleadores/resumen-contratacion; /empleadores/valoracion-carrera; /empleadores/brechas-competencias; /empleadores/cruces-exportacion
+Validaciones:
+  - npm run build → TypeScript y Vite completan correctamente
+  - Todas las rutas se generan desde una configuración única y conservan navegación directa por URL
+  - El enlace activo se actualiza al navegar y el menú móvil puede abrirse y cerrarse
+  - npm run lint → quedan 2 errores preexistentes en componentes generados de shadcn (`button.tsx` y `form.tsx`); no corresponden a la implementación de esta fase
+Decisiones: no se agrega una dependencia de router adicional; la navegación usa History API para mantener la base liviana y permitir acceso directo con el forwarding del backend; las pantallas aún no migradas muestran un estado provisional explícito
+Pendientes no bloqueantes: migrar componentes visuales y tokens del prototipo en Fase 6; conectar carga real en Fase 7; reemplazar estados provisionales por vistas analíticas en Fases 8 y 9
+Bloqueos: ninguno para iniciar la Fase 6
+Siguiente paso: Fase 6 - sistema visual y componentes compartidos
 ```
 
 ## Resultado final esperado
