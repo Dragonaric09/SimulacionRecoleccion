@@ -15,7 +15,7 @@
 | Backend Spring Boot | Base inicial disponible; pruebas OK |
 | PostgreSQL | Configurado mediante Docker Compose; configuración válida |
 | Importación CSV | Pendiente |
-| Modelo de datos definitivo | En preparación mediante `data/data-dictionary.md` |
+| Modelo de datos definitivo | V1 creada; persistencia de aplicación y pruebas de dataset pendientes |
 | API analítica | Parcial; pendiente de ampliar |
 | Migración de pantallas | Pendiente |
 
@@ -239,7 +239,7 @@ Una fase `COMPLETADA` debe tener evidencia: prueba ejecutada, endpoint probado, 
 |---|---|---|---|---|
 | 0 | Conocer el estado real del repositorio | Ninguna | Línea base | Lint, build y pruebas registrados |
 | 1 | Relacionar formularios, CSV, BD y vistas | Fase 0 | Diccionario de datos | Campos críticos mapeados |
-| 2 | Crear persistencia versionada | Fase 1 | Esquema y migraciones | Dataset de prueba guardado |
+| 2 | Crear persistencia versionada | Fase 1 | Esquema, migraciones y acceso desde la aplicación | Dataset de prueba guardado y consultado |
 | 3 | Procesar CSV de forma reproducible | Fase 2 | Importador y reporte de calidad | CSV de prueba importado |
 | 4 | Definir cálculos y respuestas de API | Fase 3 | Servicios y contratos analíticos | Resultados manuales coinciden |
 | 5 | Preparar navegación SPA | Fase 0 | Router y layout | Rutas abren directamente |
@@ -412,6 +412,20 @@ Registrar fila, columna, valor original, tipo de problema, mensaje, severidad y 
 4. Crear entidades JPA, repositorios y migraciones.
 5. Crear datos de prueba pequeños y anónimos.
 6. Probar inserción y consulta de un dataset.
+
+### Lista de cierre de la fase
+
+- [x] Existe una estrategia de migraciones elegida y documentada.
+- [x] Flyway está configurado en el backend.
+- [x] Existe una migración PostgreSQL versionada y aplicable desde cero.
+- [x] PostgreSQL levanta y la migración se aplica correctamente.
+- [x] Hibernate arranca con `ddl-auto=validate` sin intentar modificar el esquema.
+- [x] Existen entidades JPA para el núcleo de datasets y respuestas que utilizará la aplicación.
+- [x] Existen repositorios Spring Data para datasets y respuestas.
+- [x] Existe un fixture pequeño, anónimo y reproducible dentro de la prueba.
+- [x] Una prueba de integración guarda y consulta un dataset sin depender del frontend.
+- [x] La relación dataset-respuesta y la eliminación en cascada quedan respaldadas por las claves foráneas de la migración.
+- [ ] Las entidades auxiliares de mapeos, competencias e incidencias se ampliarán al implementar el importador y la validación de Fase 3.
 
 ### Puerta de aceptación
 
@@ -905,6 +919,29 @@ Validaciones: 60 preguntas de titulados; 32 preguntas de empleadores; 85 columna
 Bloqueos: confirmar formalmente el periodo 2026, política de almacenamiento de CSV originales y fórmulas finales de indicadores antes de producción
 Decisiones: UUID + dataset_id + fila de origen; vacíos como null; Sí/No como boolean; escalas como categorías ordenadas; encabezados largos no serán nombres internos
 Siguiente paso: Fase 2 - modelo de PostgreSQL y migraciones
+```
+
+### Fase 2: modelo de PostgreSQL y migraciones completada
+
+```text
+Fecha: 2026-10-07
+Fase: 2 - modelo de PostgreSQL y migraciones
+Estado: COMPLETADA
+Completado: incorporación de Flyway; migraciones V1 y V2; entidades JPA núcleo; repositorios de datasets y respuestas; prueba de persistencia con datos anónimos
+Archivos afectados: pom.xml; src/main/resources/application-dev.yml; src/main/resources/db/migration/V1__create_dataset_import_schema.sql; src/main/resources/db/migration/V2__align_dataset_hash_type.sql; src/main/java/com/simulacionem/encuesta/infrastructure/persistence/entity/; src/main/java/com/simulacionem/encuesta/infrastructure/persistence/repository/; src/test/java/com/simulacionem/encuesta/infrastructure/persistence/DatasetPersistenceTest.java
+Validaciones:
+  - .\mvnw.cmd test -DskipFrontend → BUILD SUCCESS; 2 pruebas, 0 fallos
+  - PostgreSQL 17.6 activo en Docker
+  - Flyway validó y aplicó V1 correctamente
+  - Flyway validó y aplicó V2 correctamente
+  - Spring Boot inició contra PostgreSQL en el puerto alternativo 8082
+  - Hibernate validó el esquema con ddl-auto=validate durante el arranque
+  - .\mvnw.cmd -q -DskipFrontend test → 3 pruebas, 0 fallos
+  - DatasetPersistenceTest → guardado y consulta de un dataset con una respuesta anónima
+Decisiones: Flyway será el mecanismo de migraciones; el esquema usa dataset_import, survey_response, respuestas específicas, catálogo de competencias e import_issue; los payloads crudo/normalizado quedan en JSONB para la primera versión del importador
+Pendientes no bloqueantes: ampliar las entidades auxiliares de mapeos, competencias e incidencias conforme se implemente el importador; agregar pruebas específicas de duplicados y validación en Fase 3
+Bloqueos: ninguno para iniciar la Fase 3
+Siguiente paso: Fase 3 - importación, validación y normalización de CSV
 ```
 
 ## Resultado final esperado

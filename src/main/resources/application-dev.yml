@@ -5,5 +5,5 @@ spring:
     password: dev_password_2026
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
