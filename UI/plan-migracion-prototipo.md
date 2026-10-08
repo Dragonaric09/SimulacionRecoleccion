@@ -775,17 +775,25 @@ Esta fase puede desarrollarse en paralelo después de estabilizar el modelo de f
 
 ## 16. Fase 11: exportación y simulación
 
+Estado: COMPLETADA CON ALCANCE DOCUMENTADO.
+
+La fase implementada trabaja con resultados agregados y no exporta respuestas
+individuales. La exportación de Excel se entrega como `.xls` compatible con
+Excel mediante una tabla HTML; no se genera un paquete `.xlsx` nativo.
+
 ### Exportación
 
 Esta fase debe agregar la exportación de las matrices cruzadas y visualizaciones en CSV, Excel y PNG. La Fase 4 solo entrega la tabla agregada por API; no implementa todavía esos formatos de descarga.
 
-Definir primero si se exportan:
+Alcance implementado:
 
-- datos originales;
-- datos normalizados;
-- tablas agregadas;
-- gráficos;
-- resultados filtrados.
+- tablas agregadas de cruces, con categorías de filas y columnas y sus
+  frecuencias;
+- la matriz visible en la pantalla, en CSV, `.xls` compatible con Excel y PNG;
+- únicamente el cruce seleccionado por el usuario y sin datos personales.
+
+No se exportan datos originales ni respuestas normalizadas individuales desde
+esta pantalla.
 
 La exportación debe respetar permisos y no exponer datos personales innecesarios.
 
@@ -793,16 +801,25 @@ La exportación debe respetar permisos y no exponer datos personales innecesario
 
 La simulación de escenarios queda en esta fase posterior. Debe exponer una API y una regla matemática documentada antes de conectarse a la pantalla `/titulados/simulacion-escenarios`.
 
-Antes de implementarla, documentar:
+Regla implementada:
 
-- variables modificables;
-- escenario base;
-- fórmula o modelo;
-- fuentes de datos;
-- límites de interpretación;
-- diferencia entre simulación descriptiva y predicción.
+- variable actual: distribución observada de `interes_posgrado` en titulados;
+- escenario base: las proporciones de categorías observadas en el dataset
+  seleccionado;
+- modelo: para cada repetición se generan `N` observaciones independientes
+  mediante un muestreo multinomial con esas probabilidades;
+- parámetros modificables: tamaño de muestra, número de repeticiones y semilla;
+- resumen: porcentaje medio simulado y rango aproximado del 95 %, calculado a
+  partir de la desviación estándar muestral entre repeticiones;
+- reproducibilidad: la semilla se recibe en la API y se devuelve junto con el
+  resultado.
 
-No implementar una simulación que solo cambie valores visualmente sin una regla matemática documentada.
+La API es `POST /api/analytics/simulation/multinomial`. La interfaz la conecta
+con `/titulados/simulacion-escenarios` y muestra los valores observados junto a
+los simulados. Es una simulación descriptiva, no una predicción causal ni una
+estimación de resultados futuros; sus conclusiones dependen de que la
+distribución observada sea una base razonable para el escenario.
+
 
 ## 17. Fase 12: seguridad, privacidad y operación
 
@@ -1054,7 +1071,7 @@ Validaciones:
   - git diff --check → sin errores de whitespace
   - npm run lint → los componentes nuevos no agregan errores; permanecen únicamente los 2 errores preexistentes de react-refresh/only-export-components en components/ui/button.tsx y components/ui/form.tsx
   - Los componentes compartidos se utilizan desde más de una pantalla provisional a través de PlaceholderPage
-Decisiones: los colores, tipografías y dimensiones principales se expresan mediante tokens CSS; las pantallas distinguen el dominio de titulados con azul y empleadores con verde azulado; las exportaciones se presentan como controles reutilizables hasta que la Fase 11 implemente sus endpoints
+Decisiones: los colores, tipografías y dimensiones principales se expresan mediante tokens CSS; las pantallas distinguen el dominio de titulados con azul y empleadores con verde azulado; las exportaciones se presentan como controles reutilizables y solo se habilitan cuando existe una matriz calculada
 Pendientes no bloqueantes: revisar los componentes shadcn generados para eliminar la deuda de lint; conectar controles de filtro y exportación con datos reales en las fases analíticas; añadir Dialog y mejoras específicas de Chart cuando se migren las pantallas
 Bloqueos: ninguno para iniciar la Fase 7
 Siguiente paso: Fase 7 - pantalla de carga de datos
@@ -1133,9 +1150,9 @@ Validaciones:
   - npm run lint → permanecen únicamente los 2 errores preexistentes de react-refresh/only-export-components en components/ui/button.tsx y components/ui/form.tsx
   - Las pantallas conectadas muestran conteos, porcentajes, medias y desviaciones desde respuestas de API; no incorporan valores escritos manualmente
   - Las brechas excluyen No observado porque el endpoint ya entrega solo valoraciones válidas para el promedio
-  - Los cruces muestran filas, columnas, frecuencias y n; la exportación se mantiene deshabilitada hasta la Fase 11
+  - Los cruces muestran filas, columnas, frecuencias y n; la exportación se habilita al obtener una matriz y ofrece CSV, `.xls` compatible con Excel y PNG
 Decisiones: se reutiliza un componente analítico común para selección de dataset, estados y distribuciones; empleadores conserva la paleta verde azulado; las pantallas sin endpoint no fingen resultados y enumeran los datos/operaciones que faltan
-Limitaciones: financiamiento requiere un endpoint de tabla de contingencia y Chi-cuadrada; simulación requiere modelo matemático y API; exportaciones CSV/Excel/PNG se implementarán en Fase 11; perfil y formación usan las distribuciones disponibles y no agregan pestañas de ramas que todavía no tienen endpoints específicos
+Limitaciones: financiamiento todavía requiere un endpoint específico de tabla de contingencia y Chi-cuadrada; la simulación implementada es descriptiva y usa `interes_posgrado` como primera variable; perfil y formación usan las distribuciones disponibles y no agregan pestañas de ramas que todavía no tienen endpoints específicos
 Pendientes no bloqueantes: ampliar endpoints por rama del formulario, reemplazar entradas libres de variables de cruce por catálogos permitidos, agregar radar/heatmap y pruebas de componentes, implementar exportaciones y simulación en su fase asignada
 Bloqueos: ninguno para iniciar la Fase 10; las limitaciones de financiamiento, exportación y simulación están documentadas y no se presentan como completadas
 Siguiente paso: Fase 10 - formularios dinámicos
@@ -1156,8 +1173,8 @@ Validaciones:
   - La pantalla `/cargar-datos` acepta el CSV exportado y lo envía al flujo oficial de importación
 Decisiones: la lógica de saltos y obligatoriedad pertenece a Google Forms; el backend solo recibe el CSV exportado y no depende de una sesión de captura
 Pendientes no bloqueantes: documentar en Google Forms la correspondencia entre preguntas y encabezados CSV; verificar periódicamente que cambios en el formulario no rompan el diccionario de datos; añadir soporte XLSX únicamente si se aprueba en el contrato de importación
-Bloqueos: ninguno para iniciar la Fase 11; no se requiere una base de datos de respuestas de captura aparte de los datasets importados
-Siguiente paso: Fase 11 - exportación y simulación
+Bloqueos: ninguno; no se requiere una base de datos de respuestas de captura aparte de los datasets importados
+Siguiente paso: Fase 12 - seguridad, privacidad y operación
 ```
 
 ## Resultado final esperado
