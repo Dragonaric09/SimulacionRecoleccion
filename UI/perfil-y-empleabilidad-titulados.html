@@ -1,13 +1,18 @@
-<!DOCTYPE html><html class="h-full" lang="es" style=""><head>
-<meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>Analizador de Encuestas - Perfil y empleabilidad</title>
-<link href="https://fonts.googleapis.com" rel="preconnect">
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
+﻿<!DOCTYPE html>
+<html class="h-full" lang="es" style="">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Analizador de Encuestas - Perfil y empleabilidad</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
     tailwind.config = {
       darkMode: "class",
       theme: {
@@ -47,1047 +52,1282 @@
       }
     };
   </script>
-<style>
-    body { font-family: 'Inter', sans-serif; }
-    .font-tabular { font-feature-settings: 'tnum' 1; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .font-tabular {
+      font-feature-settings: 'tnum' 1;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
   </style>
 </head>
-<body class="bg-surface text-ink-900 h-screen overflow-hidden flex antialiased">
-<!-- 1. BARRA LATERAL (240px, bg: #0B2A4A) -->
-<aside class="w-[240px] shrink-0 bg-[#0B2A4A] text-white flex flex-col justify-between h-screen border-r border-[#0B2A4A] select-none z-50">
-<div class="flex flex-col">
-<!-- Encabezado de la app -->
-<div class="p-4 flex items-center gap-3 border-b border-white/10">
-<div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-<span class="material-symbols-outlined text-white text-[22px]">school</span>
-</div>
-<div class="flex flex-col min-w-0">
-<span class="font-bold text-[16px] text-white leading-tight truncate tracking-tight">Analizador</span>
-<span class="text-[12px] text-white/70 truncate">Ing. de Sistemas · UMSS</span>
-</div>
-</div>
-<!-- Botón superior: Cargar datos -->
-<div class="p-3">
-<button class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg bg-[#0061A5] hover:bg-[#00518A] text-white text-[13px] font-medium transition-colors shadow-sm"><span class="">+ Cargar datos</span></button>
-</div>
-<!-- Navegación: TITULADOS (7 ítems) & EMPLEADORES (4 ítems) -->
-<nav class="px-2.5 flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-190px)]"><!-- SECCIÓN TITULADOS -->
-<div class="px-2 pt-2 pb-1 flex items-center justify-between">
-<span class="text-[11px] font-bold text-[#1F6FB5] uppercase tracking-wider">TITULADOS</span>
-<span class="text-[10px] font-semibold text-[#1F6FB5] bg-[#E3EEF8] px-1.5 py-0.2 rounded-full font-tabular">N=14</span>
-</div>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors" href="#">
-<span class="">Resumen</span>
-</a>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg bg-[#E3EEF8] text-[#1F6FB5] font-semibold text-[13px] transition-colors shadow-sm" href="#">
-<span class="">Perfil y empleabilidad</span>
-</a>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors" href="#">
-<span class="">Formación continua</span>
-</a>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors" href="#">
-<span class="">Financiamiento</span>
-</a>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors" href="#">
-<span class="">Brechas de competencias</span>
-</a>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors" href="#">
-<span class="">Cruces y exportar</span>
-</a>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors" href="#">
-<span class="">Simulación de escenarios</span>
-</a>
-<!-- SECCIÓN EMPLEADORES -->
-<div class="px-2 pt-4 pb-1 flex items-center justify-between">
-<span class="text-[11px] font-bold text-[#14A39A] uppercase tracking-wider">EMPLEADORES</span>
-<span class="text-[10px] font-semibold text-[#14A39A] bg-[#E1F4F2] px-1.5 py-0.2 rounded-full font-tabular">N=8</span>
-</div>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors" href="#">
-<span class="">Resumen y contratación</span>
-</a>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors" href="#">
-<span class="">Valoración de la Carrera</span>
-</a>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors" href="#">
-<span class="">Brechas de competencias</span>
-</a>
-<a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors" href="#">
-<span class="">Cruces y exportar</span>
-</a></nav>
-</div>
-<!-- Pie de sidebar -->
 
-</aside>
-<!-- CONTENEDOR PRINCIPAL -->
-<div class="flex-1 flex flex-col h-screen overflow-hidden bg-surface">
-<!-- 2. CABECERA SUPERIOR (Header) -->
-<header class="h-14 bg-surface-white border-b border-border-line px-6 flex items-center justify-end shrink-0 z-40">
-<!-- Selector, Chip & Botones de Utilidad (CERO Avatar) -->
-<div class="flex items-center gap-3">
-<!-- Periodo -->
-<div class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1 rounded-lg border border-border-line text-[12px] text-ink-900">
-<span class="material-symbols-outlined text-ink-600 text-[16px]">calendar_today</span>
-<select class="bg-transparent border-none p-0 text-[12px] font-medium outline-none cursor-pointer text-ink-900 pr-1">
-<option selected="">Periodo 2024</option>
-<option>Periodo 2023</option>
-<option>Periodo 2022</option>
-</select>
-</div>
-<!-- Chip de datos -->
-<div class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1 rounded-full border border-border-line">
-<span class="w-2 h-2 rounded-full bg-status-success"></span>
-<span class="text-[12px] font-medium text-ink-900 font-tabular">Datos cargados: N=14 (T) · N=8 (E)</span>
-</div>
-<div class="h-4 w-px bg-border-line mx-1"></div>
-<!-- Botón Definiciones -->
-<button class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-white hover:bg-surface-container text-ink-900 border border-border-line text-[12px] font-medium transition-colors shadow-sm" onclick="document.getElementById('modal-definiciones').classList.remove('hidden')">
-<span class="material-symbols-outlined text-[16px] text-ink-600">info</span>
-<span class="">Definiciones</span>
-</button>
-<!-- Botón Exportar Vista -->
-<div class="relative group">
-<button class="flex items-center gap-1 px-3 py-1 bg-secondary hover:bg-[#00518A] text-white rounded-lg text-[12px] font-medium transition-colors shadow-sm">
-<span class="material-symbols-outlined text-[16px]">download</span>
-<span class="">Exportar vista</span>
-<span class="material-symbols-outlined text-[14px]">expand_more</span>
-</button>
-<div class="hidden group-hover:flex flex-col absolute right-0 top-full mt-1 w-44 bg-surface-white rounded-lg shadow-lg border border-border-line p-1 z-50">
-<button class="flex items-center gap-2 w-full text-left px-2.5 py-1.5 text-ink-900 hover:bg-surface-container-low rounded text-[12px]" onclick="alert('Exportando dataset CSV...')">
-<span class="material-symbols-outlined text-[16px] text-[#1F6FB5]">description</span> CSV (Datos)
+<body class="bg-surface text-ink-900 h-screen overflow-hidden flex antialiased">
+  <!-- 1. BARRA LATERAL (240px, bg: #0B2A4A) -->
+  <aside
+    class="w-[240px] shrink-0 bg-[#0B2A4A] text-white flex flex-col justify-between h-screen border-r border-[#0B2A4A] select-none z-50">
+    <div class="flex flex-col">
+      <!-- Encabezado de la app -->
+      <div class="p-4 flex items-center gap-3 border-b border-white/10">
+        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-white text-[22px]">school</span>
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="font-bold text-[16px] text-white leading-tight truncate tracking-tight">Analizador</span>
+          <span class="text-[12px] text-white/70 truncate">Ing. de Sistemas · UMSS</span>
+        </div>
+      </div>
+      <!-- Botón superior: Cargar datos -->
+      <div class="p-3">
+        <a class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg bg-[#0061A5] hover:bg-[#00518A] text-white text-[13px] font-medium transition-colors shadow-sm"
+          href="cargar-datos.html"><span class="">+ Cargar datos</span></a>
+      </div>
+      <!-- Navegación: TITULADOS (7 ítems) & EMPLEADORES (4 ítems) -->
+      <nav class="px-2.5 flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-190px)]"><!-- SECCIÓN TITULADOS -->
+        <div class="px-2 pt-2 pb-1 flex items-center justify-between">
+          <span class="text-[11px] font-bold text-[#1F6FB5] uppercase tracking-wider">TITULADOS</span>
+          <span
+            class="text-[10px] font-semibold text-[#1F6FB5] bg-[#E3EEF8] px-1.5 py-0.2 rounded-full font-tabular">N=14</span>
+        </div>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors"
+          href="resumen-titulados.html">
+          <span class="">Resumen</span>
+        </a>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg bg-[#E3EEF8] text-[#1F6FB5] font-semibold text-[13px] transition-colors shadow-sm"
+          href="perfil-y-empleabilidad-titulados.html">
+          <span class="">Perfil y empleabilidad</span>
+        </a>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors"
+          href="formacion-continua-titulados.html">
+          <span class="">Formación continua</span>
+        </a>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors"
+          href="financiamiento-titulados.html">
+          <span class="">Financiamiento</span>
+        </a>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors"
+          href="brechas-competencias-titulados.html">
+          <span class="">Brechas de competencias</span>
+        </a>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors"
+          href="cruces-y-exportacion-titulados.html">
+          <span class="">Cruces y exportar</span>
+        </a>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors"
+          href="simulacion-escenarios-titulados.html">
+          <span class="">Simulación de escenarios</span>
+        </a>
+        <!-- SECCIÓN EMPLEADORES -->
+        <div class="px-2 pt-4 pb-1 flex items-center justify-between">
+          <span class="text-[11px] font-bold text-[#14A39A] uppercase tracking-wider">EMPLEADORES</span>
+          <span
+            class="text-[10px] font-semibold text-[#14A39A] bg-[#E1F4F2] px-1.5 py-0.2 rounded-full font-tabular">N=8</span>
+        </div>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors"
+          href="resumen-empleadores.html">
+          <span class="">Resumen y contratación</span>
+        </a>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors"
+          href="valoracion-carrera-empleadores.html">
+          <span class="">Valoración de la Carrera</span>
+        </a>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors"
+          href="brechas-competencias-empleadores.html">
+          <span class="">Brechas de competencias</span>
+        </a>
+        <a class="flex items-center px-2.5 py-1.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white text-[13px] transition-colors"
+          href="cruces-y-exportacion-empleadores.html">
+          <span class="">Cruces y exportar</span>
+        </a>
+      </nav>
+    </div>
+    <!-- Pie de sidebar -->
+
+  </aside>
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div class="flex-1 flex flex-col h-screen overflow-hidden bg-surface">
+    <!-- 2. CABECERA SUPERIOR (Header) -->
+    <header class="h-14 bg-surface-white border-b border-border-line px-6 flex items-center justify-end shrink-0 z-40">
+      <!-- Selector, Chip & Botones de Utilidad (CERO Avatar) -->
+      <div class="flex items-center gap-3">
+        <!-- Periodo -->
+        <div
+          class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1 rounded-lg border border-border-line text-[12px] text-ink-900">
+          <span class="material-symbols-outlined text-ink-600 text-[16px]">calendar_today</span>
+          <select
+            class="bg-transparent border-none p-0 text-[12px] font-medium outline-none cursor-pointer text-ink-900 pr-1">
+            <option selected="">Periodo 2024</option>
+            <option>Periodo 2023</option>
+            <option>Periodo 2022</option>
+          </select>
+        </div>
+        <!-- Chip de datos -->
+        <div
+          class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1 rounded-full border border-border-line">
+          <span class="w-2 h-2 rounded-full bg-status-success"></span>
+          <span class="text-[12px] font-medium text-ink-900 font-tabular">Datos cargados: N=14 (T) · N=8 (E)</span>
+        </div>
+        <div class="h-4 w-px bg-border-line mx-1"></div>
+        <!-- Botón Definiciones -->
+        <button
+          class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-white hover:bg-surface-container text-ink-900 border border-border-line text-[12px] font-medium transition-colors shadow-sm"
+          onclick="document.getElementById('modal-definiciones').classList.remove('hidden')">
+          <span class="material-symbols-outlined text-[16px] text-ink-600">info</span>
+          <span class="">Definiciones</span>
+        </button>
+        <!-- Botón Exportar Vista -->
+        <div class="relative group">
+          <button
+            class="flex items-center gap-1 px-3 py-1 bg-secondary hover:bg-[#00518A] text-white rounded-lg text-[12px] font-medium transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[16px]">download</span>
+            <span class="">Exportar vista</span>
+            <span class="material-symbols-outlined text-[14px]">expand_more</span>
+          </button>
+          <div
+            class="hidden group-hover:flex flex-col absolute right-0 top-full mt-1 w-44 bg-surface-white rounded-lg shadow-lg border border-border-line p-1 z-50">
+            <button
+              class="flex items-center gap-2 w-full text-left px-2.5 py-1.5 text-ink-900 hover:bg-surface-container-low rounded text-[12px]"
+              onclick="alert('Exportando dataset CSV...')">
+              <span class="material-symbols-outlined text-[16px] text-[#1F6FB5]">description</span> CSV (Datos)
             </button>
-<button class="flex items-center gap-2 w-full text-left px-2.5 py-1.5 text-ink-900 hover:bg-surface-container-low rounded text-[12px]" onclick="alert('Exportando Excel...')">
-<span class="material-symbols-outlined text-[16px] text-status-success">table_view</span> Excel (.xlsx)
+            <button
+              class="flex items-center gap-2 w-full text-left px-2.5 py-1.5 text-ink-900 hover:bg-surface-container-low rounded text-[12px]"
+              onclick="alert('Exportando Excel...')">
+              <span class="material-symbols-outlined text-[16px] text-status-success">table_view</span> Excel (.xlsx)
             </button>
-</div>
-</div>
-</div>
-</header>
-<!-- ÁREA DE CONTENIDO SCROLLABLE -->
-<main class="flex-1 overflow-y-auto px-6 py-5">
-<div class="max-w-7xl mx-auto flex flex-col gap-5">
-<!-- 3. TÍTULO Y CHIP DE SECCIÓN -->
-<div class="flex flex-col gap-1.5">
-<div class="flex items-center gap-2">
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold text-[#1F6FB5] bg-[#E3EEF8]">Titulados</span>
-</div>
-<h1 class="text-[26px] font-bold text-ink-900 tracking-tight">Perfil y empleabilidad (n = 14)</h1>
-</div>
-<!-- 4. FILTROS (Fila única compacta) -->
-<div class="bg-surface-white p-3 rounded-xl border border-border-line shadow-sm flex flex-wrap items-center justify-between gap-3">
-<div class="flex flex-wrap items-center gap-3">
-<!-- Filtro: Año de titulación slider de rango -->
-<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-border-line">
-<span class="material-symbols-outlined text-[16px] text-ink-600">date_range</span>
-<span class="text-[12px] font-semibold text-ink-900">Año titulación:</span>
-<span class="text-[12px] font-medium text-[#1F6FB5] font-tabular" id="range-label">2018 - 2023</span>
-<input class="w-20 h-1.5 bg-surface-container-highest rounded appearance-none cursor-pointer accent-[#1F6FB5]" max="2023" min="2018" oninput="document.getElementById('range-label').innerText = '2018 - ' + this.value" type="range" value="2023">
-</div>
-<!-- Filtro: Estado laboral selector múltiple -->
-<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-border-line">
-<span class="material-symbols-outlined text-[16px] text-ink-600">work</span>
-<span class="text-[12px] font-semibold text-ink-900">Estado laboral:</span>
-<select class="bg-transparent text-[12px] font-medium text-ink-900 border-none outline-none cursor-pointer">
-<option selected="">Todos los estados (3)</option>
-<option>En organización/empresa (9)</option>
-<option>Emprendimiento propio (2)</option>
-<option>En búsqueda activa / No trabaja (3)</option>
-</select>
-</div>
-<!-- Filtro: Sector selector múltiple -->
-<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-border-line">
-<span class="material-symbols-outlined text-[16px] text-ink-600">domain</span>
-<span class="text-[12px] font-semibold text-ink-900">Sector:</span>
-<select class="bg-transparent text-[12px] font-medium text-ink-900 border-none outline-none cursor-pointer">
-<option selected="">Todos los sectores</option>
-<option>Privado (Software &amp; Consultoría)</option>
-<option>Público / Estatal</option>
-<option>Independiente</option>
-<option>ONG / Tercero</option>
-</select>
-</div>
-<!-- Botón Limpiar filtros -->
-<button class="flex items-center gap-1 px-2.5 py-1.5 text-ink-600 hover:text-ink-900 text-[12px] font-medium hover:bg-surface-container-low rounded-lg transition-colors">
-<span class="material-symbols-outlined text-[15px]">filter_alt_off</span>
-<span class="">Limpiar filtros</span>
-</button>
-</div>
-<!-- Contador de respuestas -->
-<div class="flex items-center gap-2 text-[12px] text-ink-600">
-<span class="w-2 h-2 rounded-full bg-status-success"></span>
-<span class="">Mostrando <strong class="text-ink-900 font-semibold font-tabular">14 de 14</strong> respuestas</span>
-</div>
-</div>
-<!-- 5. BARRA DE PESTAÑAS (5 pestañas funcionales de 6.3) -->
-<div class="border-b border-border-line flex gap-2">
-<button class="tab-btn px-4 py-2.5 text-[13px] font-semibold border-b-2 border-[#1F6FB5] text-[#1F6FB5] flex items-center gap-2 transition-all" id="tab-btn-perfil" onclick="switchTab('perfil')">
-<span class="material-symbols-outlined text-[17px]">account_circle</span>
-<span class="">Perfil</span>
-<span class="bg-[#E3EEF8] text-[#1F6FB5] px-1.5 py-0.2 rounded-full text-[11px] font-bold font-tabular">n=14</span>
-</button>
-<button class="tab-btn px-4 py-2.5 text-[13px] font-medium text-ink-600 hover:text-ink-900 border-b-2 border-transparent flex items-center gap-2 transition-all" id="tab-btn-trabajo" onclick="switchTab('trabajo')">
-<span class="material-symbols-outlined text-[17px]">work</span>
-<span class="">Trabajo actual</span>
-<span class="bg-surface-container-high text-ink-600 px-1.5 py-0.2 rounded-full text-[11px] font-bold font-tabular">n=9</span>
-</button>
-<button class="tab-btn px-4 py-2.5 text-[13px] font-medium text-ink-600 hover:text-ink-900 border-b-2 border-transparent flex items-center gap-2 transition-all" id="tab-btn-sin-empleo" onclick="switchTab('sin-empleo')">
-<span class="material-symbols-outlined text-[17px]">person_search</span>
-<span class="">Sin empleo</span>
-<span class="bg-surface-container-high text-ink-600 px-1.5 py-0.2 rounded-full text-[11px] font-bold font-tabular">n=3</span>
-</button>
-<button class="tab-btn px-4 py-2.5 text-[13px] font-medium text-ink-600 hover:text-ink-900 border-b-2 border-transparent flex items-center gap-2 transition-all" id="tab-btn-primer-empleo" onclick="switchTab('primer-empleo')">
-<span class="material-symbols-outlined text-[17px]">flag</span>
-<span class="">Primer empleo</span>
-<span class="bg-surface-container-high text-ink-600 px-1.5 py-0.2 rounded-full text-[11px] font-bold font-tabular">n=6</span>
-</button>
-<button class="tab-btn px-4 py-2.5 text-[13px] font-medium text-ink-600 hover:text-ink-900 border-b-2 border-transparent flex items-center gap-2 transition-all" id="tab-btn-emprendimiento" onclick="switchTab('emprendimiento')">
-<span class="material-symbols-outlined text-[17px]">rocket_launch</span>
-<span class="">Emprendimiento</span>
-<span class="bg-surface-container-high text-ink-600 px-1.5 py-0.2 rounded-full text-[11px] font-bold font-tabular">n=2</span>
-</button>
-</div>
-<!-- ========================================== -->
-<!-- PESTAÑA 1: PERFIL (Todas las personas, n=14) -->
-<!-- ========================================== -->
-<div class="tab-content flex flex-col gap-6" id="tab-perfil">
-<!-- a) 3 Tarjetas de estadísticos -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-<!-- Media -->
-<div class="bg-surface-white rounded-xl p-4 border border-border-line shadow-sm flex flex-col justify-between">
-<div class="flex items-center justify-between mb-2">
-<span class="text-[12px] font-bold text-ink-600 uppercase tracking-wider">Media hasta Titulación</span>
-<div class="flex items-center gap-1.5">
-<button class="text-ink-600 hover:text-ink-900" title="Calculado como la suma de años calendario dividida por el total de egresados (n=14).">
-<span class="material-symbols-outlined text-[16px]">info</span>
-</button>
-<div class="w-7 h-7 rounded bg-[#E3EEF8] flex items-center justify-center">
-<span class="material-symbols-outlined text-[#1F6FB5] text-[18px]">schedule</span>
-</div>
-</div>
-</div>
-<div class="flex items-baseline gap-1.5 mb-2">
-<span class="text-[32px] font-bold text-ink-900 font-tabular leading-none">4,8</span>
-<span class="text-[16px] text-ink-600 font-medium">años</span>
-</div>
-<div class="flex items-center justify-between text-[11px] text-ink-600 pt-2 border-t border-surface-container-high">
-<span class="">± 1,6 años desviación estándar</span>
-<span class="font-bold text-[#1F6FB5] font-tabular">n = 14</span>
-</div>
-</div>
-<!-- Mediana -->
-<div class="bg-surface-white rounded-xl p-4 border border-border-line shadow-sm flex flex-col justify-between">
-<div class="flex items-center justify-between mb-2">
-<span class="text-[12px] font-bold text-ink-600 uppercase tracking-wider">Mediana de Duración</span>
-<div class="flex items-center gap-1.5">
-<button class="text-ink-600 hover:text-ink-900" title="Valor central P50: el 50% de la cohorte tardó 4,5 años o menos en titularse.">
-<span class="material-symbols-outlined text-[16px]">info</span>
-</button>
-<div class="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center">
-<span class="material-symbols-outlined text-ink-900 text-[18px]">hourglass_top</span>
-</div>
-</div>
-</div>
-<div class="flex items-baseline gap-1.5 mb-2">
-<span class="text-[32px] font-bold text-ink-900 font-tabular leading-none">4,5</span>
-<span class="text-[16px] text-ink-600 font-medium">años</span>
-</div>
-<div class="flex items-center justify-between text-[11px] text-ink-600 pt-2 border-t border-surface-container-high">
-<span class="">P50 (50% se titula en ≤ 4,5 años)</span>
-<span class="font-bold text-ink-900 font-tabular">7 de 14 ≤ 4,5a</span>
-</div>
-</div>
-<!-- Desviación estándar / Rango -->
-<div class="bg-surface-white rounded-xl p-4 border border-border-line shadow-sm flex flex-col justify-between">
-<div class="flex items-center justify-between mb-2">
-<span class="text-[12px] font-bold text-ink-600 uppercase tracking-wider">Desviación estándar</span>
-<div class="flex items-center gap-1.5">
-<button class="text-ink-600 hover:text-ink-900" title="Dispersión respecto a la media: Rango absoluto de 2,5 a 8,0 años.">
-<span class="material-symbols-outlined text-[16px]">info</span>
-</button>
-<div class="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center">
-<span class="material-symbols-outlined text-secondary text-[18px]">straighten</span>
-</div>
-</div>
-</div>
-<div class="flex items-baseline gap-1.5 mb-2">
-<span class="text-[32px] font-bold text-ink-900 font-tabular leading-none">1,6</span>
-<span class="text-[16px] text-ink-600 font-medium">años</span>
-</div>
-<div class="flex items-center justify-between text-[11px] text-ink-600 pt-2 border-t border-surface-container-high">
-<span class="">Rango: 2,5 a 8,0 años (Δ 5,5a)</span>
-<span class="font-bold text-ink-900 font-tabular">n = 14</span>
-</div>
-</div>
-</div>
-<!-- b) Gráfico de puntos por cohorte & c) Segmentación (Grid 7/5) -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-<!-- Gráfico de dispersión por cohorte -->
-<div class="lg:col-span-7 bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
-<div class="flex items-center justify-between pb-3">
-<div class="flex flex-col">
-<h2 class="text-[16px] font-bold text-ink-900">Años hasta la titulación por cohorte (n = 14)</h2>
-<span class="text-[12px] text-ink-600">Dispersión de duración individual según cohorte de egreso</span>
-</div>
-<div class="flex items-center gap-1">
-<button class="p-1 text-ink-600 hover:text-ink-900 rounded hover:bg-surface-container-low" title="Muestra el tiempo transcurrido en años desde egreso hasta titulación para cada titulado según su año.">
-<span class="material-symbols-outlined text-[18px]">info</span>
-</button>
-<button class="p-1 text-ink-600 hover:text-ink-900 rounded hover:bg-surface-container-low" onclick="alert('Exportando imagen del gráfico...')" title="Exportar gráfico">
-<span class="material-symbols-outlined text-[18px]">image</span>
-</button>
-</div>
-</div>
-<!-- Plot SVG -->
-<div class="py-3 px-4 bg-surface-container-low rounded-lg border border-surface-container-high">
-<!-- Leyenda -->
-<div class="flex flex-wrap items-center gap-4 mb-3 text-[11px] text-ink-600">
-<div class="flex items-center gap-1.5">
-<span class="w-2.5 h-2.5 rounded-full bg-[#1F6FB5]"></span>
-<span class="">Titulado individual (n=1)</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-3.5 h-0.5 bg-status-danger border-dashed"></span>
-<span class="text-status-danger font-semibold font-tabular">Media: 4,8 años</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-3.5 h-0.5 bg-[#14A39A] border-dashed"></span>
-<span class="text-[#14A39A] font-semibold font-tabular">Mediana: 4,5 años</span>
-</div>
-</div>
-<svg class="w-full h-44 overflow-visible" viewBox="0 0 540 180">
-<!-- Gridlines (2a a 8a) -->
-<line stroke="#CBD5E1" stroke-width="1" x1="45" x2="520" y1="150" y2="150"></line>
-<line stroke="#CBD5E1" stroke-dasharray="2,2" stroke-width="1" x1="45" x2="520" y1="115" y2="115"></line>
-<line stroke="#CBD5E1" stroke-dasharray="2,2" stroke-width="1" x1="45" x2="520" y1="80" y2="80"></line>
-<line stroke="#CBD5E1" stroke-dasharray="2,2" stroke-width="1" x1="45" x2="520" y1="45" y2="45"></line>
-<line stroke="#CBD5E1" stroke-dasharray="2,2" stroke-width="1" x1="45" x2="520" y1="10" y2="10"></line>
-<!-- Labels Eje Y -->
-<text class="text-[10px] fill-[#475569]" text-anchor="end" x="35" y="153">2,0a</text>
-<text class="text-[10px] fill-[#475569]" text-anchor="end" x="35" y="118">3,5a</text>
-<text class="text-[10px] fill-[#475569]" text-anchor="end" x="35" y="83">5,0a</text>
-<text class="text-[10px] fill-[#475569]" text-anchor="end" x="35" y="48">6,5a</text>
-<text class="text-[10px] fill-[#475569]" text-anchor="end" x="35" y="13">8,0a</text>
-<!-- Guías y Labels Eje X (2018 a 2023) -->
-<line stroke="#E2E8F0" x1="85" x2="85" y1="10" y2="150"></line>
-<text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="85" y="166">2018</text>
-<line stroke="#E2E8F0" x1="170" x2="170" y1="10" y2="150"></line>
-<text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="170" y="166">2019</text>
-<line stroke="#E2E8F0" x1="255" x2="255" y1="10" y2="150"></line>
-<text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="255" y="166">2020</text>
-<line stroke="#E2E8F0" x1="340" x2="340" y1="10" y2="150"></line>
-<text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="340" y="166">2021</text>
-<line stroke="#E2E8F0" x1="425" x2="425" y1="10" y2="150"></line>
-<text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="425" y="166">2022</text>
-<line stroke="#E2E8F0" x1="495" x2="495" y1="10" y2="150"></line>
-<text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="495" y="166">2023</text>
-<!-- Línea Media (4,8a) -> y = 150 - ((4.8-2)/6)*140 = 150 - 65.3 = 84.7 -->
-<line stroke="#D64545" stroke-dasharray="4,3" stroke-width="1.5" x1="45" x2="520" y1="84.7" y2="84.7"></line>
-<!-- Línea Mediana (4,5a) -> y = 150 - ((4.5-2)/6)*140 = 150 - 58.3 = 91.7 -->
-<line stroke="#14A39A" stroke-dasharray="3,3" stroke-width="1.5" x1="45" x2="520" y1="91.7" y2="91.7"></line>
-<!-- Puntos Cohorte 2018 (6,0a y 8,0a) -->
-<circle cx="81" cy="56" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<circle cx="89" cy="10" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<!-- Puntos Cohorte 2019 (5,5a y 6,5a) -->
-<circle cx="166" cy="68" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<circle cx="174" cy="45" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<!-- Puntos Cohorte 2020 (4,5a y 5,0a) -->
-<circle cx="251" cy="91.7" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<circle cx="259" cy="80" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<!-- Puntos Cohorte 2021 (4,0a, 4,5a, 5,0a) -->
-<circle cx="334" cy="103" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<circle cx="340" cy="91.7" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<circle cx="346" cy="80" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<!-- Puntos Cohorte 2022 (3,0a, 3,5a, 4,0a) -->
-<circle cx="419" cy="126" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<circle cx="425" cy="115" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<circle cx="431" cy="103" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<!-- Puntos Cohorte 2023 (2,5a y 3,0a) -->
-<circle cx="491" cy="138" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-<circle cx="499" cy="126" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
-</svg>
-</div>
-<div class="flex items-center justify-between pt-3 text-[11px] text-ink-600">
-<span class="">Periodo analizado: cohortes 2018 a 2023</span>
-<span class="font-bold text-ink-900 font-tabular">n = 14 respuestas</span>
-</div>
-</div>
-<!-- Segmentación Junior vs Consolidado -->
-<div class="lg:col-span-5 bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
-<div class="flex flex-col gap-1 pb-3">
-<div class="flex items-center justify-between">
-<h2 class="text-[16px] font-bold text-ink-900">Segmentación de titulados por antigüedad</h2>
-<button class="p-1 text-ink-600 hover:text-ink-900" title="Clasificación basada en los años transcurridos desde la titulación para contrastar inserción reciente con profesionales asentados.">
-<span class="material-symbols-outlined text-[18px]">info</span>
-</button>
-</div>
-<p class="text-[12px] text-ink-600">Clasificación según años de ejercicio profesional posterior al egreso</p>
-</div>
-<!-- Slider interactivo de umbral -->
-<div class="bg-surface-container-low p-3.5 rounded-lg border border-border-line mb-3 flex flex-col gap-2">
-<div class="flex items-center justify-between">
-<label class="text-[12px] font-bold text-ink-900" for="antiguedad-slider">Umbral de Corte Experiencia:</label>
-<span class="text-[12px] font-bold text-[#1F6FB5] bg-surface-white px-2 py-0.5 rounded shadow-sm font-tabular" id="slider-antiguedad-val">5 años</span>
-</div>
-<input class="w-full h-1.5 bg-surface-container-highest rounded appearance-none cursor-pointer accent-[#1F6FB5]" id="antiguedad-slider" max="8" min="3" oninput="updateSegmentation(this.value)" step="1" type="range" value="5">
-<div class="flex justify-between text-[11px] text-ink-600">
-<span class="">3 años (Reciente)</span>
-<span class="font-medium text-ink-900">5 años (Estándar)</span>
-<span class="">8 años (Senior)</span>
-</div>
-</div>
-<!-- Tarjetas de segmento -->
-<div class="grid grid-cols-2 gap-3 mb-2">
-<!-- Junior -->
-<div class="bg-surface-container-low p-3 rounded-lg border border-border-line flex flex-col gap-1">
-<div class="flex items-center gap-1.5 text-[#1F6FB5]">
-<span class="material-symbols-outlined text-[16px]">school</span>
-<span class="text-[11px] font-bold uppercase tracking-wider">Junior / Reciente</span>
-</div>
-<span class="text-[24px] font-bold text-ink-900 font-tabular leading-tight" id="junior-pct">71,4%</span>
-<span class="text-[11px] text-ink-600 font-tabular" id="junior-count">10 de 14 titulados (≤ 5a)</span>
-<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-1">
-<div class="bg-[#1F6FB5] h-full rounded-full transition-all" id="junior-bar" style="width: 71.4%"></div>
-</div>
-</div>
-<!-- Consolidado -->
-<div class="bg-surface-container-low p-3 rounded-lg border border-border-line flex flex-col gap-1">
-<div class="flex items-center gap-1.5 text-ink-900">
-<span class="material-symbols-outlined text-[16px]">workspace_premium</span>
-<span class="text-[11px] font-bold uppercase tracking-wider">Consolidado</span>
-</div>
-<span class="text-[24px] font-bold text-ink-900 font-tabular leading-tight" id="senior-pct">28,6%</span>
-<span class="text-[11px] text-ink-600 font-tabular" id="senior-count">4 de 14 titulados (&gt; 5a)</span>
-<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-1">
-<div class="bg-ink-900 h-full rounded-full transition-all" id="senior-bar" style="width: 28.6%"></div>
-</div>
-</div>
-</div>
-<div class="text-[11px] text-ink-600 pt-2 flex items-center justify-between">
-<span class="">Corte metodológico parametrizable</span>
-<span class="font-bold text-ink-900 font-tabular">Total = 14</span>
-</div>
-</div>
-</div>
-<!-- d) Estado laboral & Sector de inserción laboral (Grid 6/6) -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-<!-- Dona: Estado laboral actual (n=14) -->
-<div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
-<div class="flex items-center justify-between pb-2">
-<div class="flex flex-col">
-<h2 class="text-[16px] font-bold text-ink-900">Estado laboral (n = 14)</h2>
-<span class="text-[12px] text-ink-600">Situación ocupacional declarada a la fecha de la encuesta</span>
-</div>
-<div class="flex items-center gap-1">
-<button class="p-1 text-ink-600 hover:text-ink-900" title="Calculado sobre el total de egresados: ocupados (empresa o emprendimiento) vs desocupados.">
-<span class="material-symbols-outlined text-[18px]">info</span>
-</button>
-<button class="p-1 text-ink-600 hover:text-ink-900" onclick="alert('Exportando imagen del gráfico...')" title="Exportar gráfico">
-<span class="material-symbols-outlined text-[18px]">image</span>
-</button>
-</div>
-</div>
-<div class="flex flex-col sm:flex-row items-center justify-center gap-6 py-3">
-<!-- Gráfico de dona -->
-<div class="relative w-36 h-36 shrink-0">
-<svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-<circle cx="50" cy="50" fill="transparent" r="38" stroke="#E2E8F0" stroke-width="12"></circle>
-<!-- 9/14 = 64,3% -> dasharray 153.5 -->
-<circle cx="50" cy="50" fill="transparent" r="38" stroke="#1F6FB5" stroke-dasharray="153.5 238.7" stroke-dashoffset="0" stroke-width="12"></circle>
-<!-- 2/14 = 14,3% -> dasharray 34.1 -->
-<circle cx="50" cy="50" fill="transparent" r="38" stroke="#14A39A" stroke-dasharray="34.1 238.7" stroke-dashoffset="-153.5" stroke-width="12"></circle>
-<!-- 3/14 = 21,4% -> dasharray 51.1 -->
-<circle cx="50" cy="50" fill="transparent" r="38" stroke="#F2A33A" stroke-dasharray="51.1 238.7" stroke-dashoffset="-187.6" stroke-width="12"></circle>
-</svg>
-<div class="absolute inset-0 flex flex-col items-center justify-center">
-<span class="text-[20px] font-bold text-ink-900 font-tabular leading-tight">78,6%</span>
-<span class="text-[10px] font-medium text-ink-600 uppercase tracking-tight">Ocupados</span>
-</div>
-</div>
-<!-- Desglose -->
-<div class="flex flex-col gap-2 w-full sm:w-auto">
-<div class="flex items-center justify-between gap-3 p-2 rounded-lg bg-surface-container-low border border-border-line">
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 rounded bg-[#1F6FB5]"></span>
-<span class="text-[12px] text-ink-900">En organización/empresa</span>
-</div>
-<div class="text-[12px] font-tabular">
-<strong class="text-ink-900">9</strong> <span class="text-ink-600">(64,3%)</span>
-</div>
-</div>
-<div class="flex items-center justify-between gap-3 p-2 rounded-lg bg-surface-container-low border border-border-line">
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 rounded bg-[#14A39A]"></span>
-<span class="text-[12px] text-ink-900">Emprendimiento propio</span>
-</div>
-<div class="text-[12px] font-tabular">
-<strong class="text-ink-900">2</strong> <span class="text-ink-600">(14,3%)</span>
-</div>
-</div>
-<div class="flex items-center justify-between gap-3 p-2 rounded-lg bg-surface-container-low border border-border-line">
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 rounded bg-[#F2A33A]"></span>
-<span class="text-[12px] text-ink-900">En búsqueda activa / No trabaja</span>
-</div>
-<div class="text-[12px] font-tabular">
-<strong class="text-ink-900">3</strong> <span class="text-ink-600">(21,4%)</span>
-</div>
-</div>
-</div>
-</div>
-<div class="pt-2 text-[11px] text-ink-600 flex items-center justify-between border-t border-surface-container-high">
-<span class="">Tasa de personas ocupadas: 11 de 14 titulados (78,6%)</span>
-<span class="font-bold text-ink-900 font-tabular">Total = 14</span>
-</div>
-</div>
-<!-- Barras: Sector de inserción laboral (n=11 ocupados) -->
-<div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
-<div class="flex items-center justify-between pb-2">
-<div class="flex flex-col">
-<h2 class="text-[16px] font-bold text-ink-900">Sector de inserción laboral (n = 11)</h2>
-<span class="text-[12px] text-ink-600">Distribución sectorial exclusiva de titulados activos</span>
-</div>
-<div class="flex items-center gap-1">
-<button class="p-1 text-ink-600 hover:text-ink-900" title="Calculado sobre los 11 titulados que están trabajando actualmente (9 en empresa + 2 independientes).">
-<span class="material-symbols-outlined text-[18px]">info</span>
-</button>
-<button class="p-1 text-ink-600 hover:text-ink-900" onclick="alert('Exportando imagen del gráfico...')" title="Exportar gráfico">
-<span class="material-symbols-outlined text-[18px]">image</span>
-</button>
-</div>
-</div>
-<div class="flex flex-col gap-3 py-2">
-<!-- Privado -->
-<div class="flex flex-col gap-1">
-<div class="flex justify-between text-[12px]">
-<span class="text-ink-900 font-medium flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[15px] text-[#1F6FB5]">domain</span>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- ÁREA DE CONTENIDO SCROLLABLE -->
+    <main class="flex-1 overflow-y-auto px-6 py-5">
+      <div class="max-w-7xl mx-auto flex flex-col gap-5">
+        <!-- 3. TÍTULO Y CHIP DE SECCIÓN -->
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center gap-2">
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold text-[#1F6FB5] bg-[#E3EEF8]">Titulados</span>
+          </div>
+          <h1 class="text-[26px] font-bold text-ink-900 tracking-tight">Perfil y empleabilidad (n = 14)</h1>
+        </div>
+        <!-- 4. FILTROS (Fila única compacta) -->
+        <div
+          class="bg-surface-white p-3 rounded-xl border border-border-line shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Filtro: Año de titulación slider de rango -->
+            <div
+              class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-border-line">
+              <span class="material-symbols-outlined text-[16px] text-ink-600">date_range</span>
+              <span class="text-[12px] font-semibold text-ink-900">Año titulación:</span>
+              <span class="text-[12px] font-medium text-[#1F6FB5] font-tabular" id="range-label">2018 - 2023</span>
+              <input
+                class="w-20 h-1.5 bg-surface-container-highest rounded appearance-none cursor-pointer accent-[#1F6FB5]"
+                max="2023" min="2018"
+                oninput="document.getElementById('range-label').innerText = '2018 - ' + this.value" type="range"
+                value="2023">
+            </div>
+            <!-- Filtro: Estado laboral selector múltiple -->
+            <div
+              class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-border-line">
+              <span class="material-symbols-outlined text-[16px] text-ink-600">work</span>
+              <span class="text-[12px] font-semibold text-ink-900">Estado laboral:</span>
+              <select
+                class="bg-transparent text-[12px] font-medium text-ink-900 border-none outline-none cursor-pointer">
+                <option selected="">Todos los estados (3)</option>
+                <option>En organización/empresa (9)</option>
+                <option>Emprendimiento propio (2)</option>
+                <option>En búsqueda activa / No trabaja (3)</option>
+              </select>
+            </div>
+            <!-- Filtro: Sector selector múltiple -->
+            <div
+              class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-border-line">
+              <span class="material-symbols-outlined text-[16px] text-ink-600">domain</span>
+              <span class="text-[12px] font-semibold text-ink-900">Sector:</span>
+              <select
+                class="bg-transparent text-[12px] font-medium text-ink-900 border-none outline-none cursor-pointer">
+                <option selected="">Todos los sectores</option>
+                <option>Privado (Software &amp; Consultoría)</option>
+                <option>Público / Estatal</option>
+                <option>Independiente</option>
+                <option>ONG / Tercero</option>
+              </select>
+            </div>
+            <!-- Botón Limpiar filtros -->
+            <button
+              class="flex items-center gap-1 px-2.5 py-1.5 text-ink-600 hover:text-ink-900 text-[12px] font-medium hover:bg-surface-container-low rounded-lg transition-colors">
+              <span class="material-symbols-outlined text-[15px]">filter_alt_off</span>
+              <span class="">Limpiar filtros</span>
+            </button>
+          </div>
+          <!-- Contador de respuestas -->
+          <div class="flex items-center gap-2 text-[12px] text-ink-600">
+            <span class="w-2 h-2 rounded-full bg-status-success"></span>
+            <span class="">Mostrando <strong class="text-ink-900 font-semibold font-tabular">14 de 14</strong>
+              respuestas</span>
+          </div>
+        </div>
+        <!-- 5. BARRA DE PESTAÑAS (5 pestañas funcionales de 6.3) -->
+        <div class="border-b border-border-line flex gap-2">
+          <button
+            class="tab-btn px-4 py-2.5 text-[13px] font-semibold border-b-2 border-[#1F6FB5] text-[#1F6FB5] flex items-center gap-2 transition-all"
+            id="tab-btn-perfil" onclick="switchTab('perfil')">
+            <span class="material-symbols-outlined text-[17px]">account_circle</span>
+            <span class="">Perfil</span>
+            <span
+              class="bg-[#E3EEF8] text-[#1F6FB5] px-1.5 py-0.2 rounded-full text-[11px] font-bold font-tabular">n=14</span>
+          </button>
+          <button
+            class="tab-btn px-4 py-2.5 text-[13px] font-medium text-ink-600 hover:text-ink-900 border-b-2 border-transparent flex items-center gap-2 transition-all"
+            id="tab-btn-trabajo" onclick="switchTab('trabajo')">
+            <span class="material-symbols-outlined text-[17px]">work</span>
+            <span class="">Trabajo actual</span>
+            <span
+              class="bg-surface-container-high text-ink-600 px-1.5 py-0.2 rounded-full text-[11px] font-bold font-tabular">n=9</span>
+          </button>
+          <button
+            class="tab-btn px-4 py-2.5 text-[13px] font-medium text-ink-600 hover:text-ink-900 border-b-2 border-transparent flex items-center gap-2 transition-all"
+            id="tab-btn-sin-empleo" onclick="switchTab('sin-empleo')">
+            <span class="material-symbols-outlined text-[17px]">person_search</span>
+            <span class="">Sin empleo</span>
+            <span
+              class="bg-surface-container-high text-ink-600 px-1.5 py-0.2 rounded-full text-[11px] font-bold font-tabular">n=3</span>
+          </button>
+          <button
+            class="tab-btn px-4 py-2.5 text-[13px] font-medium text-ink-600 hover:text-ink-900 border-b-2 border-transparent flex items-center gap-2 transition-all"
+            id="tab-btn-primer-empleo" onclick="switchTab('primer-empleo')">
+            <span class="material-symbols-outlined text-[17px]">flag</span>
+            <span class="">Primer empleo</span>
+            <span
+              class="bg-surface-container-high text-ink-600 px-1.5 py-0.2 rounded-full text-[11px] font-bold font-tabular">n=6</span>
+          </button>
+          <button
+            class="tab-btn px-4 py-2.5 text-[13px] font-medium text-ink-600 hover:text-ink-900 border-b-2 border-transparent flex items-center gap-2 transition-all"
+            id="tab-btn-emprendimiento" onclick="switchTab('emprendimiento')">
+            <span class="material-symbols-outlined text-[17px]">rocket_launch</span>
+            <span class="">Emprendimiento</span>
+            <span
+              class="bg-surface-container-high text-ink-600 px-1.5 py-0.2 rounded-full text-[11px] font-bold font-tabular">n=2</span>
+          </button>
+        </div>
+        <!-- ========================================== -->
+        <!-- PESTAÑA 1: PERFIL (Todas las personas, n=14) -->
+        <!-- ========================================== -->
+        <div class="tab-content flex flex-col gap-6" id="tab-perfil">
+          <!-- a) 3 Tarjetas de estadísticos -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Media -->
+            <div
+              class="bg-surface-white rounded-xl p-4 border border-border-line shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[12px] font-bold text-ink-600 uppercase tracking-wider">Media hasta Titulación</span>
+                <div class="flex items-center gap-1.5">
+                  <button class="text-ink-600 hover:text-ink-900"
+                    title="Calculado como la suma de años calendario dividida por el total de egresados (n=14).">
+                    <span class="material-symbols-outlined text-[16px]">info</span>
+                  </button>
+                  <div class="w-7 h-7 rounded bg-[#E3EEF8] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[#1F6FB5] text-[18px]">schedule</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-baseline gap-1.5 mb-2">
+                <span class="text-[32px] font-bold text-ink-900 font-tabular leading-none">4,8</span>
+                <span class="text-[16px] text-ink-600 font-medium">años</span>
+              </div>
+              <div
+                class="flex items-center justify-between text-[11px] text-ink-600 pt-2 border-t border-surface-container-high">
+                <span class="">± 1,6 años desviación estándar</span>
+                <span class="font-bold text-[#1F6FB5] font-tabular">n = 14</span>
+              </div>
+            </div>
+            <!-- Mediana -->
+            <div
+              class="bg-surface-white rounded-xl p-4 border border-border-line shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[12px] font-bold text-ink-600 uppercase tracking-wider">Mediana de Duración</span>
+                <div class="flex items-center gap-1.5">
+                  <button class="text-ink-600 hover:text-ink-900"
+                    title="Valor central P50: el 50% de la cohorte tardó 4,5 años o menos en titularse.">
+                    <span class="material-symbols-outlined text-[16px]">info</span>
+                  </button>
+                  <div class="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center">
+                    <span class="material-symbols-outlined text-ink-900 text-[18px]">hourglass_top</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-baseline gap-1.5 mb-2">
+                <span class="text-[32px] font-bold text-ink-900 font-tabular leading-none">4,5</span>
+                <span class="text-[16px] text-ink-600 font-medium">años</span>
+              </div>
+              <div
+                class="flex items-center justify-between text-[11px] text-ink-600 pt-2 border-t border-surface-container-high">
+                <span class="">P50 (50% se titula en ≤ 4,5 años)</span>
+                <span class="font-bold text-ink-900 font-tabular">7 de 14 ≤ 4,5a</span>
+              </div>
+            </div>
+            <!-- Desviación estándar / Rango -->
+            <div
+              class="bg-surface-white rounded-xl p-4 border border-border-line shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[12px] font-bold text-ink-600 uppercase tracking-wider">Desviación estándar</span>
+                <div class="flex items-center gap-1.5">
+                  <button class="text-ink-600 hover:text-ink-900"
+                    title="Dispersión respecto a la media: Rango absoluto de 2,5 a 8,0 años.">
+                    <span class="material-symbols-outlined text-[16px]">info</span>
+                  </button>
+                  <div class="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center">
+                    <span class="material-symbols-outlined text-secondary text-[18px]">straighten</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-baseline gap-1.5 mb-2">
+                <span class="text-[32px] font-bold text-ink-900 font-tabular leading-none">1,6</span>
+                <span class="text-[16px] text-ink-600 font-medium">años</span>
+              </div>
+              <div
+                class="flex items-center justify-between text-[11px] text-ink-600 pt-2 border-t border-surface-container-high">
+                <span class="">Rango: 2,5 a 8,0 años (Δ 5,5a)</span>
+                <span class="font-bold text-ink-900 font-tabular">n = 14</span>
+              </div>
+            </div>
+          </div>
+          <!-- b) Gráfico de puntos por cohorte & c) Segmentación (Grid 7/5) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <!-- Gráfico de dispersión por cohorte -->
+            <div
+              class="lg:col-span-7 bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between pb-3">
+                <div class="flex flex-col">
+                  <h2 class="text-[16px] font-bold text-ink-900">Años hasta la titulación por cohorte (n = 14)</h2>
+                  <span class="text-[12px] text-ink-600">Dispersión de duración individual según cohorte de
+                    egreso</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button class="p-1 text-ink-600 hover:text-ink-900 rounded hover:bg-surface-container-low"
+                    title="Muestra el tiempo transcurrido en años desde egreso hasta titulación para cada titulado según su año.">
+                    <span class="material-symbols-outlined text-[18px]">info</span>
+                  </button>
+                  <button class="p-1 text-ink-600 hover:text-ink-900 rounded hover:bg-surface-container-low"
+                    onclick="alert('Exportando imagen del gráfico...')" title="Exportar gráfico">
+                    <span class="material-symbols-outlined text-[18px]">image</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Plot SVG -->
+              <div class="py-3 px-4 bg-surface-container-low rounded-lg border border-surface-container-high">
+                <!-- Leyenda -->
+                <div class="flex flex-wrap items-center gap-4 mb-3 text-[11px] text-ink-600">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#1F6FB5]"></span>
+                    <span class="">Titulado individual (n=1)</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-3.5 h-0.5 bg-status-danger border-dashed"></span>
+                    <span class="text-status-danger font-semibold font-tabular">Media: 4,8 años</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-3.5 h-0.5 bg-[#14A39A] border-dashed"></span>
+                    <span class="text-[#14A39A] font-semibold font-tabular">Mediana: 4,5 años</span>
+                  </div>
+                </div>
+                <svg class="w-full h-44 overflow-visible" viewBox="0 0 540 180">
+                  <!-- Gridlines (2a a 8a) -->
+                  <line stroke="#CBD5E1" stroke-width="1" x1="45" x2="520" y1="150" y2="150"></line>
+                  <line stroke="#CBD5E1" stroke-dasharray="2,2" stroke-width="1" x1="45" x2="520" y1="115" y2="115">
+                  </line>
+                  <line stroke="#CBD5E1" stroke-dasharray="2,2" stroke-width="1" x1="45" x2="520" y1="80" y2="80">
+                  </line>
+                  <line stroke="#CBD5E1" stroke-dasharray="2,2" stroke-width="1" x1="45" x2="520" y1="45" y2="45">
+                  </line>
+                  <line stroke="#CBD5E1" stroke-dasharray="2,2" stroke-width="1" x1="45" x2="520" y1="10" y2="10">
+                  </line>
+                  <!-- Labels Eje Y -->
+                  <text class="text-[10px] fill-[#475569]" text-anchor="end" x="35" y="153">2,0a</text>
+                  <text class="text-[10px] fill-[#475569]" text-anchor="end" x="35" y="118">3,5a</text>
+                  <text class="text-[10px] fill-[#475569]" text-anchor="end" x="35" y="83">5,0a</text>
+                  <text class="text-[10px] fill-[#475569]" text-anchor="end" x="35" y="48">6,5a</text>
+                  <text class="text-[10px] fill-[#475569]" text-anchor="end" x="35" y="13">8,0a</text>
+                  <!-- Guías y Labels Eje X (2018 a 2023) -->
+                  <line stroke="#E2E8F0" x1="85" x2="85" y1="10" y2="150"></line>
+                  <text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="85" y="166">2018</text>
+                  <line stroke="#E2E8F0" x1="170" x2="170" y1="10" y2="150"></line>
+                  <text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="170"
+                    y="166">2019</text>
+                  <line stroke="#E2E8F0" x1="255" x2="255" y1="10" y2="150"></line>
+                  <text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="255"
+                    y="166">2020</text>
+                  <line stroke="#E2E8F0" x1="340" x2="340" y1="10" y2="150"></line>
+                  <text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="340"
+                    y="166">2021</text>
+                  <line stroke="#E2E8F0" x1="425" x2="425" y1="10" y2="150"></line>
+                  <text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="425"
+                    y="166">2022</text>
+                  <line stroke="#E2E8F0" x1="495" x2="495" y1="10" y2="150"></line>
+                  <text class="text-[11px] font-semibold fill-[#0F172A]" text-anchor="middle" x="495"
+                    y="166">2023</text>
+                  <!-- Línea Media (4,8a) -> y = 150 - ((4.8-2)/6)*140 = 150 - 65.3 = 84.7 -->
+                  <line stroke="#D64545" stroke-dasharray="4,3" stroke-width="1.5" x1="45" x2="520" y1="84.7" y2="84.7">
+                  </line>
+                  <!-- Línea Mediana (4,5a) -> y = 150 - ((4.5-2)/6)*140 = 150 - 58.3 = 91.7 -->
+                  <line stroke="#14A39A" stroke-dasharray="3,3" stroke-width="1.5" x1="45" x2="520" y1="91.7" y2="91.7">
+                  </line>
+                  <!-- Puntos Cohorte 2018 (6,0a y 8,0a) -->
+                  <circle cx="81" cy="56" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <circle cx="89" cy="10" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <!-- Puntos Cohorte 2019 (5,5a y 6,5a) -->
+                  <circle cx="166" cy="68" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <circle cx="174" cy="45" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <!-- Puntos Cohorte 2020 (4,5a y 5,0a) -->
+                  <circle cx="251" cy="91.7" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <circle cx="259" cy="80" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <!-- Puntos Cohorte 2021 (4,0a, 4,5a, 5,0a) -->
+                  <circle cx="334" cy="103" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <circle cx="340" cy="91.7" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <circle cx="346" cy="80" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <!-- Puntos Cohorte 2022 (3,0a, 3,5a, 4,0a) -->
+                  <circle cx="419" cy="126" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <circle cx="425" cy="115" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <circle cx="431" cy="103" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <!-- Puntos Cohorte 2023 (2,5a y 3,0a) -->
+                  <circle cx="491" cy="138" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                  <circle cx="499" cy="126" fill="#1F6FB5" r="4.5" stroke="#FFF" stroke-width="1.5"></circle>
+                </svg>
+              </div>
+              <div class="flex items-center justify-between pt-3 text-[11px] text-ink-600">
+                <span class="">Periodo analizado: cohortes 2018 a 2023</span>
+                <span class="font-bold text-ink-900 font-tabular">n = 14 respuestas</span>
+              </div>
+            </div>
+            <!-- Segmentación Junior vs Consolidado -->
+            <div
+              class="lg:col-span-5 bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
+              <div class="flex flex-col gap-1 pb-3">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-[16px] font-bold text-ink-900">Segmentación de titulados por antigüedad</h2>
+                  <button class="p-1 text-ink-600 hover:text-ink-900"
+                    title="Clasificación basada en los años transcurridos desde la titulación para contrastar inserción reciente con profesionales asentados.">
+                    <span class="material-symbols-outlined text-[18px]">info</span>
+                  </button>
+                </div>
+                <p class="text-[12px] text-ink-600">Clasificación según años de ejercicio profesional posterior al
+                  egreso</p>
+              </div>
+              <!-- Slider interactivo de umbral -->
+              <div class="bg-surface-container-low p-3.5 rounded-lg border border-border-line mb-3 flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <label class="text-[12px] font-bold text-ink-900" for="antiguedad-slider">Umbral de Corte
+                    Experiencia:</label>
+                  <span
+                    class="text-[12px] font-bold text-[#1F6FB5] bg-surface-white px-2 py-0.5 rounded shadow-sm font-tabular"
+                    id="slider-antiguedad-val">5 años</span>
+                </div>
+                <input
+                  class="w-full h-1.5 bg-surface-container-highest rounded appearance-none cursor-pointer accent-[#1F6FB5]"
+                  id="antiguedad-slider" max="8" min="3" oninput="updateSegmentation(this.value)" step="1" type="range"
+                  value="5">
+                <div class="flex justify-between text-[11px] text-ink-600">
+                  <span class="">3 años (Reciente)</span>
+                  <span class="font-medium text-ink-900">5 años (Estándar)</span>
+                  <span class="">8 años (Senior)</span>
+                </div>
+              </div>
+              <!-- Tarjetas de segmento -->
+              <div class="grid grid-cols-2 gap-3 mb-2">
+                <!-- Junior -->
+                <div class="bg-surface-container-low p-3 rounded-lg border border-border-line flex flex-col gap-1">
+                  <div class="flex items-center gap-1.5 text-[#1F6FB5]">
+                    <span class="material-symbols-outlined text-[16px]">school</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider">Junior / Reciente</span>
+                  </div>
+                  <span class="text-[24px] font-bold text-ink-900 font-tabular leading-tight"
+                    id="junior-pct">71,4%</span>
+                  <span class="text-[11px] text-ink-600 font-tabular" id="junior-count">10 de 14 titulados (≤ 5a)</span>
+                  <div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-1">
+                    <div class="bg-[#1F6FB5] h-full rounded-full transition-all" id="junior-bar" style="width: 71.4%">
+                    </div>
+                  </div>
+                </div>
+                <!-- Consolidado -->
+                <div class="bg-surface-container-low p-3 rounded-lg border border-border-line flex flex-col gap-1">
+                  <div class="flex items-center gap-1.5 text-ink-900">
+                    <span class="material-symbols-outlined text-[16px]">workspace_premium</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider">Consolidado</span>
+                  </div>
+                  <span class="text-[24px] font-bold text-ink-900 font-tabular leading-tight"
+                    id="senior-pct">28,6%</span>
+                  <span class="text-[11px] text-ink-600 font-tabular" id="senior-count">4 de 14 titulados (&gt;
+                    5a)</span>
+                  <div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-1">
+                    <div class="bg-ink-900 h-full rounded-full transition-all" id="senior-bar" style="width: 28.6%">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-[11px] text-ink-600 pt-2 flex items-center justify-between">
+                <span class="">Corte metodológico parametrizable</span>
+                <span class="font-bold text-ink-900 font-tabular">Total = 14</span>
+              </div>
+            </div>
+          </div>
+          <!-- d) Estado laboral & Sector de inserción laboral (Grid 6/6) -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <!-- Dona: Estado laboral actual (n=14) -->
+            <div
+              class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between pb-2">
+                <div class="flex flex-col">
+                  <h2 class="text-[16px] font-bold text-ink-900">Estado laboral (n = 14)</h2>
+                  <span class="text-[12px] text-ink-600">Situación ocupacional declarada a la fecha de la
+                    encuesta</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button class="p-1 text-ink-600 hover:text-ink-900"
+                    title="Calculado sobre el total de egresados: ocupados (empresa o emprendimiento) vs desocupados.">
+                    <span class="material-symbols-outlined text-[18px]">info</span>
+                  </button>
+                  <button class="p-1 text-ink-600 hover:text-ink-900"
+                    onclick="alert('Exportando imagen del gráfico...')" title="Exportar gráfico">
+                    <span class="material-symbols-outlined text-[18px]">image</span>
+                  </button>
+                </div>
+              </div>
+              <div class="flex flex-col sm:flex-row items-center justify-center gap-6 py-3">
+                <!-- Gráfico de dona -->
+                <div class="relative w-36 h-36 shrink-0">
+                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" fill="transparent" r="38" stroke="#E2E8F0" stroke-width="12"></circle>
+                    <!-- 9/14 = 64,3% -> dasharray 153.5 -->
+                    <circle cx="50" cy="50" fill="transparent" r="38" stroke="#1F6FB5" stroke-dasharray="153.5 238.7"
+                      stroke-dashoffset="0" stroke-width="12"></circle>
+                    <!-- 2/14 = 14,3% -> dasharray 34.1 -->
+                    <circle cx="50" cy="50" fill="transparent" r="38" stroke="#14A39A" stroke-dasharray="34.1 238.7"
+                      stroke-dashoffset="-153.5" stroke-width="12"></circle>
+                    <!-- 3/14 = 21,4% -> dasharray 51.1 -->
+                    <circle cx="50" cy="50" fill="transparent" r="38" stroke="#F2A33A" stroke-dasharray="51.1 238.7"
+                      stroke-dashoffset="-187.6" stroke-width="12"></circle>
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="text-[20px] font-bold text-ink-900 font-tabular leading-tight">78,6%</span>
+                    <span class="text-[10px] font-medium text-ink-600 uppercase tracking-tight">Ocupados</span>
+                  </div>
+                </div>
+                <!-- Desglose -->
+                <div class="flex flex-col gap-2 w-full sm:w-auto">
+                  <div
+                    class="flex items-center justify-between gap-3 p-2 rounded-lg bg-surface-container-low border border-border-line">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded bg-[#1F6FB5]"></span>
+                      <span class="text-[12px] text-ink-900">En organización/empresa</span>
+                    </div>
+                    <div class="text-[12px] font-tabular">
+                      <strong class="text-ink-900">9</strong> <span class="text-ink-600">(64,3%)</span>
+                    </div>
+                  </div>
+                  <div
+                    class="flex items-center justify-between gap-3 p-2 rounded-lg bg-surface-container-low border border-border-line">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded bg-[#14A39A]"></span>
+                      <span class="text-[12px] text-ink-900">Emprendimiento propio</span>
+                    </div>
+                    <div class="text-[12px] font-tabular">
+                      <strong class="text-ink-900">2</strong> <span class="text-ink-600">(14,3%)</span>
+                    </div>
+                  </div>
+                  <div
+                    class="flex items-center justify-between gap-3 p-2 rounded-lg bg-surface-container-low border border-border-line">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded bg-[#F2A33A]"></span>
+                      <span class="text-[12px] text-ink-900">En búsqueda activa / No trabaja</span>
+                    </div>
+                    <div class="text-[12px] font-tabular">
+                      <strong class="text-ink-900">3</strong> <span class="text-ink-600">(21,4%)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="pt-2 text-[11px] text-ink-600 flex items-center justify-between border-t border-surface-container-high">
+                <span class="">Tasa de personas ocupadas: 11 de 14 titulados (78,6%)</span>
+                <span class="font-bold text-ink-900 font-tabular">Total = 14</span>
+              </div>
+            </div>
+            <!-- Barras: Sector de inserción laboral (n=11 ocupados) -->
+            <div
+              class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between pb-2">
+                <div class="flex flex-col">
+                  <h2 class="text-[16px] font-bold text-ink-900">Sector de inserción laboral (n = 11)</h2>
+                  <span class="text-[12px] text-ink-600">Distribución sectorial exclusiva de titulados activos</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button class="p-1 text-ink-600 hover:text-ink-900"
+                    title="Calculado sobre los 11 titulados que están trabajando actualmente (9 en empresa + 2 independientes).">
+                    <span class="material-symbols-outlined text-[18px]">info</span>
+                  </button>
+                  <button class="p-1 text-ink-600 hover:text-ink-900"
+                    onclick="alert('Exportando imagen del gráfico...')" title="Exportar gráfico">
+                    <span class="material-symbols-outlined text-[18px]">image</span>
+                  </button>
+                </div>
+              </div>
+              <div class="flex flex-col gap-3 py-2">
+                <!-- Privado -->
+                <div class="flex flex-col gap-1">
+                  <div class="flex justify-between text-[12px]">
+                    <span class="text-ink-900 font-medium flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[15px] text-[#1F6FB5]">domain</span>
                       Sector Privado (Software &amp; Consultoría)
                     </span>
-<span class="font-tabular text-ink-900">8 de 11 <strong class="text-[#1F6FB5] font-bold">(72,7%)</strong></span>
-</div>
-<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
-<div class="bg-[#1F6FB5] h-full rounded-full" style="width: 72.7%"></div>
-</div>
-</div>
-<!-- Público -->
-<div class="flex flex-col gap-1">
-<div class="flex justify-between text-[12px]">
-<span class="text-ink-900 font-medium flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[15px] text-[#0061A5]">account_balance</span>
+                    <span class="font-tabular text-ink-900">8 de 11 <strong
+                        class="text-[#1F6FB5] font-bold">(72,7%)</strong></span>
+                  </div>
+                  <div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+                    <div class="bg-[#1F6FB5] h-full rounded-full" style="width: 72.7%"></div>
+                  </div>
+                </div>
+                <!-- Público -->
+                <div class="flex flex-col gap-1">
+                  <div class="flex justify-between text-[12px]">
+                    <span class="text-ink-900 font-medium flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[15px] text-[#0061A5]">account_balance</span>
                       Sector Público / Estatal
                     </span>
-<span class="font-tabular text-ink-900">2 de 11 <strong class="text-[#0061A5] font-bold">(18,2%)</strong></span>
-</div>
-<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
-<div class="bg-[#0061A5] h-full rounded-full" style="width: 18.2%"></div>
-</div>
-</div>
-<!-- Independiente -->
-<div class="flex flex-col gap-1">
-<div class="flex justify-between text-[12px]">
-<span class="text-ink-900 font-medium flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[15px] text-[#14A39A]">person_pin</span>
+                    <span class="font-tabular text-ink-900">2 de 11 <strong
+                        class="text-[#0061A5] font-bold">(18,2%)</strong></span>
+                  </div>
+                  <div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+                    <div class="bg-[#0061A5] h-full rounded-full" style="width: 18.2%"></div>
+                  </div>
+                </div>
+                <!-- Independiente -->
+                <div class="flex flex-col gap-1">
+                  <div class="flex justify-between text-[12px]">
+                    <span class="text-ink-900 font-medium flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[15px] text-[#14A39A]">person_pin</span>
                       Independiente / Servicios Profesionales
                     </span>
-<span class="font-tabular text-ink-900">1 de 11 <strong class="text-[#14A39A] font-bold">(9,1%)</strong></span>
-</div>
-<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
-<div class="bg-[#14A39A] h-full rounded-full" style="width: 9.1%"></div>
-</div>
-</div>
-<!-- ONG -->
-<div class="flex flex-col gap-1">
-<div class="flex justify-between text-[12px] text-ink-600">
-<span class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[15px]">volunteer_activism</span>
+                    <span class="font-tabular text-ink-900">1 de 11 <strong
+                        class="text-[#14A39A] font-bold">(9,1%)</strong></span>
+                  </div>
+                  <div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+                    <div class="bg-[#14A39A] h-full rounded-full" style="width: 9.1%"></div>
+                  </div>
+                </div>
+                <!-- ONG -->
+                <div class="flex flex-col gap-1">
+                  <div class="flex justify-between text-[12px] text-ink-600">
+                    <span class="flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[15px]">volunteer_activism</span>
                       ONG / Tercer Sector
                     </span>
-<span class="font-tabular">0 de 11 <strong>(0,0%)</strong></span>
-</div>
-<div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
-<div class="bg-border-line h-full rounded-full" style="width: 0%"></div>
-</div>
-</div>
-</div>
-<div class="pt-2 text-[11px] text-ink-600 flex items-center justify-between border-t border-surface-container-high">
-<span class="">Distribución exclusiva para titulados ocupados</span>
-<span class="font-bold text-ink-900 font-tabular">n = 11</span>
-</div>
-</div>
-</div>
-<!-- e) Datos demográficos y trayectoria profesional (Sección 6.3) -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-<!-- Barras de edad (orden natural) -->
-<div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
-<div class="flex items-center justify-between pb-2">
-<div class="flex flex-col">
-<h3 class="text-[15px] font-bold text-ink-900">Distribución por edad (n = 14)</h3>
-<span class="text-[12px] text-ink-600">Rangos de edad en orden cronológico</span>
-</div>
-<button class="p-1 text-ink-600 hover:text-ink-900" title="Calculado sobre n=14 agrupados en intervalos de edad.">
-<span class="material-symbols-outlined text-[17px]">info</span>
-</button>
-</div>
-<div class="flex flex-col gap-3 py-2">
-<!-- < 25 años -->
-<div class="flex flex-col gap-1">
-<div class="flex justify-between text-[12px]">
-<span class="text-ink-900">&lt; 25 años</span>
-<span class="font-tabular text-ink-900">1 de 14 <strong class="font-semibold text-ink-600">(7,1%)</strong></span>
-</div>
-<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-<div class="bg-[#1F6FB5] h-full rounded-full" style="width: 7.1%"></div>
-</div>
-</div>
-<!-- 25 - 29 años -->
-<div class="flex flex-col gap-1">
-<div class="flex justify-between text-[12px]">
-<span class="text-ink-900 font-medium">25 - 29 años</span>
-<span class="font-tabular text-ink-900">8 de 14 <strong class="font-bold text-[#1F6FB5]">(57,1%)</strong></span>
-</div>
-<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-<div class="bg-[#1F6FB5] h-full rounded-full" style="width: 57.1%"></div>
-</div>
-</div>
-<!-- 30 - 34 años -->
-<div class="flex flex-col gap-1">
-<div class="flex justify-between text-[12px]">
-<span class="text-ink-900">30 - 34 años</span>
-<span class="font-tabular text-ink-900">4 de 14 <strong class="font-semibold text-ink-600">(28,6%)</strong></span>
-</div>
-<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-<div class="bg-[#1F6FB5] h-full rounded-full" style="width: 28.6%"></div>
-</div>
-</div>
-<!-- 35+ años -->
-<div class="flex flex-col gap-1">
-<div class="flex justify-between text-[12px]">
-<span class="text-ink-900">35+ años</span>
-<span class="font-tabular text-ink-900">1 de 14 <strong class="font-semibold text-ink-600">(7,1%)</strong></span>
-</div>
-<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-<div class="bg-[#1F6FB5] h-full rounded-full" style="width: 7.1%"></div>
-</div>
-</div>
-</div>
-<div class="pt-2 text-[11px] text-ink-600 flex items-center justify-between border-t border-surface-container-high">
-<span class="">Grupo mayoritario: 25 a 29 años</span>
-<span class="font-bold text-ink-900 font-tabular">n = 14</span>
-</div>
-</div>
-<!-- Dona de género (n = 14) -->
-<div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
-<div class="flex items-center justify-between pb-2">
-<div class="flex flex-col">
-<h3 class="text-[15px] font-bold text-ink-900">Género (n = 14)</h3>
-<span class="text-[12px] text-ink-600">Composición declarada en encuesta</span>
-</div>
-<button class="p-1 text-ink-600 hover:text-ink-900" title="Calculado sobre el total de personas tituladas encuestadas (n=14).">
-<span class="material-symbols-outlined text-[17px]">info</span>
-</button>
-</div>
-<div class="flex items-center justify-center gap-5 py-2">
-<div class="relative w-28 h-28 shrink-0">
-<svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-<circle cx="50" cy="50" fill="transparent" r="38" stroke="#E2E8F0" stroke-width="12"></circle>
-<!-- Hombres 10/14 = 71,4% -> 170.5 -->
-<circle cx="50" cy="50" fill="transparent" r="38" stroke="#1F6FB5" stroke-dasharray="170.5 238.7" stroke-dashoffset="0" stroke-width="12"></circle>
-<!-- Mujeres 4/14 = 28,6% -> 68.2 -->
-<circle cx="50" cy="50" fill="transparent" r="38" stroke="#8E5BD0" stroke-dasharray="68.2 238.7" stroke-dashoffset="-170.5" stroke-width="12"></circle>
-</svg>
-<div class="absolute inset-0 flex flex-col items-center justify-center">
-<span class="text-[15px] font-bold text-ink-900 font-tabular leading-tight">14</span>
-<span class="text-[9px] text-ink-600 uppercase">Total</span>
-</div>
-</div>
-<div class="flex flex-col gap-2">
-<div class="p-2 rounded bg-surface-container-low border border-border-line">
-<div class="flex items-center gap-1.5 text-[12px]">
-<span class="w-2.5 h-2.5 rounded bg-[#1F6FB5]"></span>
-<span class="text-ink-900 font-medium">Hombre:</span>
-<strong class="font-tabular text-ink-900 ml-auto">10 (71,4%)</strong>
-</div>
-</div>
-<div class="p-2 rounded bg-surface-container-low border border-border-line">
-<div class="flex items-center gap-1.5 text-[12px]">
-<span class="w-2.5 h-2.5 rounded bg-[#8E5BD0]"></span>
-<span class="text-ink-900 font-medium">Mujer:</span>
-<strong class="font-tabular text-ink-900 ml-auto">4 (28,6%)</strong>
-</div>
-</div>
-</div>
-</div>
-<div class="pt-2 text-[11px] text-ink-600 flex items-center justify-between border-t border-surface-container-high">
-<span class="">Hombres: 71,4% · Mujeres: 28,6%</span>
-<span class="font-bold text-ink-900 font-tabular">n = 14</span>
-</div>
-</div>
-<!-- Estadísticos de trayectoria profesional y desempleo -->
-<div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
-<div class="flex items-center justify-between pb-2">
-<div class="flex flex-col">
-<h3 class="text-[15px] font-bold text-ink-900">Trayectoria y búsqueda</h3>
-<span class="text-[12px] text-ink-600">Años de ejercicio y periodos sin empleo</span>
-</div>
-<button class="p-1 text-ink-600 hover:text-ink-900" title="Vida profesional calculada para n=14; periodos de desempleo calculados para los n=3 en búsqueda.">
-<span class="material-symbols-outlined text-[17px]">info</span>
-</button>
-</div>
-<div class="flex flex-col gap-3 py-1">
-<!-- Vida profesional -->
-<div class="p-3 bg-surface-container-low rounded-lg border border-border-line flex flex-col gap-1">
-<div class="flex items-center justify-between">
-<span class="text-[12px] font-bold text-ink-900 flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px] text-[#1F6FB5]">history_edu</span>
+                    <span class="font-tabular">0 de 11 <strong>(0,0%)</strong></span>
+                  </div>
+                  <div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+                    <div class="bg-border-line h-full rounded-full" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="pt-2 text-[11px] text-ink-600 flex items-center justify-between border-t border-surface-container-high">
+                <span class="">Distribución exclusiva para titulados ocupados</span>
+                <span class="font-bold text-ink-900 font-tabular">n = 11</span>
+              </div>
+            </div>
+          </div>
+          <!-- e) Datos demográficos y trayectoria profesional (Sección 6.3) -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <!-- Barras de edad (orden natural) -->
+            <div
+              class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between pb-2">
+                <div class="flex flex-col">
+                  <h3 class="text-[15px] font-bold text-ink-900">Distribución por edad (n = 14)</h3>
+                  <span class="text-[12px] text-ink-600">Rangos de edad en orden cronológico</span>
+                </div>
+                <button class="p-1 text-ink-600 hover:text-ink-900"
+                  title="Calculado sobre n=14 agrupados en intervalos de edad.">
+                  <span class="material-symbols-outlined text-[17px]">info</span>
+                </button>
+              </div>
+              <div class="flex flex-col gap-3 py-2">
+                <!-- < 25 años -->
+                <div class="flex flex-col gap-1">
+                  <div class="flex justify-between text-[12px]">
+                    <span class="text-ink-900">&lt; 25 años</span>
+                    <span class="font-tabular text-ink-900">1 de 14 <strong
+                        class="font-semibold text-ink-600">(7,1%)</strong></span>
+                  </div>
+                  <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                    <div class="bg-[#1F6FB5] h-full rounded-full" style="width: 7.1%"></div>
+                  </div>
+                </div>
+                <!-- 25 - 29 años -->
+                <div class="flex flex-col gap-1">
+                  <div class="flex justify-between text-[12px]">
+                    <span class="text-ink-900 font-medium">25 - 29 años</span>
+                    <span class="font-tabular text-ink-900">8 de 14 <strong
+                        class="font-bold text-[#1F6FB5]">(57,1%)</strong></span>
+                  </div>
+                  <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                    <div class="bg-[#1F6FB5] h-full rounded-full" style="width: 57.1%"></div>
+                  </div>
+                </div>
+                <!-- 30 - 34 años -->
+                <div class="flex flex-col gap-1">
+                  <div class="flex justify-between text-[12px]">
+                    <span class="text-ink-900">30 - 34 años</span>
+                    <span class="font-tabular text-ink-900">4 de 14 <strong
+                        class="font-semibold text-ink-600">(28,6%)</strong></span>
+                  </div>
+                  <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                    <div class="bg-[#1F6FB5] h-full rounded-full" style="width: 28.6%"></div>
+                  </div>
+                </div>
+                <!-- 35+ años -->
+                <div class="flex flex-col gap-1">
+                  <div class="flex justify-between text-[12px]">
+                    <span class="text-ink-900">35+ años</span>
+                    <span class="font-tabular text-ink-900">1 de 14 <strong
+                        class="font-semibold text-ink-600">(7,1%)</strong></span>
+                  </div>
+                  <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                    <div class="bg-[#1F6FB5] h-full rounded-full" style="width: 7.1%"></div>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="pt-2 text-[11px] text-ink-600 flex items-center justify-between border-t border-surface-container-high">
+                <span class="">Grupo mayoritario: 25 a 29 años</span>
+                <span class="font-bold text-ink-900 font-tabular">n = 14</span>
+              </div>
+            </div>
+            <!-- Dona de género (n = 14) -->
+            <div
+              class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between pb-2">
+                <div class="flex flex-col">
+                  <h3 class="text-[15px] font-bold text-ink-900">Género (n = 14)</h3>
+                  <span class="text-[12px] text-ink-600">Composición declarada en encuesta</span>
+                </div>
+                <button class="p-1 text-ink-600 hover:text-ink-900"
+                  title="Calculado sobre el total de personas tituladas encuestadas (n=14).">
+                  <span class="material-symbols-outlined text-[17px]">info</span>
+                </button>
+              </div>
+              <div class="flex items-center justify-center gap-5 py-2">
+                <div class="relative w-28 h-28 shrink-0">
+                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" fill="transparent" r="38" stroke="#E2E8F0" stroke-width="12"></circle>
+                    <!-- Hombres 10/14 = 71,4% -> 170.5 -->
+                    <circle cx="50" cy="50" fill="transparent" r="38" stroke="#1F6FB5" stroke-dasharray="170.5 238.7"
+                      stroke-dashoffset="0" stroke-width="12"></circle>
+                    <!-- Mujeres 4/14 = 28,6% -> 68.2 -->
+                    <circle cx="50" cy="50" fill="transparent" r="38" stroke="#8E5BD0" stroke-dasharray="68.2 238.7"
+                      stroke-dashoffset="-170.5" stroke-width="12"></circle>
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="text-[15px] font-bold text-ink-900 font-tabular leading-tight">14</span>
+                    <span class="text-[9px] text-ink-600 uppercase">Total</span>
+                  </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <div class="p-2 rounded bg-surface-container-low border border-border-line">
+                    <div class="flex items-center gap-1.5 text-[12px]">
+                      <span class="w-2.5 h-2.5 rounded bg-[#1F6FB5]"></span>
+                      <span class="text-ink-900 font-medium">Hombre:</span>
+                      <strong class="font-tabular text-ink-900 ml-auto">10 (71,4%)</strong>
+                    </div>
+                  </div>
+                  <div class="p-2 rounded bg-surface-container-low border border-border-line">
+                    <div class="flex items-center gap-1.5 text-[12px]">
+                      <span class="w-2.5 h-2.5 rounded bg-[#8E5BD0]"></span>
+                      <span class="text-ink-900 font-medium">Mujer:</span>
+                      <strong class="font-tabular text-ink-900 ml-auto">4 (28,6%)</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="pt-2 text-[11px] text-ink-600 flex items-center justify-between border-t border-surface-container-high">
+                <span class="">Hombres: 71,4% · Mujeres: 28,6%</span>
+                <span class="font-bold text-ink-900 font-tabular">n = 14</span>
+              </div>
+            </div>
+            <!-- Estadísticos de trayectoria profesional y desempleo -->
+            <div
+              class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between pb-2">
+                <div class="flex flex-col">
+                  <h3 class="text-[15px] font-bold text-ink-900">Trayectoria y búsqueda</h3>
+                  <span class="text-[12px] text-ink-600">Años de ejercicio y periodos sin empleo</span>
+                </div>
+                <button class="p-1 text-ink-600 hover:text-ink-900"
+                  title="Vida profesional calculada para n=14; periodos de desempleo calculados para los n=3 en búsqueda.">
+                  <span class="material-symbols-outlined text-[17px]">info</span>
+                </button>
+              </div>
+              <div class="flex flex-col gap-3 py-1">
+                <!-- Vida profesional -->
+                <div class="p-3 bg-surface-container-low rounded-lg border border-border-line flex flex-col gap-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[12px] font-bold text-ink-900 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[16px] text-[#1F6FB5]">history_edu</span>
                       Vida profesional (n = 14)
                     </span>
-<span class="text-[11px] font-bold text-[#1F6FB5] font-tabular">DE: ± 1,8a</span>
-</div>
-<div class="flex items-baseline gap-3">
-<div class="flex items-baseline gap-1">
-<span class="text-[11px] text-ink-600">Media:</span>
-<strong class="text-[16px] text-ink-900 font-tabular">5,2</strong>
-<span class="text-[11px] text-ink-600">años</span>
-</div>
-<div class="flex items-baseline gap-1">
-<span class="text-[11px] text-ink-600">Mediana:</span>
-<strong class="text-[16px] text-ink-900 font-tabular">5,0</strong>
-<span class="text-[11px] text-ink-600">años</span>
-</div>
-</div>
-</div>
-<!-- Desempleo / Búsqueda -->
-<div class="p-3 bg-surface-container-low rounded-lg border border-border-line flex flex-col gap-1">
-<div class="flex items-center justify-between">
-<span class="text-[12px] font-bold text-ink-900 flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px] text-[#F2A33A]">search</span>
+                    <span class="text-[11px] font-bold text-[#1F6FB5] font-tabular">DE: ± 1,8a</span>
+                  </div>
+                  <div class="flex items-baseline gap-3">
+                    <div class="flex items-baseline gap-1">
+                      <span class="text-[11px] text-ink-600">Media:</span>
+                      <strong class="text-[16px] text-ink-900 font-tabular">5,2</strong>
+                      <span class="text-[11px] text-ink-600">años</span>
+                    </div>
+                    <div class="flex items-baseline gap-1">
+                      <span class="text-[11px] text-ink-600">Mediana:</span>
+                      <strong class="text-[16px] text-ink-900 font-tabular">5,0</strong>
+                      <span class="text-[11px] text-ink-600">años</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- Desempleo / Búsqueda -->
+                <div class="p-3 bg-surface-container-low rounded-lg border border-border-line flex flex-col gap-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[12px] font-bold text-ink-900 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[16px] text-[#F2A33A]">search</span>
                       Tiempo en búsqueda activa (n = 3)
                     </span>
-<span class="text-[11px] font-bold text-ink-600 font-tabular">DE: ± 0,2a</span>
-</div>
-<div class="flex items-baseline gap-3">
-<div class="flex items-baseline gap-1">
-<span class="text-[11px] text-ink-600">Media:</span>
-<strong class="text-[16px] text-ink-900 font-tabular">0,4</strong>
-<span class="text-[11px] text-ink-600">años</span>
-</div>
-<div class="flex items-baseline gap-1">
-<span class="text-[11px] text-ink-600">Mediana:</span>
-<strong class="text-[16px] text-ink-900 font-tabular">0,3</strong>
-<span class="text-[11px] text-ink-600">años (~4 meses)</span>
-</div>
-</div>
-</div>
-</div>
-<div class="pt-2 text-[11px] text-ink-600 flex items-center justify-between border-t border-surface-container-high">
-<span class="">Parámetros calculados en años calendario</span>
-<span class="font-bold text-ink-900 font-tabular">Muestra T</span>
-</div>
-</div>
-</div>
-</div>
-<!-- ========================================== -->
-<!-- PESTAÑA 2: TRABAJO ACTUAL (n = 9) -->
-<!-- ========================================== -->
-<div class="tab-content hidden flex flex-col gap-5" id="tab-trabajo">
-<div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm">
-<div class="flex items-center justify-between pb-3 border-b border-border-line">
-<div class="flex flex-col">
-<h2 class="text-[16px] font-bold text-ink-900">Trabajo actual en organizaciones o empresas (n = 9)</h2>
-<span class="text-[12px] text-ink-600">Detalles de contratación, áreas, remuneración y pertinencia</span>
-</div>
-<span class="text-[12px] font-bold px-2.5 py-0.5 rounded bg-[#E3EEF8] text-[#1F6FB5]">n = 9</span>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-<!-- Rubro -->
-<div class="flex flex-col gap-2">
-<div class="flex items-center justify-between">
-<h3 class="text-[13px] font-bold text-ink-900">Rubro de la empresa (barras ordenadas)</h3>
-<button class="text-ink-600 hover:text-ink-900" title="Calculado sobre los 9 titulados que trabajan bajo relación de dependencia."><span class="material-symbols-outlined text-[16px]">info</span></button>
-</div>
-<div class="space-y-2">
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">Desarrollo de Software / TI</span><span class="font-tabular font-bold">5 de 9 (55,6%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#1F6FB5] h-2 rounded" style="width: 55.6%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">Banca y Servicios Financieros</span><span class="font-tabular font-bold">2 de 9 (22,2%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#1F6FB5] h-2 rounded" style="width: 22.2%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">Telecomunicaciones</span><span class="font-tabular font-bold">2 de 9 (22,2%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#1F6FB5] h-2 rounded" style="width: 22.2%"></div></div>
-</div>
-</div>
-</div>
-<!-- Remuneración mensual -->
-<div class="flex flex-col gap-2">
-<div class="flex items-center justify-between">
-<h3 class="text-[13px] font-bold text-ink-900">Remuneración mensual líquida (orden natural)</h3>
-<button class="text-ink-600 hover:text-ink-900" title="Escalas salariales declaradas en moneda nacional (Bs.)."><span class="material-symbols-outlined text-[16px]">info</span></button>
-</div>
-<div class="space-y-2">
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">&lt; 4.000 Bs.</span><span class="font-tabular font-bold">1 de 9 (11,1%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#14A39A] h-2 rounded" style="width: 11.1%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">4.000 - 7.000 Bs.</span><span class="font-tabular font-bold">4 de 9 (44,4%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#14A39A] h-2 rounded" style="width: 44.4%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">7.001 - 10.000 Bs.</span><span class="font-tabular font-bold">3 de 9 (33,3%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#14A39A] h-2 rounded" style="width: 33.3%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">&gt; 10.000 Bs.</span><span class="font-tabular font-bold">1 de 9 (11,1%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#14A39A] h-2 rounded" style="width: 11.1%"></div></div>
-</div>
-</div>
-</div>
-<!-- Áreas dentro de la organización (Varias respuestas posibles) -->
-<div class="flex flex-col gap-2">
-<div class="flex items-center justify-between">
-<h3 class="text-[13px] font-bold text-ink-900">Áreas dentro de la organización</h3>
-<span class="text-[11px] text-ink-600 font-medium">Varias respuestas posibles</span>
-</div>
-<div class="space-y-2">
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">Ingeniería / Desarrollo de Software</span><span class="font-tabular font-bold">8 menciones (88,9%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-secondary h-2 rounded" style="width: 88.9%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">Infraestructura, DevOps &amp; Redes</span><span class="font-tabular font-bold">4 menciones (44,4%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-secondary h-2 rounded" style="width: 44.4%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">Gestión de Proyectos &amp; Análisis Funcional</span><span class="font-tabular font-bold">3 menciones (33,3%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-secondary h-2 rounded" style="width: 33.3%"></div></div>
-</div>
-</div>
-</div>
-<!-- Barra apilada: Pertinencia de la formación -->
-<div class="flex flex-col gap-2">
-<div class="flex items-center justify-between">
-<h3 class="text-[13px] font-bold text-ink-900">Pertinencia de formación para el cargo</h3>
-<button class="text-ink-600 hover:text-ink-900" title="Grado de concordancia entre la carrera y las tareas actuales (4 niveles)."><span class="material-symbols-outlined text-[16px]">info</span></button>
-</div>
-<div class="pt-2">
-<div class="w-full h-4 rounded flex overflow-hidden">
-<div class="bg-[#1F6FB5] h-full" style="width: 55.6%" title="Totalmente pertinente: 5 (55,6%)"></div>
-<div class="bg-[#7DB1DD] h-full" style="width: 33.3%" title="Bastante pertinente: 3 (33,3%)"></div>
-<div class="bg-[#F2A33A] h-full" style="width: 11.1%" title="Poco pertinente: 1 (11,1%)"></div>
-<div class="bg-[#D64545] h-full" style="width: 0%" title="Nada pertinente: 0"></div>
-</div>
-<div class="grid grid-cols-3 gap-2 mt-2 text-[11px] text-ink-600">
-<div class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-[#1F6FB5]"></span> Total (55,6%)</div>
-<div class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-[#7DB1DD]"></span> Bastante (33,3%)</div>
-<div class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-[#F2A33A]"></span> Poco (11,1%)</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- ========================================== -->
-<!-- PESTAÑA 3: SIN EMPLEO (n = 3) -->
-<!-- ========================================== -->
-<div class="tab-content hidden flex flex-col gap-5" id="tab-sin-empleo">
-<div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm">
-<div class="flex items-center justify-between pb-3 border-b border-border-line">
-<div class="flex flex-col">
-<h2 class="text-[16px] font-bold text-ink-900">Población sin empleo / En búsqueda activa (n = 3)</h2>
-<span class="text-[12px] text-ink-600">Motivos y antecedentes laborales previos</span>
-</div>
-<span class="text-[12px] font-bold px-2.5 py-0.5 rounded bg-surface-container-high text-ink-900">n = 3</span>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-<!-- KPI: Han tenido trabajo antes -->
-<div class="bg-surface-container-low p-4 rounded-xl border border-border-line flex flex-col justify-between">
-<span class="text-[12px] font-bold text-ink-600 uppercase tracking-wider">Experiencia laboral previa</span>
-<div class="my-2">
-<div class="flex items-baseline gap-2">
-<span class="text-[32px] font-bold text-ink-900 font-tabular">2 de 3</span>
-<span class="text-[14px] text-ink-600 font-medium">(66,7%)</span>
-</div>
-<p class="text-[12px] text-ink-600 mt-1">Han tenido trabajo formal con anterioridad al periodo actual de búsqueda.</p>
-</div>
-<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
-<div class="bg-[#1F6FB5] h-full rounded-full" style="width: 66.7%"></div>
-</div>
-</div>
-<!-- Razones por las que no trabaja -->
-<div class="flex flex-col gap-2">
-<div class="flex items-center justify-between">
-<h3 class="text-[13px] font-bold text-ink-900">Razones por las que no trabaja (ordenadas)</h3>
-<button class="text-ink-600 hover:text-ink-900" title="Calculado sobre n=3 personas actualmente sin empleo."><span class="material-symbols-outlined text-[16px]">info</span></button>
-</div>
-<div class="space-y-2 mt-1">
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">En búsqueda activa de mejores ofertas</span><span class="font-tabular font-bold">2 de 3 (66,7%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#F2A33A] h-2 rounded" style="width: 66.7%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">Dedicación a estudios de posgrado</span><span class="font-tabular font-bold">1 de 3 (33,3%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#1F6FB5] h-2 rounded" style="width: 33.3%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1 text-ink-600"><span class="">Falta de experiencia requerida en el mercado</span><span class="font-tabular">0 de 3 (0,0%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-border-line h-2 rounded" style="width: 0%"></div></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- ========================================== -->
-<!-- PESTAÑA 4: PRIMER EMPLEO (n = 6) -->
-<!-- ========================================== -->
-<div class="tab-content hidden flex flex-col gap-5" id="tab-primer-empleo">
-<div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm">
-<div class="flex items-center justify-between pb-3 border-b border-border-line">
-<div class="flex flex-col">
-<h2 class="text-[16px] font-bold text-ink-900">Transición al primer empleo (rama n = 6)</h2>
-<span class="text-[12px] text-ink-600">Tiempo transcurrido desde titulación/egreso hasta la primera contratación laboral</span>
-</div>
-<span class="text-[12px] font-bold px-2.5 py-0.5 rounded bg-[#E3EEF8] text-[#1F6FB5]">n = 6</span>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-<!-- KPI: Empleo actual es su primer empleo -->
-<div class="bg-surface-container-low p-4 rounded-xl border border-border-line flex flex-col justify-between">
-<span class="text-[12px] font-bold text-ink-600 uppercase tracking-wider">Continuidad primer empleo</span>
-<div class="my-2">
-<div class="flex items-baseline gap-2">
-<span class="text-[32px] font-bold text-ink-900 font-tabular">4 de 11</span>
-<span class="text-[14px] text-ink-600 font-medium">(36,4%)</span>
-</div>
-<p class="text-[12px] text-ink-600 mt-1">De los 11 titulados activos actualmente, 4 continúan trabajando en su primer empleo.</p>
-</div>
-<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
-<div class="bg-[#14A39A] h-full rounded-full" style="width: 36.4%"></div>
-</div>
-</div>
-<!-- Barras: Tiempo hasta primer empleo (orden natural) -->
-<div class="flex flex-col gap-2">
-<div class="flex items-center justify-between">
-<h3 class="text-[13px] font-bold text-ink-900">Tiempo hasta el primer empleo (orden natural)</h3>
-<button class="text-ink-600 hover:text-ink-900" title="Calculado sobre la rama específica de preguntas de primer empleo (n=6)."><span class="material-symbols-outlined text-[16px]">info</span></button>
-</div>
-<div class="space-y-2 mt-1">
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">Antes de egresar / Ya trabajaba</span><span class="font-tabular font-bold">2 de 6 (33,3%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#1F6FB5] h-2 rounded" style="width: 33.3%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">Menos de 6 meses</span><span class="font-tabular font-bold">3 de 6 (50,0%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#1F6FB5] h-2 rounded" style="width: 50.0%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1"><span class="">De 6 a 12 meses</span><span class="font-tabular font-bold">1 de 6 (16,7%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#1F6FB5] h-2 rounded" style="width: 16.7%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1 text-ink-600"><span class="">Más de 1 año</span><span class="font-tabular">0 de 6 (0,0%)</span></div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-border-line h-2 rounded" style="width: 0%"></div></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- ========================================== -->
-<!-- PESTAÑA 5: EMPRENDIMIENTO (n = 2) -->
-<!-- ========================================== -->
-<div class="tab-content hidden flex flex-col gap-5" id="tab-emprendimiento">
-<div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm">
-<div class="flex items-center justify-between pb-3 border-b border-border-line">
-<div class="flex flex-col">
-<h2 class="text-[16px] font-bold text-ink-900">Emprendimiento propio e iniciativas independientes (n = 2)</h2>
-<span class="text-[12px] text-ink-600">Características, financiamiento, satisfacción e impacto formativo</span>
-</div>
-<span class="text-[12px] font-bold px-2.5 py-0.5 rounded bg-[#E1F4F2] text-[#14A39A]">n = 2</span>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-<!-- Origen, entregable y financiamiento -->
-<div class="flex flex-col gap-3">
-<h3 class="text-[13px] font-bold text-ink-900">Origen y fuentes de financiamiento</h3>
-<div class="p-3 bg-surface-container-low rounded-lg border border-border-line text-[12px] space-y-2">
-<div class="flex justify-between">
-<span class="text-ink-600">Origen del emprendimiento:</span>
-<strong class="text-ink-900">Iniciativa propia / Idea de negocio (2 de 2)</strong>
-</div>
-<div class="flex justify-between">
-<span class="text-ink-600">Tipo de producto/entregable:</span>
-<strong class="text-ink-900">Software a medida &amp; Consultoría cloud (2 de 2)</strong>
-</div>
-<div class="flex justify-between">
-<span class="text-ink-600">Financiamiento inicial:</span>
-<strong class="text-ink-900">Ahorro propio (2 de 2, 100%)</strong>
-</div>
-</div>
-</div>
-<!-- Satisfacción e importancia de la carrera -->
-<div class="flex flex-col gap-3">
-<h3 class="text-[13px] font-bold text-ink-900">Valoración formativa y satisfacción</h3>
-<div class="space-y-3">
-<div>
-<div class="flex justify-between text-[12px] mb-1">
-<span class="">Nivel de satisfacción con el emprendimiento</span>
-<strong class="text-status-success font-tabular">Muy satisfecho: 2 de 2 (100%)</strong>
-</div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-status-success h-2 rounded" style="width: 100%"></div></div>
-</div>
-<div>
-<div class="flex justify-between text-[12px] mb-1">
-<span class="">Importancia de la formación universitaria</span>
-<strong class="text-[#1F6FB5] font-tabular">Alta / Fundamental: 2 de 2 (100%)</strong>
-</div>
-<div class="w-full bg-surface-container-high h-2 rounded"><div class="bg-[#1F6FB5] h-2 rounded" style="width: 100%"></div></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- 6. NAVEGACIÓN INFERIOR (Entre pasos de flujo) -->
+                    <span class="text-[11px] font-bold text-ink-600 font-tabular">DE: ± 0,2a</span>
+                  </div>
+                  <div class="flex items-baseline gap-3">
+                    <div class="flex items-baseline gap-1">
+                      <span class="text-[11px] text-ink-600">Media:</span>
+                      <strong class="text-[16px] text-ink-900 font-tabular">0,4</strong>
+                      <span class="text-[11px] text-ink-600">años</span>
+                    </div>
+                    <div class="flex items-baseline gap-1">
+                      <span class="text-[11px] text-ink-600">Mediana:</span>
+                      <strong class="text-[16px] text-ink-900 font-tabular">0,3</strong>
+                      <span class="text-[11px] text-ink-600">años (~4 meses)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="pt-2 text-[11px] text-ink-600 flex items-center justify-between border-t border-surface-container-high">
+                <span class="">Parámetros calculados en años calendario</span>
+                <span class="font-bold text-ink-900 font-tabular">Muestra T</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ========================================== -->
+        <!-- PESTAÑA 2: TRABAJO ACTUAL (n = 9) -->
+        <!-- ========================================== -->
+        <div class="tab-content hidden flex flex-col gap-5" id="tab-trabajo">
+          <div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm">
+            <div class="flex items-center justify-between pb-3 border-b border-border-line">
+              <div class="flex flex-col">
+                <h2 class="text-[16px] font-bold text-ink-900">Trabajo actual en organizaciones o empresas (n = 9)</h2>
+                <span class="text-[12px] text-ink-600">Detalles de contratación, áreas, remuneración y
+                  pertinencia</span>
+              </div>
+              <span class="text-[12px] font-bold px-2.5 py-0.5 rounded bg-[#E3EEF8] text-[#1F6FB5]">n = 9</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <!-- Rubro -->
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-bold text-ink-900">Rubro de la empresa (barras ordenadas)</h3>
+                  <button class="text-ink-600 hover:text-ink-900"
+                    title="Calculado sobre los 9 titulados que trabajan bajo relación de dependencia."><span
+                      class="material-symbols-outlined text-[16px]">info</span></button>
+                </div>
+                <div class="space-y-2">
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">Desarrollo de Software /
+                        TI</span><span class="font-tabular font-bold">5 de 9 (55,6%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#1F6FB5] h-2 rounded" style="width: 55.6%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">Banca y Servicios
+                        Financieros</span><span class="font-tabular font-bold">2 de 9 (22,2%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#1F6FB5] h-2 rounded" style="width: 22.2%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">Telecomunicaciones</span><span
+                        class="font-tabular font-bold">2 de 9 (22,2%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#1F6FB5] h-2 rounded" style="width: 22.2%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Remuneración mensual -->
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-bold text-ink-900">Remuneración mensual líquida (orden natural)</h3>
+                  <button class="text-ink-600 hover:text-ink-900"
+                    title="Escalas salariales declaradas en moneda nacional (Bs.)."><span
+                      class="material-symbols-outlined text-[16px]">info</span></button>
+                </div>
+                <div class="space-y-2">
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">&lt; 4.000 Bs.</span><span
+                        class="font-tabular font-bold">1 de 9 (11,1%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#14A39A] h-2 rounded" style="width: 11.1%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">4.000 - 7.000 Bs.</span><span
+                        class="font-tabular font-bold">4 de 9 (44,4%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#14A39A] h-2 rounded" style="width: 44.4%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">7.001 - 10.000 Bs.</span><span
+                        class="font-tabular font-bold">3 de 9 (33,3%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#14A39A] h-2 rounded" style="width: 33.3%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">&gt; 10.000 Bs.</span><span
+                        class="font-tabular font-bold">1 de 9 (11,1%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#14A39A] h-2 rounded" style="width: 11.1%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Áreas dentro de la organización (Varias respuestas posibles) -->
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-bold text-ink-900">Áreas dentro de la organización</h3>
+                  <span class="text-[11px] text-ink-600 font-medium">Varias respuestas posibles</span>
+                </div>
+                <div class="space-y-2">
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">Ingeniería / Desarrollo de
+                        Software</span><span class="font-tabular font-bold">8 menciones (88,9%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-secondary h-2 rounded" style="width: 88.9%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">Infraestructura, DevOps &amp;
+                        Redes</span><span class="font-tabular font-bold">4 menciones (44,4%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-secondary h-2 rounded" style="width: 44.4%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">Gestión de Proyectos &amp;
+                        Análisis Funcional</span><span class="font-tabular font-bold">3 menciones (33,3%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-secondary h-2 rounded" style="width: 33.3%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Barra apilada: Pertinencia de la formación -->
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-bold text-ink-900">Pertinencia de formación para el cargo</h3>
+                  <button class="text-ink-600 hover:text-ink-900"
+                    title="Grado de concordancia entre la carrera y las tareas actuales (4 niveles)."><span
+                      class="material-symbols-outlined text-[16px]">info</span></button>
+                </div>
+                <div class="pt-2">
+                  <div class="w-full h-4 rounded flex overflow-hidden">
+                    <div class="bg-[#1F6FB5] h-full" style="width: 55.6%" title="Totalmente pertinente: 5 (55,6%)">
+                    </div>
+                    <div class="bg-[#7DB1DD] h-full" style="width: 33.3%" title="Bastante pertinente: 3 (33,3%)"></div>
+                    <div class="bg-[#F2A33A] h-full" style="width: 11.1%" title="Poco pertinente: 1 (11,1%)"></div>
+                    <div class="bg-[#D64545] h-full" style="width: 0%" title="Nada pertinente: 0"></div>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2 mt-2 text-[11px] text-ink-600">
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-[#1F6FB5]"></span> Total
+                      (55,6%)</div>
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-[#7DB1DD]"></span> Bastante
+                      (33,3%)</div>
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-[#F2A33A]"></span> Poco (11,1%)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ========================================== -->
+        <!-- PESTAÑA 3: SIN EMPLEO (n = 3) -->
+        <!-- ========================================== -->
+        <div class="tab-content hidden flex flex-col gap-5" id="tab-sin-empleo">
+          <div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm">
+            <div class="flex items-center justify-between pb-3 border-b border-border-line">
+              <div class="flex flex-col">
+                <h2 class="text-[16px] font-bold text-ink-900">Población sin empleo / En búsqueda activa (n = 3)</h2>
+                <span class="text-[12px] text-ink-600">Motivos y antecedentes laborales previos</span>
+              </div>
+              <span class="text-[12px] font-bold px-2.5 py-0.5 rounded bg-surface-container-high text-ink-900">n =
+                3</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <!-- KPI: Han tenido trabajo antes -->
+              <div
+                class="bg-surface-container-low p-4 rounded-xl border border-border-line flex flex-col justify-between">
+                <span class="text-[12px] font-bold text-ink-600 uppercase tracking-wider">Experiencia laboral
+                  previa</span>
+                <div class="my-2">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-[32px] font-bold text-ink-900 font-tabular">2 de 3</span>
+                    <span class="text-[14px] text-ink-600 font-medium">(66,7%)</span>
+                  </div>
+                  <p class="text-[12px] text-ink-600 mt-1">Han tenido trabajo formal con anterioridad al periodo actual
+                    de búsqueda.</p>
+                </div>
+                <div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+                  <div class="bg-[#1F6FB5] h-full rounded-full" style="width: 66.7%"></div>
+                </div>
+              </div>
+              <!-- Razones por las que no trabaja -->
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-bold text-ink-900">Razones por las que no trabaja (ordenadas)</h3>
+                  <button class="text-ink-600 hover:text-ink-900"
+                    title="Calculado sobre n=3 personas actualmente sin empleo."><span
+                      class="material-symbols-outlined text-[16px]">info</span></button>
+                </div>
+                <div class="space-y-2 mt-1">
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">En búsqueda activa de mejores
+                        ofertas</span><span class="font-tabular font-bold">2 de 3 (66,7%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#F2A33A] h-2 rounded" style="width: 66.7%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">Dedicación a estudios de
+                        posgrado</span><span class="font-tabular font-bold">1 de 3 (33,3%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#1F6FB5] h-2 rounded" style="width: 33.3%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1 text-ink-600"><span class="">Falta de experiencia
+                        requerida en el mercado</span><span class="font-tabular">0 de 3 (0,0%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-border-line h-2 rounded" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ========================================== -->
+        <!-- PESTAÑA 4: PRIMER EMPLEO (n = 6) -->
+        <!-- ========================================== -->
+        <div class="tab-content hidden flex flex-col gap-5" id="tab-primer-empleo">
+          <div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm">
+            <div class="flex items-center justify-between pb-3 border-b border-border-line">
+              <div class="flex flex-col">
+                <h2 class="text-[16px] font-bold text-ink-900">Transición al primer empleo (rama n = 6)</h2>
+                <span class="text-[12px] text-ink-600">Tiempo transcurrido desde titulación/egreso hasta la primera
+                  contratación laboral</span>
+              </div>
+              <span class="text-[12px] font-bold px-2.5 py-0.5 rounded bg-[#E3EEF8] text-[#1F6FB5]">n = 6</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <!-- KPI: Empleo actual es su primer empleo -->
+              <div
+                class="bg-surface-container-low p-4 rounded-xl border border-border-line flex flex-col justify-between">
+                <span class="text-[12px] font-bold text-ink-600 uppercase tracking-wider">Continuidad primer
+                  empleo</span>
+                <div class="my-2">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-[32px] font-bold text-ink-900 font-tabular">4 de 11</span>
+                    <span class="text-[14px] text-ink-600 font-medium">(36,4%)</span>
+                  </div>
+                  <p class="text-[12px] text-ink-600 mt-1">De los 11 titulados activos actualmente, 4 continúan
+                    trabajando en su primer empleo.</p>
+                </div>
+                <div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+                  <div class="bg-[#14A39A] h-full rounded-full" style="width: 36.4%"></div>
+                </div>
+              </div>
+              <!-- Barras: Tiempo hasta primer empleo (orden natural) -->
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-bold text-ink-900">Tiempo hasta el primer empleo (orden natural)</h3>
+                  <button class="text-ink-600 hover:text-ink-900"
+                    title="Calculado sobre la rama específica de preguntas de primer empleo (n=6)."><span
+                      class="material-symbols-outlined text-[16px]">info</span></button>
+                </div>
+                <div class="space-y-2 mt-1">
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">Antes de egresar / Ya
+                        trabajaba</span><span class="font-tabular font-bold">2 de 6 (33,3%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#1F6FB5] h-2 rounded" style="width: 33.3%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">Menos de 6 meses</span><span
+                        class="font-tabular font-bold">3 de 6 (50,0%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#1F6FB5] h-2 rounded" style="width: 50.0%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1"><span class="">De 6 a 12 meses</span><span
+                        class="font-tabular font-bold">1 de 6 (16,7%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#1F6FB5] h-2 rounded" style="width: 16.7%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1 text-ink-600"><span class="">Más de 1
+                        año</span><span class="font-tabular">0 de 6 (0,0%)</span></div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-border-line h-2 rounded" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ========================================== -->
+        <!-- PESTAÑA 5: EMPRENDIMIENTO (n = 2) -->
+        <!-- ========================================== -->
+        <div class="tab-content hidden flex flex-col gap-5" id="tab-emprendimiento">
+          <div class="bg-surface-white rounded-xl p-5 border border-border-line shadow-sm">
+            <div class="flex items-center justify-between pb-3 border-b border-border-line">
+              <div class="flex flex-col">
+                <h2 class="text-[16px] font-bold text-ink-900">Emprendimiento propio e iniciativas independientes (n =
+                  2)</h2>
+                <span class="text-[12px] text-ink-600">Características, financiamiento, satisfacción e impacto
+                  formativo</span>
+              </div>
+              <span class="text-[12px] font-bold px-2.5 py-0.5 rounded bg-[#E1F4F2] text-[#14A39A]">n = 2</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <!-- Origen, entregable y financiamiento -->
+              <div class="flex flex-col gap-3">
+                <h3 class="text-[13px] font-bold text-ink-900">Origen y fuentes de financiamiento</h3>
+                <div class="p-3 bg-surface-container-low rounded-lg border border-border-line text-[12px] space-y-2">
+                  <div class="flex justify-between">
+                    <span class="text-ink-600">Origen del emprendimiento:</span>
+                    <strong class="text-ink-900">Iniciativa propia / Idea de negocio (2 de 2)</strong>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-ink-600">Tipo de producto/entregable:</span>
+                    <strong class="text-ink-900">Software a medida &amp; Consultoría cloud (2 de 2)</strong>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-ink-600">Financiamiento inicial:</span>
+                    <strong class="text-ink-900">Ahorro propio (2 de 2, 100%)</strong>
+                  </div>
+                </div>
+              </div>
+              <!-- Satisfacción e importancia de la carrera -->
+              <div class="flex flex-col gap-3">
+                <h3 class="text-[13px] font-bold text-ink-900">Valoración formativa y satisfacción</h3>
+                <div class="space-y-3">
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1">
+                      <span class="">Nivel de satisfacción con el emprendimiento</span>
+                      <strong class="text-status-success font-tabular">Muy satisfecho: 2 de 2 (100%)</strong>
+                    </div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-status-success h-2 rounded" style="width: 100%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] mb-1">
+                      <span class="">Importancia de la formación universitaria</span>
+                      <strong class="text-[#1F6FB5] font-tabular">Alta / Fundamental: 2 de 2 (100%)</strong>
+                    </div>
+                    <div class="w-full bg-surface-container-high h-2 rounded">
+                      <div class="bg-[#1F6FB5] h-2 rounded" style="width: 100%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 6. NAVEGACIÓN INFERIOR (Entre pasos de flujo) -->
 
-</div>
-</main>
-</div>
-<!-- MODAL: DEFINICIONES TÉCNICAS (Sin jerga ni juicios) -->
-<div class="hidden fixed inset-0 z-50 flex items-center justify-center bg-[#0B2A4A]/40 backdrop-blur-sm p-4" id="modal-definiciones">
-<div class="bg-surface-white rounded-xl shadow-2xl max-w-lg w-full p-5 flex flex-col gap-4 border border-border-line">
-<div class="flex items-center justify-between pb-3 border-b border-border-line">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-[#1F6FB5] text-[22px]">info</span>
-<h3 class="text-[16px] font-bold text-ink-900">Definiciones Técnicas</h3>
-</div>
-<button class="p-1 rounded text-ink-600 hover:bg-surface-container" onclick="document.getElementById('modal-definiciones').classList.add('hidden')">
-<span class="material-symbols-outlined text-[20px]">close</span>
-</button>
-</div>
-<div class="text-[13px] text-ink-600 flex flex-col gap-2.5">
-<p class=""><strong class="text-ink-900 font-semibold">Media aritmética:</strong> Promedio del tiempo en años transcurrido desde el egreso hasta la fecha de titulación para la muestra analizada.</p>
-<p class=""><strong class="text-ink-900 font-semibold">Mediana (P50):</strong> Valor que divide la distribución en dos partes iguales (el 50% de los titulados requirió un tiempo menor o igual a este valor).</p>
-<p class=""><strong class="text-ink-900 font-semibold">Desviación estándar:</strong> Grado de dispersión de los datos individuales respecto a la media (± 1,6 años).</p>
-<p class=""><strong class="text-ink-900 font-semibold">Segmentación por antigüedad:</strong> Clasificación paramétrica basada en los años posteriores al egreso para diferenciar cohortes recientes de profesionales con trayectoria extendida.</p>
-</div>
-<div class="flex justify-end pt-2 border-t border-border-line">
-<button class="px-4 py-1.5 bg-[#1F6FB5] text-white rounded-lg text-[13px] font-medium hover:bg-[#16568E]" onclick="document.getElementById('modal-definiciones').classList.add('hidden')">
+      </div>
+    </main>
+  </div>
+  <!-- MODAL: DEFINICIONES TÉCNICAS (Sin jerga ni juicios) -->
+  <div class="hidden fixed inset-0 z-50 flex items-center justify-center bg-[#0B2A4A]/40 backdrop-blur-sm p-4"
+    id="modal-definiciones">
+    <div
+      class="bg-surface-white rounded-xl shadow-2xl max-w-lg w-full p-5 flex flex-col gap-4 border border-border-line">
+      <div class="flex items-center justify-between pb-3 border-b border-border-line">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#1F6FB5] text-[22px]">info</span>
+          <h3 class="text-[16px] font-bold text-ink-900">Definiciones Técnicas</h3>
+        </div>
+        <button class="p-1 rounded text-ink-600 hover:bg-surface-container"
+          onclick="document.getElementById('modal-definiciones').classList.add('hidden')">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+      <div class="text-[13px] text-ink-600 flex flex-col gap-2.5">
+        <p class=""><strong class="text-ink-900 font-semibold">Media aritmética:</strong> Promedio del tiempo en años
+          transcurrido desde el egreso hasta la fecha de titulación para la muestra analizada.</p>
+        <p class=""><strong class="text-ink-900 font-semibold">Mediana (P50):</strong> Valor que divide la distribución
+          en dos partes iguales (el 50% de los titulados requirió un tiempo menor o igual a este valor).</p>
+        <p class=""><strong class="text-ink-900 font-semibold">Desviación estándar:</strong> Grado de dispersión de los
+          datos individuales respecto a la media (± 1,6 años).</p>
+        <p class=""><strong class="text-ink-900 font-semibold">Segmentación por antigüedad:</strong> Clasificación
+          paramétrica basada en los años posteriores al egreso para diferenciar cohortes recientes de profesionales con
+          trayectoria extendida.</p>
+      </div>
+      <div class="flex justify-end pt-2 border-t border-border-line">
+        <button class="px-4 py-1.5 bg-[#1F6FB5] text-white rounded-lg text-[13px] font-medium hover:bg-[#16568E]"
+          onclick="document.getElementById('modal-definiciones').classList.add('hidden')">
           Cerrar
         </button>
-</div>
-</div>
-</div>
-<!-- JAVASCRIPT DE PESTAÑAS Y SLIDER -->
-<script>
+      </div>
+    </div>
+  </div>
+  <!-- JAVASCRIPT DE PESTAÑAS Y SLIDER -->
+  <script>
     function switchTab(tabId) {
       // Ocultar todos los contenidos
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      
+
       // Resetear estilos de botones
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('border-[#1F6FB5]', 'text-[#1F6FB5]', 'font-semibold');
@@ -1136,4 +1376,6 @@
 
 
 
-</body></html>
+</body>
+
+</html>

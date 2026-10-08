@@ -1,5 +1,564 @@
-<!DOCTYPE html><html lang="es" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline-variant": "#c4c6cf", "heat-blue-2": "#BBD6EE", "surface-bright": "#f6fafe", "titulados-active": "#E3EEF8", "surface-variant": "#dfe3e7", "on-tertiary-container": "#0ea198", "primary-fixed": "#d3e4ff", "tertiary": "#001816", "chart-cat-2": "#14A39A", "ink-900": "#0F172A", "secondary-fixed": "#d2e4ff", "on-primary-container": "#7892b7", "chart-cat-4": "#8E5BD0", "inverse-primary": "#aec8f0", "chart-cat-6": "#5C6B7A", "secondary-fixed-dim": "#9fcaff", "likert-5": "#1F6FB5", "primary-container": "#0b2a4a", "likert-4": "#8DB8E0", "on-surface": "#171c1f", "chart-cat-8": "#D9418C", "on-surface-variant": "#43474e", "error": "#ba1a1a", "on-primary-fixed": "#001c38", "heat-blue-3": "#7DB1DD", "secondary-container": "#72b4ff", "surface-white": "#FFFFFF", "tertiary-fixed-dim": "#62d9cf", "primary-fixed-dim": "#aec8f0", "surface-dim": "#d6dade", "chart-cat-5": "#E4572E", "likert-1": "#E4572E", "secondary": "#0061a5", "chart-cat-7": "#7CB342", "likert-3": "#F1F5F9", "on-tertiary-fixed-variant": "#00504b", "highlight-amber": "#F2A33A", "on-error-container": "#93000a", "on-error": "#ffffff", "inverse-on-surface": "#edf1f5", "heat-blue-1": "#EAF2FA", "background": "#f6fafe", "heat-blue-5": "#1F6FB5", "surface-container-high": "#e4e9ed", "tertiary-fixed": "#80f6eb", "on-primary-fixed-variant": "#2d486a", "tertiary-container": "#002f2c", "likert-2": "#F4A98A", "empleadores-active": "#E1F4F2", "on-secondary-fixed": "#001d37", "on-secondary-container": "#004578", "on-secondary-fixed-variant": "#00497e", "primary": "#00152d", "status-danger": "#D64545", "surface-container-lowest": "#ffffff", "on-tertiary": "#ffffff", "status-success": "#2E9E5B", "surface": "#f6fafe", "on-background": "#171c1f", "heat-blue-6": "#12467A", "heat-blue-4": "#3F86C4", "status-warning": "#E0A100", "inverse-surface": "#2c3134", "error-container": "#ffdad6", "chart-cat-3": "#F2A33A", "outline": "#74777f", "border-line": "#CBD5E1", "ink-600": "#475569", "surface-container-highest": "#dfe3e7", "chart-cat-1": "#1F6FB5", "surface-container": "#eaeef2", "on-secondary": "#ffffff", "surface-container-low": "#f0f4f8", "on-primary": "#ffffff", "on-tertiary-fixed": "#00201e", "surface-tint": "#466083" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2rem", "gutter": "1.5rem", "space-sm": "0.5rem", "space-md": "1rem", "space-xs": "0.25rem", "margin": "2rem", "space-lg": "1.5rem" }, "fontFamily": { "display-kpi": [ "Inter" ], "body-default": [ "Inter" ], "caption-meta": [ "Inter" ], "title-section": [ "Inter" ], "body-medium": [ "Inter" ], "label-default": [ "Inter" ], "body-tabular": [ "Inter" ], "headline-page": [ "Inter" ], "caption-bold": [ "Inter" ], "title-card": [ "Inter" ] }, "fontSize": { "display-kpi": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "body-default": [ "14px", { "lineHeight": "20px", "fontWeight": "400" } ], "caption-meta": [ "12px", { "lineHeight": "16px", "fontWeight": "400" } ], "title-section": [ "20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-medium": [ "14px", { "lineHeight": "20px", "fontWeight": "500" } ], "label-default": [ "13px", { "lineHeight": "16px", "fontWeight": "500" } ], "body-tabular": [ "14px", { "lineHeight": "20px", "fontWeight": "400" } ], "headline-page": [ "28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "caption-bold": [ "12px", { "lineHeight": "16px", "fontWeight": "600" } ], "title-card": [ "18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" } ] } } } };</script></head><body class="bg-surface font-body-default text-on-surface antialiased" style="height: 100vh; max-height: 100vh; overflow: hidden;"><div class="flex h-screen w-full overflow-hidden bg-[#F1F5F9] text-ink-900 antialiased"><aside class="w-60 bg-primary-container text-surface-white shrink-0 flex flex-col justify-between shadow-md z-30 select-none"><div class="flex flex-col flex-1 overflow-y-auto"><div class="px-space-md pt-space-lg pb-space-md border-b border-surface-white/10"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-surface-white/10 flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-tertiary-fixed text-[20px]">analytics</span></div><div class="leading-tight"><p class="font-caption-bold text-caption-bold text-surface-white">Analizador</p><p class="font-caption-meta text-caption-meta text-on-primary-container truncate">Ing. de Sistemas · UMSS</p></div></div><div class="mt-space-md"><button class="w-full flex items-center justify-center gap-space-xs py-2 px-space-md rounded-lg bg-surface-white/10 hover:bg-surface-white/20 text-surface-white font-label-default text-label-default transition-colors" type="button"><span class="">+ Cargar datos</span></button></div></div><nav class="flex-1 px-space-sm py-space-md space-y-space-md"><div class="space-y-1"><div class="px-space-sm py-1 flex items-center justify-between"><span class="font-caption-bold text-caption-bold text-chart-cat-1 tracking-wider uppercase">Titulados</span><span class="font-caption-meta text-caption-meta text-heat-blue-2">N=14</span></div><div class="space-y-0.5"><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" href="#"><span class="">Resumen</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" href="#"><span class="">Perfil y empleabilidad</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" href="#"><span class="">Formación continua</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" href="#"><span class="">Financiamiento</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" href="#"><span class="">Brechas de competencias</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" href="#"><span class="">Cruces y exportar</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" href="#"><span class="">Simulación de escenarios</span></a></div></div><div class="space-y-1"><div class="px-space-sm py-1 flex items-center justify-between"><span class="font-caption-bold text-caption-bold text-chart-cat-2 tracking-wider uppercase">Empleadores</span><span class="font-caption-meta text-caption-meta text-tertiary-fixed">N=8</span></div><div class="space-y-0.5"><a class="flex items-center px-space-sm py-1.5 rounded-lg bg-empleadores-active text-chart-cat-2 font-caption-bold text-body-default shadow-sm transition-colors" href="#"><span class="">Resumen y contratación</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" href="#"><span class="">Valoración de la Carrera</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" href="#"><span class="">Brechas de competencias</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" href="#"><span class="">Cruces y exportar</span></a></div></div></nav></div></aside><div class="flex-1 flex flex-col h-screen overflow-hidden"><header class="h-16 bg-surface-white border-b border-border-line px-space-lg flex items-center justify-between shrink-0 shadow-sm z-20"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-surface-container-high text-ink-900 font-label-default text-label-default"><span class="material-symbols-outlined text-[16px] text-ink-600">calendar_today</span><span class="">Periodo 2024</span></div><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container font-caption-meta text-caption-meta text-ink-900"><span class="w-2 h-2 rounded-full bg-status-success animate-pulse"></span><span class="">Datos cargados: N=14 (T) · N=8 (E)</span></div><button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-line hover:bg-surface-container text-ink-600 hover:text-ink-900 transition-colors font-label-default text-label-default" id="header-help-btn" type="button"><span class="material-symbols-outlined text-[16px]">info</span><span class="">Definiciones</span></button><div class="relative inline-block text-left"><button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-surface-white transition-colors font-label-default text-label-default shadow-sm" id="export-btn" type="button"><span class="material-symbols-outlined text-[16px]">download</span><span class="">Exportar vista</span></button></div></div></header><main class="flex-1 overflow-y-auto px-space-lg py-space-lg bg-[#F1F5F9]"><div class="max-w-7xl mx-auto space-y-space-lg pb-space-xl"><div class="flex flex-col gap-space-md"><div class="flex flex-wrap items-center justify-between gap-space-md"><div class="flex items-center gap-3"><h1 class="text-2xl font-bold text-ink-900 tracking-tight">Resumen y contratación</h1><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-caption-bold font-caption-bold bg-empleadores-active text-chart-cat-2 border border-chart-cat-2/20"><span class="w-1.5 h-1.5 rounded-full bg-chart-cat-2 mr-1.5"></span>Empleadores (n = 8)</span></div><div class="font-caption-meta text-caption-meta text-ink-600">Censo representativo · Respuestas anónimas garantizadas</div></div></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md"><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between text-ink-600 mb-2"><span class="font-caption-bold text-caption-bold uppercase tracking-wider">Organizaciones encuestadas</span><span class="material-symbols-outlined text-[20px] text-chart-cat-2">domain</span></div><div><div class="font-display-kpi text-display-kpi text-ink-900 mb-1">8</div><div class="font-body-medium text-body-medium text-ink-600">100% de la muestra objetivo</div></div><div class="mt-3 pt-2 text-outline font-caption-meta text-caption-meta border-t border-border-line/40">Empleadores validados · n = 8</div></div><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between text-ink-600 mb-2"><span class="font-caption-bold text-caption-bold uppercase tracking-wider">Han contratado en 5 años</span><span class="material-symbols-outlined text-[20px] text-chart-cat-2">person_add</span></div><div><div class="font-display-kpi text-display-kpi text-ink-900 mb-1">6 de 8</div><div class="font-body-medium text-body-medium text-chart-cat-2 font-semibold">75,0% de organizaciones</div></div><div class="mt-3 pt-2 text-outline font-caption-meta text-caption-meta border-t border-border-line/40">Graduados incorporados · n = 8</div></div><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between text-ink-600 mb-2"><span class="font-caption-bold text-caption-bold uppercase tracking-wider">Alta prob. de contratar</span><span class="material-symbols-outlined text-[20px] text-chart-cat-2">trending_up</span></div><div><div class="font-display-kpi text-display-kpi text-ink-900 mb-1">3 de 8</div><div class="font-body-medium text-body-medium text-ink-600">37,5% previsión 12 meses</div></div><div class="mt-3 pt-2 text-outline font-caption-meta text-caption-meta border-t border-border-line/40">Demanda a corto plazo · n = 8</div></div><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between text-ink-600 mb-2"><span class="font-caption-bold text-caption-bold uppercase tracking-wider">Organizaciones privadas</span><span class="material-symbols-outlined text-[20px] text-chart-cat-2">apartment</span></div><div><div class="font-display-kpi text-display-kpi text-ink-900 mb-1">5 de 8</div><div class="font-body-medium text-body-medium text-ink-600">62,5% sector corporativo / TI</div></div><div class="mt-3 pt-2 text-outline font-caption-meta text-caption-meta border-t border-border-line/40">Naturaleza jurídica · n = 8</div></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg"><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-2"><h2 class="font-title-card text-title-card text-ink-900">Tipo de organización</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n = 8)</span></div><button class="text-ink-600 hover:text-ink-900" title="Frecuencia jurídica declarada" type="button"><span class="material-symbols-outlined text-[18px]">info</span></button></div><div class="space-y-4 my-2"><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium">Sector Privado</span><span class="text-ink-900 font-body-tabular font-medium">5 de 8 (62,5%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2 h-3 rounded-full" style="width: 62.5%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium">Sector Público / Estatal</span><span class="text-ink-900 font-body-tabular font-medium">3 de 8 (37,5%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2/70 h-3 rounded-full" style="width: 37.5%"></div></div></div></div><div class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40"><span class="">Clasificación según personería institucional</span><span class="">n = 8</span></div></div><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-2"><h2 class="font-title-card text-title-card text-ink-900">Tamaño de organización</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n = 8)</span></div><button class="text-ink-600 hover:text-ink-900" title="Orden natural de estratos" type="button"><span class="material-symbols-outlined text-[18px]">info</span></button></div><div class="space-y-3 my-2"><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Micro (&lt; 10 empleados)</span><span class="text-ink-600 font-body-tabular">1 de 8 (12,5%)</span></div><div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden"><div class="bg-chart-cat-2/50 h-2.5 rounded-full" style="width: 12.5%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Pequeña (10 - 49 empleados)</span><span class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div><div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden"><div class="bg-chart-cat-2/75 h-2.5 rounded-full" style="width: 25%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium">Mediana (50 - 149 empleados)</span><span class="text-ink-900 font-body-tabular font-medium">3 de 8 (37,5%)</span></div><div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden"><div class="bg-chart-cat-2 h-2.5 rounded-full" style="width: 37.5%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Grande (&gt; 150 empleados)</span><span class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div><div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden"><div class="bg-chart-cat-2/85 h-2.5 rounded-full" style="width: 25%"></div></div></div></div><div class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40"><span class="">Estratificación estandarizada</span><span class="">n = 8</span></div></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg"><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-2"><h2 class="font-title-card text-title-card text-ink-900">Rubro de la organización</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n = 8)</span></div><button class="text-ink-600 hover:text-ink-900" title="Categorías ordenadas descendentemente" type="button"><span class="material-symbols-outlined text-[18px]">info</span></button></div><div class="space-y-3.5 my-2"><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium">Desarrollo de Software / TI</span><span class="text-ink-900 font-body-tabular font-medium">4 de 8 (50,0%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2 h-3 rounded-full" style="width: 50%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium">Banca y Servicios Financieros</span><span class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2/80 h-3 rounded-full" style="width: 25%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Telecomunicaciones y Conectividad</span><span class="text-ink-600 font-body-tabular">1 de 8 (12,5%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2/50 h-3 rounded-full" style="width: 12.5%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Educación Superior / Servicios</span><span class="text-ink-600 font-body-tabular">1 de 8 (12,5%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2/50 h-3 rounded-full" style="width: 12.5%"></div></div></div></div><div class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40"><span class="">Distribución por sector económico</span><span class="">n = 8</span></div></div><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-2"><h2 class="font-title-card text-title-card text-ink-900">Departamento y presencia de sedes</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n = 8)</span></div><button class="text-ink-600 hover:text-ink-900" title="Ubicación y sedes concurrentes" type="button"><span class="material-symbols-outlined text-[18px]">info</span></button></div><div class="space-y-3 my-2"><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium">Cochabamba (Sede principal / filial)</span><span class="text-ink-900 font-body-tabular font-medium">5 de 8 (62,5%)</span></div><div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden"><div class="bg-chart-cat-2 h-2.5 rounded-full" style="width: 62.5%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Santa Cruz</span><span class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div><div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden"><div class="bg-chart-cat-2/75 h-2.5 rounded-full" style="width: 25%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">La Paz</span><span class="text-ink-600 font-body-tabular">1 de 8 (12,5%)</span></div><div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden"><div class="bg-chart-cat-2/50 h-2.5 rounded-full" style="width: 12.5%"></div></div></div><div class="pt-2 border-t border-border-line/40"><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-chart-cat-2">hub</span>Organizaciones con sedes múltiples</span><span class="text-ink-900 font-body-tabular font-semibold">4 de 8 (50,0%)</span></div><div class="w-full bg-surface-container rounded-full h-2 overflow-hidden"><div class="bg-primary-container h-2 rounded-full" style="width: 50%"></div></div></div></div><div class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40"><span class="">Alcance territorial y cobertura</span><span class="">n = 8</span></div></div></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg"><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-2"><h2 class="font-title-card text-title-card text-ink-900">Nivel de formación demandado</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n = 8)</span></div><button class="text-ink-600 hover:text-ink-900" title="Orden natural de titulación" type="button"><span class="material-symbols-outlined text-[18px]">info</span></button></div><div class="space-y-3.5 my-2"><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium">Licenciatura</span><span class="text-ink-900 font-body-tabular font-semibold">6 de 8 (75,0%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2 h-3 rounded-full" style="width: 75%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Diplomado / Especialidad</span><span class="text-ink-600 font-body-tabular">3 de 8 (37,5%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2/70 h-3 rounded-full" style="width: 37.5%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Maestría / Posgrado</span><span class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2/50 h-3 rounded-full" style="width: 25%"></div></div></div></div><div class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40"><span class="">Selección múltiple permitida</span><span class="">n = 8</span></div></div><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-2"><h2 class="font-title-card text-title-card text-ink-900">Medio de convocatoria preferido</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n = 8)</span></div><button class="text-ink-600 hover:text-ink-900" title="Canales de reclutamiento" type="button"><span class="material-symbols-outlined text-[18px]">info</span></button></div><div class="space-y-3.5 my-2"><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium">Convocatoria pública / Web</span><span class="text-ink-900 font-body-tabular font-medium">3 de 8 (37,5%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2 h-3 rounded-full" style="width: 37.5%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium">Redes profesionales / LinkedIn</span><span class="text-ink-900 font-body-tabular font-medium">3 de 8 (37,5%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2 h-3 rounded-full" style="width: 37.5%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Referencias y pasantías UMSS</span><span class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2/70 h-3 rounded-full" style="width: 25%"></div></div></div></div><div class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40"><span class="">Canales declarados preferentes</span><span class="">n = 8</span></div></div><div class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between"><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-2"><h2 class="font-title-card text-title-card text-ink-900">Cargos que desempeñan los titulados</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n = 8)</span></div><button class="text-ink-600 hover:text-ink-900" title="Roles ocupados por graduados" type="button"><span class="material-symbols-outlined text-[18px]">info</span></button></div><div class="space-y-3.5 my-2"><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900 font-body-medium">Desarrollador / Ing. de Software</span><span class="text-ink-900 font-body-tabular font-semibold">5 de 8 (62,5%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2 h-3 rounded-full" style="width: 62.5%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Administrador BD / DevOps / Infra</span><span class="text-ink-600 font-body-tabular">3 de 8 (37,5%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2/75 h-3 rounded-full" style="width: 37.5%"></div></div></div><div><div class="flex justify-between items-center font-body-default mb-1"><span class="text-ink-900">Líder técnico / Gestión de Proyectos</span><span class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div><div class="w-full bg-surface-container rounded-full h-3 overflow-hidden"><div class="bg-chart-cat-2/50 h-3 rounded-full" style="width: 25%"></div></div></div></div><div class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40"><span class="">Puestos técnicos reportados</span><span class="">n = 8</span></div></div></div></div></main></div></div><div class="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 backdrop-blur-sm hidden" id="help-modal"><div class="bg-surface-white rounded-xl shadow-xl max-w-lg w-full p-space-lg mx-4 border border-border-line"><div class="flex items-center justify-between pb-3 mb-3 border-b border-border-line"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-chart-cat-2 text-[22px]">info</span><h3 class="font-title-card text-title-card text-ink-900">Definiciones y notas de cálculo</h3></div><button class="text-ink-600 hover:text-ink-900" id="close-modal-btn" type="button"><span class="material-symbols-outlined text-[20px]">close</span></button></div><div class="space-y-3 font-body-default text-body-default text-ink-600"><p class=""><strong>Población objetivo:</strong> El universo de empleadores consultados comprende 8 empresas e instituciones representativas que contratan graduados de la carrera de Ingeniería de Sistemas.</p><p class=""><strong>Anonimato metodológico:</strong> Por acuerdo de confidencialidad de la encuesta de acreditación, no se revelan nombres de empresas, NITs ni datos de contacto individuales.</p><p class=""><strong>Frecuencias:</strong> Todos los datos se reportan en formato absoluto 'k de 8' junto con su porcentaje exacto de frecuencia muestral.</p></div><div class="mt-6 flex justify-end"><button class="px-4 py-2 bg-chart-cat-2 text-surface-white font-label-default text-label-default rounded-lg hover:bg-chart-cat-2/90 transition-opacity" id="close-modal-confirm" type="button">Cerrar</button></div></div></div>
+﻿<!DOCTYPE html>
+<html lang="es" style="">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="web_dashboard" name="shell-type">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <style>
+        @layer base {
+
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                overscroll-behavior: none;
+            }
+
+            main>:first-child {
+                margin-top: 0 !important;
+            }
+
+            main>:last-child {
+                margin-bottom: 0 !important;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+        id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline-variant": "#c4c6cf", "heat-blue-2": "#BBD6EE", "surface-bright": "#f6fafe", "titulados-active": "#E3EEF8", "surface-variant": "#dfe3e7", "on-tertiary-container": "#0ea198", "primary-fixed": "#d3e4ff", "tertiary": "#001816", "chart-cat-2": "#14A39A", "ink-900": "#0F172A", "secondary-fixed": "#d2e4ff", "on-primary-container": "#7892b7", "chart-cat-4": "#8E5BD0", "inverse-primary": "#aec8f0", "chart-cat-6": "#5C6B7A", "secondary-fixed-dim": "#9fcaff", "likert-5": "#1F6FB5", "primary-container": "#0b2a4a", "likert-4": "#8DB8E0", "on-surface": "#171c1f", "chart-cat-8": "#D9418C", "on-surface-variant": "#43474e", "error": "#ba1a1a", "on-primary-fixed": "#001c38", "heat-blue-3": "#7DB1DD", "secondary-container": "#72b4ff", "surface-white": "#FFFFFF", "tertiary-fixed-dim": "#62d9cf", "primary-fixed-dim": "#aec8f0", "surface-dim": "#d6dade", "chart-cat-5": "#E4572E", "likert-1": "#E4572E", "secondary": "#0061a5", "chart-cat-7": "#7CB342", "likert-3": "#F1F5F9", "on-tertiary-fixed-variant": "#00504b", "highlight-amber": "#F2A33A", "on-error-container": "#93000a", "on-error": "#ffffff", "inverse-on-surface": "#edf1f5", "heat-blue-1": "#EAF2FA", "background": "#f6fafe", "heat-blue-5": "#1F6FB5", "surface-container-high": "#e4e9ed", "tertiary-fixed": "#80f6eb", "on-primary-fixed-variant": "#2d486a", "tertiary-container": "#002f2c", "likert-2": "#F4A98A", "empleadores-active": "#E1F4F2", "on-secondary-fixed": "#001d37", "on-secondary-container": "#004578", "on-secondary-fixed-variant": "#00497e", "primary": "#00152d", "status-danger": "#D64545", "surface-container-lowest": "#ffffff", "on-tertiary": "#ffffff", "status-success": "#2E9E5B", "surface": "#f6fafe", "on-background": "#171c1f", "heat-blue-6": "#12467A", "heat-blue-4": "#3F86C4", "status-warning": "#E0A100", "inverse-surface": "#2c3134", "error-container": "#ffdad6", "chart-cat-3": "#F2A33A", "outline": "#74777f", "border-line": "#CBD5E1", "ink-600": "#475569", "surface-container-highest": "#dfe3e7", "chart-cat-1": "#1F6FB5", "surface-container": "#eaeef2", "on-secondary": "#ffffff", "surface-container-low": "#f0f4f8", "on-primary": "#ffffff", "on-tertiary-fixed": "#00201e", "surface-tint": "#466083" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2rem", "gutter": "1.5rem", "space-sm": "0.5rem", "space-md": "1rem", "space-xs": "0.25rem", "margin": "2rem", "space-lg": "1.5rem" }, "fontFamily": { "display-kpi": ["Inter"], "body-default": ["Inter"], "caption-meta": ["Inter"], "title-section": ["Inter"], "body-medium": ["Inter"], "label-default": ["Inter"], "body-tabular": ["Inter"], "headline-page": ["Inter"], "caption-bold": ["Inter"], "title-card": ["Inter"] }, "fontSize": { "display-kpi": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-default": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "caption-meta": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "title-section": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-medium": ["14px", { "lineHeight": "20px", "fontWeight": "500" }], "label-default": ["13px", { "lineHeight": "16px", "fontWeight": "500" }], "body-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-page": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "caption-bold": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "title-card": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }] } } } };</script>
+</head>
+
+<body class="bg-surface font-body-default text-on-surface antialiased"
+    style="height: 100vh; max-height: 100vh; overflow: hidden;">
+    <div class="flex h-screen w-full overflow-hidden bg-[#F1F5F9] text-ink-900 antialiased">
+        <aside
+            class="w-60 bg-primary-container text-surface-white shrink-0 flex flex-col justify-between shadow-md z-30 select-none">
+            <div class="flex flex-col flex-1 overflow-y-auto">
+                <div class="px-space-md pt-space-lg pb-space-md border-b border-surface-white/10">
+                    <div class="flex items-center gap-space-sm">
+                        <div class="w-8 h-8 rounded-lg bg-surface-white/10 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-tertiary-fixed text-[20px]">analytics</span>
+                        </div>
+                        <div class="leading-tight">
+                            <p class="font-caption-bold text-caption-bold text-surface-white">Analizador</p>
+                            <p class="font-caption-meta text-caption-meta text-on-primary-container truncate">Ing. de
+                                Sistemas · UMSS</p>
+                        </div>
+                    </div>
+                    <div class="mt-space-md"><a
+                            class="w-full flex items-center justify-center gap-space-xs py-2 px-space-md rounded-lg bg-surface-white/10 hover:bg-surface-white/20 text-surface-white font-label-default text-label-default transition-colors"
+                            href="cargar-datos.html"><span class="">+ Cargar datos</span></a></div>
+                </div>
+                <nav class="flex-1 px-space-sm py-space-md space-y-space-md">
+                    <div class="space-y-1">
+                        <div class="px-space-sm py-1 flex items-center justify-between"><span
+                                class="font-caption-bold text-caption-bold text-chart-cat-1 tracking-wider uppercase">Titulados</span><span
+                                class="font-caption-meta text-caption-meta text-heat-blue-2">N=14</span></div>
+                        <div class="space-y-0.5"><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+                                href="resumen-titulados.html"><span class="">Resumen</span></a><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+                                href="perfil-y-empleabilidad-titulados.html"><span class="">Perfil y
+                                    empleabilidad</span></a><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+                                href="formacion-continua-titulados.html"><span class="">Formación continua</span></a><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+                                href="financiamiento-titulados.html"><span class="">Financiamiento</span></a><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+                                href="brechas-competencias-titulados.html"><span class="">Brechas de
+                                    competencias</span></a><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+                                href="cruces-y-exportacion-titulados.html"><span class="">Cruces y exportar</span></a><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+                                href="simulacion-escenarios-titulados.html"><span class="">Simulación de
+                                    escenarios</span></a></div>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="px-space-sm py-1 flex items-center justify-between"><span
+                                class="font-caption-bold text-caption-bold text-chart-cat-2 tracking-wider uppercase">Empleadores</span><span
+                                class="font-caption-meta text-caption-meta text-tertiary-fixed">N=8</span></div>
+                        <div class="space-y-0.5"><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg bg-empleadores-active text-chart-cat-2 font-caption-bold text-body-default shadow-sm transition-colors"
+                                href="resumen-empleadores.html"><span class="">Resumen y contratación</span></a><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+                                href="valoracion-carrera-empleadores.html"><span class="">Valoración de la
+                                    Carrera</span></a><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+                                href="brechas-competencias-empleadores.html"><span class="">Brechas de
+                                    competencias</span></a><a
+                                class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+                                href="cruces-y-exportacion-empleadores.html"><span class="">Cruces y exportar</span></a>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col h-screen overflow-hidden">
+            <header
+                class="h-16 bg-surface-white border-b border-border-line px-space-lg flex items-center justify-between shrink-0 shadow-sm z-20">
+                <div class="flex items-center gap-space-md">
+                    <div
+                        class="flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-surface-container-high text-ink-900 font-label-default text-label-default">
+                        <span class="material-symbols-outlined text-[16px] text-ink-600">calendar_today</span><span
+                            class="">Periodo 2024</span></div>
+                    <div
+                        class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container font-caption-meta text-caption-meta text-ink-900">
+                        <span class="w-2 h-2 rounded-full bg-status-success animate-pulse"></span><span class="">Datos
+                            cargados: N=14 (T) · N=8 (E)</span></div><button
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-line hover:bg-surface-container text-ink-600 hover:text-ink-900 transition-colors font-label-default text-label-default"
+                        id="header-help-btn" type="button"><span
+                            class="material-symbols-outlined text-[16px]">info</span><span
+                            class="">Definiciones</span></button>
+                    <div class="relative inline-block text-left"><button
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-surface-white transition-colors font-label-default text-label-default shadow-sm"
+                            id="export-btn" type="button"><span
+                                class="material-symbols-outlined text-[16px]">download</span><span class="">Exportar
+                                vista</span></button></div>
+                </div>
+            </header>
+            <main class="flex-1 overflow-y-auto px-space-lg py-space-lg bg-[#F1F5F9]">
+                <div class="max-w-7xl mx-auto space-y-space-lg pb-space-xl">
+                    <div class="flex flex-col gap-space-md">
+                        <div class="flex flex-wrap items-center justify-between gap-space-md">
+                            <div class="flex items-center gap-3">
+                                <h1 class="text-2xl font-bold text-ink-900 tracking-tight">Resumen y contratación</h1>
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-caption-bold font-caption-bold bg-empleadores-active text-chart-cat-2 border border-chart-cat-2/20"><span
+                                        class="w-1.5 h-1.5 rounded-full bg-chart-cat-2 mr-1.5"></span>Empleadores (n =
+                                    8)</span>
+                            </div>
+                            <div class="font-caption-meta text-caption-meta text-ink-600">Censo representativo ·
+                                Respuestas anónimas garantizadas</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between text-ink-600 mb-2"><span
+                                    class="font-caption-bold text-caption-bold uppercase tracking-wider">Organizaciones
+                                    encuestadas</span><span
+                                    class="material-symbols-outlined text-[20px] text-chart-cat-2">domain</span></div>
+                            <div>
+                                <div class="font-display-kpi text-display-kpi text-ink-900 mb-1">8</div>
+                                <div class="font-body-medium text-body-medium text-ink-600">100% de la muestra objetivo
+                                </div>
+                            </div>
+                            <div
+                                class="mt-3 pt-2 text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                Empleadores validados · n = 8</div>
+                        </div>
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between text-ink-600 mb-2"><span
+                                    class="font-caption-bold text-caption-bold uppercase tracking-wider">Han contratado
+                                    en 5 años</span><span
+                                    class="material-symbols-outlined text-[20px] text-chart-cat-2">person_add</span>
+                            </div>
+                            <div>
+                                <div class="font-display-kpi text-display-kpi text-ink-900 mb-1">6 de 8</div>
+                                <div class="font-body-medium text-body-medium text-chart-cat-2 font-semibold">75,0% de
+                                    organizaciones</div>
+                            </div>
+                            <div
+                                class="mt-3 pt-2 text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                Graduados incorporados · n = 8</div>
+                        </div>
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between text-ink-600 mb-2"><span
+                                    class="font-caption-bold text-caption-bold uppercase tracking-wider">Alta prob. de
+                                    contratar</span><span
+                                    class="material-symbols-outlined text-[20px] text-chart-cat-2">trending_up</span>
+                            </div>
+                            <div>
+                                <div class="font-display-kpi text-display-kpi text-ink-900 mb-1">3 de 8</div>
+                                <div class="font-body-medium text-body-medium text-ink-600">37,5% previsión 12 meses
+                                </div>
+                            </div>
+                            <div
+                                class="mt-3 pt-2 text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                Demanda a corto plazo · n = 8</div>
+                        </div>
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between text-ink-600 mb-2"><span
+                                    class="font-caption-bold text-caption-bold uppercase tracking-wider">Organizaciones
+                                    privadas</span><span
+                                    class="material-symbols-outlined text-[20px] text-chart-cat-2">apartment</span>
+                            </div>
+                            <div>
+                                <div class="font-display-kpi text-display-kpi text-ink-900 mb-1">5 de 8</div>
+                                <div class="font-body-medium text-body-medium text-ink-600">62,5% sector corporativo /
+                                    TI</div>
+                            </div>
+                            <div
+                                class="mt-3 pt-2 text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                Naturaleza jurídica · n = 8</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <h2 class="font-title-card text-title-card text-ink-900">Tipo de organización</h2>
+                                    <span class="text-ink-600 font-caption-meta text-caption-meta">(n = 8)</span>
+                                </div><button class="text-ink-600 hover:text-ink-900"
+                                    title="Frecuencia jurídica declarada" type="button"><span
+                                        class="material-symbols-outlined text-[18px]">info</span></button>
+                            </div>
+                            <div class="space-y-4 my-2">
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium">Sector Privado</span><span
+                                            class="text-ink-900 font-body-tabular font-medium">5 de 8 (62,5%)</span>
+                                    </div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2 h-3 rounded-full" style="width: 62.5%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium">Sector Público / Estatal</span><span
+                                            class="text-ink-900 font-body-tabular font-medium">3 de 8 (37,5%)</span>
+                                    </div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2/70 h-3 rounded-full" style="width: 37.5%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                <span class="">Clasificación según personería institucional</span><span class="">n =
+                                    8</span></div>
+                        </div>
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <h2 class="font-title-card text-title-card text-ink-900">Tamaño de organización</h2>
+                                    <span class="text-ink-600 font-caption-meta text-caption-meta">(n = 8)</span>
+                                </div><button class="text-ink-600 hover:text-ink-900" title="Orden natural de estratos"
+                                    type="button"><span
+                                        class="material-symbols-outlined text-[18px]">info</span></button>
+                            </div>
+                            <div class="space-y-3 my-2">
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Micro (&lt; 10 empleados)</span><span
+                                            class="text-ink-600 font-body-tabular">1 de 8 (12,5%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+                                        <div class="bg-chart-cat-2/50 h-2.5 rounded-full" style="width: 12.5%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Pequeña (10 - 49 empleados)</span><span
+                                            class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+                                        <div class="bg-chart-cat-2/75 h-2.5 rounded-full" style="width: 25%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium">Mediana (50 - 149
+                                            empleados)</span><span class="text-ink-900 font-body-tabular font-medium">3
+                                            de 8 (37,5%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+                                        <div class="bg-chart-cat-2 h-2.5 rounded-full" style="width: 37.5%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Grande (&gt; 150 empleados)</span><span
+                                            class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+                                        <div class="bg-chart-cat-2/85 h-2.5 rounded-full" style="width: 25%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                <span class="">Estratificación estandarizada</span><span class="">n = 8</span></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <h2 class="font-title-card text-title-card text-ink-900">Rubro de la organización
+                                    </h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n = 8)</span>
+                                </div><button class="text-ink-600 hover:text-ink-900"
+                                    title="Categorías ordenadas descendentemente" type="button"><span
+                                        class="material-symbols-outlined text-[18px]">info</span></button>
+                            </div>
+                            <div class="space-y-3.5 my-2">
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium">Desarrollo de Software /
+                                            TI</span><span class="text-ink-900 font-body-tabular font-medium">4 de 8
+                                            (50,0%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2 h-3 rounded-full" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium">Banca y Servicios
+                                            Financieros</span><span class="text-ink-600 font-body-tabular">2 de 8
+                                            (25,0%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2/80 h-3 rounded-full" style="width: 25%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Telecomunicaciones y Conectividad</span><span
+                                            class="text-ink-600 font-body-tabular">1 de 8 (12,5%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2/50 h-3 rounded-full" style="width: 12.5%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Educación Superior / Servicios</span><span
+                                            class="text-ink-600 font-body-tabular">1 de 8 (12,5%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2/50 h-3 rounded-full" style="width: 12.5%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                <span class="">Distribución por sector económico</span><span class="">n = 8</span></div>
+                        </div>
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <h2 class="font-title-card text-title-card text-ink-900">Departamento y presencia de
+                                        sedes</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n =
+                                        8)</span>
+                                </div><button class="text-ink-600 hover:text-ink-900"
+                                    title="Ubicación y sedes concurrentes" type="button"><span
+                                        class="material-symbols-outlined text-[18px]">info</span></button>
+                            </div>
+                            <div class="space-y-3 my-2">
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium">Cochabamba (Sede principal /
+                                            filial)</span><span class="text-ink-900 font-body-tabular font-medium">5 de
+                                            8 (62,5%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+                                        <div class="bg-chart-cat-2 h-2.5 rounded-full" style="width: 62.5%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Santa Cruz</span><span
+                                            class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+                                        <div class="bg-chart-cat-2/75 h-2.5 rounded-full" style="width: 25%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">La Paz</span><span
+                                            class="text-ink-600 font-body-tabular">1 de 8 (12,5%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+                                        <div class="bg-chart-cat-2/50 h-2.5 rounded-full" style="width: 12.5%"></div>
+                                    </div>
+                                </div>
+                                <div class="pt-2 border-t border-border-line/40">
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium flex items-center gap-1.5"><span
+                                                class="material-symbols-outlined text-[16px] text-chart-cat-2">hub</span>Organizaciones
+                                            con sedes múltiples</span><span
+                                            class="text-ink-900 font-body-tabular font-semibold">4 de 8 (50,0%)</span>
+                                    </div>
+                                    <div class="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                                        <div class="bg-primary-container h-2 rounded-full" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                <span class="">Alcance territorial y cobertura</span><span class="">n = 8</span></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <h2 class="font-title-card text-title-card text-ink-900">Nivel de formación
+                                        demandado</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n
+                                        = 8)</span>
+                                </div><button class="text-ink-600 hover:text-ink-900"
+                                    title="Orden natural de titulación" type="button"><span
+                                        class="material-symbols-outlined text-[18px]">info</span></button>
+                            </div>
+                            <div class="space-y-3.5 my-2">
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium">Licenciatura</span><span
+                                            class="text-ink-900 font-body-tabular font-semibold">6 de 8 (75,0%)</span>
+                                    </div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2 h-3 rounded-full" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Diplomado / Especialidad</span><span
+                                            class="text-ink-600 font-body-tabular">3 de 8 (37,5%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2/70 h-3 rounded-full" style="width: 37.5%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Maestría / Posgrado</span><span
+                                            class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2/50 h-3 rounded-full" style="width: 25%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                <span class="">Selección múltiple permitida</span><span class="">n = 8</span></div>
+                        </div>
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <h2 class="font-title-card text-title-card text-ink-900">Medio de convocatoria
+                                        preferido</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n
+                                        = 8)</span>
+                                </div><button class="text-ink-600 hover:text-ink-900" title="Canales de reclutamiento"
+                                    type="button"><span
+                                        class="material-symbols-outlined text-[18px]">info</span></button>
+                            </div>
+                            <div class="space-y-3.5 my-2">
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium">Convocatoria pública / Web</span><span
+                                            class="text-ink-900 font-body-tabular font-medium">3 de 8 (37,5%)</span>
+                                    </div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2 h-3 rounded-full" style="width: 37.5%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium">Redes profesionales /
+                                            LinkedIn</span><span class="text-ink-900 font-body-tabular font-medium">3 de
+                                            8 (37,5%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2 h-3 rounded-full" style="width: 37.5%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Referencias y pasantías UMSS</span><span
+                                            class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2/70 h-3 rounded-full" style="width: 25%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                <span class="">Canales declarados preferentes</span><span class="">n = 8</span></div>
+                        </div>
+                        <div
+                            class="bg-surface-white rounded-lg p-5 shadow-sm border border-border-line flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <h2 class="font-title-card text-title-card text-ink-900">Cargos que desempeñan los
+                                        titulados</h2><span class="text-ink-600 font-caption-meta text-caption-meta">(n
+                                        = 8)</span>
+                                </div><button class="text-ink-600 hover:text-ink-900"
+                                    title="Roles ocupados por graduados" type="button"><span
+                                        class="material-symbols-outlined text-[18px]">info</span></button>
+                            </div>
+                            <div class="space-y-3.5 my-2">
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900 font-body-medium">Desarrollador / Ing. de
+                                            Software</span><span class="text-ink-900 font-body-tabular font-semibold">5
+                                            de 8 (62,5%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2 h-3 rounded-full" style="width: 62.5%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Administrador BD / DevOps / Infra</span><span
+                                            class="text-ink-600 font-body-tabular">3 de 8 (37,5%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2/75 h-3 rounded-full" style="width: 37.5%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center font-body-default mb-1"><span
+                                            class="text-ink-900">Líder técnico / Gestión de Proyectos</span><span
+                                            class="text-ink-600 font-body-tabular">2 de 8 (25,0%)</span></div>
+                                    <div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                                        <div class="bg-chart-cat-2/50 h-3 rounded-full" style="width: 25%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="mt-4 pt-3 flex items-center justify-between text-outline font-caption-meta text-caption-meta border-t border-border-line/40">
+                                <span class="">Puestos técnicos reportados</span><span class="">n = 8</span></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 backdrop-blur-sm hidden"
+        id="help-modal">
+        <div class="bg-surface-white rounded-xl shadow-xl max-w-lg w-full p-space-lg mx-4 border border-border-line">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-border-line">
+                <div class="flex items-center gap-2"><span
+                        class="material-symbols-outlined text-chart-cat-2 text-[22px]">info</span>
+                    <h3 class="font-title-card text-title-card text-ink-900">Definiciones y notas de cálculo</h3>
+                </div><button class="text-ink-600 hover:text-ink-900" id="close-modal-btn" type="button"><span
+                        class="material-symbols-outlined text-[20px]">close</span></button>
+            </div>
+            <div class="space-y-3 font-body-default text-body-default text-ink-600">
+                <p class=""><strong>Población objetivo:</strong> El universo de empleadores consultados comprende 8
+                    empresas e instituciones representativas que contratan graduados de la carrera de Ingeniería de
+                    Sistemas.</p>
+                <p class=""><strong>Anonimato metodológico:</strong> Por acuerdo de confidencialidad de la encuesta de
+                    acreditación, no se revelan nombres de empresas, NITs ni datos de contacto individuales.</p>
+                <p class=""><strong>Frecuencias:</strong> Todos los datos se reportan en formato absoluto 'k de 8' junto
+                    con su porcentaje exacto de frecuencia muestral.</p>
+            </div>
+            <div class="mt-6 flex justify-end"><button
+                    class="px-4 py-2 bg-chart-cat-2 text-surface-white font-label-default text-label-default rounded-lg hover:bg-chart-cat-2/90 transition-opacity"
+                    id="close-modal-confirm" type="button">Cerrar</button></div>
+        </div>
+    </div>
 
 
 
@@ -11,4 +570,6 @@
 
 
 
-</body></html>
+</body>
+
+</html>

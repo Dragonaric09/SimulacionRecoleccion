@@ -1,513 +1,742 @@
-<!DOCTYPE html><html lang="es" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "likert-4": "#8DB8E0", "titulados-active": "#E3EEF8", "on-background": "#171c1f", "chart-cat-7": "#7CB342", "chart-cat-6": "#5C6B7A", "surface-container-highest": "#dfe3e7", "empleadores-active": "#E1F4F2", "chart-cat-1": "#1F6FB5", "chart-cat-3": "#F2A33A", "error": "#ba1a1a", "error-container": "#ffdad6", "surface-container": "#eaeef2", "on-primary-fixed": "#001c38", "surface-dim": "#d6dade", "status-danger": "#D64545", "surface-tint": "#466083", "secondary-container": "#72b4ff", "on-tertiary-fixed": "#00201e", "heat-blue-6": "#12467A", "likert-5": "#1F6FB5", "secondary-fixed": "#d2e4ff", "tertiary": "#001816", "on-error-container": "#93000a", "surface-white": "#FFFFFF", "on-tertiary-container": "#0ea198", "heat-blue-2": "#BBD6EE", "status-warning": "#E0A100", "on-primary": "#ffffff", "on-secondary": "#ffffff", "likert-2": "#F4A98A", "on-secondary-container": "#004578", "tertiary-container": "#002f2c", "outline-variant": "#c4c6cf", "heat-blue-1": "#EAF2FA", "heat-blue-3": "#7DB1DD", "on-primary-fixed-variant": "#2d486a", "inverse-on-surface": "#edf1f5", "chart-cat-5": "#E4572E", "primary-fixed-dim": "#aec8f0", "on-secondary-fixed-variant": "#00497e", "primary-fixed": "#d3e4ff", "surface-variant": "#dfe3e7", "inverse-surface": "#2c3134", "chart-cat-2": "#14A39A", "on-secondary-fixed": "#001d37", "surface-container-high": "#e4e9ed", "likert-3": "#F1F5F9", "on-tertiary-fixed-variant": "#00504b", "secondary-fixed-dim": "#9fcaff", "secondary": "#0061a5", "heat-blue-4": "#3F86C4", "highlight-amber": "#F2A33A", "primary-container": "#0b2a4a", "surface-container-low": "#f0f4f8", "inverse-primary": "#aec8f0", "tertiary-fixed": "#80f6eb", "on-surface-variant": "#43474e", "ink-900": "#0F172A", "on-error": "#ffffff", "ink-600": "#475569", "chart-cat-4": "#8E5BD0", "surface-container-lowest": "#ffffff", "outline": "#74777f", "status-success": "#2E9E5B", "heat-blue-5": "#1F6FB5", "on-tertiary": "#ffffff", "border-line": "#CBD5E1", "tertiary-fixed-dim": "#62d9cf", "chart-cat-8": "#D9418C", "primary": "#00152d", "likert-1": "#E4572E", "on-primary-container": "#7892b7", "background": "#f6fafe", "on-surface": "#171c1f", "surface": "#f6fafe", "surface-bright": "#f6fafe" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "1.5rem", "space-xl": "2rem", "space-lg": "1.5rem", "space-sm": "0.5rem", "margin": "2rem", "space-xs": "0.25rem", "space-md": "1rem" }, "fontFamily": { "title-card": ["Inter"], "headline-page": ["Inter"], "label-default": ["Inter"], "caption-bold": ["Inter"], "caption-meta": ["Inter"], "title-section": ["Inter"], "display-kpi": ["Inter"], "body-default": ["Inter"], "body-tabular": ["Inter"], "body-medium": ["Inter"] }, "fontSize": { "title-card": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-page": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "label-default": ["13px", { "lineHeight": "16px", "fontWeight": "500" }], "caption-bold": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "caption-meta": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "title-section": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-kpi": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-default": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "body-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "body-medium": ["14px", { "lineHeight": "20px", "fontWeight": "500" }] } } } };</script></head><body class="bg-likert-3 text-on-surface font-body-default h-screen overflow-hidden"><aside class="fixed left-0 top-0 h-full w-60 bg-primary-container text-surface-white z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="px-space-md py-space-lg flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-chart-cat-1 flex items-center justify-center text-surface-white"><span class="material-symbols-outlined text-[20px]">school</span></div><div class="flex flex-col"><span class="font-title-card text-title-card text-surface-white tracking-tight leading-tight">Analizador</span><span class="font-caption-meta text-caption-meta text-on-primary-container leading-tight">Ing. de Sistemas · UMSS</span></div></div><div class="px-space-md mb-space-md"><button class="w-full flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-lg bg-chart-cat-1 hover:bg-secondary text-surface-white font-label-default text-label-default transition-colors" type="button"><span class="font-medium">+ Cargar datos</span></button></div><div class="overflow-y-auto max-h-[calc(100vh-210px)] px-space-xs"><div class="px-space-sm pt-space-xs pb-space-xs"><div class="flex items-center justify-between"><span class="font-caption-bold text-caption-bold tracking-wider text-chart-cat-1 uppercase">Titulados</span><span class="text-[11px] font-caption-bold px-1.5 py-0.5 rounded bg-chart-cat-1/20 text-surface-white">N=14</span></div></div><nav class="flex flex-col gap-0.5 mb-space-md" data-active-classes="bg-titulados-active text-chart-cat-1 font-body-medium rounded-lg"><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all" data-path="titulados-resumen" href="#">Resumen</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all" data-path="titulados-perfil-y-empleabilidad" href="#">Perfil y empleabilidad</a><a aria-current="page" class="flex items-center px-space-sm py-1.5 transition-all bg-titulados-active text-chart-cat-1 font-body-medium rounded-lg" data-path="titulados-formacion-continua" href="#">Formación continua</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all" data-path="titulados-financiamiento" href="#">Financiamiento</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all" data-path="titulados-brechas-de-competencias" href="#">Brechas de competencias</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all" data-path="titulados-cruces-y-exportar" href="#">Cruces y exportar</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all" data-path="titulados-simulacion-de-escenarios" href="#">Simulación de escenarios</a></nav><div class="px-space-sm pt-space-xs pb-space-xs"><div class="flex items-center justify-between"><span class="font-caption-bold text-caption-bold tracking-wider text-chart-cat-2 uppercase">Empleadores</span><span class="text-[11px] font-caption-bold px-1.5 py-0.5 rounded bg-chart-cat-2/20 text-surface-white">N=8</span></div></div><nav class="flex flex-col gap-0.5" data-active-classes="bg-empleadores-active text-chart-cat-2 font-body-medium rounded-lg"><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all" data-path="empleadores-resumen-y-contratacion" href="#">Resumen y contratación</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all" data-path="empleadores-valoracion-de-la-carrera" href="#">Valoración de la Carrera</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all" data-path="empleadores-brechas-de-competencias" href="#">Brechas de competencias</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all" data-path="empleadores-cruces-y-exportar" href="#">Cruces y exportar</a></nav></div></div></aside><div class="pl-60 h-screen flex flex-col overflow-hidden"><header class="fixed top-0 left-60 right-0 h-16 bg-surface-white shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center px-space-lg justify-end"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-surface-container-low font-label-default text-label-default text-ink-900"><span class="material-symbols-outlined text-[18px] text-ink-600">calendar_today</span><span class="">Periodo 2024</span></div><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-low font-caption-bold text-caption-bold text-ink-900"><span class="w-2 h-2 rounded-full bg-status-success"></span><span class="">Datos cargados: N=14 (T) · N=8 (E)</span></div><div class="flex items-center gap-space-xs"><button class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-surface-white hover:bg-surface-container-low text-ink-900 font-label-default text-label-default transition-colors" type="button"><span class="material-symbols-outlined text-[18px] text-ink-600">info</span><span class="">Definiciones</span></button><button class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-chart-cat-1 hover:bg-secondary text-surface-white font-label-default text-label-default transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">download</span><span class="">Exportar vista</span></button></div></div></header><main class="relative pt-16 bg-likert-3 min-h-screen w-full px-space-lg py-space-lg flex-1 overflow-y-auto"><div class="flex flex-col w-full">
-<div class="max-w-[1200px] w-full mx-auto space-y-space-lg">
-<!-- Header Section -->
-<div class="flex flex-col gap-space-xs">
-<div class="flex items-center gap-space-sm">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-caption-bold font-caption-bold bg-titulados-active text-chart-cat-1">
-          Titulados
-        </span>
-<span class="text-caption-meta font-caption-meta text-ink-600">Módulo Académico · Seguimiento a Graduados</span>
-</div>
-<div class="flex items-baseline justify-between">
-<h1 class="text-headline-page font-headline-page text-ink-900 tracking-tight">
-          Formación continua <span class="text-ink-600 font-body-default">(n = 14)</span>
-</h1>
-</div>
-</div>
-<!-- Persistent Filter Bar -->
-<div class="bg-surface-white rounded-lg p-space-md shadow-sm flex flex-col gap-space-sm">
-<div class="flex flex-wrap items-center justify-between gap-space-md">
-<div class="flex flex-wrap items-center gap-space-lg">
-<!-- Año de titulación range -->
-<div class="flex items-center gap-space-sm">
-<label class="text-label-default font-label-default text-ink-600 whitespace-nowrap">Año titulación:</label>
-<div class="flex items-center gap-2 bg-surface-container-low px-2.5 py-1 rounded-lg">
-<span class="text-caption-bold font-caption-bold text-ink-900">2018</span>
-<input class="w-20 accent-chart-cat-1 h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer" max="2023" min="2018" type="range" value="2018">
-<span class="text-caption-meta font-caption-meta text-ink-600">—</span>
-<input class="w-20 accent-chart-cat-1 h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer" max="2023" min="2018" type="range" value="2023">
-<span class="text-caption-bold font-caption-bold text-ink-900">2023</span>
-</div>
-</div>
-<!-- Estado laboral dropdown -->
-<div class="flex items-center gap-space-xs">
-<label class="text-label-default font-label-default text-ink-600">Estado laboral:</label>
-<div class="relative">
-<select class="bg-surface-container-low text-ink-900 text-label-default font-label-default rounded-lg pl-3 pr-8 py-1.5 appearance-none focus:outline-none cursor-pointer">
-<option>Todos los estados (3)</option>
-<option>Empleado por cuenta ajena</option>
-<option>Independiente / Emprendedor</option>
-<option>En búsqueda de empleo</option>
-</select>
-<span class="material-symbols-outlined text-[16px] text-ink-600 absolute right-2 top-2 pointer-events-none">expand_more</span>
-</div>
-</div>
-<!-- Sector dropdown -->
-<div class="flex items-center gap-space-xs">
-<label class="text-label-default font-label-default text-ink-600">Sector:</label>
-<div class="relative">
-<select class="bg-surface-container-low text-ink-900 text-label-default font-label-default rounded-lg pl-3 pr-8 py-1.5 appearance-none focus:outline-none cursor-pointer">
-<option>Todos los sectores</option>
-<option>Privado tecnológico</option>
-<option>Financiero / Bancario</option>
-<option>Público / Estatal</option>
-<option>Educación / Académico</option>
-</select>
-<span class="material-symbols-outlined text-[16px] text-ink-600 absolute right-2 top-2 pointer-events-none">expand_more</span>
-</div>
-</div>
-<button class="text-label-default font-label-default text-ink-600 hover:text-chart-cat-1 transition-colors" type="button">
-            Limpiar filtros
-          </button>
-</div>
-<!-- Counter Indicator -->
-<div class="inline-flex items-center gap-2 bg-surface-container-low px-3 py-1 rounded-full">
-<span class="w-2 h-2 rounded-full bg-status-success"></span>
-<span class="text-caption-bold font-caption-bold text-ink-900">Mostrando 14 de 14 respuestas</span>
-</div>
-</div>
-</div>
-<!-- Level 1 Tabs -->
-<div class="flex border-b-0 gap-2 bg-surface-container-high/40 p-1 rounded-lg">
-<button class="flex-1 py-2 px-4 rounded-lg text-body-medium font-body-medium text-ink-600 hover:text-ink-900 hover:bg-surface-white/60 transition-all text-center" id="tab-btn-cursado" onclick="switchMainTab('cursado')" type="button">
-        Posgrado cursado (n = 6)
-      </button>
-<button class="flex-1 py-2 px-4 rounded-lg text-body-medium font-body-medium bg-surface-white text-chart-cat-1 shadow-sm font-semibold transition-all text-center" id="tab-btn-interes" onclick="switchMainTab('interes')" type="button">
-        Interés en posgrado (n = 10)
-      </button>
-<button class="flex-1 py-2 px-4 rounded-lg text-body-medium font-body-medium text-ink-600 hover:text-ink-900 hover:bg-surface-white/60 transition-all text-center" id="tab-btn-opinion" onclick="switchMainTab('opinion')" type="button">
-        Opinión sobre el posgrado de la FCyT (n = 14)
-      </button>
-</div>
-<!-- TAB 1 CONTENT (Posgrado cursado) -->
-<div class="hidden space-y-space-lg" id="tab-content-cursado">
-<div class="grid grid-cols-12 gap-space-lg">
-<div class="col-span-12 md:col-span-4 bg-surface-white rounded-lg p-space-lg shadow-sm flex flex-col justify-between">
-<span class="text-caption-bold font-caption-bold text-ink-600 uppercase tracking-wider">Formación complementaria activa</span>
-<div class="my-space-md">
-<span class="text-display-kpi font-display-kpi text-ink-900">6 de 14</span>
-<div class="text-body-medium font-body-medium text-chart-cat-1 mt-1">42,9% de la muestra total</div>
-</div>
-<span class="text-caption-meta font-caption-meta text-ink-600">Base total evaluada: n = 14 titulados</span>
-</div>
-<div class="col-span-12 md:col-span-8 bg-surface-white rounded-lg p-space-lg shadow-sm">
-<div class="flex items-center justify-between mb-space-md">
-<h3 class="text-title-card font-title-card text-ink-900">Nivel más alto cursado (n = 6)</h3>
-<span class="text-caption-meta font-caption-meta text-ink-600">Escala de 5 niveles</span>
-</div>
-<div class="space-y-space-sm">
-<div class="space-y-1">
-<div class="flex justify-between text-body-default font-body-default text-ink-900">
-<span class="">Diplomado</span>
-<span class="font-body-medium">3 (50,0%)</span>
-</div>
-<div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
-<div class="bg-chart-cat-1 h-full rounded-full" style="width: 50%;"></div>
-</div>
-</div>
-<div class="space-y-1">
-<div class="flex justify-between text-body-default font-body-default text-ink-900">
-<span class="">Maestría</span>
-<span class="font-body-medium">2 (33,3%)</span>
-</div>
-<div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
-<div class="bg-chart-cat-1 h-full rounded-full" style="width: 33.3%;"></div>
-</div>
-</div>
-<div class="space-y-1">
-<div class="flex justify-between text-body-default font-body-default text-ink-900">
-<span class="">Especialidad</span>
-<span class="font-body-medium">1 (16,7%)</span>
-</div>
-<div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
-<div class="bg-chart-cat-1 h-full rounded-full" style="width: 16.7%;"></div>
-</div>
-</div>
-<div class="space-y-1">
-<div class="flex justify-between text-body-default font-body-default text-ink-600">
-<span class="">Doctorado</span>
-<span class="font-body-medium">0 (0,0%)</span>
-</div>
-<div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
-<div class="bg-chart-cat-1 h-full rounded-full" style="width: 0%;"></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="grid grid-cols-12 gap-space-lg">
-<div class="col-span-12 md:col-span-6 bg-surface-white rounded-lg p-space-lg shadow-sm">
-<h3 class="text-title-card font-title-card text-ink-900 mb-space-md">Institución donde lo cursó (n = 6)</h3>
-<div class="space-y-space-sm">
-<div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
-<span class="text-body-default font-body-default text-ink-900">UMSS (Universidad Mayor de San Simón)</span>
-<span class="text-body-medium font-body-medium text-chart-cat-1">4 (66,7%)</span>
-</div>
-<div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
-<span class="text-body-default font-body-default text-ink-900">Otras universidades nacionales</span>
-<span class="text-body-medium font-body-medium text-ink-900">1 (16,7%)</span>
-</div>
-<div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
-<span class="text-body-default font-body-default text-ink-900">Universidad internacional</span>
-<span class="text-body-medium font-body-medium text-ink-900">1 (16,7%)</span>
-</div>
-</div>
-</div>
-<div class="col-span-12 md:col-span-6 bg-surface-white rounded-lg p-space-lg shadow-sm">
-<h3 class="text-title-card font-title-card text-ink-900 mb-space-md">Fuente principal de financiamiento (n = 6)</h3>
-<div class="space-y-space-sm">
-<div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
-<span class="text-body-default font-body-default text-ink-900">Recursos propios</span>
-<span class="text-body-medium font-body-medium text-chart-cat-1">4 (66,7%)</span>
-</div>
-<div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
-<span class="text-body-default font-body-default text-ink-900">Beca parcial institucional</span>
-<span class="text-body-medium font-body-medium text-ink-900">2 (33,3%)</span>
-</div>
-<div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
-<span class="text-body-default font-body-default text-ink-600">Financiamiento por empleador</span>
-<span class="text-body-medium font-body-medium text-ink-600">0 (0,0%)</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- TAB 2 CONTENT (Interés en posgrado - ACTIVE) -->
-<div class="space-y-space-lg" id="tab-content-interes">
-<!-- Sub-tabs Navigation -->
-<div class="flex items-center gap-space-xs border-b-0 pb-1">
-<button class="px-space-md py-1.5 rounded-lg text-label-default font-label-default bg-chart-cat-1 text-surface-white transition-colors" type="button">
-          Área
-        </button>
-<button class="px-space-md py-1.5 rounded-lg text-label-default font-label-default text-ink-600 hover:text-ink-900 hover:bg-surface-container-low transition-colors" type="button">
-          Nivel de interés
-        </button>
-<button class="px-space-md py-1.5 rounded-lg text-label-default font-label-default text-ink-600 hover:text-ink-900 hover:bg-surface-container-low transition-colors" type="button">
-          Modalidad
-        </button>
-<button class="px-space-md py-1.5 rounded-lg text-label-default font-label-default text-ink-600 hover:text-ink-900 hover:bg-surface-container-low transition-colors" type="button">
-          Organización preferida
-        </button>
-</div>
-<!-- KPI Summary Row (4 cards) -->
-<div class="grid grid-cols-12 gap-space-md">
-<!-- KPI 1 -->
-<div class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface-white rounded-lg p-5 shadow-sm flex flex-col justify-between">
-<div>
-<span class="text-caption-bold font-caption-bold text-ink-600 uppercase tracking-wider">Interés en posgrado</span>
-<div class="text-display-kpi font-display-kpi text-ink-900 mt-2">10 de 14</div>
-</div>
-<div class="mt-2 text-body-medium font-body-medium text-ink-600">
-            71,4% de la muestra <span class="text-caption-meta font-caption-meta text-ink-600 block">(n = 14)</span>
-</div>
-</div>
-<!-- KPI 2 -->
-<div class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface-white rounded-lg p-5 shadow-sm flex flex-col justify-between">
-<div>
-<span class="text-caption-bold font-caption-bold text-ink-600 uppercase tracking-wider">Nivel predilecto</span>
-<div class="text-display-kpi font-display-kpi text-ink-900 mt-2">Maestría</div>
-</div>
-<div class="mt-2 text-body-medium font-body-medium text-ink-600">
-            6 de 10 interesados <span class="text-caption-meta font-caption-meta text-ink-600 block">(60,0%)</span>
-</div>
-</div>
-<!-- KPI 3 -->
-<div class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface-white rounded-lg p-5 shadow-sm flex flex-col justify-between">
-<div>
-<span class="text-caption-bold font-caption-bold text-ink-600 uppercase tracking-wider">Concentración temática</span>
-<div class="text-title-section font-title-section text-ink-900 mt-3">Top 2 acumulado</div>
-</div>
-<div class="mt-2 text-body-medium font-body-medium text-ink-600">
-            8 de 14 <span class="text-caption-meta font-caption-meta text-ink-600 block">(57 %)</span>
-</div>
-</div>
-<!-- KPI 4 -->
-<div class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface-white rounded-lg p-5 shadow-sm flex flex-col justify-between">
-<div>
-<span class="text-caption-bold font-caption-bold text-ink-600 uppercase tracking-wider">Modalidad preferida</span>
-<div class="text-display-kpi font-display-kpi text-ink-900 mt-2">Virtual / Híbrida</div>
-</div>
-<div class="mt-2 text-body-medium font-body-medium text-ink-600">
-            8 de 10 interesados <span class="text-caption-meta font-caption-meta text-ink-600 block">(80,0%)</span>
-</div>
-</div>
-</div>
-<!-- Main Analytical Section: Sub-tab 'Área de interés' -->
-<div class="grid grid-cols-12 gap-space-lg">
-<!-- Card 1: Pareto Bar Chart -->
-<div class="col-span-12 lg:col-span-7 bg-surface-white rounded-lg p-space-lg shadow-sm flex flex-col justify-between">
-<div>
-<div class="flex items-start justify-between gap-space-sm mb-1">
-<div>
-<h2 class="text-title-card font-title-card text-ink-900">
-                  Distribución de demanda por área temática y porcentaje acumulado (Pareto)
-                </h2>
-<p class="text-caption-meta font-caption-meta text-ink-600 mt-1">
-                  Frecuencia absoluta y % acumulado de menciones (n = 10 interesados, 14 respuestas ponderadas)
-                </p>
-</div>
-<div class="flex items-center gap-1">
-<button class="p-1 rounded text-ink-600 hover:text-chart-cat-1 hover:bg-surface-container-low transition-colors" title="Información técnica" type="button">
-<span class="material-symbols-outlined text-[18px]">info</span>
-</button>
-<button class="p-1 rounded text-ink-600 hover:text-chart-cat-1 hover:bg-surface-container-low transition-colors" title="Descargar imagen" type="button">
-<span class="material-symbols-outlined text-[18px]">download</span>
-</button>
-</div>
-</div>
-<!-- Pareto Chart (Inline Vector Engine) -->
-<div class="relative w-full mt-6 pt-2">
-<svg class="w-full h-auto overflow-visible select-none" preserveAspectRatio="xMidYMid meet" viewBox="0 0 600 280">
-<!-- Background Gridlines for % -->
-<line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="50" x2="550" y1="20" y2="20"></line>
-<text class="text-[10px] fill-ink-600 font-sans" x="555" y="24">100%</text>
-<!-- 80% Pareto Cutoff Reference Line -->
-<line stroke="#F2A33A" stroke-dasharray="4 3" stroke-width="1.5" x1="50" x2="550" y1="64" y2="64"></line>
-<text class="text-[10px] fill-chart-cat-3 font-semibold font-sans" x="555" y="68">80%</text>
-<line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="50" x2="550" y1="108" y2="108"></line>
-<text class="text-[10px] fill-ink-600 font-sans" x="555" y="112">60%</text>
-<line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="50" x2="550" y1="152" y2="152"></line>
-<text class="text-[10px] fill-ink-600 font-sans" x="555" y="156">40%</text>
-<line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="50" x2="550" y1="196" y2="196"></line>
-<text class="text-[10px] fill-ink-600 font-sans" x="555" y="200">20%</text>
-<!-- Base axis line -->
-<line stroke="#CBD5E1" stroke-width="1" x1="50" x2="550" y1="240" y2="240"></line>
-<!-- Category 1: IA y Machine Learning (fi=8, %=28.6%, Acum=28.6% -> y=177) -->
-<rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="160" rx="2" width="50" x="75" y="80"></rect>
-<text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="100" y="74">8</text>
-<text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="100" y="254">IA y ML</text>
-<!-- Category 2: Ciberseguridad y Redes (fi=6, %=21.4%, Acum=50.0% -> y=130) -->
-<rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="120" rx="2" width="50" x="155" y="120"></rect>
-<text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="180" y="114">6</text>
-<text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="180" y="254">Ciberseg.</text>
-<!-- Category 3: Ciencia de Datos (fi=5, %=17.9%, Acum=67.9% -> y=90) -->
-<rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="100" rx="2" width="50" x="235" y="140"></rect>
-<text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="260" y="134">5</text>
-<text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="260" y="254">Datos</text>
-<!-- Category 4: Cloud Computing y DevOps (fi=4, %=14.3%, Acum=82.1% -> y=59) -->
-<rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="80" rx="2" width="50" x="315" y="160"></rect>
-<text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="340" y="154">4</text>
-<text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="340" y="254">Cloud/DevOps</text>
-<!-- Category 5: Ingeniería de Software (fi=3, %=10.7%, Acum=92.9% -> y=35) -->
-<rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="60" rx="2" width="50" x="395" y="180"></rect>
-<text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="420" y="174">3</text>
-<text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="420" y="254">Ing. Soft.</text>
-<!-- Category 6: Bases de Datos Avanzadas (fi=2, %=7.1%, Acum=100.0% -> y=20) -->
-<rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="40" rx="2" width="50" x="475" y="200"></rect>
-<text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="500" y="194">2</text>
-<text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="500" y="254">Bases Datos</text>
-<!-- Cumulative Percentage Curve (Orange) -->
-<!-- P1:(100, 177) P2:(180, 130) P3:(260, 90) P4:(340, 59) P5:(420, 35) P6:(500, 20) -->
-<path d="M 100 177 L 180 130 L 260 90 L 340 59 L 420 35 L 500 20" fill="none" stroke="#F2A33A" stroke-width="2.5"></path>
-<!-- Markers with value flags -->
-<circle cx="100" cy="177" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
-<text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="100" y="167">28,6%</text>
-<circle cx="180" cy="130" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
-<text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="180" y="120">50,0%</text>
-<circle cx="260" cy="90" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
-<text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="260" y="80">67,9%</text>
-<circle cx="340" cy="59" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
-<text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="340" y="49">82,1%</text>
-<circle cx="420" cy="35" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
-<text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="420" y="25">92,9%</text>
-<circle cx="500" cy="20" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
-<text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="500" y="12">100,0%</text>
-</svg>
-</div>
-</div>
-<!-- Footnote & Legend -->
-<div class="mt-4 pt-3 flex flex-wrap items-center justify-between text-caption-meta font-caption-meta text-ink-600 gap-2 border-t-0 bg-surface-container-low/50 px-3 py-2 rounded">
-<div class="flex items-center gap-4">
-<span class="inline-flex items-center gap-1.5">
-<span class="w-3 h-3 rounded-sm bg-chart-cat-1"></span>
-<span class="">Menciones individuales (fi)</span>
-</span>
-<span class="inline-flex items-center gap-1.5">
-<span class="w-3 h-0.5 bg-chart-cat-3"></span>
-<span class="">% Acumulado (Pareto)</span>
-</span>
-</div>
-<span class="">n = 10 titulados con interés en posgrado</span>
-</div>
-</div>
-<!-- Card 2: Frequency Table -->
-<div class="col-span-12 lg:col-span-5 bg-surface-white rounded-lg p-space-lg shadow-sm flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-space-sm">
-<h2 class="text-title-card font-title-card text-ink-900">
-                Tabla de frecuencias
-              </h2>
-<span class="text-caption-bold font-caption-bold text-chart-cat-1 bg-titulados-active px-2 py-0.5 rounded">
-                n = 10
-              </span>
-</div>
-<p class="text-caption-meta font-caption-meta text-ink-600 mb-space-md">
-              Áreas temáticas seleccionadas con opción múltiple
-            </p>
-<div class="overflow-x-auto">
-<table class="w-full text-left">
-<thead>
-<tr class="bg-surface-container-low text-caption-bold font-caption-bold text-ink-600">
-<th class="py-2.5 px-3 rounded-l">ÁREA TEMÁTICA</th>
-<th class="py-2.5 px-2 text-right">fi</th>
-<th class="py-2.5 px-2 text-right">fr (%)</th>
-<th class="py-2.5 px-2 text-right">Fi</th>
-<th class="py-2.5 px-3 text-right rounded-r">% ACUM.</th>
-</tr>
-</thead>
-<tbody class="text-body-tabular font-body-tabular text-ink-900">
-<tr class="hover:bg-surface-container-low/50 transition-colors">
-<td class="py-2 px-3 text-body-medium font-body-medium">IA y Machine Learning</td>
-<td class="py-2 px-2 text-right">8</td>
-<td class="py-2 px-2 text-right">28,6%</td>
-<td class="py-2 px-2 text-right text-ink-600">8</td>
-<td class="py-2 px-3 text-right font-medium">28,6%</td>
-</tr>
-<tr class="hover:bg-surface-container-low/50 transition-colors">
-<td class="py-2 px-3 text-body-medium font-body-medium">Ciberseguridad y Redes</td>
-<td class="py-2 px-2 text-right">6</td>
-<td class="py-2 px-2 text-right">21,4%</td>
-<td class="py-2 px-2 text-right text-ink-600">14</td>
-<td class="py-2 px-3 text-right font-medium">50,0%</td>
-</tr>
-<tr class="hover:bg-surface-container-low/50 transition-colors">
-<td class="py-2 px-3 text-body-medium font-body-medium">Ciencia de Datos</td>
-<td class="py-2 px-2 text-right">5</td>
-<td class="py-2 px-2 text-right">17,9%</td>
-<td class="py-2 px-2 text-right text-ink-600">19</td>
-<td class="py-2 px-3 text-right font-medium">67,9%</td>
-</tr>
-<tr class="hover:bg-surface-container-low/50 transition-colors">
-<td class="py-2 px-3 text-body-medium font-body-medium">Cloud Computing y DevOps</td>
-<td class="py-2 px-2 text-right">4</td>
-<td class="py-2 px-2 text-right">14,3%</td>
-<td class="py-2 px-2 text-right text-ink-600">23</td>
-<td class="py-2 px-3 text-right font-medium">82,1%</td>
-</tr>
-<tr class="hover:bg-surface-container-low/50 transition-colors">
-<td class="py-2 px-3 text-body-medium font-body-medium">Ingeniería de Software</td>
-<td class="py-2 px-2 text-right">3</td>
-<td class="py-2 px-2 text-right">10,7%</td>
-<td class="py-2 px-2 text-right text-ink-600">26</td>
-<td class="py-2 px-3 text-right font-medium">92,9%</td>
-</tr>
-<tr class="hover:bg-surface-container-low/50 transition-colors">
-<td class="py-2 px-3 text-body-medium font-body-medium">Bases de Datos Avanzadas</td>
-<td class="py-2 px-2 text-right">2</td>
-<td class="py-2 px-2 text-right">7,1%</td>
-<td class="py-2 px-2 text-right text-ink-600">28</td>
-<td class="py-2 px-3 text-right font-medium">100,0%</td>
-</tr>
-</tbody>
-<tfoot>
-<tr class="bg-surface-container-low/70 font-semibold text-ink-900 text-body-tabular font-body-tabular">
-<td class="py-2 px-3 rounded-l">Total menciones</td>
-<td class="py-2 px-2 text-right">28</td>
-<td class="py-2 px-2 text-right">100,0%</td>
-<td class="py-2 px-2 text-right text-ink-600">28</td>
-<td class="py-2 px-3 text-right rounded-r">100,0%</td>
-</tr>
-</tfoot>
-</table>
-</div>
-</div>
-<div class="mt-4 pt-3 text-caption-meta font-caption-meta text-ink-600 flex items-center justify-between">
-<span class="">Menciones ponderadas totales: 28</span>
-<span class="text-caption-bold font-caption-bold text-chart-cat-1">Base: n = 10 titulados</span>
-</div>
-</div>
-</div>
-</div>
-<!-- TAB 3 CONTENT: Opinión sobre el posgrado de la FCyT (n = 14) -->
-<div class="block space-y-space-md" id="tab-content-opinion">
-<div class="bg-surface-white rounded-lg p-space-lg shadow-sm">
-<div class="flex flex-wrap items-center justify-between gap-space-sm mb-space-md">
-<div>
-<h2 class="text-title-card font-title-card text-ink-900">
-              Opinión sobre el posgrado de la FCyT (n = 14)
-            </h2>
-<p class="text-body-default font-body-default text-ink-900 mt-1">
-              "Los programas de posgrado de la FCyT responden a las necesidades del medio profesional actual"
-            </p>
-</div>
-<button class="text-caption-bold font-caption-bold text-ink-600 hover:text-chart-cat-1 flex items-center gap-1 transition-colors" type="button">
-<span class="material-symbols-outlined text-[16px]">help_outline</span>
-<span class="">¿Cómo leer esto?</span>
-</button>
-</div>
-<!-- 4-Level Likert Stacked Distribution Bar -->
-<div class="space-y-3">
-<div class="w-full h-11 bg-surface-container-low rounded-lg flex overflow-hidden p-1 gap-1">
-<!-- Level 1: Totalmente en desacuerdo (2 de 14, 14.3%) -->
-<div class="bg-likert-1 h-full rounded flex items-center justify-center text-surface-white font-caption-bold text-caption-bold title='Totalmente en desacuerdo: 2 (14,3%)'" style="width: 14.28%;">
-              2 (14,3%)
-            </div>
-<!-- Level 2: En desacuerdo (3 de 14, 21.4%) -->
-<div class="bg-likert-2 h-full rounded flex items-center justify-center text-ink-900 font-caption-bold text-caption-bold title='En desacuerdo: 3 (21,4%)'" style="width: 21.43%;">
-              3 (21,4%)
-            </div>
-<!-- Level 3: De acuerdo (6 de 14, 42.9%) -->
-<div class="bg-likert-4 h-full rounded flex items-center justify-center text-ink-900 font-caption-bold text-caption-bold title='De acuerdo: 6 (42,9%)'" style="width: 42.86%;">
-              6 (42,9%)
-            </div>
-<!-- Level 4: Totalmente de acuerdo (3 de 14, 21.4%) -->
-<div class="bg-likert-5 h-full rounded flex items-center justify-center text-surface-white font-caption-bold text-caption-bold title='Totalmente de acuerdo: 3 (21,4%)'" style="width: 21.43%;">
-              3 (21,4%)
-            </div>
-</div>
-<!-- Likert Legend Indicator -->
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-<div class="flex items-center gap-2">
-<span class="w-3.5 h-3.5 rounded-sm bg-likert-1 flex-shrink-0"></span>
-<span class="text-caption-meta font-caption-meta text-ink-900">Totalmente en desacuerdo (2)</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="w-3.5 h-3.5 rounded-sm bg-likert-2 flex-shrink-0"></span>
-<span class="text-caption-meta font-caption-meta text-ink-900">En desacuerdo (3)</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="w-3.5 h-3.5 rounded-sm bg-likert-4 flex-shrink-0"></span>
-<span class="text-caption-meta font-caption-meta text-ink-900">De acuerdo (6)</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="w-3.5 h-3.5 rounded-sm bg-likert-5 flex-shrink-0"></span>
-<span class="text-caption-meta font-caption-meta text-ink-900">Totalmente de acuerdo (3)</span>
-</div>
-</div>
-</div>
-<div class="mt-space-md pt-3 flex items-center justify-between text-caption-meta font-caption-meta text-ink-600 border-t-0">
-<span class="">Escala Likert de 4 niveles balanceada</span>
-<span class="">Base total de la muestra: n = 14 titulados</span>
-</div>
-</div>
-</div>
-<!-- Institutional Desktop Bottom Navigation Bar -->
+﻿<!DOCTYPE html>
+<html lang="es" style="">
 
-</div>
-</div>
-<script>
-  function switchMainTab(tabId) {
-    const tabs = ['cursado', 'interes', 'opinion'];
-    tabs.forEach(t => {
-      const content = document.getElementById('tab-content-' + t);
-      const btn = document.getElementById('tab-btn-' + t);
-      if (t === tabId) {
-        if (content) content.classList.remove('hidden');
-        if (btn) {
-          btn.classList.add('bg-surface-white', 'text-chart-cat-1', 'shadow-sm', 'font-semibold');
-          btn.classList.remove('text-ink-600');
-        }
-      } else {
-        if (t !== 'opinion' && content) content.classList.add('hidden');
-        if (btn) {
-          btn.classList.remove('bg-surface-white', 'text-chart-cat-1', 'shadow-sm', 'font-semibold');
-          btn.classList.add('text-ink-600');
-        }
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="web_dashboard" name="shell-type">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet">
+  <style>
+    @layer base {
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
       }
-    });
-  }
-</script></main></div>
+
+      body {
+        overscroll-behavior: none;
+      }
+
+      main> :first-child {
+        margin-top: 0 !important;
+      }
+
+      main> :last-child {
+        margin-bottom: 0 !important;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script
+    id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "likert-4": "#8DB8E0", "titulados-active": "#E3EEF8", "on-background": "#171c1f", "chart-cat-7": "#7CB342", "chart-cat-6": "#5C6B7A", "surface-container-highest": "#dfe3e7", "empleadores-active": "#E1F4F2", "chart-cat-1": "#1F6FB5", "chart-cat-3": "#F2A33A", "error": "#ba1a1a", "error-container": "#ffdad6", "surface-container": "#eaeef2", "on-primary-fixed": "#001c38", "surface-dim": "#d6dade", "status-danger": "#D64545", "surface-tint": "#466083", "secondary-container": "#72b4ff", "on-tertiary-fixed": "#00201e", "heat-blue-6": "#12467A", "likert-5": "#1F6FB5", "secondary-fixed": "#d2e4ff", "tertiary": "#001816", "on-error-container": "#93000a", "surface-white": "#FFFFFF", "on-tertiary-container": "#0ea198", "heat-blue-2": "#BBD6EE", "status-warning": "#E0A100", "on-primary": "#ffffff", "on-secondary": "#ffffff", "likert-2": "#F4A98A", "on-secondary-container": "#004578", "tertiary-container": "#002f2c", "outline-variant": "#c4c6cf", "heat-blue-1": "#EAF2FA", "heat-blue-3": "#7DB1DD", "on-primary-fixed-variant": "#2d486a", "inverse-on-surface": "#edf1f5", "chart-cat-5": "#E4572E", "primary-fixed-dim": "#aec8f0", "on-secondary-fixed-variant": "#00497e", "primary-fixed": "#d3e4ff", "surface-variant": "#dfe3e7", "inverse-surface": "#2c3134", "chart-cat-2": "#14A39A", "on-secondary-fixed": "#001d37", "surface-container-high": "#e4e9ed", "likert-3": "#F1F5F9", "on-tertiary-fixed-variant": "#00504b", "secondary-fixed-dim": "#9fcaff", "secondary": "#0061a5", "heat-blue-4": "#3F86C4", "highlight-amber": "#F2A33A", "primary-container": "#0b2a4a", "surface-container-low": "#f0f4f8", "inverse-primary": "#aec8f0", "tertiary-fixed": "#80f6eb", "on-surface-variant": "#43474e", "ink-900": "#0F172A", "on-error": "#ffffff", "ink-600": "#475569", "chart-cat-4": "#8E5BD0", "surface-container-lowest": "#ffffff", "outline": "#74777f", "status-success": "#2E9E5B", "heat-blue-5": "#1F6FB5", "on-tertiary": "#ffffff", "border-line": "#CBD5E1", "tertiary-fixed-dim": "#62d9cf", "chart-cat-8": "#D9418C", "primary": "#00152d", "likert-1": "#E4572E", "on-primary-container": "#7892b7", "background": "#f6fafe", "on-surface": "#171c1f", "surface": "#f6fafe", "surface-bright": "#f6fafe" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "1.5rem", "space-xl": "2rem", "space-lg": "1.5rem", "space-sm": "0.5rem", "margin": "2rem", "space-xs": "0.25rem", "space-md": "1rem" }, "fontFamily": { "title-card": ["Inter"], "headline-page": ["Inter"], "label-default": ["Inter"], "caption-bold": ["Inter"], "caption-meta": ["Inter"], "title-section": ["Inter"], "display-kpi": ["Inter"], "body-default": ["Inter"], "body-tabular": ["Inter"], "body-medium": ["Inter"] }, "fontSize": { "title-card": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-page": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "label-default": ["13px", { "lineHeight": "16px", "fontWeight": "500" }], "caption-bold": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "caption-meta": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "title-section": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-kpi": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-default": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "body-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "body-medium": ["14px", { "lineHeight": "20px", "fontWeight": "500" }] } } } };</script>
+</head>
+
+<body class="bg-likert-3 text-on-surface font-body-default h-screen overflow-hidden">
+  <aside
+    class="fixed left-0 top-0 h-full w-60 bg-primary-container text-surface-white z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+    <div class="flex flex-col">
+      <div class="px-space-md py-space-lg flex items-center gap-space-sm">
+        <div class="w-9 h-9 rounded-lg bg-chart-cat-1 flex items-center justify-center text-surface-white"><span
+            class="material-symbols-outlined text-[20px]">school</span></div>
+        <div class="flex flex-col"><span
+            class="font-title-card text-title-card text-surface-white tracking-tight leading-tight">Analizador</span><span
+            class="font-caption-meta text-caption-meta text-on-primary-container leading-tight">Ing. de Sistemas ·
+            UMSS</span></div>
+      </div>
+      <div class="px-space-md mb-space-md"><a
+          class="w-full flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-lg bg-chart-cat-1 hover:bg-secondary text-surface-white font-label-default text-label-default transition-colors"
+          href="cargar-datos.html"><span class="font-medium">+ Cargar datos</span></a></div>
+      <div class="overflow-y-auto max-h-[calc(100vh-210px)] px-space-xs">
+        <div class="px-space-sm pt-space-xs pb-space-xs">
+          <div class="flex items-center justify-between"><span
+              class="font-caption-bold text-caption-bold tracking-wider text-chart-cat-1 uppercase">Titulados</span><span
+              class="text-[11px] font-caption-bold px-1.5 py-0.5 rounded bg-chart-cat-1/20 text-surface-white">N=14</span>
+          </div>
+        </div>
+        <nav class="flex flex-col gap-0.5 mb-space-md"
+          data-active-classes="bg-titulados-active text-chart-cat-1 font-body-medium rounded-lg"><a
+            class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all"
+            data-path="titulados-resumen" href="resumen-titulados.html">Resumen</a><a
+            class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all"
+            data-path="titulados-perfil-y-empleabilidad" href="perfil-y-empleabilidad-titulados.html">Perfil y
+            empleabilidad</a><a aria-current="page"
+            class="flex items-center px-space-sm py-1.5 transition-all bg-titulados-active text-chart-cat-1 font-body-medium rounded-lg"
+            data-path="titulados-formacion-continua" href="formacion-continua-titulados.html">Formación continua</a><a
+            class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all"
+            data-path="titulados-financiamiento" href="financiamiento-titulados.html">Financiamiento</a><a
+            class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all"
+            data-path="titulados-brechas-de-competencias" href="brechas-competencias-titulados.html">Brechas de
+            competencias</a><a
+            class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all"
+            data-path="titulados-cruces-y-exportar" href="cruces-y-exportacion-titulados.html">Cruces y exportar</a><a
+            class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all"
+            data-path="titulados-simulacion-de-escenarios" href="simulacion-escenarios-titulados.html">Simulación de
+            escenarios</a></nav>
+        <div class="px-space-sm pt-space-xs pb-space-xs">
+          <div class="flex items-center justify-between"><span
+              class="font-caption-bold text-caption-bold tracking-wider text-chart-cat-2 uppercase">Empleadores</span><span
+              class="text-[11px] font-caption-bold px-1.5 py-0.5 rounded bg-chart-cat-2/20 text-surface-white">N=8</span>
+          </div>
+        </div>
+        <nav class="flex flex-col gap-0.5"
+          data-active-classes="bg-empleadores-active text-chart-cat-2 font-body-medium rounded-lg"><a
+            class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all"
+            data-path="empleadores-resumen-y-contratacion" href="resumen-empleadores.html">Resumen y contratación</a><a
+            class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all"
+            data-path="empleadores-valoracion-de-la-carrera" href="valoracion-carrera-empleadores.html">Valoración de la
+            Carrera</a><a
+            class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all"
+            data-path="empleadores-brechas-de-competencias" href="brechas-competencias-empleadores.html">Brechas de
+            competencias</a><a
+            class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-container-highest/10 hover:text-surface-white font-body-default text-body-default transition-all"
+            data-path="empleadores-cruces-y-exportar" href="cruces-y-exportacion-empleadores.html">Cruces y exportar</a>
+        </nav>
+      </div>
+    </div>
+  </aside>
+  <div class="pl-60 h-screen flex flex-col overflow-hidden">
+    <header
+      class="fixed top-0 left-60 right-0 h-16 bg-surface-white shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center px-space-lg justify-end">
+      <div class="flex items-center gap-space-md">
+        <div
+          class="flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-surface-container-low font-label-default text-label-default text-ink-900">
+          <span class="material-symbols-outlined text-[18px] text-ink-600">calendar_today</span><span class="">Periodo
+            2024</span></div>
+        <div
+          class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-low font-caption-bold text-caption-bold text-ink-900">
+          <span class="w-2 h-2 rounded-full bg-status-success"></span><span class="">Datos cargados: N=14 (T) · N=8
+            (E)</span></div>
+        <div class="flex items-center gap-space-xs"><button
+            class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-surface-white hover:bg-surface-container-low text-ink-900 font-label-default text-label-default transition-colors"
+            type="button"><span class="material-symbols-outlined text-[18px] text-ink-600">info</span><span
+              class="">Definiciones</span></button><button
+            class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-chart-cat-1 hover:bg-secondary text-surface-white font-label-default text-label-default transition-colors"
+            type="button"><span class="material-symbols-outlined text-[18px]">download</span><span class="">Exportar
+              vista</span></button></div>
+      </div>
+    </header>
+    <main class="relative pt-16 bg-likert-3 min-h-screen w-full px-space-lg py-space-lg flex-1 overflow-y-auto">
+      <div class="flex flex-col w-full">
+        <div class="max-w-[1200px] w-full mx-auto space-y-space-lg">
+          <!-- Header Section -->
+          <div class="flex flex-col gap-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-caption-bold font-caption-bold bg-titulados-active text-chart-cat-1">
+                Titulados
+              </span>
+              <span class="text-caption-meta font-caption-meta text-ink-600">Módulo Académico · Seguimiento a
+                Graduados</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <h1 class="text-headline-page font-headline-page text-ink-900 tracking-tight">
+                Formación continua <span class="text-ink-600 font-body-default">(n = 14)</span>
+              </h1>
+            </div>
+          </div>
+          <!-- Persistent Filter Bar -->
+          <div class="bg-surface-white rounded-lg p-space-md shadow-sm flex flex-col gap-space-sm">
+            <div class="flex flex-wrap items-center justify-between gap-space-md">
+              <div class="flex flex-wrap items-center gap-space-lg">
+                <!-- Año de titulación range -->
+                <div class="flex items-center gap-space-sm">
+                  <label class="text-label-default font-label-default text-ink-600 whitespace-nowrap">Año
+                    titulación:</label>
+                  <div class="flex items-center gap-2 bg-surface-container-low px-2.5 py-1 rounded-lg">
+                    <span class="text-caption-bold font-caption-bold text-ink-900">2018</span>
+                    <input
+                      class="w-20 accent-chart-cat-1 h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer"
+                      max="2023" min="2018" type="range" value="2018">
+                    <span class="text-caption-meta font-caption-meta text-ink-600">—</span>
+                    <input
+                      class="w-20 accent-chart-cat-1 h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer"
+                      max="2023" min="2018" type="range" value="2023">
+                    <span class="text-caption-bold font-caption-bold text-ink-900">2023</span>
+                  </div>
+                </div>
+                <!-- Estado laboral dropdown -->
+                <div class="flex items-center gap-space-xs">
+                  <label class="text-label-default font-label-default text-ink-600">Estado laboral:</label>
+                  <div class="relative">
+                    <select
+                      class="bg-surface-container-low text-ink-900 text-label-default font-label-default rounded-lg pl-3 pr-8 py-1.5 appearance-none focus:outline-none cursor-pointer">
+                      <option>Todos los estados (3)</option>
+                      <option>Empleado por cuenta ajena</option>
+                      <option>Independiente / Emprendedor</option>
+                      <option>En búsqueda de empleo</option>
+                    </select>
+                    <span
+                      class="material-symbols-outlined text-[16px] text-ink-600 absolute right-2 top-2 pointer-events-none">expand_more</span>
+                  </div>
+                </div>
+                <!-- Sector dropdown -->
+                <div class="flex items-center gap-space-xs">
+                  <label class="text-label-default font-label-default text-ink-600">Sector:</label>
+                  <div class="relative">
+                    <select
+                      class="bg-surface-container-low text-ink-900 text-label-default font-label-default rounded-lg pl-3 pr-8 py-1.5 appearance-none focus:outline-none cursor-pointer">
+                      <option>Todos los sectores</option>
+                      <option>Privado tecnológico</option>
+                      <option>Financiero / Bancario</option>
+                      <option>Público / Estatal</option>
+                      <option>Educación / Académico</option>
+                    </select>
+                    <span
+                      class="material-symbols-outlined text-[16px] text-ink-600 absolute right-2 top-2 pointer-events-none">expand_more</span>
+                  </div>
+                </div>
+                <button
+                  class="text-label-default font-label-default text-ink-600 hover:text-chart-cat-1 transition-colors"
+                  type="button">
+                  Limpiar filtros
+                </button>
+              </div>
+              <!-- Counter Indicator -->
+              <div class="inline-flex items-center gap-2 bg-surface-container-low px-3 py-1 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-status-success"></span>
+                <span class="text-caption-bold font-caption-bold text-ink-900">Mostrando 14 de 14 respuestas</span>
+              </div>
+            </div>
+          </div>
+          <!-- Level 1 Tabs -->
+          <div class="flex border-b-0 gap-2 bg-surface-container-high/40 p-1 rounded-lg">
+            <button
+              class="flex-1 py-2 px-4 rounded-lg text-body-medium font-body-medium text-ink-600 hover:text-ink-900 hover:bg-surface-white/60 transition-all text-center"
+              id="tab-btn-cursado" onclick="switchMainTab('cursado')" type="button">
+              Posgrado cursado (n = 6)
+            </button>
+            <button
+              class="flex-1 py-2 px-4 rounded-lg text-body-medium font-body-medium bg-surface-white text-chart-cat-1 shadow-sm font-semibold transition-all text-center"
+              id="tab-btn-interes" onclick="switchMainTab('interes')" type="button">
+              Interés en posgrado (n = 10)
+            </button>
+            <button
+              class="flex-1 py-2 px-4 rounded-lg text-body-medium font-body-medium text-ink-600 hover:text-ink-900 hover:bg-surface-white/60 transition-all text-center"
+              id="tab-btn-opinion" onclick="switchMainTab('opinion')" type="button">
+              Opinión sobre el posgrado de la FCyT (n = 14)
+            </button>
+          </div>
+          <!-- TAB 1 CONTENT (Posgrado cursado) -->
+          <div class="hidden space-y-space-lg" id="tab-content-cursado">
+            <div class="grid grid-cols-12 gap-space-lg">
+              <div
+                class="col-span-12 md:col-span-4 bg-surface-white rounded-lg p-space-lg shadow-sm flex flex-col justify-between">
+                <span class="text-caption-bold font-caption-bold text-ink-600 uppercase tracking-wider">Formación
+                  complementaria activa</span>
+                <div class="my-space-md">
+                  <span class="text-display-kpi font-display-kpi text-ink-900">6 de 14</span>
+                  <div class="text-body-medium font-body-medium text-chart-cat-1 mt-1">42,9% de la muestra total</div>
+                </div>
+                <span class="text-caption-meta font-caption-meta text-ink-600">Base total evaluada: n = 14
+                  titulados</span>
+              </div>
+              <div class="col-span-12 md:col-span-8 bg-surface-white rounded-lg p-space-lg shadow-sm">
+                <div class="flex items-center justify-between mb-space-md">
+                  <h3 class="text-title-card font-title-card text-ink-900">Nivel más alto cursado (n = 6)</h3>
+                  <span class="text-caption-meta font-caption-meta text-ink-600">Escala de 5 niveles</span>
+                </div>
+                <div class="space-y-space-sm">
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-body-default font-body-default text-ink-900">
+                      <span class="">Diplomado</span>
+                      <span class="font-body-medium">3 (50,0%)</span>
+                    </div>
+                    <div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
+                      <div class="bg-chart-cat-1 h-full rounded-full" style="width: 50%;"></div>
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-body-default font-body-default text-ink-900">
+                      <span class="">Maestría</span>
+                      <span class="font-body-medium">2 (33,3%)</span>
+                    </div>
+                    <div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
+                      <div class="bg-chart-cat-1 h-full rounded-full" style="width: 33.3%;"></div>
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-body-default font-body-default text-ink-900">
+                      <span class="">Especialidad</span>
+                      <span class="font-body-medium">1 (16,7%)</span>
+                    </div>
+                    <div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
+                      <div class="bg-chart-cat-1 h-full rounded-full" style="width: 16.7%;"></div>
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-body-default font-body-default text-ink-600">
+                      <span class="">Doctorado</span>
+                      <span class="font-body-medium">0 (0,0%)</span>
+                    </div>
+                    <div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
+                      <div class="bg-chart-cat-1 h-full rounded-full" style="width: 0%;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-12 gap-space-lg">
+              <div class="col-span-12 md:col-span-6 bg-surface-white rounded-lg p-space-lg shadow-sm">
+                <h3 class="text-title-card font-title-card text-ink-900 mb-space-md">Institución donde lo cursó (n = 6)
+                </h3>
+                <div class="space-y-space-sm">
+                  <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+                    <span class="text-body-default font-body-default text-ink-900">UMSS (Universidad Mayor de San
+                      Simón)</span>
+                    <span class="text-body-medium font-body-medium text-chart-cat-1">4 (66,7%)</span>
+                  </div>
+                  <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+                    <span class="text-body-default font-body-default text-ink-900">Otras universidades nacionales</span>
+                    <span class="text-body-medium font-body-medium text-ink-900">1 (16,7%)</span>
+                  </div>
+                  <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+                    <span class="text-body-default font-body-default text-ink-900">Universidad internacional</span>
+                    <span class="text-body-medium font-body-medium text-ink-900">1 (16,7%)</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-span-12 md:col-span-6 bg-surface-white rounded-lg p-space-lg shadow-sm">
+                <h3 class="text-title-card font-title-card text-ink-900 mb-space-md">Fuente principal de financiamiento
+                  (n = 6)</h3>
+                <div class="space-y-space-sm">
+                  <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+                    <span class="text-body-default font-body-default text-ink-900">Recursos propios</span>
+                    <span class="text-body-medium font-body-medium text-chart-cat-1">4 (66,7%)</span>
+                  </div>
+                  <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+                    <span class="text-body-default font-body-default text-ink-900">Beca parcial institucional</span>
+                    <span class="text-body-medium font-body-medium text-ink-900">2 (33,3%)</span>
+                  </div>
+                  <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+                    <span class="text-body-default font-body-default text-ink-600">Financiamiento por empleador</span>
+                    <span class="text-body-medium font-body-medium text-ink-600">0 (0,0%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- TAB 2 CONTENT (Interés en posgrado - ACTIVE) -->
+          <div class="space-y-space-lg" id="tab-content-interes">
+            <!-- Sub-tabs Navigation -->
+            <div class="flex items-center gap-space-xs border-b-0 pb-1">
+              <button
+                class="px-space-md py-1.5 rounded-lg text-label-default font-label-default bg-chart-cat-1 text-surface-white transition-colors"
+                type="button">
+                Área
+              </button>
+              <button
+                class="px-space-md py-1.5 rounded-lg text-label-default font-label-default text-ink-600 hover:text-ink-900 hover:bg-surface-container-low transition-colors"
+                type="button">
+                Nivel de interés
+              </button>
+              <button
+                class="px-space-md py-1.5 rounded-lg text-label-default font-label-default text-ink-600 hover:text-ink-900 hover:bg-surface-container-low transition-colors"
+                type="button">
+                Modalidad
+              </button>
+              <button
+                class="px-space-md py-1.5 rounded-lg text-label-default font-label-default text-ink-600 hover:text-ink-900 hover:bg-surface-container-low transition-colors"
+                type="button">
+                Organización preferida
+              </button>
+            </div>
+            <!-- KPI Summary Row (4 cards) -->
+            <div class="grid grid-cols-12 gap-space-md">
+              <!-- KPI 1 -->
+              <div
+                class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface-white rounded-lg p-5 shadow-sm flex flex-col justify-between">
+                <div>
+                  <span class="text-caption-bold font-caption-bold text-ink-600 uppercase tracking-wider">Interés en
+                    posgrado</span>
+                  <div class="text-display-kpi font-display-kpi text-ink-900 mt-2">10 de 14</div>
+                </div>
+                <div class="mt-2 text-body-medium font-body-medium text-ink-600">
+                  71,4% de la muestra <span class="text-caption-meta font-caption-meta text-ink-600 block">(n =
+                    14)</span>
+                </div>
+              </div>
+              <!-- KPI 2 -->
+              <div
+                class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface-white rounded-lg p-5 shadow-sm flex flex-col justify-between">
+                <div>
+                  <span class="text-caption-bold font-caption-bold text-ink-600 uppercase tracking-wider">Nivel
+                    predilecto</span>
+                  <div class="text-display-kpi font-display-kpi text-ink-900 mt-2">Maestría</div>
+                </div>
+                <div class="mt-2 text-body-medium font-body-medium text-ink-600">
+                  6 de 10 interesados <span
+                    class="text-caption-meta font-caption-meta text-ink-600 block">(60,0%)</span>
+                </div>
+              </div>
+              <!-- KPI 3 -->
+              <div
+                class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface-white rounded-lg p-5 shadow-sm flex flex-col justify-between">
+                <div>
+                  <span class="text-caption-bold font-caption-bold text-ink-600 uppercase tracking-wider">Concentración
+                    temática</span>
+                  <div class="text-title-section font-title-section text-ink-900 mt-3">Top 2 acumulado</div>
+                </div>
+                <div class="mt-2 text-body-medium font-body-medium text-ink-600">
+                  8 de 14 <span class="text-caption-meta font-caption-meta text-ink-600 block">(57 %)</span>
+                </div>
+              </div>
+              <!-- KPI 4 -->
+              <div
+                class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface-white rounded-lg p-5 shadow-sm flex flex-col justify-between">
+                <div>
+                  <span class="text-caption-bold font-caption-bold text-ink-600 uppercase tracking-wider">Modalidad
+                    preferida</span>
+                  <div class="text-display-kpi font-display-kpi text-ink-900 mt-2">Virtual / Híbrida</div>
+                </div>
+                <div class="mt-2 text-body-medium font-body-medium text-ink-600">
+                  8 de 10 interesados <span
+                    class="text-caption-meta font-caption-meta text-ink-600 block">(80,0%)</span>
+                </div>
+              </div>
+            </div>
+            <!-- Main Analytical Section: Sub-tab 'Área de interés' -->
+            <div class="grid grid-cols-12 gap-space-lg">
+              <!-- Card 1: Pareto Bar Chart -->
+              <div
+                class="col-span-12 lg:col-span-7 bg-surface-white rounded-lg p-space-lg shadow-sm flex flex-col justify-between">
+                <div>
+                  <div class="flex items-start justify-between gap-space-sm mb-1">
+                    <div>
+                      <h2 class="text-title-card font-title-card text-ink-900">
+                        Distribución de demanda por área temática y porcentaje acumulado (Pareto)
+                      </h2>
+                      <p class="text-caption-meta font-caption-meta text-ink-600 mt-1">
+                        Frecuencia absoluta y % acumulado de menciones (n = 10 interesados, 14 respuestas ponderadas)
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <button
+                        class="p-1 rounded text-ink-600 hover:text-chart-cat-1 hover:bg-surface-container-low transition-colors"
+                        title="Información técnica" type="button">
+                        <span class="material-symbols-outlined text-[18px]">info</span>
+                      </button>
+                      <button
+                        class="p-1 rounded text-ink-600 hover:text-chart-cat-1 hover:bg-surface-container-low transition-colors"
+                        title="Descargar imagen" type="button">
+                        <span class="material-symbols-outlined text-[18px]">download</span>
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Pareto Chart (Inline Vector Engine) -->
+                  <div class="relative w-full mt-6 pt-2">
+                    <svg class="w-full h-auto overflow-visible select-none" preserveAspectRatio="xMidYMid meet"
+                      viewBox="0 0 600 280">
+                      <!-- Background Gridlines for % -->
+                      <line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="50" x2="550" y1="20" y2="20">
+                      </line>
+                      <text class="text-[10px] fill-ink-600 font-sans" x="555" y="24">100%</text>
+                      <!-- 80% Pareto Cutoff Reference Line -->
+                      <line stroke="#F2A33A" stroke-dasharray="4 3" stroke-width="1.5" x1="50" x2="550" y1="64" y2="64">
+                      </line>
+                      <text class="text-[10px] fill-chart-cat-3 font-semibold font-sans" x="555" y="68">80%</text>
+                      <line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="50" x2="550" y1="108" y2="108">
+                      </line>
+                      <text class="text-[10px] fill-ink-600 font-sans" x="555" y="112">60%</text>
+                      <line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="50" x2="550" y1="152" y2="152">
+                      </line>
+                      <text class="text-[10px] fill-ink-600 font-sans" x="555" y="156">40%</text>
+                      <line stroke="#E2E8F0" stroke-dasharray="3 3" stroke-width="1" x1="50" x2="550" y1="196" y2="196">
+                      </line>
+                      <text class="text-[10px] fill-ink-600 font-sans" x="555" y="200">20%</text>
+                      <!-- Base axis line -->
+                      <line stroke="#CBD5E1" stroke-width="1" x1="50" x2="550" y1="240" y2="240"></line>
+                      <!-- Category 1: IA y Machine Learning (fi=8, %=28.6%, Acum=28.6% -> y=177) -->
+                      <rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="160" rx="2" width="50"
+                        x="75" y="80"></rect>
+                      <text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="100"
+                        y="74">8</text>
+                      <text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="100" y="254">IA y
+                        ML</text>
+                      <!-- Category 2: Ciberseguridad y Redes (fi=6, %=21.4%, Acum=50.0% -> y=130) -->
+                      <rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="120" rx="2" width="50"
+                        x="155" y="120"></rect>
+                      <text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="180"
+                        y="114">6</text>
+                      <text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="180"
+                        y="254">Ciberseg.</text>
+                      <!-- Category 3: Ciencia de Datos (fi=5, %=17.9%, Acum=67.9% -> y=90) -->
+                      <rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="100" rx="2" width="50"
+                        x="235" y="140"></rect>
+                      <text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="260"
+                        y="134">5</text>
+                      <text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="260"
+                        y="254">Datos</text>
+                      <!-- Category 4: Cloud Computing y DevOps (fi=4, %=14.3%, Acum=82.1% -> y=59) -->
+                      <rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="80" rx="2" width="50"
+                        x="315" y="160"></rect>
+                      <text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="340"
+                        y="154">4</text>
+                      <text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="340"
+                        y="254">Cloud/DevOps</text>
+                      <!-- Category 5: Ingeniería de Software (fi=3, %=10.7%, Acum=92.9% -> y=35) -->
+                      <rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="60" rx="2" width="50"
+                        x="395" y="180"></rect>
+                      <text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="420"
+                        y="174">3</text>
+                      <text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="420" y="254">Ing.
+                        Soft.</text>
+                      <!-- Category 6: Bases de Datos Avanzadas (fi=2, %=7.1%, Acum=100.0% -> y=20) -->
+                      <rect class="hover:opacity-90 transition-opacity" fill="#1F6FB5" height="40" rx="2" width="50"
+                        x="475" y="200"></rect>
+                      <text class="text-[11px] font-bold fill-ink-900 font-sans" text-anchor="middle" x="500"
+                        y="194">2</text>
+                      <text class="text-[9.5px] fill-ink-600 font-sans" text-anchor="middle" x="500" y="254">Bases
+                        Datos</text>
+                      <!-- Cumulative Percentage Curve (Orange) -->
+                      <!-- P1:(100, 177) P2:(180, 130) P3:(260, 90) P4:(340, 59) P5:(420, 35) P6:(500, 20) -->
+                      <path d="M 100 177 L 180 130 L 260 90 L 340 59 L 420 35 L 500 20" fill="none" stroke="#F2A33A"
+                        stroke-width="2.5"></path>
+                      <!-- Markers with value flags -->
+                      <circle cx="100" cy="177" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
+                      <text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="100"
+                        y="167">28,6%</text>
+                      <circle cx="180" cy="130" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
+                      <text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="180"
+                        y="120">50,0%</text>
+                      <circle cx="260" cy="90" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
+                      <text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="260"
+                        y="80">67,9%</text>
+                      <circle cx="340" cy="59" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
+                      <text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="340"
+                        y="49">82,1%</text>
+                      <circle cx="420" cy="35" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
+                      <text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="420"
+                        y="25">92,9%</text>
+                      <circle cx="500" cy="20" fill="#FFFFFF" r="4" stroke="#F2A33A" stroke-width="2"></circle>
+                      <text class="text-[10px] font-bold fill-chart-cat-3 font-sans" text-anchor="middle" x="500"
+                        y="12">100,0%</text>
+                    </svg>
+                  </div>
+                </div>
+                <!-- Footnote & Legend -->
+                <div
+                  class="mt-4 pt-3 flex flex-wrap items-center justify-between text-caption-meta font-caption-meta text-ink-600 gap-2 border-t-0 bg-surface-container-low/50 px-3 py-2 rounded">
+                  <div class="flex items-center gap-4">
+                    <span class="inline-flex items-center gap-1.5">
+                      <span class="w-3 h-3 rounded-sm bg-chart-cat-1"></span>
+                      <span class="">Menciones individuales (fi)</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5">
+                      <span class="w-3 h-0.5 bg-chart-cat-3"></span>
+                      <span class="">% Acumulado (Pareto)</span>
+                    </span>
+                  </div>
+                  <span class="">n = 10 titulados con interés en posgrado</span>
+                </div>
+              </div>
+              <!-- Card 2: Frequency Table -->
+              <div
+                class="col-span-12 lg:col-span-5 bg-surface-white rounded-lg p-space-lg shadow-sm flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-space-sm">
+                    <h2 class="text-title-card font-title-card text-ink-900">
+                      Tabla de frecuencias
+                    </h2>
+                    <span
+                      class="text-caption-bold font-caption-bold text-chart-cat-1 bg-titulados-active px-2 py-0.5 rounded">
+                      n = 10
+                    </span>
+                  </div>
+                  <p class="text-caption-meta font-caption-meta text-ink-600 mb-space-md">
+                    Áreas temáticas seleccionadas con opción múltiple
+                  </p>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                      <thead>
+                        <tr class="bg-surface-container-low text-caption-bold font-caption-bold text-ink-600">
+                          <th class="py-2.5 px-3 rounded-l">ÁREA TEMÁTICA</th>
+                          <th class="py-2.5 px-2 text-right">fi</th>
+                          <th class="py-2.5 px-2 text-right">fr (%)</th>
+                          <th class="py-2.5 px-2 text-right">Fi</th>
+                          <th class="py-2.5 px-3 text-right rounded-r">% ACUM.</th>
+                        </tr>
+                      </thead>
+                      <tbody class="text-body-tabular font-body-tabular text-ink-900">
+                        <tr class="hover:bg-surface-container-low/50 transition-colors">
+                          <td class="py-2 px-3 text-body-medium font-body-medium">IA y Machine Learning</td>
+                          <td class="py-2 px-2 text-right">8</td>
+                          <td class="py-2 px-2 text-right">28,6%</td>
+                          <td class="py-2 px-2 text-right text-ink-600">8</td>
+                          <td class="py-2 px-3 text-right font-medium">28,6%</td>
+                        </tr>
+                        <tr class="hover:bg-surface-container-low/50 transition-colors">
+                          <td class="py-2 px-3 text-body-medium font-body-medium">Ciberseguridad y Redes</td>
+                          <td class="py-2 px-2 text-right">6</td>
+                          <td class="py-2 px-2 text-right">21,4%</td>
+                          <td class="py-2 px-2 text-right text-ink-600">14</td>
+                          <td class="py-2 px-3 text-right font-medium">50,0%</td>
+                        </tr>
+                        <tr class="hover:bg-surface-container-low/50 transition-colors">
+                          <td class="py-2 px-3 text-body-medium font-body-medium">Ciencia de Datos</td>
+                          <td class="py-2 px-2 text-right">5</td>
+                          <td class="py-2 px-2 text-right">17,9%</td>
+                          <td class="py-2 px-2 text-right text-ink-600">19</td>
+                          <td class="py-2 px-3 text-right font-medium">67,9%</td>
+                        </tr>
+                        <tr class="hover:bg-surface-container-low/50 transition-colors">
+                          <td class="py-2 px-3 text-body-medium font-body-medium">Cloud Computing y DevOps</td>
+                          <td class="py-2 px-2 text-right">4</td>
+                          <td class="py-2 px-2 text-right">14,3%</td>
+                          <td class="py-2 px-2 text-right text-ink-600">23</td>
+                          <td class="py-2 px-3 text-right font-medium">82,1%</td>
+                        </tr>
+                        <tr class="hover:bg-surface-container-low/50 transition-colors">
+                          <td class="py-2 px-3 text-body-medium font-body-medium">Ingeniería de Software</td>
+                          <td class="py-2 px-2 text-right">3</td>
+                          <td class="py-2 px-2 text-right">10,7%</td>
+                          <td class="py-2 px-2 text-right text-ink-600">26</td>
+                          <td class="py-2 px-3 text-right font-medium">92,9%</td>
+                        </tr>
+                        <tr class="hover:bg-surface-container-low/50 transition-colors">
+                          <td class="py-2 px-3 text-body-medium font-body-medium">Bases de Datos Avanzadas</td>
+                          <td class="py-2 px-2 text-right">2</td>
+                          <td class="py-2 px-2 text-right">7,1%</td>
+                          <td class="py-2 px-2 text-right text-ink-600">28</td>
+                          <td class="py-2 px-3 text-right font-medium">100,0%</td>
+                        </tr>
+                      </tbody>
+                      <tfoot>
+                        <tr
+                          class="bg-surface-container-low/70 font-semibold text-ink-900 text-body-tabular font-body-tabular">
+                          <td class="py-2 px-3 rounded-l">Total menciones</td>
+                          <td class="py-2 px-2 text-right">28</td>
+                          <td class="py-2 px-2 text-right">100,0%</td>
+                          <td class="py-2 px-2 text-right text-ink-600">28</td>
+                          <td class="py-2 px-3 text-right rounded-r">100,0%</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+                <div
+                  class="mt-4 pt-3 text-caption-meta font-caption-meta text-ink-600 flex items-center justify-between">
+                  <span class="">Menciones ponderadas totales: 28</span>
+                  <span class="text-caption-bold font-caption-bold text-chart-cat-1">Base: n = 10 titulados</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- TAB 3 CONTENT: Opinión sobre el posgrado de la FCyT (n = 14) -->
+          <div class="block space-y-space-md" id="tab-content-opinion">
+            <div class="bg-surface-white rounded-lg p-space-lg shadow-sm">
+              <div class="flex flex-wrap items-center justify-between gap-space-sm mb-space-md">
+                <div>
+                  <h2 class="text-title-card font-title-card text-ink-900">
+                    Opinión sobre el posgrado de la FCyT (n = 14)
+                  </h2>
+                  <p class="text-body-default font-body-default text-ink-900 mt-1">
+                    "Los programas de posgrado de la FCyT responden a las necesidades del medio profesional actual"
+                  </p>
+                </div>
+                <button
+                  class="text-caption-bold font-caption-bold text-ink-600 hover:text-chart-cat-1 flex items-center gap-1 transition-colors"
+                  type="button">
+                  <span class="material-symbols-outlined text-[16px]">help_outline</span>
+                  <span class="">¿Cómo leer esto?</span>
+                </button>
+              </div>
+              <!-- 4-Level Likert Stacked Distribution Bar -->
+              <div class="space-y-3">
+                <div class="w-full h-11 bg-surface-container-low rounded-lg flex overflow-hidden p-1 gap-1">
+                  <!-- Level 1: Totalmente en desacuerdo (2 de 14, 14.3%) -->
+                  <div
+                    class="bg-likert-1 h-full rounded flex items-center justify-center text-surface-white font-caption-bold text-caption-bold title='Totalmente en desacuerdo: 2 (14,3%)'"
+                    style="width: 14.28%;">
+                    2 (14,3%)
+                  </div>
+                  <!-- Level 2: En desacuerdo (3 de 14, 21.4%) -->
+                  <div
+                    class="bg-likert-2 h-full rounded flex items-center justify-center text-ink-900 font-caption-bold text-caption-bold title='En desacuerdo: 3 (21,4%)'"
+                    style="width: 21.43%;">
+                    3 (21,4%)
+                  </div>
+                  <!-- Level 3: De acuerdo (6 de 14, 42.9%) -->
+                  <div
+                    class="bg-likert-4 h-full rounded flex items-center justify-center text-ink-900 font-caption-bold text-caption-bold title='De acuerdo: 6 (42,9%)'"
+                    style="width: 42.86%;">
+                    6 (42,9%)
+                  </div>
+                  <!-- Level 4: Totalmente de acuerdo (3 de 14, 21.4%) -->
+                  <div
+                    class="bg-likert-5 h-full rounded flex items-center justify-center text-surface-white font-caption-bold text-caption-bold title='Totalmente de acuerdo: 3 (21,4%)'"
+                    style="width: 21.43%;">
+                    3 (21,4%)
+                  </div>
+                </div>
+                <!-- Likert Legend Indicator -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                  <div class="flex items-center gap-2">
+                    <span class="w-3.5 h-3.5 rounded-sm bg-likert-1 flex-shrink-0"></span>
+                    <span class="text-caption-meta font-caption-meta text-ink-900">Totalmente en desacuerdo (2)</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-3.5 h-3.5 rounded-sm bg-likert-2 flex-shrink-0"></span>
+                    <span class="text-caption-meta font-caption-meta text-ink-900">En desacuerdo (3)</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-3.5 h-3.5 rounded-sm bg-likert-4 flex-shrink-0"></span>
+                    <span class="text-caption-meta font-caption-meta text-ink-900">De acuerdo (6)</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-3.5 h-3.5 rounded-sm bg-likert-5 flex-shrink-0"></span>
+                    <span class="text-caption-meta font-caption-meta text-ink-900">Totalmente de acuerdo (3)</span>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="mt-space-md pt-3 flex items-center justify-between text-caption-meta font-caption-meta text-ink-600 border-t-0">
+                <span class="">Escala Likert de 4 niveles balanceada</span>
+                <span class="">Base total de la muestra: n = 14 titulados</span>
+              </div>
+            </div>
+          </div>
+          <!-- Institutional Desktop Bottom Navigation Bar -->
+
+        </div>
+      </div>
+      <script>
+        function switchMainTab(tabId) {
+          const tabs = ['cursado', 'interes', 'opinion'];
+          tabs.forEach(t => {
+            const content = document.getElementById('tab-content-' + t);
+            const btn = document.getElementById('tab-btn-' + t);
+            if (t === tabId) {
+              if (content) content.classList.remove('hidden');
+              if (btn) {
+                btn.classList.add('bg-surface-white', 'text-chart-cat-1', 'shadow-sm', 'font-semibold');
+                btn.classList.remove('text-ink-600');
+              }
+            } else {
+              if (t !== 'opinion' && content) content.classList.add('hidden');
+              if (btn) {
+                btn.classList.remove('bg-surface-white', 'text-chart-cat-1', 'shadow-sm', 'font-semibold');
+                btn.classList.add('text-ink-600');
+              }
+            }
+          });
+        }
+      </script>
+    </main>
+  </div>
 
 
 
@@ -519,4 +748,6 @@
 
 
 
-</body></html>
+</body>
+
+</html>

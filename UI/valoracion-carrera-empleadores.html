@@ -1,593 +1,976 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline-variant": "#c4c6cf", "heat-blue-2": "#BBD6EE", "surface-bright": "#f6fafe", "titulados-active": "#E3EEF8", "surface-variant": "#dfe3e7", "on-tertiary-container": "#0ea198", "primary-fixed": "#d3e4ff", "tertiary": "#001816", "chart-cat-2": "#14A39A", "ink-900": "#0F172A", "secondary-fixed": "#d2e4ff", "on-primary-container": "#7892b7", "chart-cat-4": "#8E5BD0", "inverse-primary": "#aec8f0", "chart-cat-6": "#5C6B7A", "secondary-fixed-dim": "#9fcaff", "likert-5": "#1F6FB5", "primary-container": "#0b2a4a", "likert-4": "#8DB8E0", "on-surface": "#171c1f", "chart-cat-8": "#D9418C", "on-surface-variant": "#43474e", "error": "#ba1a1a", "on-primary-fixed": "#001c38", "heat-blue-3": "#7DB1DD", "secondary-container": "#72b4ff", "surface-white": "#FFFFFF", "tertiary-fixed-dim": "#62d9cf", "primary-fixed-dim": "#aec8f0", "surface-dim": "#d6dade", "chart-cat-5": "#E4572E", "likert-1": "#E4572E", "secondary": "#0061a5", "chart-cat-7": "#7CB342", "likert-3": "#F1F5F9", "on-tertiary-fixed-variant": "#00504b", "highlight-amber": "#F2A33A", "on-error-container": "#93000a", "on-error": "#ffffff", "inverse-on-surface": "#edf1f5", "heat-blue-1": "#EAF2FA", "background": "#f6fafe", "heat-blue-5": "#1F6FB5", "surface-container-high": "#e4e9ed", "tertiary-fixed": "#80f6eb", "on-primary-fixed-variant": "#2d486a", "tertiary-container": "#002f2c", "likert-2": "#F4A98A", "empleadores-active": "#E1F4F2", "on-secondary-fixed": "#001d37", "on-secondary-container": "#004578", "on-secondary-fixed-variant": "#00497e", "primary": "#00152d", "status-danger": "#D64545", "surface-container-lowest": "#ffffff", "on-tertiary": "#ffffff", "status-success": "#2E9E5B", "surface": "#f6fafe", "on-background": "#171c1f", "heat-blue-6": "#12467A", "heat-blue-4": "#3F86C4", "status-warning": "#E0A100", "inverse-surface": "#2c3134", "error-container": "#ffdad6", "chart-cat-3": "#F2A33A", "outline": "#74777f", "border-line": "#CBD5E1", "ink-600": "#475569", "surface-container-highest": "#dfe3e7", "chart-cat-1": "#1F6FB5", "surface-container": "#eaeef2", "on-secondary": "#ffffff", "surface-container-low": "#f0f4f8", "on-primary": "#ffffff", "on-tertiary-fixed": "#00201e", "surface-tint": "#466083" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2rem", "gutter": "1.5rem", "space-sm": "0.5rem", "space-md": "1rem", "space-xs": "0.25rem", "margin": "2rem", "space-lg": "1.5rem" }, "fontFamily": { "display-kpi": [ "Inter" ], "body-default": [ "Inter" ], "caption-meta": [ "Inter" ], "title-section": [ "Inter" ], "body-medium": [ "Inter" ], "label-default": [ "Inter" ], "body-tabular": [ "Inter" ], "headline-page": [ "Inter" ], "caption-bold": [ "Inter" ], "title-card": [ "Inter" ] }, "fontSize": { "display-kpi": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "body-default": [ "14px", { "lineHeight": "20px", "fontWeight": "400" } ], "caption-meta": [ "12px", { "lineHeight": "16px", "fontWeight": "400" } ], "title-section": [ "20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-medium": [ "14px", { "lineHeight": "20px", "fontWeight": "500" } ], "label-default": [ "13px", { "lineHeight": "16px", "fontWeight": "500" } ], "body-tabular": [ "14px", { "lineHeight": "20px", "fontWeight": "400" } ], "headline-page": [ "28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "caption-bold": [ "12px", { "lineHeight": "16px", "fontWeight": "600" } ], "title-card": [ "18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" } ] } } } };</script></head><body class="bg-surface font-body-default text-on-surface antialiased" style="height: 100vh; max-height: 100vh; overflow: hidden;"><aside class="fixed left-0 top-0 h-screen w-60 bg-primary-container z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] overflow-y-auto" style="height: 100vh; overflow-y: auto; flex-shrink: 0;"><div class="flex flex-col flex-1"><div class="px-space-md pt-space-lg pb-space-md"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-surface-white/10 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-tertiary-fixed text-[20px]">analytics</span></div><div class="leading-tight"><p class="font-caption-bold text-caption-bold text-surface-white">Analizador</p><p class="font-caption-meta text-caption-meta text-on-primary-container truncate">Ing. Sistemas · UMSS</p></div></div><div class="mt-space-md"><button class="w-full flex items-center justify-center gap-space-xs py-2 px-space-md rounded-lg bg-surface-white/10 hover:bg-surface-white/20 text-surface-white font-label-default text-label-default transition-colors" type="button"><span class="">+ Cargar datos</span></button></div></div><nav class="flex-1 px-space-sm space-y-space-md pb-space-lg"><div class="space-y-1"><div class="px-space-sm py-1 flex items-center justify-between"><span class="font-caption-bold text-caption-bold text-heat-blue-3 tracking-wider uppercase">Titulados</span><span class="font-caption-meta text-caption-meta text-heat-blue-2">N=14</span></div><div class="space-y-0.5"><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" data-path="titulados-resumen" href="#"><span class="">Resumen</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" data-path="titulados-perfil-y-empleabilidad" href="#"><span class="">Perfil y empleabilidad</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" data-path="titulados-formacion-continua" href="#"><span class="">Formación continua</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" data-path="titulados-financiamiento" href="#"><span class="">Financiamiento</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" data-path="titulados-brechas-competencias" href="#"><span class="">Brechas de competencias</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" data-path="titulados-cruces-y-exportar" href="#"><span class="">Cruces y exportar</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" data-path="titulados-simulacion-escenarios" href="#"><span class="">Simulación de escenarios</span></a></div></div><div class="space-y-1"><div class="px-space-sm py-1 flex items-center justify-between"><span class="font-caption-bold text-caption-bold text-chart-cat-2 tracking-wider uppercase">Empleadores</span><span class="font-caption-meta text-caption-meta text-on-tertiary-container">N=8</span></div><div class="space-y-0.5"><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" data-path="empleadores-resumen-y-contratacion" href="#"><span class="">Resumen y contratación</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg bg-empleadores-active text-chart-cat-2 font-caption-bold transition-colors" data-path="empleadores-valoracion-carrera" href="#"><span class="">Valoración de la Carrera</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" data-path="empleadores-brechas-competencias" href="#"><span class="">Brechas de competencias</span></a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors" data-path="empleadores-cruces-y-exportar" href="#"><span class="">Cruces y exportar</span></a></div></div></nav></div></aside><div class="pl-60" style="height: 100vh; overflow: hidden auto; display: flex; flex-direction: column;"><header class="fixed top-0 left-60 right-0 h-16 bg-surface-white/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-end px-space-lg"><div class="flex items-center gap-3"><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-surface-container-high text-ink-900 font-label-default text-label-default"><span class="material-symbols-outlined text-[16px] text-ink-600">calendar_today</span><span class="">Periodo 2024</span></div><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container font-caption-meta text-caption-meta text-ink-900"><span class="w-2 h-2 rounded-full bg-status-success animate-pulse"></span><span class="">Datos cargados: N=14 (T) · N=8 (E)</span></div><button type="button" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-line bg-surface-white hover:bg-surface-container text-ink-600 hover:text-ink-900 font-label-default text-label-default transition-colors"><span class="material-symbols-outlined text-[18px]">info</span><span class="">Definiciones</span></button><button type="button" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-surface-white font-label-default text-label-default shadow-sm transition-colors"><span class="material-symbols-outlined text-[18px]">download</span><span class="">Exportar vista</span></button></div></header><main class="relative pt-16 bg-surface-container min-h-screen overflow-y-auto"><div class="flex flex-col w-full min-w-0 pb-16">
-<!-- Top Bar & Header Context -->
-<div class="px-8 pt-6 pb-5 bg-surface-white border-b border-border-line"><div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4"><div class="flex items-center gap-3"><h1 class="font-headline-page text-headline-page text-ink-900 tracking-tight">Valoración de la Carrera</h1><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-empleadores-active text-chart-cat-2 font-caption-bold text-caption-bold"><span class="w-1.5 h-1.5 rounded-full bg-chart-cat-2"></span>Empleadores (n = 8)</span></div><div class="text-right"><p class="font-body-default text-body-default text-ink-600">Censo representativo · Respuestas anónimas garantizadas</p></div></div><div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-surface-container"><div class="flex flex-wrap items-center gap-3"><span class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider mr-1">Filtros:</span><div class="flex items-center gap-2"><label class="font-caption-meta text-caption-meta text-ink-600 uppercase" for="filter-tipo">Tipo de organización</label><div class="relative"><select class="appearance-none bg-surface-container-low border border-border-line rounded-lg px-3 py-1.5 pr-8 font-body-default text-body-default text-ink-900 focus:outline-none focus:ring-1 focus:ring-chart-cat-2 cursor-pointer" id="filter-tipo"><option value="todos">Todos (Público / Privado)</option><option value="privado">Sector Privado (n = 6)</option><option value="publico">Sector Público (n = 2)</option></select><span class="material-symbols-outlined absolute right-2 top-2 text-ink-600 pointer-events-none text-[18px]">expand_more</span></div></div><div class="flex items-center gap-2"><label class="font-caption-meta text-caption-meta text-ink-600 uppercase" for="filter-tamano">Tamaño</label><div class="relative"><select class="appearance-none bg-surface-container-low border border-border-line rounded-lg px-3 py-1.5 pr-8 font-body-default text-body-default text-ink-900 focus:outline-none focus:ring-1 focus:ring-chart-cat-2 cursor-pointer" id="filter-tamano"><option value="todos">Todos los tamaños</option><option value="grande">Grande (&gt;100 empleados)</option><option value="mediana">Mediana (20-99 empleados)</option><option value="pequena">Pequeña (&lt;20 empleados)</option></select><span class="material-symbols-outlined absolute right-2 top-2 text-ink-600 pointer-events-none text-[18px]">expand_more</span></div></div><button class="px-2.5 py-1.5 rounded text-chart-cat-2 hover:bg-empleadores-active font-label-default text-label-default transition-colors" id="btn-reset-filters" type="button">Limpiar filtros</button></div><div class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-low border border-border-line"><span class="w-2 h-2 rounded-full bg-chart-cat-2"></span><span class="font-caption-meta text-caption-meta text-ink-900 font-medium">Mostrando 8 de 8 organizaciones</span></div></div></div>
-<!-- Primary Workspace Content -->
-<div class="max-w-[1280px] w-full mx-auto px-8 py-6 space-y-6">
-<!-- Tab Strip & Legend Bar -->
-<div class="bg-surface-white rounded-xl border border-border-line p-4 shadow-sm">
-<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-<!-- Tab Selectors -->
-<div class="flex items-center gap-2 border-b lg:border-b-0 border-border-line pb-3 lg:pb-0" role="tablist">
-<button aria-selected="true" class="tab-trigger active flex items-center gap-2 px-4 py-2 rounded-lg font-caption-bold text-caption-bold transition-all bg-empleadores-active text-chart-cat-2 shadow-sm" id="tab-btn-formacion" role="tab">
-<span class="material-symbols-outlined text-[18px]">school</span>
-            Formación y perfil
-            <span class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-white text-ink-900 font-caption-meta text-caption-meta">10</span>
-</button>
-<button aria-selected="false" class="tab-trigger flex items-center gap-2 px-4 py-2 rounded-lg font-caption-bold text-caption-bold transition-all text-ink-600 hover:text-ink-900 hover:bg-surface-container" id="tab-btn-relacion" role="tab">
-<span class="material-symbols-outlined text-[18px]">handshake</span>
-            Relación con la Carrera
-            <span class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-container-high text-ink-600 font-caption-meta text-caption-meta">8</span>
-</button>
-</div>
-<!-- Scale Legend (Likert 4 categories) -->
-<div class="flex flex-wrap items-center gap-4 py-1 px-3 bg-surface-container-low rounded-lg border border-border-line/60">
-<span class="font-caption-meta text-caption-meta text-ink-600 uppercase tracking-wider font-semibold mr-1">Escala de respuesta:</span>
-<div class="flex items-center gap-1.5">
-<span class="w-3.5 h-3.5 rounded-sm bg-[#1F6FB5]"></span>
-<span class="font-caption-meta text-caption-meta text-ink-900">Totalmente de acuerdo</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-3.5 h-3.5 rounded-sm bg-[#8DB8E0]"></span>
-<span class="font-caption-meta text-caption-meta text-ink-900">Parcialmente de acuerdo</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-3.5 h-3.5 rounded-sm bg-[#E4572E]"></span>
-<span class="font-caption-meta text-caption-meta text-ink-900">Totalmente en desacuerdo</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-3.5 h-3.5 rounded-sm bg-[#94A3B8]"></span>
-<span class="font-caption-meta text-caption-meta text-ink-900">No sabe</span>
-</div>
-</div>
-</div>
-</div>
-<!-- TAB 1: FORMACIÓN Y PERFIL (10 AFIRMACIONES) -->
-<div class="space-y-3" id="pane-formacion" role="tabpanel">
-<div class="flex items-center justify-between px-1">
-<p class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider">Afirmaciones de competencias técnicas, profesionales y mercado (10 reactivos)</p>
-<span class="font-caption-meta text-caption-meta text-ink-600">Base muestral: n = 8 empleadores evaluados</span>
-</div>
-<!-- Item 1 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">01</span>
-<div class="relative group">
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2 cursor-help" title="Los titulados demuestran sólida base técnica y conceptual en ingeniería de software y sistemas.">
-                Los titulados demuestran sólida base técnica y conceptual en ingeniería de software y sistemas.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 87.5%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 62.5%" title="Totalmente de acuerdo: 5 (62.5%)">5</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="Totalmente en desacuerdo: 1 (12.5%)">1</div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0.0%)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 2 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">02</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Poseen capacidad para resolver problemas complejos y adaptarse a nuevas tecnologías.">
-                Poseen capacidad para resolver problemas complejos y adaptarse a nuevas tecnologías.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 100.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 75.0%" title="Totalmente de acuerdo: 6 (75.0%)">6</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0%)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 3 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">03</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Demuestran habilidades de trabajo en equipo y comunicación efectiva en el entorno laboral.">
-                Demuestran habilidades de trabajo en equipo y comunicación efectiva en el entorno laboral.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 62.5%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 37.5%" title="Totalmente de acuerdo: 3 (37.5%)">3</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 37.5%" title="Totalmente en desacuerdo: 3 (37.5%)">3</div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0%)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 4 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">04</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Cuentan con formación adecuada en gestión de proyectos y metodologías ágiles.">
-                Cuentan con formación adecuada en gestión de proyectos y metodologías ágiles.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 75.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 50.0%" title="Totalmente de acuerdo: 4 (50.0%)">4</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="Totalmente en desacuerdo: 1 (12.5%)">1</div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 5 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">05</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="El desempeño profesional de los graduados responde a los requerimientos actuales del mercado.">
-                El desempeño profesional de los graduados responde a los requerimientos actuales del mercado.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 87.5%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 62.5%" title="Totalmente de acuerdo: 5 (62.5%)">5</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="Totalmente en desacuerdo: 1 (12.5%)">1</div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0%)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 6 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">06</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Demuestran compromiso ético y responsabilidad profesional en sus funciones.">
-                Demuestran compromiso ético y responsabilidad profesional en sus funciones.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 100.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 87.5%" title="Totalmente de acuerdo: 7 (87.5%)">7</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 12.5%" title="Parcialmente de acuerdo: 1 (12.5%)">1</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0%)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 7 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">07</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Poseen destreza en diseño, implementación y administración de bases de datos.">
-                Poseen destreza en diseño, implementación y administración de bases de datos.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 87.5%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 50.0%" title="Totalmente de acuerdo: 4 (50.0%)">4</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 37.5%" title="Parcialmente de acuerdo: 3 (37.5%)">3</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="Totalmente en desacuerdo: 1 (12.5%)">1</div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0%)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 8 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">08</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Muestran capacidad de aprendizaje autónomo y actualización continua.">
-                Muestran capacidad de aprendizaje autónomo y actualización continua.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 100.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 75.0%" title="Totalmente de acuerdo: 6 (75.0%)">6</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0%)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 9 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">09</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Poseen dominio suficiente de inglés técnico para la lectura y documentación.">
-                Poseen dominio suficiente de inglés técnico para la lectura y documentación.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 50.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 25.0%" title="Totalmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 37.5%" title="Totalmente en desacuerdo: 3 (37.5%)">3</div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 10 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">10</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="La preparación general de los titulados es competitiva respecto a otras universidades.">
-                La preparación general de los titulados es competitiva respecto a otras universidades.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 87.5%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 62.5%" title="Totalmente de acuerdo: 5 (62.5%)">5</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- TAB 2: RELACIÓN CON LA CARRERA (8 AFIRMACIONES) -->
-<div class="space-y-3 hidden" id="pane-relacion" role="tabpanel">
-<div class="flex items-center justify-between px-1">
-<p class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider">Afirmaciones de vinculación, modalidades de grado y retroalimentación institucional (8 reactivos)</p>
-<span class="font-caption-meta text-caption-meta text-ink-600">Base muestral: n = 8 empleadores evaluados</span>
-</div>
-<!-- Item R1 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">01</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="La Carrera brinda confianza técnica y académica a nuestra organización.">
-                La Carrera brinda confianza técnica y académica a nuestra organización.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 100.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 75.0%" title="Totalmente de acuerdo: 6 (75.0%)">6</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0%)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item R2 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">02</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Existe apertura e interés de la Carrera para vincularse con el sector productivo.">
-                Existe apertura e interés de la Carrera para vincularse con el sector productivo.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 62.5%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 37.5%" title="Totalmente de acuerdo: 3 (37.5%)">3</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 25.0%" title="Totalmente en desacuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item R3 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">03</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Nuestra organización tiene disposición para acoger estudiantes en modalidades de pasantía / TIS.">
-                Nuestra organización tiene disposición para acoger estudiantes en modalidades de pasantía / TIS.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 100.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 87.5%" title="Totalmente de acuerdo: 7 (87.5%)">7</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 12.5%" title="Parcialmente de acuerdo: 1 (12.5%)">1</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0%)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item R4 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">04</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Los mecanismos de contacto y convocatoria con la Carrera son accesibles y oportunos.">
-                Los mecanismos de contacto y convocatoria con la Carrera son accesibles y oportunos.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 50.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 25.0%" title="Totalmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 37.5%" title="Totalmente en desacuerdo: 3 (37.5%)">3</div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item R5 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">05</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Consideramos valioso participar en la revisión periódica del plan de estudios de la Carrera.">
-                Consideramos valioso participar en la revisión periódica del plan de estudios de la Carrera.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 100.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 87.5%" title="Totalmente de acuerdo: 7 (87.5%)">7</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 12.5%" title="Parcialmente de acuerdo: 1 (12.5%)">1</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0%)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item R6 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">06</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Nuestra organización estaría dispuesta a cofinanciar o apoyar proyectos de grado aplicados.">
-                Nuestra organización estaría dispuesta a cofinanciar o apoyar proyectos de grado aplicados.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 75.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 50.0%" title="Totalmente de acuerdo: 4 (50.0%)">4</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="Totalmente en desacuerdo: 1 (12.5%)">1</div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item R7 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">07</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="La Carrera mantiene una comunicación periódica y fluida con los empleadores.">
-                La Carrera mantiene una comunicación periódica y fluida con los empleadores.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 37.5%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="Totalmente de acuerdo: 1 (12.5%)">1</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 50.0%" title="Totalmente en desacuerdo: 4 (50.0%)">4</div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Item R8 -->
-<div class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-<div class="lg:col-span-5 flex items-start gap-3">
-<span class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">08</span>
-<div>
-<p class="font-body-medium text-body-medium text-ink-900 line-clamp-2" title="Recomendaríamos contratar a más titulados de Ingeniería en Sistemas de la UMSS.">
-                Recomendaríamos contratar a más titulados de Ingeniería en Sistemas de la UMSS.
-              </p>
-<div class="flex items-center gap-2 mt-1">
-<span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
-<span class="text-ink-600/40 text-[10px]">•</span>
-<span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo: 100.0%</span>
-</div>
-</div>
-</div>
-<div class="lg:col-span-7">
-<div class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
-<div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 87.5%" title="Totalmente de acuerdo: 7 (87.5%)">7</div>
-<div class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90" style="width: 12.5%" title="Parcialmente de acuerdo: 1 (12.5%)">1</div>
-<div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
-<div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90" style="width: 0%" title="No sabe: 0 (0%)"></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Summary Statistics Grid -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-<div class="bg-surface-white border border-border-line rounded-xl p-4 shadow-sm">
-<p class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider mb-1">Muestra de Empleadores</p>
-<p class="font-display-kpi text-display-kpi text-ink-900">8</p>
-<p class="font-body-default text-body-default text-ink-600 mt-1">100% organizaciones validadas</p>
-</div>
-<div class="bg-surface-white border border-border-line rounded-xl p-4 shadow-sm">
-<p class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider mb-1">Total Reactivos Cuantitativos</p>
-<p class="font-display-kpi text-display-kpi text-chart-cat-2">18</p>
-<p class="font-body-default text-body-default text-ink-600 mt-1">10 Formación · 8 Relación</p>
-</div>
-<div class="bg-surface-white border border-border-line rounded-xl p-4 shadow-sm">
-<p class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider mb-1">Tasa de Recomendación</p>
-<p class="font-display-kpi text-display-kpi text-chart-cat-1">100%</p>
-<p class="font-body-default text-body-default text-ink-600 mt-1">8 de 8 empleadores favorables</p>
-</div>
-</div>
-<!-- Bottom Navigation Bar -->
+﻿<!DOCTYPE html>
+<html lang="es">
 
-</div>
-<script>
-    (function() {
-      const tabFormacion = document.getElementById('tab-btn-formacion');
-      const tabRelacion = document.getElementById('tab-btn-relacion');
-      const paneFormacion = document.getElementById('pane-formacion');
-      const paneRelacion = document.getElementById('pane-relacion');
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="web_dashboard" name="shell-type">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet">
+  <style>
+    @layer base {
 
-      function switchTab(activeTab, activePane, inactiveTab, inactivePane) {
-        activeTab.classList.add('bg-empleadores-active', 'text-chart-cat-2', 'shadow-sm');
-        activeTab.classList.remove('text-ink-600', 'hover:text-ink-900', 'hover:bg-surface-container');
-        activeTab.setAttribute('aria-selected', 'true');
-
-        inactiveTab.classList.remove('bg-empleadores-active', 'text-chart-cat-2', 'shadow-sm');
-        inactiveTab.classList.add('text-ink-600', 'hover:text-ink-900', 'hover:bg-surface-container');
-        inactiveTab.setAttribute('aria-selected', 'false');
-
-        activePane.classList.remove('hidden');
-        inactivePane.classList.add('hidden');
+      html,
+      body {
+        margin: 0;
+        padding: 0;
       }
 
-      if (tabFormacion && tabRelacion) {
-        tabFormacion.addEventListener('click', () => {
-          switchTab(tabFormacion, paneFormacion, tabRelacion, paneRelacion);
-        });
-
-        tabRelacion.addEventListener('click', () => {
-          switchTab(tabRelacion, paneRelacion, tabFormacion, paneFormacion);
-        });
+      body {
+        overscroll-behavior: none;
       }
 
-      const resetBtn = document.getElementById('btn-reset-filters');
-      if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-          const sel1 = document.getElementById('filter-tipo');
-          const sel2 = document.getElementById('filter-tamano');
-          if (sel1) sel1.value = 'todos';
-          if (sel2) sel2.value = 'todos';
-        });
+      main>:first-child {
+        margin-top: 0 !important;
       }
-    })();
-  </script>
-</div></main></div>
+
+      main>:last-child {
+        margin-bottom: 0 !important;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script
+    id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline-variant": "#c4c6cf", "heat-blue-2": "#BBD6EE", "surface-bright": "#f6fafe", "titulados-active": "#E3EEF8", "surface-variant": "#dfe3e7", "on-tertiary-container": "#0ea198", "primary-fixed": "#d3e4ff", "tertiary": "#001816", "chart-cat-2": "#14A39A", "ink-900": "#0F172A", "secondary-fixed": "#d2e4ff", "on-primary-container": "#7892b7", "chart-cat-4": "#8E5BD0", "inverse-primary": "#aec8f0", "chart-cat-6": "#5C6B7A", "secondary-fixed-dim": "#9fcaff", "likert-5": "#1F6FB5", "primary-container": "#0b2a4a", "likert-4": "#8DB8E0", "on-surface": "#171c1f", "chart-cat-8": "#D9418C", "on-surface-variant": "#43474e", "error": "#ba1a1a", "on-primary-fixed": "#001c38", "heat-blue-3": "#7DB1DD", "secondary-container": "#72b4ff", "surface-white": "#FFFFFF", "tertiary-fixed-dim": "#62d9cf", "primary-fixed-dim": "#aec8f0", "surface-dim": "#d6dade", "chart-cat-5": "#E4572E", "likert-1": "#E4572E", "secondary": "#0061a5", "chart-cat-7": "#7CB342", "likert-3": "#F1F5F9", "on-tertiary-fixed-variant": "#00504b", "highlight-amber": "#F2A33A", "on-error-container": "#93000a", "on-error": "#ffffff", "inverse-on-surface": "#edf1f5", "heat-blue-1": "#EAF2FA", "background": "#f6fafe", "heat-blue-5": "#1F6FB5", "surface-container-high": "#e4e9ed", "tertiary-fixed": "#80f6eb", "on-primary-fixed-variant": "#2d486a", "tertiary-container": "#002f2c", "likert-2": "#F4A98A", "empleadores-active": "#E1F4F2", "on-secondary-fixed": "#001d37", "on-secondary-container": "#004578", "on-secondary-fixed-variant": "#00497e", "primary": "#00152d", "status-danger": "#D64545", "surface-container-lowest": "#ffffff", "on-tertiary": "#ffffff", "status-success": "#2E9E5B", "surface": "#f6fafe", "on-background": "#171c1f", "heat-blue-6": "#12467A", "heat-blue-4": "#3F86C4", "status-warning": "#E0A100", "inverse-surface": "#2c3134", "error-container": "#ffdad6", "chart-cat-3": "#F2A33A", "outline": "#74777f", "border-line": "#CBD5E1", "ink-600": "#475569", "surface-container-highest": "#dfe3e7", "chart-cat-1": "#1F6FB5", "surface-container": "#eaeef2", "on-secondary": "#ffffff", "surface-container-low": "#f0f4f8", "on-primary": "#ffffff", "on-tertiary-fixed": "#00201e", "surface-tint": "#466083" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2rem", "gutter": "1.5rem", "space-sm": "0.5rem", "space-md": "1rem", "space-xs": "0.25rem", "margin": "2rem", "space-lg": "1.5rem" }, "fontFamily": { "display-kpi": ["Inter"], "body-default": ["Inter"], "caption-meta": ["Inter"], "title-section": ["Inter"], "body-medium": ["Inter"], "label-default": ["Inter"], "body-tabular": ["Inter"], "headline-page": ["Inter"], "caption-bold": ["Inter"], "title-card": ["Inter"] }, "fontSize": { "display-kpi": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-default": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "caption-meta": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "title-section": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-medium": ["14px", { "lineHeight": "20px", "fontWeight": "500" }], "label-default": ["13px", { "lineHeight": "16px", "fontWeight": "500" }], "body-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-page": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "caption-bold": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "title-card": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }] } } } };</script>
+</head>
+
+<body class="bg-surface font-body-default text-on-surface antialiased"
+  style="height: 100vh; max-height: 100vh; overflow: hidden;">
+  <aside
+    class="fixed left-0 top-0 h-screen w-60 bg-primary-container z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] overflow-y-auto"
+    style="height: 100vh; overflow-y: auto; flex-shrink: 0;">
+    <div class="flex flex-col flex-1">
+      <div class="px-space-md pt-space-lg pb-space-md">
+        <div class="flex items-center gap-space-sm">
+          <div class="w-8 h-8 rounded-lg bg-surface-white/10 flex items-center justify-center flex-shrink-0"><span
+              class="material-symbols-outlined text-tertiary-fixed text-[20px]">analytics</span></div>
+          <div class="leading-tight">
+            <p class="font-caption-bold text-caption-bold text-surface-white">Analizador</p>
+            <p class="font-caption-meta text-caption-meta text-on-primary-container truncate">Ing. Sistemas · UMSS</p>
+          </div>
+        </div>
+        <div class="mt-space-md"><a
+            class="w-full flex items-center justify-center gap-space-xs py-2 px-space-md rounded-lg bg-surface-white/10 hover:bg-surface-white/20 text-surface-white font-label-default text-label-default transition-colors"
+            href="cargar-datos.html"><span class="">+ Cargar datos</span></a></div>
+      </div>
+      <nav class="flex-1 px-space-sm space-y-space-md pb-space-lg">
+        <div class="space-y-1">
+          <div class="px-space-sm py-1 flex items-center justify-between"><span
+              class="font-caption-bold text-caption-bold text-heat-blue-3 tracking-wider uppercase">Titulados</span><span
+              class="font-caption-meta text-caption-meta text-heat-blue-2">N=14</span></div>
+          <div class="space-y-0.5"><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+              data-path="titulados-resumen" href="resumen-titulados.html"><span class="">Resumen</span></a><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+              data-path="titulados-perfil-y-empleabilidad" href="perfil-y-empleabilidad-titulados.html"><span
+                class="">Perfil y empleabilidad</span></a><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+              data-path="titulados-formacion-continua" href="formacion-continua-titulados.html"><span class="">Formación
+                continua</span></a><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+              data-path="titulados-financiamiento" href="financiamiento-titulados.html"><span
+                class="">Financiamiento</span></a><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+              data-path="titulados-brechas-competencias" href="brechas-competencias-titulados.html"><span
+                class="">Brechas de competencias</span></a><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+              data-path="titulados-cruces-y-exportar" href="cruces-y-exportacion-titulados.html"><span class="">Cruces y
+                exportar</span></a><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+              data-path="titulados-simulacion-escenarios" href="simulacion-escenarios-titulados.html"><span
+                class="">Simulación de escenarios</span></a></div>
+        </div>
+        <div class="space-y-1">
+          <div class="px-space-sm py-1 flex items-center justify-between"><span
+              class="font-caption-bold text-caption-bold text-chart-cat-2 tracking-wider uppercase">Empleadores</span><span
+              class="font-caption-meta text-caption-meta text-on-tertiary-container">N=8</span></div>
+          <div class="space-y-0.5"><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+              data-path="empleadores-resumen-y-contratacion" href="resumen-empleadores.html"><span class="">Resumen y
+                contratación</span></a><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg bg-empleadores-active text-chart-cat-2 font-caption-bold transition-colors"
+              data-path="empleadores-valoracion-carrera" href="valoracion-carrera-empleadores.html"><span
+                class="">Valoración de la Carrera</span></a><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+              data-path="empleadores-brechas-competencias" href="brechas-competencias-empleadores.html"><span
+                class="">Brechas de competencias</span></a><a
+              class="flex items-center px-space-sm py-1.5 rounded-lg text-on-primary-container hover:bg-surface-white/5 hover:text-surface-white font-body-default text-body-default transition-colors"
+              data-path="empleadores-cruces-y-exportar" href="cruces-y-exportacion-empleadores.html"><span
+                class="">Cruces y exportar</span></a></div>
+        </div>
+      </nav>
+    </div>
+  </aside>
+  <div class="pl-60" style="height: 100vh; overflow: hidden auto; display: flex; flex-direction: column;">
+    <header
+      class="fixed top-0 left-60 right-0 h-16 bg-surface-white/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-end px-space-lg">
+      <div class="flex items-center gap-3">
+        <div
+          class="flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-surface-container-high text-ink-900 font-label-default text-label-default">
+          <span class="material-symbols-outlined text-[16px] text-ink-600">calendar_today</span><span class="">Periodo
+            2024</span></div>
+        <div
+          class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container font-caption-meta text-caption-meta text-ink-900">
+          <span class="w-2 h-2 rounded-full bg-status-success animate-pulse"></span><span class="">Datos cargados: N=14
+            (T) · N=8 (E)</span></div><button type="button"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-line bg-surface-white hover:bg-surface-container text-ink-600 hover:text-ink-900 font-label-default text-label-default transition-colors"><span
+            class="material-symbols-outlined text-[18px]">info</span><span class="">Definiciones</span></button><button
+          type="button"
+          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-surface-white font-label-default text-label-default shadow-sm transition-colors"><span
+            class="material-symbols-outlined text-[18px]">download</span><span class="">Exportar vista</span></button>
+      </div>
+    </header>
+    <main class="relative pt-16 bg-surface-container min-h-screen overflow-y-auto">
+      <div class="flex flex-col w-full min-w-0 pb-16">
+        <!-- Top Bar & Header Context -->
+        <div class="px-8 pt-6 pb-5 bg-surface-white border-b border-border-line">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center gap-3">
+              <h1 class="font-headline-page text-headline-page text-ink-900 tracking-tight">Valoración de la Carrera
+              </h1><span
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-empleadores-active text-chart-cat-2 font-caption-bold text-caption-bold"><span
+                  class="w-1.5 h-1.5 rounded-full bg-chart-cat-2"></span>Empleadores (n = 8)</span>
+            </div>
+            <div class="text-right">
+              <p class="font-body-default text-body-default text-ink-600">Censo representativo · Respuestas anónimas
+                garantizadas</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-surface-container">
+            <div class="flex flex-wrap items-center gap-3"><span
+                class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider mr-1">Filtros:</span>
+              <div class="flex items-center gap-2"><label
+                  class="font-caption-meta text-caption-meta text-ink-600 uppercase" for="filter-tipo">Tipo de
+                  organización</label>
+                <div class="relative"><select
+                    class="appearance-none bg-surface-container-low border border-border-line rounded-lg px-3 py-1.5 pr-8 font-body-default text-body-default text-ink-900 focus:outline-none focus:ring-1 focus:ring-chart-cat-2 cursor-pointer"
+                    id="filter-tipo">
+                    <option value="todos">Todos (Público / Privado)</option>
+                    <option value="privado">Sector Privado (n = 6)</option>
+                    <option value="publico">Sector Público (n = 2)</option>
+                  </select><span
+                    class="material-symbols-outlined absolute right-2 top-2 text-ink-600 pointer-events-none text-[18px]">expand_more</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2"><label
+                  class="font-caption-meta text-caption-meta text-ink-600 uppercase" for="filter-tamano">Tamaño</label>
+                <div class="relative"><select
+                    class="appearance-none bg-surface-container-low border border-border-line rounded-lg px-3 py-1.5 pr-8 font-body-default text-body-default text-ink-900 focus:outline-none focus:ring-1 focus:ring-chart-cat-2 cursor-pointer"
+                    id="filter-tamano">
+                    <option value="todos">Todos los tamaños</option>
+                    <option value="grande">Grande (&gt;100 empleados)</option>
+                    <option value="mediana">Mediana (20-99 empleados)</option>
+                    <option value="pequena">Pequeña (&lt;20 empleados)</option>
+                  </select><span
+                    class="material-symbols-outlined absolute right-2 top-2 text-ink-600 pointer-events-none text-[18px]">expand_more</span>
+                </div>
+              </div><button
+                class="px-2.5 py-1.5 rounded text-chart-cat-2 hover:bg-empleadores-active font-label-default text-label-default transition-colors"
+                id="btn-reset-filters" type="button">Limpiar filtros</button>
+            </div>
+            <div
+              class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-low border border-border-line">
+              <span class="w-2 h-2 rounded-full bg-chart-cat-2"></span><span
+                class="font-caption-meta text-caption-meta text-ink-900 font-medium">Mostrando 8 de 8
+                organizaciones</span></div>
+          </div>
+        </div>
+        <!-- Primary Workspace Content -->
+        <div class="max-w-[1280px] w-full mx-auto px-8 py-6 space-y-6">
+          <!-- Tab Strip & Legend Bar -->
+          <div class="bg-surface-white rounded-xl border border-border-line p-4 shadow-sm">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <!-- Tab Selectors -->
+              <div class="flex items-center gap-2 border-b lg:border-b-0 border-border-line pb-3 lg:pb-0"
+                role="tablist">
+                <button aria-selected="true"
+                  class="tab-trigger active flex items-center gap-2 px-4 py-2 rounded-lg font-caption-bold text-caption-bold transition-all bg-empleadores-active text-chart-cat-2 shadow-sm"
+                  id="tab-btn-formacion" role="tab">
+                  <span class="material-symbols-outlined text-[18px]">school</span>
+                  Formación y perfil
+                  <span
+                    class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-white text-ink-900 font-caption-meta text-caption-meta">10</span>
+                </button>
+                <button aria-selected="false"
+                  class="tab-trigger flex items-center gap-2 px-4 py-2 rounded-lg font-caption-bold text-caption-bold transition-all text-ink-600 hover:text-ink-900 hover:bg-surface-container"
+                  id="tab-btn-relacion" role="tab">
+                  <span class="material-symbols-outlined text-[18px]">handshake</span>
+                  Relación con la Carrera
+                  <span
+                    class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-container-high text-ink-600 font-caption-meta text-caption-meta">8</span>
+                </button>
+              </div>
+              <!-- Scale Legend (Likert 4 categories) -->
+              <div
+                class="flex flex-wrap items-center gap-4 py-1 px-3 bg-surface-container-low rounded-lg border border-border-line/60">
+                <span
+                  class="font-caption-meta text-caption-meta text-ink-600 uppercase tracking-wider font-semibold mr-1">Escala
+                  de respuesta:</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3.5 h-3.5 rounded-sm bg-[#1F6FB5]"></span>
+                  <span class="font-caption-meta text-caption-meta text-ink-900">Totalmente de acuerdo</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3.5 h-3.5 rounded-sm bg-[#8DB8E0]"></span>
+                  <span class="font-caption-meta text-caption-meta text-ink-900">Parcialmente de acuerdo</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3.5 h-3.5 rounded-sm bg-[#E4572E]"></span>
+                  <span class="font-caption-meta text-caption-meta text-ink-900">Totalmente en desacuerdo</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3.5 h-3.5 rounded-sm bg-[#94A3B8]"></span>
+                  <span class="font-caption-meta text-caption-meta text-ink-900">No sabe</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- TAB 1: FORMACIÓN Y PERFIL (10 AFIRMACIONES) -->
+          <div class="space-y-3" id="pane-formacion" role="tabpanel">
+            <div class="flex items-center justify-between px-1">
+              <p class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider">Afirmaciones de
+                competencias técnicas, profesionales y mercado (10 reactivos)</p>
+              <span class="font-caption-meta text-caption-meta text-ink-600">Base muestral: n = 8 empleadores
+                evaluados</span>
+            </div>
+            <!-- Item 1 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">01</span>
+                  <div class="relative group">
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2 cursor-help"
+                      title="Los titulados demuestran sólida base técnica y conceptual en ingeniería de software y sistemas.">
+                      Los titulados demuestran sólida base técnica y conceptual en ingeniería de software y sistemas.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        87.5%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 62.5%" title="Totalmente de acuerdo: 5 (62.5%)">5</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="Totalmente en desacuerdo: 1 (12.5%)">1</div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0.0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item 2 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">02</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Poseen capacidad para resolver problemas complejos y adaptarse a nuevas tecnologías.">
+                      Poseen capacidad para resolver problemas complejos y adaptarse a nuevas tecnologías.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        100.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 75.0%" title="Totalmente de acuerdo: 6 (75.0%)">6</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item 3 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">03</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Demuestran habilidades de trabajo en equipo y comunicación efectiva en el entorno laboral.">
+                      Demuestran habilidades de trabajo en equipo y comunicación efectiva en el entorno laboral.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        62.5%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 37.5%" title="Totalmente de acuerdo: 3 (37.5%)">3</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 37.5%" title="Totalmente en desacuerdo: 3 (37.5%)">3</div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item 4 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">04</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Cuentan con formación adecuada en gestión de proyectos y metodologías ágiles.">
+                      Cuentan con formación adecuada en gestión de proyectos y metodologías ágiles.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        75.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 50.0%" title="Totalmente de acuerdo: 4 (50.0%)">4</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="Totalmente en desacuerdo: 1 (12.5%)">1</div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item 5 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">05</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="El desempeño profesional de los graduados responde a los requerimientos actuales del mercado.">
+                      El desempeño profesional de los graduados responde a los requerimientos actuales del mercado.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        87.5%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 62.5%" title="Totalmente de acuerdo: 5 (62.5%)">5</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="Totalmente en desacuerdo: 1 (12.5%)">1</div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item 6 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">06</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Demuestran compromiso ético y responsabilidad profesional en sus funciones.">
+                      Demuestran compromiso ético y responsabilidad profesional en sus funciones.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        100.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 87.5%" title="Totalmente de acuerdo: 7 (87.5%)">7</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 12.5%" title="Parcialmente de acuerdo: 1 (12.5%)">1</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item 7 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">07</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Poseen destreza en diseño, implementación y administración de bases de datos.">
+                      Poseen destreza en diseño, implementación y administración de bases de datos.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        87.5%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 50.0%" title="Totalmente de acuerdo: 4 (50.0%)">4</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 37.5%" title="Parcialmente de acuerdo: 3 (37.5%)">3</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="Totalmente en desacuerdo: 1 (12.5%)">1</div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item 8 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">08</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Muestran capacidad de aprendizaje autónomo y actualización continua.">
+                      Muestran capacidad de aprendizaje autónomo y actualización continua.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        100.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 75.0%" title="Totalmente de acuerdo: 6 (75.0%)">6</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item 9 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">09</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Poseen dominio suficiente de inglés técnico para la lectura y documentación.">
+                      Poseen dominio suficiente de inglés técnico para la lectura y documentación.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        50.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Totalmente de acuerdo: 2 (25.0%)">2</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 37.5%" title="Totalmente en desacuerdo: 3 (37.5%)">3</div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item 10 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">10</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="La preparación general de los titulados es competitiva respecto a otras universidades.">
+                      La preparación general de los titulados es competitiva respecto a otras universidades.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        87.5%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 62.5%" title="Totalmente de acuerdo: 5 (62.5%)">5</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- TAB 2: RELACIÓN CON LA CARRERA (8 AFIRMACIONES) -->
+          <div class="space-y-3 hidden" id="pane-relacion" role="tabpanel">
+            <div class="flex items-center justify-between px-1">
+              <p class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider">Afirmaciones de
+                vinculación, modalidades de grado y retroalimentación institucional (8 reactivos)</p>
+              <span class="font-caption-meta text-caption-meta text-ink-600">Base muestral: n = 8 empleadores
+                evaluados</span>
+            </div>
+            <!-- Item R1 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">01</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="La Carrera brinda confianza técnica y académica a nuestra organización.">
+                      La Carrera brinda confianza técnica y académica a nuestra organización.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        100.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 75.0%" title="Totalmente de acuerdo: 6 (75.0%)">6</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item R2 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">02</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Existe apertura e interés de la Carrera para vincularse con el sector productivo.">
+                      Existe apertura e interés de la Carrera para vincularse con el sector productivo.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        62.5%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 37.5%" title="Totalmente de acuerdo: 3 (37.5%)">3</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Totalmente en desacuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item R3 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">03</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Nuestra organización tiene disposición para acoger estudiantes en modalidades de pasantía / TIS.">
+                      Nuestra organización tiene disposición para acoger estudiantes en modalidades de pasantía / TIS.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        100.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 87.5%" title="Totalmente de acuerdo: 7 (87.5%)">7</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 12.5%" title="Parcialmente de acuerdo: 1 (12.5%)">1</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item R4 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">04</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Los mecanismos de contacto y convocatoria con la Carrera son accesibles y oportunos.">
+                      Los mecanismos de contacto y convocatoria con la Carrera son accesibles y oportunos.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        50.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Totalmente de acuerdo: 2 (25.0%)">2</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 37.5%" title="Totalmente en desacuerdo: 3 (37.5%)">3</div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item R5 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">05</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Consideramos valioso participar en la revisión periódica del plan de estudios de la Carrera.">
+                      Consideramos valioso participar en la revisión periódica del plan de estudios de la Carrera.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        100.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 87.5%" title="Totalmente de acuerdo: 7 (87.5%)">7</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 12.5%" title="Parcialmente de acuerdo: 1 (12.5%)">1</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item R6 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">06</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Nuestra organización estaría dispuesta a cofinanciar o apoyar proyectos de grado aplicados.">
+                      Nuestra organización estaría dispuesta a cofinanciar o apoyar proyectos de grado aplicados.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        75.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 50.0%" title="Totalmente de acuerdo: 4 (50.0%)">4</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="Totalmente en desacuerdo: 1 (12.5%)">1</div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item R7 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">07</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="La Carrera mantiene una comunicación periódica y fluida con los empleadores.">
+                      La Carrera mantiene una comunicación periódica y fluida con los empleadores.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        37.5%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="Totalmente de acuerdo: 1 (12.5%)">1</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 25.0%" title="Parcialmente de acuerdo: 2 (25.0%)">2</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 50.0%" title="Totalmente en desacuerdo: 4 (50.0%)">4</div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 12.5%" title="No sabe: 1 (12.5%)">1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Item R8 -->
+            <div
+              class="bg-surface-white border border-border-line rounded-lg p-4 shadow-sm hover:border-chart-cat-2/50 transition-colors">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div class="lg:col-span-5 flex items-start gap-3">
+                  <span
+                    class="font-caption-bold text-caption-bold text-chart-cat-2 bg-empleadores-active px-2 py-0.5 rounded text-center min-w-[28px]">08</span>
+                  <div>
+                    <p class="font-body-medium text-body-medium text-ink-900 line-clamp-2"
+                      title="Recomendaríamos contratar a más titulados de Ingeniería en Sistemas de la UMSS.">
+                      Recomendaríamos contratar a más titulados de Ingeniería en Sistemas de la UMSS.
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="font-caption-meta text-caption-meta text-ink-600">n = 8</span>
+                      <span class="text-ink-600/40 text-[10px]">•</span>
+                      <span class="font-caption-meta text-caption-meta text-chart-cat-1 font-semibold">Acuerdo:
+                        100.0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-7">
+                  <div
+                    class="w-full h-8 bg-surface-container rounded flex overflow-hidden text-surface-white font-caption-bold text-caption-bold select-none">
+                    <div class="bg-[#1F6FB5] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 87.5%" title="Totalmente de acuerdo: 7 (87.5%)">7</div>
+                    <div
+                      class="bg-[#8DB8E0] h-full flex items-center justify-center text-ink-900 transition-all hover:opacity-90"
+                      style="width: 12.5%" title="Parcialmente de acuerdo: 1 (12.5%)">1</div>
+                    <div class="bg-[#E4572E] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="Totalmente en desacuerdo: 0 (0%)"></div>
+                    <div class="bg-[#94A3B8] h-full flex items-center justify-center transition-all hover:opacity-90"
+                      style="width: 0%" title="No sabe: 0 (0%)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Summary Statistics Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div class="bg-surface-white border border-border-line rounded-xl p-4 shadow-sm">
+              <p class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider mb-1">Muestra de
+                Empleadores</p>
+              <p class="font-display-kpi text-display-kpi text-ink-900">8</p>
+              <p class="font-body-default text-body-default text-ink-600 mt-1">100% organizaciones validadas</p>
+            </div>
+            <div class="bg-surface-white border border-border-line rounded-xl p-4 shadow-sm">
+              <p class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider mb-1">Total Reactivos
+                Cuantitativos</p>
+              <p class="font-display-kpi text-display-kpi text-chart-cat-2">18</p>
+              <p class="font-body-default text-body-default text-ink-600 mt-1">10 Formación · 8 Relación</p>
+            </div>
+            <div class="bg-surface-white border border-border-line rounded-xl p-4 shadow-sm">
+              <p class="font-caption-bold text-caption-bold text-ink-600 uppercase tracking-wider mb-1">Tasa de
+                Recomendación</p>
+              <p class="font-display-kpi text-display-kpi text-chart-cat-1">100%</p>
+              <p class="font-body-default text-body-default text-ink-600 mt-1">8 de 8 empleadores favorables</p>
+            </div>
+          </div>
+          <!-- Bottom Navigation Bar -->
+
+        </div>
+        <script>
+          (function () {
+            const tabFormacion = document.getElementById('tab-btn-formacion');
+            const tabRelacion = document.getElementById('tab-btn-relacion');
+            const paneFormacion = document.getElementById('pane-formacion');
+            const paneRelacion = document.getElementById('pane-relacion');
+
+            function switchTab(activeTab, activePane, inactiveTab, inactivePane) {
+              activeTab.classList.add('bg-empleadores-active', 'text-chart-cat-2', 'shadow-sm');
+              activeTab.classList.remove('text-ink-600', 'hover:text-ink-900', 'hover:bg-surface-container');
+              activeTab.setAttribute('aria-selected', 'true');
+
+              inactiveTab.classList.remove('bg-empleadores-active', 'text-chart-cat-2', 'shadow-sm');
+              inactiveTab.classList.add('text-ink-600', 'hover:text-ink-900', 'hover:bg-surface-container');
+              inactiveTab.setAttribute('aria-selected', 'false');
+
+              activePane.classList.remove('hidden');
+              inactivePane.classList.add('hidden');
+            }
+
+            if (tabFormacion && tabRelacion) {
+              tabFormacion.addEventListener('click', () => {
+                switchTab(tabFormacion, paneFormacion, tabRelacion, paneRelacion);
+              });
+
+              tabRelacion.addEventListener('click', () => {
+                switchTab(tabRelacion, paneRelacion, tabFormacion, paneFormacion);
+              });
+            }
+
+            const resetBtn = document.getElementById('btn-reset-filters');
+            if (resetBtn) {
+              resetBtn.addEventListener('click', () => {
+                const sel1 = document.getElementById('filter-tipo');
+                const sel2 = document.getElementById('filter-tamano');
+                if (sel1) sel1.value = 'todos';
+                if (sel2) sel2.value = 'todos';
+              });
+            }
+          })();
+        </script>
+      </div>
+    </main>
+  </div>
 
 
 
@@ -600,4 +983,6 @@
 
 
 
-</body></html>
+</body>
+
+</html>
