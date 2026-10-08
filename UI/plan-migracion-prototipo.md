@@ -11,9 +11,9 @@
 | Prototipo HTML | Disponible en `UI/` |
 | Definición de formularios | Disponible en `form/` |
 | CSV de respuestas | Disponible en `data/` |
-| Frontend React | Base inicial disponible |
-| Backend Spring Boot | Base inicial disponible |
-| PostgreSQL | Configurado mediante Docker Compose |
+| Frontend React | Base inicial disponible; `build` OK; `lint` con 2 errores preexistentes |
+| Backend Spring Boot | Base inicial disponible; pruebas OK |
+| PostgreSQL | Configurado mediante Docker Compose; configuración válida |
 | Importación CSV | Pendiente |
 | Modelo de datos definitivo | Pendiente |
 | API analítica | Parcial; pendiente de ampliar |
@@ -868,6 +868,30 @@ Además, la revisión visual final debe confirmar:
 11. Formularios dinámicos, si forman parte del alcance.
 12. Exportación y simulación.
 13. Seguridad, pruebas y cierre.
+
+## Bitácora de actualización
+
+### Fase 0: línea base completada
+
+```text
+Fecha: 2026-10-07
+Fase: 0 - inventario y línea base
+Estado: COMPLETADA CON DEUDA TÉCNICA REGISTRADA
+Completado: inventario de frontend, backend, base de datos, UI, form y data
+Archivos afectados: ninguno del código; se actualizó este plan
+Validaciones:
+  - frontend: npm run build → OK
+  - frontend: npm run lint → FALLA por 2 errores preexistentes de react-refresh/only-export-components
+  - backend: .\mvnw.cmd test -DskipFrontend → OK; 2 pruebas, 0 fallos
+  - Docker Compose: docker compose config --quiet → OK
+  - inventario: 12 HTML, 4 MD, 4 archivos form, 2 CSV
+Errores registrados:
+  - frontend/src/components/ui/button.tsx: exportación de buttonVariants junto a componentes
+  - frontend/src/components/ui/form.tsx: exportación de useFormField junto a componentes
+Decisiones: no corregir el lint dentro de la Fase 0 ni mezclarlo con el diseño del analizador; resolverlo antes de marcar la base técnica del frontend como limpia
+Bloqueos: el lint debe corregirse antes de cerrar la Fase 13
+Siguiente paso: Fase 1 - contrato funcional y diccionario de datos
+```
 
 ## Resultado final esperado
 
