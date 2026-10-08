@@ -21,7 +21,7 @@ export function AppLayout({ route }: Props) {
           />
         )}
         <aside
-          className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-primary-container bg-primary text-white transition-transform lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col overflow-hidden border-r border-primary-container bg-primary text-white transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:self-start ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           } ${sidebarOpen ? '' : 'lg:w-[76px]'}`}
         >
