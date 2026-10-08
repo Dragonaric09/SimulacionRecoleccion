@@ -1,0 +1,759 @@
+{
+  "titulo": "ENCUESTA EMPLEADORES",
+  "descripcion": "La Carrera de Ingeniería de Sistemas de la Facultad de Ciencias y Tecnología (UMSS), en el marco de su proceso de Autoevaluación Académica, desarrolla la etapa de recopilación de información primaria mediante la aplicación del presente cuestionario dirigido a empleadores de profesionales titulados de la Carrera.\nEl objetivo de esta encuesta es conocer la percepción del sector empleador respecto al desempeño profesional, competencias, capacidades y formación académica de los Ingenieros de Sistemas titulados por la Universidad Mayor de San Simón, con la finalidad de identificar fortalezas y oportunidades de mejora en el proceso formativo de la Carrera.\nLa información proporcionada será utilizada exclusivamente con fines académicos e institucionales, garantizando la confidencialidad y anonimato de las respuestas. Agradecemos su valiosa participación y solicitamos que la valoración sea realizada considerando su experiencia y relación laboral con los profesionales titulados de la Carrera de Ingeniería de Sistemas.",
+  "es_quiz": false,
+  "secciones": [
+    {
+      "numero": 1,
+      "titulo": "(Primera sección: lo que está antes del primer salto de página)",
+      "al_terminar": {
+        "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+      },
+      "preguntas": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "numero": 2,
+      "titulo": "EMPLEABILIDAD",
+      "al_terminar": {
+        "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+      },
+      "preguntas": [
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26
+      ]
+    },
+    {
+      "numero": 3,
+      "titulo": "FORMACIÓN Y PERFIL PROFESIONAL",
+      "al_terminar": {
+        "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+      },
+      "preguntas": [
+        28
+      ]
+    },
+    {
+      "numero": 4,
+      "titulo": "RELACIÓN DE LA CARRERA CON LA ORGANIZACIÓN",
+      "al_terminar": {
+        "accion": "ENVIAR_FORMULARIO"
+      },
+      "preguntas": [
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ]
+    }
+  ],
+  "preguntas": [
+    {
+      "orden": 1,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Nombre de la Empresa o Institución ",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 2,
+      "seccion": 1,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Tipo de organización",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Público",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Privado",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 3,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "NIT de la empresa o institucion",
+      "ayuda": "Si es institución pública sin NIT, indique su código institucional ",
+      "requerida": true
+    },
+    {
+      "orden": 4,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Razon Social (nombre legal)",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 5,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Nombre Comercial",
+      "ayuda": "Nombre con el que se conoce publicamente",
+      "requerida": true
+    },
+    {
+      "orden": 6,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Año de inicio de operaciones",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 7,
+      "seccion": 1,
+      "tipo": "LIST",
+      "titulo": "Departamento",
+      "ayuda": "",
+      "requerida": true,
+      "opciones": [
+        {
+          "valor": "La Paz",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Cochabamba",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Oruro",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Potosi",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Sucre",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Tarija",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Santa Cruz",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Beni",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Pando",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 8,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Ciudad/Municipio y direccion",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 9,
+      "seccion": 1,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Presencia de sedes",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Solo sede central",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Varias sedes en Bolivia",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Sedes en Bolivia y el exterior",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 10,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Pagina web",
+      "ayuda": "Escriba \"No tiene\" si no cuenta con una",
+      "requerida": true
+    },
+    {
+      "orden": 11,
+      "seccion": 1,
+      "tipo": "CHECKBOX",
+      "titulo": "Redes sociales activas",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        "Facebook",
+        "LinkedIn",
+        "Instagram",
+        "Tik Tok",
+        "X (Twitter)",
+        "Ninguna"
+      ]
+    },
+    {
+      "orden": 12,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "WhatsApp Business ",
+      "ayuda": "  Con código de país, ej. 591 70000000  ",
+      "requerida": true
+    },
+    {
+      "orden": 13,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Representante (Apellidos y Nombres) ",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 14,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Área en la que se desempeña",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 15,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Cargo del representante",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 16,
+      "seccion": 1,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Tamaño de la organización",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Grande (100 funcionarios o más)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Mediana (entre 31 a 99 funcionarios)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Pequeña (entre 11 a 30 funcionarios)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Micro (hasta 10 funcionarios)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 17,
+      "seccion": 1,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Indique el rubro o sector principal de la organización en la que se desempeña laboralmente el profesional titulado de la Carrera de Ingeniería de Sistemas.",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Desarrollo de software",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Servicios de tecnologías de información (TI)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Telecomunicaciones y redes",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Soporte técnico y mantenimiento de sistemas",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Consultoría en sistemas / transformación digital",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Banca y servicios financieros",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Instituciones públicas / gobierno",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Educación e investigación",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Industria y manufactura",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Comercio y comercio electrónico",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Salud",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Seguridad informática / ciberseguridad",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Análisis de datos / inteligencia de negocios",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Startups o emprendimientos tecnológicos",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Otros",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 19,
+      "seccion": 2,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": " ¿La organización ha contratado Ingenieros de la carrera de Sistemas en los últimos 5 años?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "SI",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "No",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 20,
+      "seccion": 2,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Considerando las necesidades actuales y proyectadas de la organización, ¿existe la posibilidad de incorporar Ingenieros de Sistemas en su equipo de trabajo durante los próximos años?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Sí, existe una alta probabilidad de contratación",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Sí, dependiendo del crecimiento o nuevos proyectos de la organización",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "No se tiene prevista la contratación actualmente",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "No requiere profesionales del área de Sistemas",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 21,
+      "seccion": 2,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿Qué nivel de formación académica o actualización profesional, demanda su organización para contratar nuevos profesionales del área?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Licenciatura",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Diplomado",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Especialidad",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Maestría",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Doctorado",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Post- doctorado",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 22,
+      "seccion": 2,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": " ¿A través de qué medio convoca a profesionales en su organización (empresa o institución)?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Medios escritos y audiovisuales",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Internet y Redes sociales",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Postulación competitiva (convocatorias públicas y privadas)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Oferta profesional personal",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Recomendación de terceros",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Otros",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 23,
+      "seccion": 2,
+      "tipo": "CHECKBOX",
+      "titulo": "¿Qué tipo de cargos desempeñan los profesionales titulados de la Carrera de Ingeniería de Sistemas en su organización?",
+      "ayuda": "(Puede seleccionar más de una opción)",
+      "requerida": true,
+      "tiene_otro": true,
+      "opciones": [
+        "De apoyo / asistencia tecnológica",
+        "Técnico (desarrollo de software, administración de sistemas, redes, bases de datos, soporte TI)",
+        "Analista (sistemas, datos, procesos o soluciones tecnológicas)",
+        "Especialista (ciberseguridad, arquitectura de software, infraestructura tecnológica, entre otros)",
+        "Supervisor / Coordinador de área tecnológica",
+        "Jefatura o Gerencial (gestión de proyectos, dirección de TI, transformación digital)",
+        "Consultor tecnológico"
+      ]
+    },
+    {
+      "orden": 24,
+      "seccion": 2,
+      "tipo": "TEXT",
+      "titulo": "Desde su experiencia en el sector laboral, ¿qué nuevas áreas de conocimiento, tecnologías o tendencias emergentes considera importantes para la formación del profesional de Ingeniería de Sistemas?",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 25,
+      "seccion": 2,
+      "tipo": "TEXT",
+      "titulo": "¿Cuáles son las nuevas herramientas tecnológicas (software, plataformas o entornos de desarrollo) que, a su criterio, debería conocer y manejar el profesional titulado de la Carrera de Ingeniería de Sistemas?",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 26,
+      "seccion": 2,
+      "tipo": "TEXT",
+      "titulo": "Desde su experiencia en el ámbito laboral, ¿qué habilidades, competencias y destrezas considera fundamentales que debe desarrollar el profesional de Ingeniería de Sistemas para responder adecuadamente a las necesidades de la organización y del mercado laboral?",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 28,
+      "seccion": 3,
+      "tipo": "GRID",
+      "titulo": "",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "La Carrera de Ingeniería de Sistemas de la Universidad Mayor de San Simón brinda confianza a nuestra organización como formadora de profesionales del área tecnológica.",
+        "Considero que el título profesional otorgado por la Carrera de Ingeniería de Sistemas es consistente con el nivel de formación y las competencias demostradas por sus titulados.",
+        "Las autoridades de la Carrera de Ingeniería de Sistemas consultan regularmente nuestra opinión como empleadores respecto al perfil profesional y las competencias requeridas en el ámbito laboral.",
+        "Conozco el perfil profesional y las competencias de egreso declaradas por la Carrera de Ingeniería de Sistemas.",
+        "El perfil profesional declarado por la Carrera de Ingeniería de Sistemas es coherente con el desempeño laboral demostrado por sus titulados.",
+        "La formación proporcionada por la Carrera de Ingeniería de Sistemas permite a sus titulados alcanzar un desempeño destacado tanto en el ámbito profesional como en su formación integral.",
+        "La Carrera de Ingeniería de Sistemas considera nuestra opinión como empleadores e incorpora las necesidades del sector laboral en la definición y mejora de actividades de formación práctica, pasantías y modalidades de titulación.",
+        "El desempeño profesional de los titulados de Ingeniería de Sistemas evidencia el desarrollo de competencias laborales como: comunicación efectiva, análisis y resolución de problemas, pensamiento crítico, aprendizaje continuo, trabajo en equipo, iniciativa personal y manejo adecuado de tecnologías de información.",
+        "Los profesionales titulados de Ingeniería de Sistemas demuestran valores y actitudes relacionados con la ética profesional, responsabilidad social, inclusión, diversidad, respeto a los derechos humanos y compromiso con el medio ambiente.",
+        "He participado en procesos de recopilación de información, evaluación o retroalimentación relacionados con el desempeño laboral de los titulados de la Carrera de Ingeniería de Sistemas."
+      ],
+      "columnas": [
+        "Totalmente de acuerdo",
+        "Parcialmente de acuerdo",
+        "Totalmente desacuerdo",
+        "No sabe"
+      ]
+    },
+    {
+      "orden": 30,
+      "seccion": 4,
+      "tipo": "GRID",
+      "titulo": "",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "La Carrera de Ingeniería de Sistemas mantiene vínculos con organizaciones e instituciones que generan oportunidades laborales para sus titulados.",
+        "He participado en actividades de vinculación con el entorno laboral y tecnológico organizadas por la Carrera de Ingeniería de Sistemas o la Facultad de Ciencias y Tecnología.",
+        "He participado en actividades de difusión de oportunidades laborales, convocatorias, pasantías o prácticas profesionales organizadas por la Carrera de Ingeniería de Sistemas.",
+        "He participado en actividades de vinculación entre profesionales del sector tecnológico, empleadores, docentes y estudiantes de la Carrera de Ingeniería de Sistemas para el intercambio de conocimientos, experiencias y desarrollo de trabajos conjuntos.",
+        "Como empleador, he sido consultado sobre el desempeño profesional de los titulados de Ingeniería de Sistemas, con el propósito de retroalimentar el perfil profesional y el plan de estudios de la Carrera.",
+        "Como empleador, la Carrera de Ingeniería de Sistemas ha consultado nuestra opinión respecto a la pertinencia de la formación impartida y su correspondencia con las necesidades del sector tecnológico y laboral.",
+        "Cuando nuestra organización requiere profesionales del área de Sistemas, recurrimos a la Universidad Mayor de San Simón y a la Carrera de Ingeniería de Sistemas como fuente de búsqueda de talento profesional.",
+        "He sido consultado periódicamente por la Carrera de Ingeniería de Sistemas durante sus procesos de autoevaluación y mejora continua."
+      ],
+      "columnas": [
+        "Totalmente de acuerdo",
+        "Parcialmente de acuerdo",
+        "Totalmente desacuerdo",
+        "No sabe"
+      ]
+    },
+    {
+      "orden": 31,
+      "seccion": 4,
+      "tipo": "SECTION_HEADER",
+      "titulo": "BRECHAS DE COMPETENCIAS PROFESIONALES",
+      "ayuda": "Evalúe el nivel que demuestran los titulados de Ingeniería de Sistemas de la UMSS en su organización, frente a lo que exigen sus puestos de trabajo. \nEscala: 1 = Muy insuficiente, 5 = Muy suficiente. Marque \"No observado\" si no ha podido evaluar esa competencia."
+    },
+    {
+      "orden": 32,
+      "seccion": 4,
+      "tipo": "GRID",
+      "titulo": "Competencias TÉCNICAS (hard skills) que demuestran los titulados",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "Programación y desarrollo de software",
+        "Bases de datos",
+        "Redes e infraestructura",
+        "Seguridad informática",
+        "Análisis de datos",
+        "Ingeniería de requisitos y modelado de sistemas",
+        "Gestión de proyectos",
+        "Cloud / DevOps"
+      ],
+      "columnas": [
+        "1 - Muy insuficiente",
+        "2 - Insuficiente",
+        "3 - Aceptable",
+        "4 - Suficiente",
+        "5 - Muy suficiente",
+        "No observado"
+      ]
+    },
+    {
+      "orden": 33,
+      "seccion": 4,
+      "tipo": "GRID",
+      "titulo": "Competencias TRANSVERSALES (soft skills) que demuestran los titulados",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "Comunicación oral y escrita",
+        "Trabajo en equipo",
+        "Resolución de problemas",
+        "Liderazgo",
+        "Inglés técnico",
+        "Aprendizaje autónomo"
+      ],
+      "columnas": [
+        "1 - Muy insuficiente",
+        "2 - Insuficiente",
+        "3 - Aceptable",
+        "4 - Suficiente",
+        "5 - Muy suficiente",
+        "No observado"
+      ]
+    },
+    {
+      "orden": 34,
+      "seccion": 4,
+      "tipo": "PARAGRAPH_TEXT",
+      "titulo": "¿Qué competencia considera que más les falta a los titulados de la Carrera? (opcional)",
+      "ayuda": "",
+      "requerida": false
+    },
+    {
+      "orden": 35,
+      "seccion": 4,
+      "tipo": "IMAGE",
+      "titulo": "",
+      "ayuda": ""
+    }
+  ]
+}

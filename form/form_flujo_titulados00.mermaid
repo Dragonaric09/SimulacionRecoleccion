@@ -1,0 +1,30 @@
+flowchart TD
+  S1["1. DATOS GENERALES"]
+  S2["2. FORMACIÓN COMPLEMENTARIA"]
+  S3["3. INTERÉS EN POSGRADO"]
+  S4["4. PREFERENCIAS DE POSGRADO"]
+  S5["5. OPINIÓN Y SITUACIÓN LABORAL"]
+  S6["6. TRABAJO ACTUAL"]
+  S7["7. EMPRENDIMIENTO"]
+  S8["8. SITUACIÓN SIN EMPLEO"]
+  S9["9. ¿PRIMER EMPLEO?"]
+  S10["10. PRIMER TRABAJO"]
+  S11["11. SATISFACCIÓN Y CIERRE"]
+  FIN(["Enviar formulario"])
+  S1 -->|"Sí"| S2
+  S1 -->|"No"| S3
+  S2 --> S3
+  S3 -->|"SI"| S4
+  S3 -->|"NO"| S5
+  S4 --> S5
+  S5 -->|"Actualmente me encuentro trabajando en una organización"| S6
+  S5 -->|"Actualmente NO trabajo"| S8
+  S5 -->|"Actualmente dedico mi tiempo COMPLETO a un emprendimiento pr"| S7
+  S6 --> S9
+  S7 --> S9
+  S8 -->|"SI"| S10
+  S8 -->|"NO"| S11
+  S9 -->|"Sí"| S10
+  S9 -->|"No"| S11
+  S10 --> S11
+  S11 --> FIN

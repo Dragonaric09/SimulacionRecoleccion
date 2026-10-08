@@ -1,0 +1,1858 @@
+{
+  "titulo": "ENCUESTA DE OPINIÓN A TITULADOS DE INGENIERÍA EN SISTEMAS ",
+  "descripcion": "Estimad@ Ingenier@:\n\nLa Carrera de Ingeniería en Sistemas está en proceso de Autoevaluación para la elaboración de un PLAN DE DESARROLLO ESTRATÉGICO en el marco de una futura postulación de acreditación ante el ARCUSUR. Por lo que debido a la gran importancia de este proceso le pedimos por favor que pueda ayudarnos compartiendo su opinión sobre varios aspectos importantes de la Carrera.\nLe agradecemos su colaboración.",
+  "es_quiz": false,
+  "secciones": [
+    {
+      "numero": 1,
+      "titulo": "DATOS GENERALES",
+      "al_terminar": {
+        "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+      },
+      "preguntas": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "numero": 2,
+      "titulo": "FORMACIÓN COMPLEMENTARIA",
+      "al_terminar": {
+        "accion": "IR_A_SECCION",
+        "seccion": 3,
+        "titulo": "INTERÉS EN POSGRADO"
+      },
+      "preguntas": [
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "numero": 3,
+      "titulo": "INTERÉS EN POSGRADO",
+      "al_terminar": {
+        "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+      },
+      "preguntas": [
+        19
+      ]
+    },
+    {
+      "numero": 4,
+      "titulo": "PREFERENCIAS DE POSGRADO",
+      "al_terminar": {
+        "accion": "IR_A_SECCION",
+        "seccion": 5,
+        "titulo": "OPINIÓN Y SITUACIÓN LABORAL"
+      },
+      "preguntas": [
+        21,
+        22,
+        23,
+        24,
+        25
+      ]
+    },
+    {
+      "numero": 5,
+      "titulo": "OPINIÓN Y SITUACIÓN LABORAL",
+      "al_terminar": {
+        "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+      },
+      "preguntas": [
+        27,
+        28,
+        29,
+        30
+      ]
+    },
+    {
+      "numero": 6,
+      "titulo": "TRABAJO ACTUAL",
+      "al_terminar": {
+        "accion": "IR_A_SECCION",
+        "seccion": 9,
+        "titulo": "¿PRIMER EMPLEO?"
+      },
+      "preguntas": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42
+      ]
+    },
+    {
+      "numero": 7,
+      "titulo": "EMPRENDIMIENTO",
+      "al_terminar": {
+        "accion": "IR_A_SECCION",
+        "seccion": 9,
+        "titulo": "¿PRIMER EMPLEO?"
+      },
+      "preguntas": [
+        44,
+        45,
+        46,
+        47,
+        48
+      ]
+    },
+    {
+      "numero": 8,
+      "titulo": "SITUACIÓN SIN EMPLEO",
+      "al_terminar": {
+        "accion": "IR_A_SECCION",
+        "seccion": 11,
+        "titulo": "SATISFACCIÓN Y CIERRE"
+      },
+      "preguntas": [
+        50,
+        51
+      ]
+    },
+    {
+      "numero": 9,
+      "titulo": "¿PRIMER EMPLEO?",
+      "al_terminar": {
+        "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+      },
+      "preguntas": [
+        53
+      ]
+    },
+    {
+      "numero": 10,
+      "titulo": "PRIMER TRABAJO",
+      "al_terminar": {
+        "accion": "IR_A_SECCION",
+        "seccion": 11,
+        "titulo": "SATISFACCIÓN Y CIERRE"
+      },
+      "preguntas": [
+        55,
+        56
+      ]
+    },
+    {
+      "numero": 11,
+      "titulo": "SATISFACCIÓN Y CIERRE",
+      "al_terminar": {
+        "accion": "ENVIAR_FORMULARIO"
+      },
+      "preguntas": [
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70
+      ]
+    }
+  ],
+  "preguntas": [
+    {
+      "orden": 1,
+      "seccion": 1,
+      "tipo": "SECTION_HEADER",
+      "titulo": "DATOS GENERALES",
+      "ayuda": "INTRODUCE TU INFORMACION PARA QUE LA REGISTREMOS"
+    },
+    {
+      "orden": 2,
+      "seccion": 1,
+      "tipo": "LIST",
+      "titulo": "Edad que tiene actualmente ",
+      "ayuda": "",
+      "requerida": true,
+      "opciones": [
+        {
+          "valor": "15 - 18 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "19 - 22 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "23 - 26 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "27 - 30 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "31 - 34 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "35 años o más",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 3,
+      "seccion": 1,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Género:",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Hombre",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Mujer",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 4,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Apellido(s) y Nombre(s)",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 5,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Año de titulación ",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 6,
+      "seccion": 1,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Sector en el que trabaja",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Público",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Privado",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Independiente",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "ONG",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "No trabaja",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 7,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Vinculo Laboral (Empres/Industria)",
+      "ayuda": "Describa de forma breve en que trabaja actualmente",
+      "requerida": true
+    },
+    {
+      "orden": 8,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Area de especialización",
+      "ayuda": "Indica en que area te desempeñas o te especializas",
+      "requerida": true
+    },
+    {
+      "orden": 9,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Rubro de la Empresa",
+      "ayuda": "Cual es el rubro de la empresa en la que te encuentras",
+      "requerida": true
+    },
+    {
+      "orden": 10,
+      "seccion": 1,
+      "tipo": "TEXT",
+      "titulo": "Cargo",
+      "ayuda": "Cargo en el que te desempeñas (programador, soporte, matenimiento, diseñador, ...)",
+      "requerida": true
+    },
+    {
+      "orden": 11,
+      "seccion": 1,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Titulo de profesion",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": true,
+      "opciones": [
+        {
+          "valor": "Ingeniero de Sistemas",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Ingeniero Informatico",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 12,
+      "seccion": 1,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Posterior a sus estudios de pregrado en Ingeniería en Sistemas, ¿Ha realizado o se encuentra realizando algún programa de formación complementaria? (programas de posgrado, diplomados, doble titulación por diplomado, especializaciones, etc)",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Sí",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 2,
+            "titulo": "FORMACIÓN COMPLEMENTARIA"
+          }
+        },
+        {
+          "valor": "No",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 3,
+            "titulo": "INTERÉS EN POSGRADO"
+          }
+        }
+      ],
+      "ramifica": true,
+      "ramificacion_por_opcion": [
+        {
+          "opcion": "Sí",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 2,
+            "titulo": "FORMACIÓN COMPLEMENTARIA"
+          }
+        },
+        {
+          "opcion": "No",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 3,
+            "titulo": "INTERÉS EN POSGRADO"
+          }
+        }
+      ]
+    },
+    {
+      "orden": 14,
+      "seccion": 2,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿CUÁL ES EL PROGRAMA DE FORMACIÓN COMPLEMENTARIA DE MAYOR NIVEL QUE HA CONCLUIDO O QUE SE ENCUENTRA REALIZANDO?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Diplomado",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Especialidad",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Maestria",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Doctorado",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Pos Doctorado",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 15,
+      "seccion": 2,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿DONDE HA CURSADO EL PROGRAMA INDICADO?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": true,
+      "opciones": [
+        {
+          "valor": "ESCUELA UNIVERSITARIA DE POSGRADO (EUPG)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "DIRECCIÓN DE POSGRADO FCyT",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "IBNORCA",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "UNIVERSIDADES INTERNACIONALES",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "UNIVERSIDADES PRIVADES NACIONALES",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "UNIVERSIDADES PÚBLICAS NACIONALES",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 16,
+      "seccion": 2,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿CUÁL FUE LA FUENTE DE FINANCIAMIENTO PARA CURSAR EL PROGRAMA INDICADO?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "FINANCIADO CON RECURSOS PROPIOS",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "TOTAL FINANCIAMIENTO POR MEDIO DE UNA BECA",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "FINANCIADO PARCIALMENTE POR MEDIO DE UNA BECA",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 17,
+      "seccion": 2,
+      "tipo": "TEXT",
+      "titulo": "  INDIQUE EL NOMBRE DEL PROGRAMA  ",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 19,
+      "seccion": 3,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿ESTARÍA INTERESADO EN REALIZAR ESTUDIOS EN ALGÚN PROGRAMA DE POSGRADO\nDENTRO DE LAS ÁREAS DE LA INGENIERÍA EN SISTEMAS?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "SI",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 4,
+            "titulo": "PREFERENCIAS DE POSGRADO"
+          }
+        },
+        {
+          "valor": "NO",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 5,
+            "titulo": "OPINIÓN Y SITUACIÓN LABORAL"
+          }
+        }
+      ],
+      "ramifica": true,
+      "ramificacion_por_opcion": [
+        {
+          "opcion": "SI",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 4,
+            "titulo": "PREFERENCIAS DE POSGRADO"
+          }
+        },
+        {
+          "opcion": "NO",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 5,
+            "titulo": "OPINIÓN Y SITUACIÓN LABORAL"
+          }
+        }
+      ]
+    },
+    {
+      "orden": 21,
+      "seccion": 4,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "  ¿Qué nivel de posgrado le interesa?  ",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Diplomado",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Especialidad",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Maestría",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Doctorado",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 22,
+      "seccion": 4,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿EN CUÁL DE LAS SIGUIENTES ÁREAS LE INTERESARÍA REALIZAR EL PROGRAMA?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "IA",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "ROBÓTICA",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "INGENIERIA DE SOFTWARE",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "BASE DE DATOS",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "REDES DE DATOS Y SEGURIDAD",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Ciencia de Datos",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Ciberseguridad",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 23,
+      "seccion": 4,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Modalidad preferida",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Presencial",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Virtual",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Híbrida",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Modular(fines de semana)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 24,
+      "seccion": 4,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "EN CASO DE REALIZAR UN ESTUDIO DE POSGRADO ¿EN QUÉ ORGANIZACIÓN\nEDUCATIVA OPTARÍA POR REALIZAR SUS ESTUDIOS DE POSGRADO?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": true,
+      "opciones": [
+        {
+          "valor": "ESCUELA UNIVERSITARIA DE POSGRADO (EUPG)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "DIRECCIÓN DE POSGRADO FCyT",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "IBNORCA",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "UNIVERSIDADES INTERNACIONALES",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "UNIVERSIDADES PÚBLICAS NACIONALES",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "UNIVERSIDADES PRIVADAS NACIONALES",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 25,
+      "seccion": 4,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "EN CASO DE REALIZAR UN ESTUDIO DE POSGRADO, ¿CÓMO FINANCIARÍA SUS ESTUDIOS? ",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Recursos propios",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Becas estatales",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Créditos educativos",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Patrocinio empresarial",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 27,
+      "seccion": 5,
+      "tipo": "GRID",
+      "titulo": "¿CUAL ES SU OPINIÓN PERSONAL RESPECTO AL POSGRADO DE LA FCyT?",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "¿CONSIDERA QUE EXISTEN PROGRAMS DE FORMACIÓN DE POSGRADO OFERTADOS EN LA DIRECCIÓN DE PROSGRADO DE LA FCyT QUE SON AFINES D?"
+      ],
+      "columnas": [
+        "TOTALMENTE EN DESACUERDO",
+        "EN DESACUERDO",
+        "DE ACUERDO",
+        "TOTALMENTE DE ACUERDO"
+      ]
+    },
+    {
+      "orden": 28,
+      "seccion": 5,
+      "tipo": "TEXT",
+      "titulo": "¿CUÁNTOS SON LOS AÑOS DE VIDA PROFESIONAL QUE LLEVA HASTA LA FECHA?",
+      "ayuda": "Introduzca solo un número sin espacios por delante o detrás de este",
+      "requerida": true
+    },
+    {
+      "orden": 29,
+      "seccion": 5,
+      "tipo": "TEXT",
+      "titulo": "DE LA CANTIDAD DE TIEMPO RESPONDIDA EN LA PREGUNTA ANTERIOR, ¿QUÉ CANTIDAD CORRESPONDE AL TOTAL DE TIEMPO EN QUE SE HA ENCONTRADO DESEMPLEADO?",
+      "ayuda": "Introduzca solo un número sin espacios por delante o detrás de este",
+      "requerida": true
+    },
+    {
+      "orden": 30,
+      "seccion": 5,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿CUÁL DE LAS SIGUIENTES AFIRMACIONES DESCRIBE SU SITUACIÓN LABORAL ACTUAL?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Actualmente me encuentro trabajando en una organización",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 6,
+            "titulo": "TRABAJO ACTUAL"
+          }
+        },
+        {
+          "valor": "Actualmente NO trabajo",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 8,
+            "titulo": "SITUACIÓN SIN EMPLEO"
+          }
+        },
+        {
+          "valor": "Actualmente dedico mi tiempo COMPLETO a un emprendimiento propio",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 7,
+            "titulo": "EMPRENDIMIENTO"
+          }
+        }
+      ],
+      "ramifica": true,
+      "ramificacion_por_opcion": [
+        {
+          "opcion": "Actualmente me encuentro trabajando en una organización",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 6,
+            "titulo": "TRABAJO ACTUAL"
+          }
+        },
+        {
+          "opcion": "Actualmente NO trabajo",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 8,
+            "titulo": "SITUACIÓN SIN EMPLEO"
+          }
+        },
+        {
+          "opcion": "Actualmente dedico mi tiempo COMPLETO a un emprendimiento propio",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 7,
+            "titulo": "EMPRENDIMIENTO"
+          }
+        }
+      ]
+    },
+    {
+      "orden": 32,
+      "seccion": 6,
+      "tipo": "TEXT",
+      "titulo": "Nombre de la empresa u organización donde trabaja actualmente:",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 33,
+      "seccion": 6,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿ CUÁL ES EL RUBRO DE LA ORGANIZACIÓN DONDE TRABAJA ACTUALMENTE?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Telecomunicaciones",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Educación",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Desarrollo de Software",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Redes de Computadoras",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Salud",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Banca",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 34,
+      "seccion": 6,
+      "tipo": "TEXT",
+      "titulo": "OTRO RUBRO:",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 35,
+      "seccion": 6,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "EL TRABAJO EN EL QUE SE ENCUENTRA, ¿A QUÉ SECTOR CORRESPONDE?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "PÚBLICO",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "PRIVADO",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 36,
+      "seccion": 6,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿EN QUÉ DEPARTAMENTO DE BOLIVIA TRABAJA?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "COCHABAMBA",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "CHUQUISACA",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "TARIJA",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "LA PAZ",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "ORURO",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "POTOSI",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "SANTA CRUZ",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "BENI",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "PANDO",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "EXTRANJERO",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 37,
+      "seccion": 6,
+      "tipo": "CHECKBOX",
+      "titulo": "¿CUÁL ES EL ÁREA DENTRO DE LA ORGANIZACIÓN DONDE DESARROLLA SUS\nACTIVIDADES PROFESIONALES?",
+      "ayuda": "Selecciona 2 opciones ",
+      "requerida": true,
+      "tiene_otro": true,
+      "opciones": [
+        "Contabilidad",
+        "Administración",
+        "Computo",
+        "desarrollo",
+        "RRHH"
+      ]
+    },
+    {
+      "orden": 38,
+      "seccion": 6,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿Cuál es el cargo que desempeña en su actual trabajo?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": true,
+      "opciones": [
+        {
+          "valor": "Ejecutivo",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Técnico",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Desarrollo",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Help Desk",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 39,
+      "seccion": 6,
+      "tipo": "GRID",
+      "titulo": "¿COMO EVALUA SU FORMACION EN INGENIERIA DE SISTEMA EN SU TRABAJO ACTUAMENTE ?",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "En su actual puesto de trabajo las labores que se encuentra desempeñando son peritnentes a sus formación como Ingeniero de Sistemas"
+      ],
+      "columnas": [
+        "Totalmente en desacuerdo",
+        "En desacuerdo",
+        "De acuerdo",
+        "Totalmente de acuerdo"
+      ]
+    },
+    {
+      "orden": 40,
+      "seccion": 6,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿Que antiguedad tiene en su actual trabajo?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Menos de 1 año",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre 1 a 2 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre 2 a 5 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre 5 a 8 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre 8 a 11 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre 11 a 15 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre 15 a 20 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre 20 a 25 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "más de 25 años",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 41,
+      "seccion": 6,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿A través de qué medio obtivo el trabajo que actualmente desempeña?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "MEDIOS ESCRITOS O AUDIOVISUALES",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "INTERNET Y REDES SOCIALES",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "POSTULACIÓN COMPETITIVA (CONVOCATORIAS PÚBLICAS Y PRIVADAS)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "RECOMENDACIÓN DE TERCEROS",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "OTROS",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 42,
+      "seccion": 6,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Señale la remuneración promedio mensual que está percibiendo en su actual trabajo",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Menor a Bs. 2500",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre Bs. 2.500 - Bs. 3.500",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre Bs. 3.501 - Bs. 5.000",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre Bs. 5.001 - Bs. 7.000",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre Bs. 7.001 - Bs. 10.000",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Más de Bs. 10.000",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 44,
+      "seccion": 7,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿Cuál es el origen del desarrollo de su propio emprendimiento?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Idea propia.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Idea conjunta con compañeros.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "StartUp",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Spin Off (derivado de un proyecto de la Universidad)",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Otro.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 45,
+      "seccion": 7,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿Qué tipo de entregable genera el negocio?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Producto",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Servicio",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Ambos",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 46,
+      "seccion": 7,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿Ha requerido financiamiento externo para su negocio?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Si, mediante préstamos bancarios.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Si, mediante inversores.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "No, financiamiento propio.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 47,
+      "seccion": 7,
+      "tipo": "GRID",
+      "titulo": "Satisfacción",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "¿Que tan satisfecho esá con el rendimiento actual de su negocio ?"
+      ],
+      "columnas": [
+        "Insatisfecho",
+        "Algo satisfecho",
+        "Satisfecho"
+      ]
+    },
+    {
+      "orden": 48,
+      "seccion": 7,
+      "tipo": "GRID",
+      "titulo": "Importancia de Ingenieria de sistemas ",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "¿Qué tan importante considera que fue su formación en Ingeniería en Sistemas para iniciar y gestioar su negocio??"
+      ],
+      "columnas": [
+        "No es importante",
+        "Poco Importante",
+        "Importante",
+        "Muy importante"
+      ]
+    },
+    {
+      "orden": 50,
+      "seccion": 8,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Indique cuál es la razón por la que actualmente no trabaja en un empleo relacionado con su formación como Ingeniero de Sistemas",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Demanda laboral inexistente.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Incumplimiento de requisitos de experiencia previa.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Incumplimiento de requisitos en habilidades específicas (idiomas, softwares, etc).",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Red de contactos limitada.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Problemas de presentación del CV.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Habilidades deficientes en las entrevistas.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Ofertas laborales con remuneración muy bajas.",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Otro",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 51,
+      "seccion": 8,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Si bien actualmente no trabaja, ¿Ha tenido algún trabajo antes?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "SI",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 10,
+            "titulo": "PRIMER TRABAJO"
+          }
+        },
+        {
+          "valor": "NO",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 11,
+            "titulo": "SATISFACCIÓN Y CIERRE"
+          }
+        }
+      ],
+      "ramifica": true,
+      "ramificacion_por_opcion": [
+        {
+          "opcion": "SI",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 10,
+            "titulo": "PRIMER TRABAJO"
+          }
+        },
+        {
+          "opcion": "NO",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 11,
+            "titulo": "SATISFACCIÓN Y CIERRE"
+          }
+        }
+      ]
+    },
+    {
+      "orden": 53,
+      "seccion": 9,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿El trabajo que ejerce actualmente es su primer empleo?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Sí",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 10,
+            "titulo": "PRIMER TRABAJO"
+          }
+        },
+        {
+          "valor": "No",
+          "al_elegirla": {
+            "accion": "IR_A_SECCION",
+            "seccion": 11,
+            "titulo": "SATISFACCIÓN Y CIERRE"
+          }
+        }
+      ],
+      "ramifica": true,
+      "ramificacion_por_opcion": [
+        {
+          "opcion": "Sí",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 10,
+            "titulo": "PRIMER TRABAJO"
+          }
+        },
+        {
+          "opcion": "No",
+          "luego_de_esta_seccion": {
+            "accion": "IR_A_SECCION",
+            "seccion": 11,
+            "titulo": "SATISFACCIÓN Y CIERRE"
+          }
+        }
+      ]
+    },
+    {
+      "orden": 55,
+      "seccion": 10,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Luego de titularse, ¿Cuánto tiempo se demoró en conseguir su primer trabajo relacionado con su formación como Ingeniero en Sistemas?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "Ya trabajaba antes de titularse",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Menos de 1 mes",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre 1 - 4 meses",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre 4 - 8 meses",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Entre 8 - 12 meses",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Más de 12 meses",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 56,
+      "seccion": 10,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "Desde que se tituló, ¿en cuántos empleos usted se ha desempeñado? (Incluyendo su actual empleo si corresponde)",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "1",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "2",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "3",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "Más de 3",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 58,
+      "seccion": 11,
+      "tipo": "GRID",
+      "titulo": "",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "De manera global ¿Cuál es el grado de satisfacción que ha desarrollado con la formación profesional recibida en la Carrera de Ingenieria de Sistemas?",
+        "Considera que existe concordancia entre la formación profesional recibida en la Carrera de Ingeniería de sitemas y requerimientos"
+      ],
+      "columnas": [
+        "Totalmente en desacuerdo",
+        "En desacuerdo",
+        "De acuerdo",
+        "Totalmente de Acuerdo"
+      ]
+    },
+    {
+      "orden": 59,
+      "seccion": 11,
+      "tipo": "SECTION_HEADER",
+      "titulo": "BRECHAS DE COMPETENCIAS PROFESIONALES ",
+      "ayuda": "Evalúe qué tan preparado lo dejó la formación recibida en la Carrera frente a lo que exige su puesto de trabajo. Escala: 1 = Muy insuficiente, 5 = Muy suficiente. Si actualmente no trabaja, responda pensando en su último empleo."
+    },
+    {
+      "orden": 60,
+      "seccion": 11,
+      "tipo": "GRID",
+      "titulo": "Competencias TÉCNICAS (hard skills): ¿Qué tan preparado lo dejó la Carrera? ",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "Programación y desarrollo de software",
+        "Bases de datos",
+        "Redes e infraestructura",
+        "Seguridad informática",
+        "Análisis de datos",
+        "Ingeniería de requisitos y modelado de sistemas",
+        "Gestión de proyectos",
+        "Cloud / DevOps"
+      ],
+      "columnas": [
+        "1 - Muy insuficiente",
+        "2 - Insuficiente",
+        "3 - Aceptable",
+        "4 - Suficiente",
+        "5 - Muy suficiente"
+      ]
+    },
+    {
+      "orden": 61,
+      "seccion": 11,
+      "tipo": "GRID",
+      "titulo": "Competencias TRANSVERSALES (soft skills): ¿Qué tan preparado lo dejó la Carrera? ",
+      "ayuda": "",
+      "requerida": true,
+      "filas": [
+        "Comunicación oral y escrita",
+        "Trabajo en equipo",
+        "Resolución de problemas",
+        "Liderazgo",
+        "Inglés técnico",
+        "Aprendizaje autónomo"
+      ],
+      "columnas": [
+        "1 - Muy insuficiente",
+        "2 - Insuficiente",
+        "3 - Aceptable",
+        "4 - Suficiente",
+        "5 - Muy suficiente"
+      ]
+    },
+    {
+      "orden": 62,
+      "seccion": 11,
+      "tipo": "PARAGRAPH_TEXT",
+      "titulo": "¿Qué competencia le hizo más falta al iniciar su vida laboral?",
+      "ayuda": "  Opcional. Responda solo si ha trabajado alguna vez.  ",
+      "requerida": false
+    },
+    {
+      "orden": 63,
+      "seccion": 11,
+      "tipo": "CHECKBOX",
+      "titulo": "¿Qué aspectos de la Carrera les resultaron de bastante utilidad?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        "La aplicación práctica de conceptos teóricos en proyectos reales.",
+        "La oportunidad de realizar pasantías o prácticas profesionales.",
+        "La distribución de los horarios de clases.",
+        "El desarrollo de habilidades analíticas y de resolución de problemas.",
+        "La colaboración de equipos multidisciplinarios para resolver problemas complejos.",
+        "La enseñanza de herramientas y software específico de la industria."
+      ]
+    },
+    {
+      "orden": 64,
+      "seccion": 11,
+      "tipo": "CHECKBOX",
+      "titulo": "¿Qué aspectos de la Carrera considera que pueden mejorarse?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        "Mayor integración de la teoría con aplicaciones prácticas en el plan de estudios.",
+        "Mayor relacionamiento del estudiante con las empresas por medio de práctica profesionales.",
+        "La distribución de horarios de clases. (Horario para trabajadores, módulos virtuales, etc)",
+        "Actualización constante del plan de estudios para atender tendencias actuales.",
+        "Incremento de actividades extracurriculares (Investigación, servicio social, etc)",
+        "Ofrecimiento de más opciones de especialización."
+      ]
+    },
+    {
+      "orden": 65,
+      "seccion": 11,
+      "tipo": "CHECKBOX",
+      "titulo": "Indique 5 asignaturas cursadas en la Carrera que considera que le brindaron una ventaja competitiva al momento de buscar trabajo o desenvolverse profesionalmente.",
+      "ayuda": "Escoja 5 asignaturas",
+      "requerida": true,
+      "tiene_otro": true,
+      "opciones": [
+        "Introducción",
+        "Base de Datos",
+        "Inteligencia Artificial",
+        "Redes de Computadora",
+        "Electivas",
+        "T.I.S.",
+        "Básicas (Física, Calculo, Algebras)",
+        "Planificación de Proyectos y Gestión",
+        "Tecnologia Redes Avanzadas"
+      ]
+    },
+    {
+      "orden": 66,
+      "seccion": 11,
+      "tipo": "CHECKBOX",
+      "titulo": "Indique 5 asignaturas cursadas en la Carrera que no le resultaron de mucha utilidad en su vida profesional.",
+      "ayuda": "Seleccione 5 opciones",
+      "requerida": true,
+      "tiene_otro": true,
+      "opciones": [
+        "Básicas (Física, Calculo, Algebras)",
+        "Aplic. Interactivas para Televisión Digital",
+        "Telefonía IP",
+        "Web Semánticas",
+        "Graficación por Computadora",
+        "Robótica",
+        "Taller de Programación en Bajo Nivel",
+        "Teoría de Autómatas y Leng. Formales",
+        "Programación Funcional",
+        "Teoría de Grafos",
+        "Contabilidad Básica"
+      ]
+    },
+    {
+      "orden": 67,
+      "seccion": 11,
+      "tipo": "MULTIPLE_CHOICE",
+      "titulo": "¿Le interesaría formar parte una red de contactos oficial de la Carrera de Ingeniería en Sistemas para compartir experiencias, proyectos y ofertas laborales?",
+      "ayuda": "",
+      "requerida": true,
+      "tiene_otro": false,
+      "opciones": [
+        {
+          "valor": "SI",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        },
+        {
+          "valor": "No",
+          "al_elegirla": {
+            "accion": "SIGUE_A_LA_SIGUIENTE_SECCION"
+          }
+        }
+      ],
+      "ramifica": false
+    },
+    {
+      "orden": 68,
+      "seccion": 11,
+      "tipo": "TEXT",
+      "titulo": "Email de contacto",
+      "ayuda": "",
+      "requerida": true
+    },
+    {
+      "orden": 69,
+      "seccion": 11,
+      "tipo": "TEXT",
+      "titulo": "Número telefónico de contacto:",
+      "ayuda": "DE PREFERENCIA CON ACCESO A WHATSAPP",
+      "requerida": true
+    },
+    {
+      "orden": 70,
+      "seccion": 11,
+      "tipo": "TEXT",
+      "titulo": "LINK de LinkedIn",
+      "ayuda": "",
+      "requerida": false
+    }
+  ]
+}
