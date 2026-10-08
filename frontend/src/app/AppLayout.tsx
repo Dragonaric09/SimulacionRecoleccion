@@ -21,28 +21,28 @@ export function AppLayout({ route }: Props) {
           />
         )}
         <aside
-          className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col overflow-hidden border-r border-primary-container bg-primary text-white transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:self-start ${
+            className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col overflow-hidden border-r border-primary-container bg-primary-container text-on-primary transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:self-start ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           } ${sidebarOpen ? '' : 'lg:w-[76px]'}`}
         >
-          <div className="flex h-16 items-center gap-3 border-b px-4">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white">
+          <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/10 text-secondary-container">
               <Database className="size-5" />
             </div>
             {sidebarOpen && (
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">SimulacionEM</p>
+                <p className="truncate text-lg font-semibold leading-tight">Analizador</p>
                 <p className="truncate text-xs text-on-primary-container">Analizador de encuestas</p>
               </div>
             )}
           </div>
-          <nav className="flex-1 space-y-5 overflow-y-auto p-3" aria-label="Navegación principal">
+          <nav className="flex-1 space-y-5 overflow-y-auto px-2 py-3" aria-label="Navegación principal">
             {(['general', 'titulados', 'empleadores'] as const).map((section) => {
               const items = navigation.filter((item) => item.section === section)
               return (
                 <div key={section} className="space-y-1">
                   {sidebarOpen && (
-                    <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-on-primary-container">
+                    <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-[#7db1dd]">
                       {sectionLabels[section]}
                     </p>
                   )}
@@ -62,7 +62,7 @@ export function AppLayout({ route }: Props) {
                         }}
                         className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                           active
-                            ? 'bg-slate-900 text-white shadow-sm'
+                            ? 'bg-white/10 text-white shadow-sm'
                             : 'text-on-primary-container hover:bg-white/10 hover:text-white'
                         } ${sidebarOpen ? '' : 'justify-center'}`}
                       >
@@ -75,7 +75,7 @@ export function AppLayout({ route }: Props) {
               )
             })}
           </nav>
-          <div className="hidden border-t p-3 lg:block">
+          <div className="hidden border-t border-white/10 p-3 lg:block">
             <Button
               variant="ghost"
               size="sm"
@@ -89,7 +89,7 @@ export function AppLayout({ route }: Props) {
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border-line bg-white/95 px-4 backdrop-blur sm:px-6">
+          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border-line bg-surface/95 px-4 backdrop-blur sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -100,12 +100,15 @@ export function AppLayout({ route }: Props) {
               >
                 <Menu />
               </Button>
-              <div>
+              <div className="hidden sm:block">
                 <p className="text-sm font-medium text-ink-900">{route.label}</p>
-                <p className="hidden text-xs text-ink-600 sm:block">{route.description}</p>
+                <p className="text-xs text-ink-600">{route.description}</p>
               </div>
             </div>
-            <span className="rounded-full border border-border-line bg-slate-50 px-3 py-1 text-xs text-ink-600">Modo analizador</span>
+            <div className="flex items-center gap-2 rounded-lg bg-surface-container-high px-3 py-1.5 text-xs text-ink-600">
+              <span className="size-2 rounded-full bg-status-success" />
+              Modo analizador
+            </div>
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
             <PlaceholderPage route={route} />

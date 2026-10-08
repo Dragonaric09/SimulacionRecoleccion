@@ -17,7 +17,16 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary: var(--on-primary);
+  --color-on-primary-container: var(--on-primary-container);
   --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-surface: var(--surface);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-white: var(--surface-white);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -46,21 +55,31 @@
   --color-ink-600: var(--ink-600);
   --color-border-line: var(--border-line);
   --color-status-warning: var(--status-warning);
+  --color-status-success: var(--status-success);
   --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --background: #f6fafe;
+  --foreground: #171c1f;
+  --card: #ffffff;
+  --card-foreground: #171c1f;
+  --popover: #ffffff;
+  --popover-foreground: #171c1f;
+  --primary: #0061a5;
+  --primary-foreground: #ffffff;
+  --primary-container: #0b2a4a;
+  --on-primary: #ffffff;
+  --on-primary-container: #7892b7;
+  --secondary: #0061a5;
+  --secondary-foreground: #ffffff;
+  --on-secondary: #ffffff;
+  --secondary-container: #72b4ff;
+  --surface: #f6fafe;
+  --surface-container-low: #f0f4f8;
+  --surface-container-high: #e4e9ed;
+  --surface-white: #ffffff;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
@@ -88,6 +107,7 @@
   --ink-600: #475569;
   --border-line: #cbd5e1;
   --status-warning: #e0a100;
+  --status-success: #2e9e5b;
 }
 
 .dark {
