@@ -32,10 +32,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class CsvImportService {
@@ -151,14 +153,15 @@ public class CsvImportService {
             }
             List<String> normalizedHeaders = headers.stream().map(this::clean).toList();
             Map<String, Integer> headerOccurrences = new LinkedHashMap<>();
+            Set<String> warnedHeaders = new HashSet<>();
             for (int i = 0; i < normalizedHeaders.size(); i++) {
                 if (normalizedHeaders.get(i) == null) {
                     parsedIssues.add(new Issue(null, i + 1, headers.get(i), null, "ERROR", "COLUMNA_SIN_NOMBRE", "Existe una columna sin nombre"));
                 } else {
                     String normalized = normalizedHeaders.get(i).toLowerCase(Locale.ROOT);
                     int occurrence = headerOccurrences.merge(normalized, 1, Integer::sum);
-                    if (occurrence > 1) {
-                        parsedIssues.add(new Issue(null, i + 1, headers.get(i), null, "ADVERTENCIA", "ENCABEZADO_DUPLICADO", "El encabezado aparece más de una vez; se conserva por posición de origen"));
+                    if (occurrence > 1 && warnedHeaders.add(normalized)) {
+                        parsedIssues.add(new Issue(null, i + 1, headers.get(i), null, "ADVERTENCIA", "ENCABEZADO_DUPLICADO", "El encabezado aparece más de una vez; por fila se conserva el primer valor no vacío"));
                     }
                 }
             }
@@ -314,8 +317,15 @@ public class CsvImportService {
     }
 
     private String firstValue(List<String> headers, CSVRecord record, String fragment) {
-        int index = indexOf(headers, fragment);
-        return index >= 0 && index < record.size() ? clean(record.get(index)) : null;
+        String wanted = clean(fragment);
+        for (int i = 0; i < headers.size() && i < record.size(); i++) {
+            String header = clean(headers.get(i));
+            if (header != null && header.toLowerCase(Locale.ROOT).contains(wanted.toLowerCase(Locale.ROOT))) {
+                String value = clean(record.get(i));
+                if (value != null) return value;
+            }
+        }
+        return null;
     }
 
     private int indexOf(List<String> headers, String fragment) {
