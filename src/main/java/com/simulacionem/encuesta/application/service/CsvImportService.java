@@ -29,6 +29,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
+import java.text.Normalizer;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -205,6 +206,10 @@ public class CsvImportService {
         putKnown(values, headers, record, "anio_titulacion", "año de titulación");
         putKnown(values, headers, record, "sector_trabajo", "sector en el que trabaja");
         putKnown(values, headers, record, "antiguedad_trabajo", "antiguedad tiene en su actual trabajo");
+        putKnown(values, headers, record, "rubro_trabajo_actual", "rubro de la organización");
+        putKnown(values, headers, record, "area_trabajo", "área dentro de la organización");
+        putKnown(values, headers, record, "pertinencia_trabajo_formacion", "peritnentes a sus formación");
+        putKnown(values, headers, record, "remuneracion_rango", "remuneración promedio mensual");
         putKnown(values, headers, record, "tipo_organizacion", "tipo de organización");
         putKnown(values, headers, record, "tamano_organizacion", "tamaño de la organización");
         putKnown(values, headers, record, "rubro_organizacion", "rubro o sector principal");
@@ -339,7 +344,7 @@ public class CsvImportService {
         String wanted = clean(fragment);
         for (int i = 0; i < headers.size() && i < record.size(); i++) {
             String header = clean(headers.get(i));
-            if (header != null && header.toLowerCase(Locale.ROOT).contains(wanted.toLowerCase(Locale.ROOT))) {
+            if (header != null && matchable(header).contains(matchable(wanted))) {
                 String value = clean(record.get(i));
                 if (value != null) return value;
             }
@@ -351,7 +356,7 @@ public class CsvImportService {
         String wanted = clean(fragment);
         for (int i = 0; i < headers.size(); i++) {
             String header = clean(headers.get(i));
-            if (header != null && header.toLowerCase(Locale.ROOT).contains(wanted.toLowerCase(Locale.ROOT))) return i;
+            if (header != null && matchable(header).contains(matchable(wanted))) return i;
         }
         return -1;
     }
@@ -368,6 +373,12 @@ public class CsvImportService {
         if (value == null) return null;
         String result = value.trim();
         return result.isEmpty() ? null : result;
+    }
+
+    private String matchable(String value) {
+        return Normalizer.normalize(value == null ? "" : value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT);
     }
 
     private String safeName(String name) { return name == null || name.isBlank() ? "archivo.csv" : name; }

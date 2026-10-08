@@ -42,7 +42,8 @@ public class AnalyticsController {
         return analytics.summary(datasetId, "TITULADOS", List.of(
                 "anio_titulacion", "anios_vida_profesional", "anios_desempleo",
                 "situacion_laboral_actual", "sector_trabajo", "primera_experiencia_laboral",
-                "edad_rango", "genero"));
+                "edad_rango", "genero", "rubro_trabajo_actual", "remuneracion_rango",
+                "area_trabajo", "pertinencia_trabajo_formacion"));
     }
 
     @GetMapping("/titulados/employment/profile")
