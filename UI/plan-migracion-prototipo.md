@@ -1060,6 +1060,31 @@ Bloqueos: ninguno para iniciar la Fase 7
 Siguiente paso: Fase 7 - pantalla de carga de datos
 ```
 
+### Fase 7: pantalla de carga de datos completada
+
+```text
+Fecha: 2026-10-08
+Fase: 7 - pantalla de carga de datos
+Estado: COMPLETADA CON ALCANCE CSV DOCUMENTADO
+Completado: selección del tipo de encuesta; selección de archivo CSV; envío multipart a validación; presentación de filas leídas, válidas y rechazadas; avisos y errores por fila/código/mensaje; confirmación condicionada a cero errores y al menos una fila válida; importación del archivo; presentación del datasetId; consulta y selección del dataset activo mediante localStorage; listado de datasets existentes
+Archivos afectados: frontend/src/api/client.ts; frontend/src/features/encuesta/api.ts; frontend/src/features/encuesta/CargarDatosPage.tsx; frontend/src/app/PlaceholderPage.tsx; este plan
+Endpoints utilizados:
+  - POST /api/datasets/validate
+  - POST /api/datasets/import
+  - GET /api/datasets
+Validaciones:
+  - npm run build → TypeScript y Vite completan correctamente
+  - npm run lint → permanecen únicamente los 2 errores preexistentes de react-refresh/only-export-components en components/ui/button.tsx y components/ui/form.tsx
+  - La solicitud multipart no fuerza Content-Type JSON, permitiendo que el navegador construya correctamente el boundary de FormData
+  - El botón Procesar permanece deshabilitado si no hay archivo, si existen errores, si no hay filas válidas o si el tipo detectado no coincide con el seleccionado
+  - Las incidencias no se ocultan y distinguen errores de advertencias
+Decisiones: la pantalla no envía datos a las vistas analíticas; guarda únicamente el identificador activo para que las fases posteriores consulten la API; la detección final del tipo de encuesta pertenece al backend y la selección de la interfaz se usa como comprobación de coherencia
+Alcance documentado: el contrato actual de la API implementa CSV; JSON de estructura y XLSX quedan para una ampliación posterior del contrato de importación, no se simulan como formatos aceptados
+Pendientes no bloqueantes: agregar una prueba de interfaz automatizada; mostrar información detallada de columnas/preguntas detectadas cuando el backend la exponga; agregar soporte JSON/XLSX si se aprueba en el contrato de datos; conectar las vistas analíticas al dataset activo en Fases 8 y 9
+Bloqueos: ninguno para iniciar la Fase 8
+Siguiente paso: Fase 8 - pantalla analítica piloto de resumen de titulados
+```
+
 ## Resultado final esperado
 
 Una aplicación React mantenible, conectada a Spring Boot y PostgreSQL, que importe CSV reales, informe problemas de calidad, guarde datos normalizados, calcule indicadores reproducibles y muestre las pantallas analíticas mediante un layout compartido.

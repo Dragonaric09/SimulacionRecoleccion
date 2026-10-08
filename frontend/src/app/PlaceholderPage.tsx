@@ -1,28 +1,16 @@
-import { Construction, Database, FileChartColumn, Users } from 'lucide-react'
+import { Construction, FileChartColumn, Users } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ChiCuadradoDemo } from '@/features/analitica/ChiCuadradoDemo'
 import { Badge } from '@/components/analytics/Badge'
 import { ExportActions } from '@/components/analytics/ExportActions'
 import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
+import { CargarDatosPage } from '@/features/encuesta/CargarDatosPage'
 import type { NavigationItem } from './navigation'
 
 export function PlaceholderPage({ route }: { route: NavigationItem }) {
   if (route.path === '/cargar-datos') {
-    return (
-      <div className="mx-auto max-w-5xl space-y-6">
-        <PageIntro title="Cargar datos" description="Importa un CSV para habilitar los análisis del sistema." section="general" />
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Database className="size-5" /> Importación de datasets</CardTitle>
-            <CardDescription>La pantalla de carga se conectará a los endpoints de validación e importación en la fase 7.</CardDescription>
-          </CardHeader>
-          <CardContent><div className="rounded-lg border border-dashed p-10 text-center text-sm text-slate-500">Zona de carga preparada para la siguiente fase</div></CardContent>
-        </Card>
-        <ChiCuadradoDemo />
-      </div>
-    )
+    return <CargarDatosPage />
   }
 
   return (
