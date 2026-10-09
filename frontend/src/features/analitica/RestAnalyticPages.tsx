@@ -1422,7 +1422,17 @@ function EducationOpinionPanel({ summary }: { summary: AnalyticsSummary }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <LikertStatement number="" title="" distribution={opinion} />
+        <LikertStatement
+          number=""
+          title=""
+          distribution={opinion}
+          showSummary={false}
+        />
+        <LikertLegend />
+        <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs text-ink-600">
+          <span>Escala Likert de 4 niveles balanceada</span>
+          <span>Base total de la muestra: n = {opinion?.validCount ?? 0}</span>
+        </div>
       </CardContent>
     </Card>
   );
@@ -2618,10 +2628,12 @@ function LikertStatement({
   number,
   title,
   distribution,
+  showSummary = true,
 }: {
   number: string;
   title: string;
   distribution?: CategoryDistribution;
+  showSummary?: boolean;
 }) {
   const entries = orderedLikertEntries(distribution);
   const colors = ["#ed552f", "#f3a487", "#7db1dd", "#1f6fb5"];
@@ -2629,15 +2641,19 @@ function LikertStatement({
   const favorable = favorableCount(distribution);
   return (
     <div className="space-y-2 border-t border-surface-container-high pt-5 first:border-t-0 first:pt-0">
-      <div className="flex flex-col justify-between gap-1 md:flex-row md:items-center">
-        <span className="font-semibold text-ink-900">
-          {number} {title}
-        </span>
-        <span className="text-xs text-ink-600">
-          Media: {averageLikert(distribution)} / 4,00 ·{" "}
-          {favorablePercentage(distribution)}% acuerdo favorable
-        </span>
-      </div>
+      {(showSummary || number || title) && (
+        <div className="flex flex-col justify-between gap-1 md:flex-row md:items-center">
+          <span className="font-semibold text-ink-900">
+            {number} {title}
+          </span>
+          {showSummary && (
+            <span className="text-xs text-ink-600">
+              Media: {averageLikert(distribution)} / 4,00 ·{" "}
+              {favorablePercentage(distribution)}% acuerdo favorable
+            </span>
+          )}
+        </div>
+      )}
       {entries.length ? (
         <>
           <div className="flex h-11 overflow-hidden rounded-lg">
