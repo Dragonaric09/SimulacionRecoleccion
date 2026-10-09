@@ -68,6 +68,7 @@ import {
 } from "@/components/ui/select";
 import type { DatasetSummary } from "@/features/encuesta/api";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
+import { contrastTextColor } from "@/lib/utils";
 
 type Domain = "TITULADOS" | "EMPLEADORES";
 type Tone = "titulados" | "empleadores";
@@ -1960,7 +1961,7 @@ export function CompetencePage({ domain }: { domain: Domain }) {
                 />
                 <KpiCard
                   label="Media de la dimensión"
-                  value={average ? average.toFixed(2) : "—"}
+                  value={average ? formatDecimal(average) : "—"}
                   detail="Escala de 1 a 5"
                   note="Promedio de competencias"
                   icon={WorkIcon}
@@ -2009,6 +2010,17 @@ function CompetenceMatrix({
   items: Competence[];
   className?: string;
 }) {
+  const columnMaxima = [1, 2, 3, 4, 5].reduce<Record<number, number>>(
+    (maxima, level) => {
+      maxima[level] = Math.max(
+        1,
+        ...items.map((item) => item.levelCounts[String(level)] ?? 0),
+      );
+      return maxima;
+    },
+    {},
+  );
+
   return (
     <Card className={`rounded-xl border-0 shadow-sm ${className}`}>
       <CardHeader>
@@ -2022,7 +2034,7 @@ function CompetenceMatrix({
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <Table className="min-w-[650px] text-sm">
+          <Table className="min-w-[820px] text-sm">
             <thead>
               <tr className="text-xs uppercase tracking-wider text-ink-600">
                 <th className="w-56 p-2 text-left">Competencia técnica</th>
@@ -2047,6 +2059,8 @@ function CompetenceMatrix({
                   </th>
                 ))}
                 <th className="p-2 text-right">Total</th>
+                <th className="p-2 text-right">Media</th>
+                <th className="p-2 text-right">DE</th>
               </tr>
             </thead>
             <tbody>
@@ -2059,15 +2073,42 @@ function CompetenceMatrix({
                     {matrixCompetenceName(item.name)}
                   </td>
                   {[1, 2, 3, 4, 5].map((current) => (
-                    <td
-                      key={current}
-                      className={`p-2 text-center font-semibold ${matrixColor(current)}`}
-                    >
-                      {item.levelCounts[String(current)] ?? 0}
-                    </td>
+                    (() => {
+                      const count = item.levelCounts[String(current)] ?? 0;
+                      return (
+                        <td
+                          key={current}
+                          className="p-2 text-center font-semibold transition-[background-color,color] duration-300 ease-out"
+                          style={{
+                            backgroundColor: matrixBackground(
+                              current,
+                              count,
+                              columnMaxima[current],
+                            ),
+                            color: contrastTextColor(
+                              matrixBackground(
+                                current,
+                                count,
+                                columnMaxima[current],
+                              ),
+                            ),
+                          }}
+                        >
+                          {count}
+                        </td>
+                      );
+                    })()
                   ))}
                   <td className="tabular-nums p-2 text-right font-semibold">
                     {item.validCount}
+                  </td>
+                  <td className="tabular-nums p-2 text-right font-semibold">
+                    {formatDecimal(item.average)}
+                  </td>
+                  <td className="tabular-nums p-2 text-right">
+                    {item.standardDeviation == null || item.validCount < 2
+                      ? "n/d"
+                      : formatDecimal(item.standardDeviation)}
                   </td>
                 </tr>
               ))}
@@ -2089,9 +2130,6 @@ function CompetenceMatrix({
             suficiente
           </span>
         </div>
-        <p className="mt-3 text-xs text-ink-600">
-          Las frecuencias excluyen respuestas “No observado” y “No sabe”.
-        </p>
       </CardContent>
     </Card>
   );
@@ -2319,7 +2357,7 @@ function LikertStatement({
                 style={{
                   width: `${distribution?.percentages[label] ?? 0}%`,
                   backgroundColor: colors[index],
-                  color: index < 2 ? "#0f172a" : "white",
+                  color: contrastTextColor(colors[index]),
                 }}
                 title={`${label}: ${count} (${distribution?.percentages[label]}%)`}
               >
@@ -2486,15 +2524,15 @@ function CompetenceStatsTable({
                   <td
                     className={`tabular-nums p-3 text-right font-semibold ${item.average < 2.5 ? "text-red-600" : "text-titulados"}`}
                   >
-                    {item.average.toFixed(2)}
+                    {formatDecimal(item.average)}
                   </td>
                   <td className="tabular-nums p-3 text-right">
-                    {item.standardDeviation == null
-                      ? "—"
-                      : item.standardDeviation.toFixed(2)}
+                    {item.standardDeviation == null || item.validCount < 2
+                      ? "n/d"
+                      : formatDecimal(item.standardDeviation)}
                   </td>
                   <td className="tabular-nums p-3 text-right">
-                    {item.median.toFixed(2)}
+                    {formatDecimal(item.median)}
                   </td>
                   <td className="p-3 text-right">
                     {item.modalLevel} - {levelLabel(item.modalLevel)}{" "}
@@ -2514,7 +2552,7 @@ function CompetenceStatsTable({
             válidas registradas.
           </span>
           <strong className="whitespace-nowrap text-ink-900">
-            Media global {group}: {globalAverage.toFixed(2)}
+            Media global {group}: {formatDecimal(globalAverage)}
           </strong>
         </div>
       </CardContent>
@@ -2533,6 +2571,9 @@ function levelLabel(level: number) {
           ? "Suficiente"
           : "Muy suficiente";
 }
+function formatDecimal(value: number, digits = 2) {
+  return value.toFixed(digits).replace(".", ",");
+}
 function groupLabel(group: string) {
   return group === "HARD_SKILL"
     ? "Hard skills"
@@ -2547,14 +2588,18 @@ function matrixCompetenceName(name: string) {
   return name;
 }
 
-function matrixColor(level: number) {
-  return level <= 2
-    ? "bg-red-100 text-red-800"
-    : level === 3
-      ? "bg-slate-200 text-ink-900"
-      : level === 4
-        ? "bg-blue-100 text-titulados"
-        : "bg-blue-200 text-titulados";
+function matrixBackground(level: number, count: number, columnMaximum: number) {
+  const intensity = count / Math.max(1, columnMaximum);
+  const alpha = 0.08 + intensity * 0.52;
+  const color =
+    level <= 2
+      ? "248, 113, 113"
+      : level === 3
+        ? "148, 163, 184"
+        : level === 4
+          ? "96, 165, 250"
+          : "59, 130, 246";
+  return `rgba(${color}, ${alpha.toFixed(3)})`;
 }
 
 function CompetenceRadar({
@@ -2566,14 +2611,12 @@ function CompetenceRadar({
 }) {
   const plotted = items.slice(0, 8);
   const chartData = plotted.map((item) => ({
-    subject: `${radarLabel(item.name).join(" ")} (${item.average.toFixed(2)})`,
+    subject: `${radarLabel(item.name)} (${formatDecimal(item.average)})`,
     average: item.average,
-    threshold: 3.5,
     name: item.name,
   }));
   const chartConfig = {
     average: { label: "Media observada", color: "#1f6fb5" },
-    threshold: { label: "Umbral base", color: "#f2a33a" },
   };
   return (
     <Card
@@ -2582,12 +2625,11 @@ function CompetenceRadar({
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle className="title-card">Perfil medio muestral</CardTitle>
+            <CardTitle className="title-card">Media por competencia</CardTitle>
             <CardDescription>
-              Escala continua de 1,0 a 5,0 · máximo 8 competencias
+              Escala continua de 1,0 a 5,0
             </CardDescription>
           </div>
-          <Badge tone="neutral">Umbral 3,5</Badge>
         </div>
       </CardHeader>
       <CardContent>
@@ -2609,14 +2651,6 @@ function CompetenceRadar({
                   axisLine={false}
                 />
                 <Radar
-                  name="Umbral base"
-                  dataKey="threshold"
-                  stroke="#f2a33a"
-                  fill="none"
-                  strokeDasharray="5 4"
-                  strokeWidth={1.5}
-                />
-                <Radar
                   name="Media observada"
                   dataKey="average"
                   stroke="#1f6fb5"
@@ -2632,10 +2666,6 @@ function CompetenceRadar({
                 <i className="h-1.5 w-4 rounded-sm bg-titulados" />
                 Media observada
               </span>
-              <span className="flex items-center gap-1.5 text-ink-600">
-                <i className="h-0.5 w-4 border-t-2 border-dashed border-status-warning" />
-                Umbral base (3,50)
-              </span>
             </div>
           </div>
         ) : (
@@ -2648,15 +2678,15 @@ function CompetenceRadar({
 
 function radarLabel(name: string) {
   const normalized = name.toLowerCase();
-  if (normalized.includes("programación")) return ["Programación"];
-  if (normalized.includes("bases")) return ["Bases de datos"];
-  if (normalized.includes("requisitos")) return ["Requisitos y", "modelado"];
-  if (normalized.includes("análisis")) return ["Análisis de", "datos"];
-  if (normalized.includes("gestión")) return ["Gestión de", "proyectos"];
-  if (normalized.includes("redes")) return ["Redes"];
-  if (normalized.includes("seguridad")) return ["Seguridad"];
-  if (normalized.includes("cloud")) return ["Cloud / DevOps"];
-  return [name];
+  if (normalized.includes("programación")) return "Programación";
+  if (normalized.includes("bases")) return "Bases de datos";
+  if (normalized.includes("requisitos")) return "Requisitos y modelado";
+  if (normalized.includes("análisis")) return "Análisis de datos";
+  if (normalized.includes("gestión")) return "Gestión de proyectos";
+  if (normalized.includes("redes")) return "Redes";
+  if (normalized.includes("seguridad")) return "Seguridad";
+  if (normalized.includes("cloud")) return "Cloud / DevOps";
+  return name;
 }
 
 export function FinancingCompletePage() {
@@ -3955,7 +3985,9 @@ function CrossTable({
                         colorHeatmap
                           ? {
                               backgroundColor: `rgba(31,111,181,${0.08 + intensity * 0.75})`,
-                              color: intensity >= 0.98 ? "white" : "#0f172a",
+                              color: contrastTextColor(
+                                `rgba(31,111,181,${0.08 + intensity * 0.75})`,
+                              ),
                             }
                           : undefined
                       }
@@ -4175,15 +4207,14 @@ function CrossBars({
                       const value = cross.counts[row]?.[column] ?? 0;
                       if (value <= 0) return null;
                       const width = (value * 100) / totalRow;
-                      const lightSegment = index === 1;
                       return (
                         <div
                           key={column}
-                          className="flex min-w-0 items-center justify-center px-1 text-[10px] font-semibold text-white"
+                          className="flex min-w-0 items-center justify-center px-1 text-[10px] font-semibold"
                           style={{
                             width: width + "%",
                             backgroundColor: colors[index % colors.length],
-                            color: lightSegment ? "#173f67" : "white",
+                            color: contrastTextColor(colors[index % colors.length]),
                           }}
                           title={
                             booleanLabel(column) +
