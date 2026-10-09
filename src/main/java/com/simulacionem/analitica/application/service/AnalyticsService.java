@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -145,7 +146,7 @@ public class AnalyticsService {
         return datasets.findAll().stream().filter(d -> type == null || type.equals(d.getSurveyType()))
                 .reduce((a, b) -> b)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("No existe un dataset importado para el filtro solicitado"));
+                        () -> new NoSuchElementException("No existe un dataset importado para el filtro solicitado"));
     }
 
     private String value(SurveyResponseEntity response, String field) {

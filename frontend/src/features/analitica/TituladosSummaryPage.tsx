@@ -60,6 +60,8 @@ export function TituladosSummaryPage() {
     if (!datasetsReady) return;
     if (!datasetId) {
       setLoading(false);
+      setError(null);
+      setSummary(null);
       return;
     }
     setLoading(true);
@@ -74,6 +76,8 @@ export function TituladosSummaryPage() {
           localStorage.removeItem("simulacionem.activeDatasetId");
           setDatasetId(undefined);
           setSummary(null);
+          setError(null);
+          return;
         }
         setError(message);
       })
