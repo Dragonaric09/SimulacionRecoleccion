@@ -47,6 +47,11 @@ public class AnalyticsController {
                 "area_trabajo", "pertinencia_trabajo_formacion"));
     }
 
+    @GetMapping("/titulados/employment/unemployment")
+    public AnalyticsSummaryDto tituladosUnemployment(@RequestParam(required = false) UUID datasetId) {
+        return analytics.unemploymentSummary(datasetId);
+    }
+
     @GetMapping("/titulados/employment/profile")
     public EmploymentProfileDto tituladosEmploymentProfile(@RequestParam(required = false) UUID datasetId) {
         return analytics.employmentProfile(datasetId);

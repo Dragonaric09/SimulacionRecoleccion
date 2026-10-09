@@ -75,7 +75,30 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
     public Map<String, Object> map(List<String> headers, CSVRecord record, List<FieldMappingSupport.MappingIssue> issues) {
         Map<String, Object> values = FieldMappingSupport.baseValues(headers, record);
         applyMappings(values, headers, record, DEFINITIONS, issues);
+        inferLaborStatusWhenMissing(values);
+        if (!isUnemployed(headers, record)) {
+            values.remove("razon_no_trabaja");
+            values.remove("experiencia_laboral_previa");
+            values.remove("anios_desempleo");
+        }
         return values;
+    }
+
+    private void inferLaborStatusWhenMissing(Map<String, Object> values) {
+        if (values.containsKey("situacion_laboral_actual")) return;
+        boolean hasCurrentWorkData = List.of("sector_trabajo", "vinculo_laboral", "area_trabajo",
+                        "cargo_actual", "rubro_empresa")
+                .stream()
+                .anyMatch(values::containsKey);
+        if (hasCurrentWorkData) values.put("situacion_laboral_actual", "Trabaja en una organización");
+    }
+
+    private boolean isUnemployed(List<String> headers, CSVRecord record) {
+        String status = FieldMappingSupport.firstValue(headers, record, "situación laboral actual");
+        if (status == null) return false;
+        String normalized = FieldMappingSupport.matchable(status);
+        return normalized.contains("no trabaja") || normalized.contains("no trabajo")
+                || normalized.contains("busqueda") || normalized.contains("desemple");
     }
 
     @Override

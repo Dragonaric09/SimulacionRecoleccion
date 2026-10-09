@@ -22,6 +22,7 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.Locale;
 
 @Service
 public class AnalyticsService {
@@ -44,6 +45,23 @@ public class AnalyticsService {
         List<SurveyResponseEntity> rows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
         if (fields == null || fields.isEmpty())
             fields = defaultFields(dataset.getSurveyType());
+        return summarize(dataset, rows, fields);
+    }
+
+    @Transactional(readOnly = true)
+    public AnalyticsSummaryDto unemploymentSummary(UUID datasetId) {
+        DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
+        List<SurveyResponseEntity> rows = responses
+                .findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA")
+                .stream()
+                .filter(this::isUnemployed)
+                .toList();
+        return summarize(dataset, rows, List.of(
+                "primera_experiencia_laboral", "razon_no_trabaja", "anios_desempleo"));
+    }
+
+    private AnalyticsSummaryDto summarize(DatasetImportEntity dataset, List<SurveyResponseEntity> rows,
+            List<String> fields) {
         Map<String, CategoryDistributionDto> distributions = new LinkedHashMap<>();
         Map<String, Double> averages = new LinkedHashMap<>();
         Map<String, Double> medians = new LinkedHashMap<>();
@@ -65,6 +83,15 @@ public class AnalyticsService {
         return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), rows.size(), rows.size(),
                 distributions, averages, medians, standardDeviations,
                 rows.size() < MINIMUM_SAMPLE_SIZE);
+    }
+
+    private boolean isUnemployed(SurveyResponseEntity response) {
+        String status = value(response, "situacion_laboral_actual");
+        if (status == null || status.isBlank()) return false;
+        String normalized = java.text.Normalizer.normalize(status.toLowerCase(Locale.ROOT),
+                java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        return normalized.contains("no trabaja") || normalized.contains("no trabajo")
+                || normalized.contains("busqueda") || normalized.contains("desemple");
     }
 
     @Transactional(readOnly = true)

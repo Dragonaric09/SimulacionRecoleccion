@@ -134,6 +134,8 @@ export function EmploymentProfilePage() {
     loading: datasetsLoading,
   } = useDatasets("TITULADOS");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [unemploymentSummary, setUnemploymentSummary] =
+    useState<AnalyticsSummary | null>(null);
   const [profile, setProfile] = useState<EmploymentProfile | null>(null);
   const [activeTab, setActiveTab] = useState("perfil");
   const [yearMax, setYearMax] = useState<number | undefined>();
@@ -144,6 +146,7 @@ export function EmploymentProfilePage() {
   useEffect(() => {
     if (!datasetId) {
       setSummary(null);
+      setUnemploymentSummary(null);
       setProfile(null);
       return;
     }
@@ -155,10 +158,14 @@ export function EmploymentProfilePage() {
       apiRequest<EmploymentProfile>(
         `/analytics/titulados/employment/profile${query}`,
       ),
+      apiRequest<AnalyticsSummary>(
+        `/analytics/titulados/employment/unemployment${query}`,
+      ),
     ])
-      .then(([nextSummary, nextProfile]) => {
+      .then(([nextSummary, nextProfile, nextUnemploymentSummary]) => {
         setSummary(nextSummary);
         setProfile(nextProfile);
+        setUnemploymentSummary(nextUnemploymentSummary);
       })
       .catch((cause) =>
         setError(cause instanceof Error ? cause.message : String(cause)),
@@ -283,6 +290,7 @@ export function EmploymentProfilePage() {
             labor={labor}
             sectors={sectors}
             unemployed={unemployed}
+            unemploymentSummary={unemploymentSummary}
           />
         </>
       )}
@@ -390,6 +398,7 @@ function EmploymentTabContent({
   labor,
   sectors,
   unemployed,
+  unemploymentSummary,
 }: {
   tab: string;
   summary: AnalyticsSummary;
@@ -397,6 +406,7 @@ function EmploymentTabContent({
   labor?: CategoryDistribution;
   sectors?: CategoryDistribution;
   unemployed: number | null;
+  unemploymentSummary: AnalyticsSummary | null;
 }) {
   if (tab === "emprendimiento")
     return (
@@ -411,10 +421,8 @@ function EmploymentTabContent({
   if (tab === "desempleo")
     return (
       <UnemploymentPanel
-        summary={summary}
         unemployed={unemployed}
-        previousExperience={summary.distributions.primera_experiencia_laboral}
-        reasons={summary.distributions.razon_no_trabaja}
+        unemploymentSummary={unemploymentSummary}
       />
     );
   if (tab === "primer-empleo")
@@ -467,25 +475,25 @@ function EmploymentTabContent({
 }
 
 function UnemploymentPanel({
-  summary,
   unemployed,
-  previousExperience,
-  reasons,
+  unemploymentSummary,
 }: {
-  summary: AnalyticsSummary;
   unemployed: number | null;
-  previousExperience?: CategoryDistribution;
-  reasons?: CategoryDistribution;
+  unemploymentSummary: AnalyticsSummary | null;
 }) {
-  const total = summary.validResponses;
+  const previousExperience =
+    unemploymentSummary?.distributions.primera_experiencia_laboral;
+  const reasons = unemploymentSummary?.distributions.razon_no_trabaja;
+  const total = unemploymentSummary?.validResponses ?? unemployed ?? 0;
   const previousCount = previousExperience
     ? booleanCount(previousExperience, true)
     : null;
   const previousPercent =
     previousCount == null ? null : formatPercentage(previousCount, total);
-  const average = summary.numericAverages.anios_desempleo;
-  const median = summary.numericMedians.anios_desempleo;
-  const deviation = summary.numericStandardDeviations.anios_desempleo;
+  const average = unemploymentSummary?.numericAverages.anios_desempleo;
+  const median = unemploymentSummary?.numericMedians.anios_desempleo;
+  const deviation =
+    unemploymentSummary?.numericStandardDeviations.anios_desempleo;
   const reasonEntries = Object.entries(reasons?.counts ?? {}).sort(
     ([, left], [, right]) => right - left,
   );
