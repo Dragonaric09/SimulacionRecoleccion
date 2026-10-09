@@ -154,16 +154,29 @@ public class AnalyticsController {
             for (int i = 0; i < counts.length; i++) { sums[i] += counts[i] * 100.0 / request.sampleSize(); squares[i] += Math.pow(counts[i] * 100.0 / request.sampleSize(), 2); }
         }
         List<SimulationCategory> result = new ArrayList<>();
+        long observedTotal = request.observedCounts() == null ? 0L
+                : request.observedCounts().stream().mapToLong(Long::longValue).sum();
         for (int i = 0; i < request.categories().size(); i++) {
             double mean = sums[i] / request.repetitions();
             double deviation = request.repetitions() > 1 ? Math.sqrt((squares[i] - request.repetitions() * mean * mean) / (request.repetitions() - 1)) : 0;
-            result.add(new SimulationCategory(request.categories().get(i), request.probabilities().get(i) * 100, round(mean), round(Math.max(0, mean - 1.96 * deviation)), round(Math.min(100, mean + 1.96 * deviation))));
+            long observedCount = request.observedCounts() != null && i < request.observedCounts().size()
+                    ? request.observedCounts().get(i) : 0L;
+            double observedPercentage = observedTotal > 0
+                    ? observedCount * 100.0 / observedTotal
+                    : request.probabilities().get(i) * 100;
+            result.add(new SimulationCategory(request.categories().get(i), observedCount,
+                    round(observedPercentage), round(mean),
+                    round(Math.max(0, mean - 1.96 * deviation)),
+                    round(Math.min(100, mean + 1.96 * deviation)), round(deviation)));
         }
         return new SimulationResult(request.sampleSize(), request.repetitions(), request.seed(), result);
     }
 
-    public record SimulationRequest(List<String> categories, List<Double> probabilities, int sampleSize, int repetitions, long seed) { }
-    public record SimulationCategory(String category, double observedPercentage, double simulatedMean, double lower95, double upper95) { }
+    public record SimulationRequest(List<String> categories, List<Double> probabilities, List<Long> observedCounts,
+                                    int sampleSize, int repetitions, long seed) { }
+    public record SimulationCategory(String category, long observedCount, double observedPercentage,
+                                     double simulatedMean, double lower95, double upper95,
+                                     double standardDeviation) { }
     public record SimulationResult(int sampleSize, int repetitions, long seed, List<SimulationCategory> categories) { }
 
     private double round(double value) { return Math.round(value * 100.0) / 100.0; }
