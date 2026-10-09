@@ -40,11 +40,18 @@ public class SurveyResponseEntity {
 
     protected SurveyResponseEntity() { }
 
-    public SurveyResponseEntity(DatasetImportEntity dataset, String surveyType, int sourceRowNumber, String responseStatus, Map<String, Object> rawPayload) {
+    public SurveyResponseEntity(DatasetImportEntity dataset, String surveyType, int sourceRowNumber,
+                                String responseStatus, Map<String, Object> rawPayload) {
+        this(dataset, surveyType, sourceRowNumber, null, responseStatus, rawPayload);
+    }
+
+    public SurveyResponseEntity(DatasetImportEntity dataset, String surveyType, int sourceRowNumber,
+                                OffsetDateTime submittedAt, String responseStatus, Map<String, Object> rawPayload) {
         this.dataset = dataset;
         this.id = UUID.randomUUID();
         this.surveyType = surveyType;
         this.sourceRowNumber = sourceRowNumber;
+        this.submittedAt = submittedAt;
         this.responseStatus = responseStatus;
         this.rawPayload = rawPayload;
         this.normalizedPayload = rawPayload;
@@ -55,5 +62,6 @@ public class SurveyResponseEntity {
     public int getSourceRowNumber() { return sourceRowNumber; }
     public String getResponseStatus() { return responseStatus; }
     public String getSurveyType() { return surveyType; }
+    public OffsetDateTime getSubmittedAt() { return submittedAt; }
     public Map<String, Object> getNormalizedPayload() { return normalizedPayload; }
 }

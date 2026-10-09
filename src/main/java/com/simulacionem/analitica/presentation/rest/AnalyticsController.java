@@ -42,6 +42,7 @@ public class AnalyticsController {
         return analytics.summary(datasetId, "TITULADOS", List.of(
                 "anio_titulacion", "anios_vida_profesional", "anios_desempleo",
                 "situacion_laboral_actual", "sector_trabajo", "primera_experiencia_laboral",
+                "razon_no_trabaja", "experiencia_laboral_previa", "tiempo_primer_empleo", "cantidad_empleos",
                 "edad_rango", "genero", "rubro_trabajo_actual", "remuneracion_rango",
                 "area_trabajo", "pertinencia_trabajo_formacion"));
     }
@@ -60,7 +61,8 @@ public class AnalyticsController {
     public AnalyticsSummaryDto tituladosSatisfaction(@RequestParam(required = false) UUID datasetId) {
         return analytics.summary(datasetId, "TITULADOS", List.of(
                 "satisfaccion_formacion", "concordancia_formacion_requerimientos",
-                "pertinencia_trabajo_formacion"));
+                "pertinencia_trabajo_formacion", "satisfaccion_emprendimiento",
+                "importancia_formacion_emprendimiento"));
     }
 
     @GetMapping("/titulados/curriculum")

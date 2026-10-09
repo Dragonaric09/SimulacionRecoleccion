@@ -73,11 +73,11 @@ Los nombres internos deben ser estables, cortos, en `snake_case`, sin acentos y 
 | `Género` | `genero` | `category` | Perfil |
 | `Año de titulación` | `anio_titulacion` | `integer` | Antigüedad; validar rango y año |
 | `Sector en el que trabaja` | `sector_trabajo` | `category` | Perfil y empleo |
-| `Vinculo Laboral (Empres/Industria)` | `vinculo_laboral_texto` | `text` | No graficar automáticamente |
-| `Area de especialización` | `area_especializacion_texto` | `text` | No graficar automáticamente |
-| `Rubro de la Empresa` | `rubro_empresa_texto` | `text` | No graficar automáticamente |
-| `Cargo` | `cargo_texto` | `text` | No graficar automáticamente |
-| `Titulo de profesion` | `titulo_profesion` | `category` | Perfil |
+| `Vinculo Laboral (Empres/Industria)` | `vinculo_laboral` | `text` | No graficar automáticamente |
+| `Area de especialización` | `area_especializacion` | `text` | No graficar automáticamente |
+| `Rubro de la Empresa` | `rubro_empresa` | `text` | No graficar automáticamente |
+| `Cargo` | `cargo_profesional` | `text` | No graficar automáticamente |
+| `Titulo de profesion` | `titulo_profesional` | `category` | Perfil |
 | `¿CUÁNTOS SON LOS AÑOS DE VIDA PROFESIONAL...?` | `anios_vida_profesional` | `integer` | Media, mediana y desviación |
 | `...TIEMPO ... DESEMPLEADO` | `anios_desempleo` | `integer` | Estadísticos; mostrar `n` válido |
 | `¿CUÁL ... SITUACIÓN LABORAL ACTUAL?` | `situacion_laboral_actual` | `category` | Resumen y pestañas |
@@ -87,15 +87,15 @@ Los nombres internos deben ser estables, cortos, en `snake_case`, sin acentos y 
 | Columna CSV / pregunta | Nombre interno | Tipo | Uso |
 |---|---|---|---|
 | `...formación complementaria...?` | `tiene_formacion_complementaria` | `boolean` | Define rama; resumen |
-| `¿CUÁL ES EL PROGRAMA ... MAYOR NIVEL...?` | `nivel_formacion_complementaria` | `category` | Posgrado cursado; orden natural |
-| `¿DONDE HA CURSADO ...?` | `lugar_formacion_complementaria` | `category` | Posgrado cursado |
+| `¿CUÁL ES EL PROGRAMA ... MAYOR NIVEL...?` | `formacion_complementaria_nivel` | `category` | Posgrado cursado; orden natural |
+| `¿DONDE HA CURSADO ...?` | `institucion_formacion_complementaria` | `category` | Posgrado cursado |
 | `¿CUÁL FUE LA FUENTE DE FINANCIAMIENTO ...?` | `financiamiento_posgrado_cursado` | `category` | Financiamiento cursado |
 | `INDIQUE EL NOMBRE DEL PROGRAMA` | `programa_cursado_texto` | `text` | No graficar automáticamente |
 | `¿ESTARÍA INTERESADO ... POSGRADO...?` | `interes_posgrado` | `boolean` | Define rama |
 | `¿Qué nivel de posgrado le interesa?` | `nivel_posgrado_interes` | `category` | Orden natural |
 | `¿EN CUÁL ... ÁREAS ...?` | `area_posgrado_interes` | `category` | Frecuencia y simulación |
 | `Modalidad preferida` | `modalidad_posgrado` | `category` | Orden natural |
-| `...¿EN QUÉ ORGANIZACIÓN EDUCATIVA...?` | `organizacion_posgrado_preferida` | `category` | Frecuencia/Pareto |
+| `...¿EN QUÉ ORGANIZACIÓN EDUCATIVA...?` | `institucion_posgrado_interes` | `category` | Frecuencia/Pareto |
 | `...¿CÓMO FINANCIARÍA SUS ESTUDIOS?` | `financiamiento_posgrado_estimado` | `category` | Cruces y financiamiento |
 | `INDIQUE EL NOMBRE DEL PROGRAMA` (segunda aparición) | `programa_interes_texto` | `text` | Resolver duplicado antes de importar |
 
@@ -109,10 +109,10 @@ Los nombres internos deben ser estables, cortos, en `snake_case`, sin acentos y 
 | `...¿A QUÉ SECTOR CORRESPONDE?` | `sector_trabajo_actual` | `category` | Trabajo actual |
 | `¿EN QUÉ DEPARTAMENTO...?` | `departamento_trabajo` | `category` | Trabajo actual |
 | `¿CUÁL ES EL ÁREA ...?` | `area_trabajo` | `multi_category` | Indicar varias respuestas |
-| `¿Cuál es el cargo...?` | `cargo_trabajo` | `category` | Orden por frecuencia |
+| `¿Cuál es el cargo...?` | `cargo_actual` | `category` | Orden por frecuencia |
 | `...labores ... pertinentes...` | `pertinencia_trabajo_formacion` | `likert` | Barra apilada |
 | `¿Que antiguedad ...?` | `antiguedad_trabajo` | `category` | Orden natural |
-| `¿A través de qué medio ...?` | `medio_obtencion_trabajo` | `category` | Orden por frecuencia |
+| `¿A través de qué medio ...?` | `medio_obtencion_empleo` | `category` | Orden por frecuencia |
 | `remuneración promedio mensual` | `remuneracion_rango` | `category` | Orden natural |
 | `¿Cuál es el origen ... emprendimiento?` | `origen_emprendimiento` | `category` | Emprendimiento |
 | `¿Qué tipo de entregable ...?` | `tipo_entregable_emprendimiento` | `category` | Emprendimiento |
@@ -122,8 +122,8 @@ Los nombres internos deben ser estables, cortos, en `snake_case`, sin acentos y 
 | `¿El trabajo ... es su primer empleo?` | `es_primer_empleo` | `boolean` | Primer empleo |
 | `¿...tiempo ... primer trabajo...?` | `tiempo_primer_empleo` | `category` | Orden natural |
 | `¿en cuántos empleos ...?` | `cantidad_empleos` | `integer` | Cruces; no mostrar en primer empleo |
-| `...razón ... actualmente no trabaja...` | `razon_no_empleo_relacionado` | `category` | Sin empleo |
-| `...¿Ha tenido algún trabajo antes?` | `tuvo_trabajo_anterior` | `boolean` | Sin empleo |
+| `...razón ... actualmente no trabaja...` | `razon_no_trabaja` | `category` | Sin empleo |
+| `...¿Ha tenido algún trabajo antes?` | `experiencia_laboral_previa` | `boolean` | Sin empleo |
 
 ### 4.4 Competencias y cierre
 
@@ -137,7 +137,7 @@ Los nombres internos deben ser estables, cortos, en `snake_case`, sin acentos y 
 | Aspectos a mejorar | `aspectos_mejorables` |
 | Asignaturas con ventaja | `asignaturas_ventaja` |
 | Asignaturas poco útiles | `asignaturas_poco_utiles` |
-| Competencia faltante (texto) | `competencia_faltante_texto` |
+| Competencia faltante (texto) | `competencia_faltante` |
 
 Las columnas de contacto (`Email de contacto`, `Número telefónico de contacto`, `LINK de LinkedIn`) son datos personales y no deben llegar a las vistas analíticas.
 
@@ -151,7 +151,7 @@ Las columnas de contacto (`Email de contacto`, `Número telefónico de contacto`
 | `Tamaño de la organización` | `tamano_organizacion` | `category` | Orden Micro → Grande |
 | `Indique el rubro o sector principal...` | `rubro_organizacion` | `category` | Resumen |
 | `¿...ha contratado ... últimos 5 años?` | `contrato_titulados_ultimos_5_anios` | `boolean` | KPI |
-| `...posibilidad de incorporar...` | `probabilidad_contratacion` | `category` | KPI y resumen |
+| `...posibilidad de incorporar...` | `posibilidad_incorporacion` | `category` | KPI y resumen |
 | `¿Qué nivel de formación ... demanda...?` | `nivel_formacion_demandado` | `category` | Orden natural |
 | `¿A través de qué medio convoca...?` | `medio_convocatoria` | `category` | Frecuencia |
 | `¿Qué tipo de cargos desempeñan...?` | `cargos_titulados` | `multi_category` | Varias respuestas |

@@ -182,14 +182,16 @@ public class AnalyticsService {
     }
 
     private boolean multiCategoryField(String field) {
-        return List.of("aspectos_utiles", "aspectos_mejorables", "asignaturas_ventaja", "asignaturas_poco_utiles")
+        return List.of("aspectos_utiles", "aspectos_mejorables", "asignaturas_ventaja", "asignaturas_poco_utiles",
+                "area_posgrado_interes", "area_trabajo", "redes_sociales_activas", "cargos_titulados")
                 .contains(field);
     }
 
     private List<String> defaultFields(String type) {
         return "EMPLEADORES".equals(type)
                 ? List.of("tipo_organizacion", "tamano_organizacion", "rubro_organizacion",
-                        "contrato_titulados_ultimos_5_anios")
+                        "contrato_titulados_ultimos_5_anios", "presencia_sedes", "posibilidad_incorporacion",
+                        "nivel_formacion_demandado", "medio_convocatoria", "cargos_titulados")
                 : List.of("edad_rango", "sector_trabajo", "situacion_laboral_actual", "tiene_formacion_complementaria",
                         "interes_posgrado");
     }

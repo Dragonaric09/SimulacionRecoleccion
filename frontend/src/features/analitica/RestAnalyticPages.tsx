@@ -410,32 +410,12 @@ function EmploymentTabContent({
     return <CurrentWorkPanel summary={summary} sectors={sectors} />;
   if (tab === "desempleo")
     return (
-      <div className="grid items-start gap-6 lg:grid-cols-12">
-        <Card className="h-fit rounded-xl border-0 shadow-sm lg:col-span-5">
-          <CardHeader>
-            <CardTitle className="title-card">Personas sin empleo</CardTitle>
-            <CardDescription>
-              Conteo calculado desde la situación laboral · n ={" "}
-              {summary.validResponses}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="display-kpi tabular-nums text-ink-900">
-              {unemployed ?? "—"}
-            </p>
-            <p className="mt-1 text-sm text-ink-600">
-              {formatPercentage(unemployed ?? 0, summary.validResponses)} de la
-              muestra
-            </p>
-          </CardContent>
-        </Card>
-        <NumericSummaryCard
-          title="Tiempo de desempleo"
-          field="anios_desempleo"
-          summary={summary}
-          className="lg:col-span-7"
-        />
-      </div>
+      <UnemploymentPanel
+        summary={summary}
+        unemployed={unemployed}
+        previousExperience={summary.distributions.primera_experiencia_laboral}
+        reasons={summary.distributions.razon_no_trabaja}
+      />
     );
   if (tab === "primer-empleo")
     return (
@@ -483,6 +463,125 @@ function EmploymentTabContent({
         <CareerTrajectoryCard professional={summary} unemployment={summary} />
       </div>
     </>
+  );
+}
+
+function UnemploymentPanel({
+  summary,
+  unemployed,
+  previousExperience,
+  reasons,
+}: {
+  summary: AnalyticsSummary;
+  unemployed: number | null;
+  previousExperience?: CategoryDistribution;
+  reasons?: CategoryDistribution;
+}) {
+  const total = summary.validResponses;
+  const previousCount = previousExperience
+    ? booleanCount(previousExperience, true)
+    : null;
+  const previousPercent =
+    previousCount == null ? null : formatPercentage(previousCount, total);
+  const average = summary.numericAverages.anios_desempleo;
+  const median = summary.numericMedians.anios_desempleo;
+  const deviation = summary.numericStandardDeviations.anios_desempleo;
+  const reasonEntries = Object.entries(reasons?.counts ?? {}).sort(
+    ([, left], [, right]) => right - left,
+  );
+
+  return (
+    <Card className="rounded-xl border border-border-line shadow-sm">
+      <CardHeader className="border-b border-border-line">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="title-card">
+              Población sin empleo / En búsqueda activa (n = {unemployed ?? 0})
+            </CardTitle>
+            <CardDescription>
+              Motivos y antecedentes laborales previos
+            </CardDescription>
+          </div>
+          <span className="rounded-md bg-surface-container-high px-3 py-1 text-xs font-semibold tabular-nums text-ink-900">
+            n = {unemployed ?? 0}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-xl border border-border-line bg-surface-container-low p-4">
+          <p className="label-default uppercase tracking-wider text-titulados">
+            Experiencia laboral previa
+          </p>
+          <p className="mt-4 text-4xl font-semibold tabular-nums text-ink-900">
+            {previousCount == null ? "—" : `${previousCount} de ${total}`}{" "}
+            {previousPercent && (
+              <span className="text-base font-normal text-ink-600">
+                ({previousPercent})
+              </span>
+            )}
+          </p>
+          <p className="mt-2 text-sm text-ink-600">
+            Han tenido trabajo formal con anterioridad al periodo actual de
+            búsqueda.
+          </p>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-container-high">
+            <div
+              className="h-full rounded-full bg-titulados transition-all duration-500"
+              style={{ width: `${previousCount == null ? 0 : (previousCount / Math.max(total, 1)) * 100}%` }}
+            />
+          </div>
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-ink-900">
+              Razones por las que no trabaja (ordenadas)
+            </h3>
+            <span className="text-xs text-ink-600">n = {reasons?.validCount ?? 0}</span>
+          </div>
+          {reasonEntries.length ? (
+            <div className="mt-4 space-y-3">
+              {reasonEntries.map(([label, count], index) => {
+                const percent = reasons?.percentages[label] ?? 0;
+                return (
+                  <div key={label} className="space-y-1">
+                    <div className="flex items-start justify-between gap-3 text-sm">
+                      <span className="min-w-0 break-words">{label}</span>
+                      <span className="whitespace-nowrap tabular-nums font-semibold">
+                        {count} de {reasons?.validCount ?? 0} ({formatPercentage(count, reasons?.validCount ?? 0)})
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${percent}%`, backgroundColor: unemploymentReasonColor(index) }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-ink-600">
+              No hay razones mapeadas en este dataset. Vuelve a importar el CSV para aplicar el nuevo mapeo.
+            </p>
+          )}
+          <div className="mt-5 grid grid-cols-3 gap-2 border-t border-surface-container-high pt-3">
+            {[
+              ["Media", average],
+              ["Mediana", median],
+              ["DE", deviation],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <p className="caption-meta text-ink-600">{label} · años</p>
+                <p className="mt-1 font-semibold tabular-nums text-ink-900">
+                  {typeof value === "number" ? value.toFixed(1).replace(".", ",") : "—"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -1268,6 +1367,10 @@ function laborColor(label: string) {
   )
     return "#f2a33a";
   return "#1f6fb5";
+}
+
+function unemploymentReasonColor(index: number) {
+  return ["#f2a33a", "#1f6fb5", "#94a3b8", "#14a39a", "#8c57d3"][index % 5];
 }
 
 function AgeDistributionCard({
@@ -2223,6 +2326,10 @@ function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | null }) {
   const concordance =
     summary?.distributions.concordancia_formacion_requerimientos;
   const pertinence = summary?.distributions.pertinencia_trabajo_formacion;
+  const entrepreneurshipSatisfaction =
+    summary?.distributions.satisfaccion_emprendimiento;
+  const entrepreneurshipImportance =
+    summary?.distributions.importancia_formacion_emprendimiento;
   if (!summary)
     return (
       <StatusPanel
@@ -2261,6 +2368,20 @@ function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | null }) {
           title="Concordancia entre la formación académica y los requerimientos del mercado laboral"
           distribution={concordance}
         />
+        {entrepreneurshipSatisfaction && (
+          <LikertStatement
+            number="3."
+            title="Satisfacción con el rendimiento actual del emprendimiento"
+            distribution={entrepreneurshipSatisfaction}
+          />
+        )}
+        {entrepreneurshipImportance && (
+          <LikertStatement
+            number="4."
+            title="Importancia de la formación en Ingeniería de Sistemas para el emprendimiento"
+            distribution={entrepreneurshipImportance}
+          />
+        )}
         <div className="grid gap-4 pt-1 md:grid-cols-2">
           <SummaryMetric
             title="Pertinencia con el cargo"
