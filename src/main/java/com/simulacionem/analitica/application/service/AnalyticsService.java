@@ -57,7 +57,7 @@ public class AnalyticsService {
                     standardDeviations.put(field, sampleStandardDeviation(numbers));
                 }
             } else {
-                distributions.put(field, distribution(values));
+                distributions.put(field, multiCategoryField(field) ? multiDistribution(values) : distribution(values));
             }
         }
         return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), rows.size(), rows.size(),
@@ -158,6 +158,22 @@ public class AnalyticsService {
         Map<String, Double> percentages = new LinkedHashMap<>();
         counts.forEach((key, count) -> percentages.put(key, round(count * 100.0 / values.size())));
         return new CategoryDistributionDto(values.size(), counts, percentages);
+    }
+
+    private CategoryDistributionDto multiDistribution(List<String> values) {
+        List<String> options = values.stream()
+                .flatMap(value -> java.util.Arrays.stream(value.split("\\s*[,;\\n]\\s*")))
+                .map(String::trim).filter(value -> !value.isBlank()).toList();
+        Map<String, Long> counts = options.stream()
+                .collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
+        Map<String, Double> percentages = new LinkedHashMap<>();
+        counts.forEach((key, count) -> percentages.put(key, round(count * 100.0 / values.size())));
+        return new CategoryDistributionDto(values.size(), counts, percentages);
+    }
+
+    private boolean multiCategoryField(String field) {
+        return List.of("aspectos_utiles", "aspectos_mejorables", "asignaturas_ventaja", "asignaturas_poco_utiles")
+                .contains(field);
     }
 
     private List<String> defaultFields(String type) {

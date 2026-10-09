@@ -63,6 +63,12 @@ public class AnalyticsController {
                 "pertinencia_trabajo_formacion"));
     }
 
+    @GetMapping("/titulados/curriculum")
+    public AnalyticsSummaryDto tituladosCurriculum(@RequestParam(required = false) UUID datasetId) {
+        return analytics.summary(datasetId, "TITULADOS", List.of(
+                "aspectos_utiles", "aspectos_mejorables", "asignaturas_ventaja", "asignaturas_poco_utiles"));
+    }
+
     @GetMapping("/employers/summary")
     public AnalyticsSummaryDto employersSummary(@RequestParam(required = false) UUID datasetId,
                                                 @RequestParam(required = false) String fields) {
