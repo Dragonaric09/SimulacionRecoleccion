@@ -279,10 +279,17 @@ export function EmploymentProfilePage() {
       {summary && (
         <>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList variant="line" className="w-full justify-start">
+            <TabsList
+              variant="line"
+              className="grid w-full grid-cols-3 border-b border-border-line bg-transparent"
+            >
               {tabs.map((tab) => {
                 return (
-                  <TabsTrigger key={tab.key} value={tab.key}>
+                  <TabsTrigger
+                    key={tab.key}
+                    value={tab.key}
+                    className="w-full min-w-0 flex-none px-2 text-center text-sm data-[state=active]:font-semibold after:!left-1/6 after:!right-1/6 after:!w-auto after:!translate-x-0"
+                  >
                     {tab.label}
                   </TabsTrigger>
                 );
@@ -1383,30 +1390,235 @@ function EducationCompletedPanel({ summary }: { summary: AnalyticsSummary }) {
 
 function EducationInterestPanel({ summary }: { summary: AnalyticsSummary }) {
   const interest = summary.distributions.interes_posgrado;
+  const interested = interest ? booleanCount(interest, true) : 0;
+  const interestTotal = interest?.validCount ?? 0;
+  const level = summary.distributions.nivel_posgrado_interes;
+  const area = summary.distributions.area_posgrado_interes;
+  const modality = summary.distributions.modalidad_posgrado;
+  const institution = summary.distributions.institucion_posgrado_interes;
+  const topLevel = topDistributionEntry(level);
+  const topModality = topDistributionEntry(modality);
+  const areaRows = distributionRows(area);
+  const areaMentions = areaRows.reduce((total, row) => total + row.count, 0);
+  const topTwoArea = areaRows.slice(0, 2).reduce((total, row) => total + row.count, 0);
   return (
     <>
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(220px,0.7fr)_minmax(0,1.3fr)]">
+      <div className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
-          label="Interés en realizar estudios de posgrado"
-          value={`${interest ? booleanCount(interest, true) : 0} de ${summary.validResponses}`}
-          detail={`${formatPercentage(interest ? booleanCount(interest, true) : 0, summary.validResponses)} de la muestra total`}
-          note={`n = ${interest?.validCount ?? 0}`}
+          label="Interés en posgrado"
+          value={`${interested} de ${summary.validResponses}`}
+          detail={`${formatPercentage(interested, summary.validResponses)} de la muestra total`}
+          note={`n = ${interestTotal}`}
           icon={GraduationIcon}
           tone="titulados"
         />
-        <ProfileDistributionCard
-          title={`Nivel de posgrado de interés (n = ${summary.distributions.nivel_posgrado_interes?.validCount ?? 0})`}
-          description="Orden natural"
-          distribution={summary.distributions.nivel_posgrado_interes}
+        <KpiCard
+          label="Nivel predilecto"
+          value={topLevel?.label ?? "—"}
+          detail={topLevel ? `${topLevel.count} de ${topLevel.total} interesados` : "Sin respuestas"}
+          note={`n = ${level?.validCount ?? 0}`}
+          icon={GraduationIcon}
+          tone="titulados"
+        />
+        <KpiCard
+          label="Concentración temática"
+          value="Top 2 acumulado"
+          detail={`${topTwoArea} de ${areaMentions} menciones`}
+          note={areaMentions ? `${formatPercentage(topTwoArea, areaMentions)} acumulado` : "Sin respuestas"}
+          icon={GraduationIcon}
+          tone="titulados"
+        />
+        <KpiCard
+          label="Modalidad preferida"
+          value={topModality?.label ?? "—"}
+          detail={topModality ? `${topModality.count} de ${topModality.total} interesados` : "Sin respuestas"}
+          note={`n = ${modality?.validCount ?? 0}`}
+          icon={GraduationIcon}
+          tone="titulados"
         />
       </div>
-      <div className="grid items-start gap-4 lg:grid-cols-3">
-        <ProfileDistributionCard title="Área de interés" description="Áreas de posgrado seleccionadas" distribution={summary.distributions.area_posgrado_interes} />
-        <ProfileDistributionCard title="Modalidad preferida" description="Preferencias de cursado" distribution={summary.distributions.modalidad_posgrado} />
-        <ProfileDistributionCard title="Fuente de financiamiento" description="Financiamiento estimado" distribution={summary.distributions.financiamiento_posgrado_estimado} />
+      <EducationAreaPanel distribution={area} />
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <ProfileDistributionCard
+          title="Nivel de posgrado de interés"
+          description="Orden natural"
+          distribution={level}
+        />
+        <ProfileDistributionCard
+          title="Modalidad preferida"
+          description="Preferencias de cursado"
+          distribution={modality}
+        />
+        <ProfileDistributionCard
+          title="Organización preferida"
+          description="Institución donde realizaría el posgrado"
+          distribution={institution}
+        />
+        <ProfileDistributionCard
+          title="Fuente de financiamiento"
+          description="Financiamiento estimado"
+          distribution={summary.distributions.financiamiento_posgrado_estimado}
+        />
       </div>
     </>
   );
+}
+
+function EducationAreaPanel({ distribution }: { distribution?: CategoryDistribution }) {
+  const rows = distributionRows(distribution);
+  const totalMentions = rows.reduce((total, row) => total + row.count, 0);
+  const totalBase = distribution?.validCount ?? 0;
+  let accumulated = 0;
+  const enriched = rows.map((row) => {
+    accumulated += row.count;
+    return { ...row, accumulated, accumulatedPercent: totalMentions ? (accumulated * 100) / totalMentions : 0 };
+  });
+  return (
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.9fr)]">
+      <Card className="rounded-xl border-0 shadow-sm">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle className="title-card">Distribución de demanda por área temática y porcentaje acumulado (Pareto)</CardTitle>
+              <CardDescription>Frecuencia absoluta y % acumulado de menciones · n = {totalBase} interesados</CardDescription>
+            </div>
+            <span className="text-xs text-ink-600">{totalMentions} menciones</span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {enriched.length ? (
+            <ParetoAreaChart rows={enriched} totalBase={totalBase} />
+          ) : (
+            <Empty className="py-8"><EmptyTitle>Sin áreas disponibles</EmptyTitle></Empty>
+          )}
+        </CardContent>
+      </Card>
+      <Card className="rounded-xl border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle className="title-card">Tabla de frecuencias</CardTitle>
+          <CardDescription>Áreas temáticas seleccionadas con opción múltiple · n = {totalBase}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table className="text-xs">
+            <TableHeader><TableRow><TableHead>Área temática</TableHead><TableHead className="text-right">fi</TableHead><TableHead className="text-right">fr (%)</TableHead><TableHead className="text-right">Fi</TableHead><TableHead className="text-right">Fr (%)</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {enriched.map((row) => <TableRow key={row.label}><TableCell className="whitespace-normal">{row.label}</TableCell><TableCell className="text-right tabular-nums">{row.count}</TableCell><TableCell className="text-right tabular-nums">{row.percent.toFixed(1)}</TableCell><TableCell className="text-right tabular-nums">{row.accumulated}</TableCell><TableCell className="text-right tabular-nums">{row.accumulatedPercent.toFixed(1)}</TableCell></TableRow>)}
+              <TableRow><TableCell className="font-semibold">Total menciones</TableCell><TableCell className="text-right font-semibold tabular-nums">{totalMentions}</TableCell><TableCell className="text-right font-semibold tabular-nums">100,0</TableCell><TableCell className="text-right font-semibold tabular-nums">{totalMentions}</TableCell><TableCell className="text-right font-semibold tabular-nums">100,0</TableCell></TableRow>
+            </TableBody>
+          </Table>
+          <p className="mt-3 text-xs text-ink-600">Las frecuencias pueden superar n porque la pregunta permite varias respuestas.</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ParetoAreaChart({
+  rows,
+  totalBase,
+}: {
+  rows: { label: string; count: number; percent: number; accumulated: number; accumulatedPercent: number }[];
+  totalBase: number;
+}) {
+  const width = 760;
+  const height = 300;
+  const left = 52;
+  const right = 48;
+  const top = 28;
+  const bottom = 78;
+  const chartWidth = width - left - right;
+  const chartHeight = height - top - bottom;
+  const maxCount = Math.max(...rows.map((row) => row.count), 1);
+  const slot = chartWidth / rows.length;
+  const barWidth = Math.min(58, slot * 0.58);
+  const point = (index: number, value: number) => ({
+    x: left + slot * index + slot / 2,
+    y: top + chartHeight - (value / 100) * chartHeight,
+  });
+  const linePoints = rows
+    .map((row, index) => {
+      const current = point(index, row.accumulatedPercent);
+      return `${current.x},${current.y}`;
+    })
+    .join(" ");
+  const yGrid = [0, 20, 40, 60, 80, 100];
+
+  return (
+    <div className="overflow-x-auto">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-auto min-w-[620px] w-full" role="img" aria-label="Pareto de áreas de posgrado">
+        {yGrid.map((value) => {
+          const y = top + chartHeight - (value / 100) * chartHeight;
+          return (
+            <g key={value}>
+              <line x1={left} x2={width - right} y1={y} y2={y} stroke="#d7e0e8" strokeDasharray="2 4" />
+              <text x={width - right + 8} y={y + 4} fontSize="10" fill="#64748b">{value}%</text>
+            </g>
+          );
+        })}
+        <line
+          x1={left}
+          x2={width - right}
+          y1={top + chartHeight * 0.2}
+          y2={top + chartHeight * 0.2}
+          stroke="#f59e0b"
+          strokeDasharray="5 4"
+          opacity="0.75"
+        />
+        <text x={width - right - 4} y={top + chartHeight * 0.2 - 6} textAnchor="end" fontSize="10" fill="#d97706">80%</text>
+        {rows.map((row, index) => {
+          const x = left + slot * index + (slot - barWidth) / 2;
+          const barHeight = (row.count / maxCount) * chartHeight;
+          const y = top + chartHeight - barHeight;
+          return (
+            <g key={row.label}>
+              <rect x={x} y={y} width={barWidth} height={barHeight} rx="2" fill="#1f6fb5" />
+              <text x={x + barWidth / 2} y={y - 8} textAnchor="middle" fontSize="13" fontWeight="700" fill="#0f3f6d">{row.count}</text>
+              <text x={x + barWidth / 2} y={height - 45} textAnchor="middle" fontSize="10.5" fontWeight="500" fill="#334155">
+                {shortAreaLabel(row.label).map((line, lineIndex) => (
+                  <tspan key={line} x={x + barWidth / 2} dy={lineIndex === 0 ? 0 : 12}>{line}</tspan>
+                ))}
+              </text>
+            </g>
+          );
+        })}
+        <polyline points={linePoints} fill="none" stroke="#f59e0b" strokeWidth="2.5" />
+        {rows.map((row, index) => {
+          const current = point(index, row.accumulatedPercent);
+          return (
+            <g key={`${row.label}-point`}>
+              <circle cx={current.x} cy={current.y} r="5" fill="#fff" stroke="#c2410c" strokeWidth="2.5" />
+              <rect x={current.x - 22} y={current.y - 29} width="44" height="17" rx="4" fill="#fff" stroke="#fed7aa" strokeWidth="1" opacity="0.96" />
+              <text x={current.x} y={current.y - 17} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#9a3412">{row.accumulatedPercent.toFixed(1)}%</text>
+            </g>
+          );
+        })}
+        <text x={left} y={height - 10} fontSize="10" fill="#64748b">Menciones individuales (fi)</text>
+        <line x1={width - 260} x2={width - 238} y1={height - 14} y2={height - 14} stroke="#f59e0b" strokeWidth="2.5" />
+        <text x={width - 232} y={height - 10} fontSize="10" fill="#64748b">% acumulado (Pareto)</text>
+        <text x={width - right} y={height - 10} textAnchor="end" fontSize="10" fill="#64748b">n = {totalBase} interesados</text>
+      </svg>
+    </div>
+  );
+}
+
+function shortAreaLabel(label: string): string[] {
+  const value = label.toLocaleLowerCase("es-BO");
+  if (value.includes("inteligencia artificial") || value.includes("machine learning")) return ["IA", "y ML"];
+  if (value.includes("ciberseguridad")) return ["Ciberseg."];
+  if (value.includes("ciencia de datos")) return ["Ciencia", "de Datos"];
+  if (value.includes("big data")) return ["Big Data"];
+  if (value.includes("base de datos") || value.includes("bases de datos")) return ["Bases", "de Datos"];
+  if (value.includes("cloud")) return ["Cloud/", "DevOps"];
+  if (value.includes("software")) return ["Ing.", "Software"];
+  if (value.includes("robótica") || value.includes("robotica")) return ["Robótica"];
+  const words = label.trim().split(/\s+/);
+  return words.length > 2 ? [words.slice(0, Math.ceil(words.length / 2)).join(" "), words.slice(Math.ceil(words.length / 2)).join(" ")] : [label];
+}
+
+function distributionRows(distribution?: CategoryDistribution) {
+  return Object.entries(distribution?.counts ?? {})
+    .map(([label, count]) => ({ label: booleanLabel(label), count, percent: distribution?.percentages[label] ?? 0, total: distribution?.validCount ?? 0 }))
+    .sort((left, right) => right.count - left.count);
 }
 
 function EducationOpinionPanel({ summary }: { summary: AnalyticsSummary }) {
@@ -1893,7 +2105,10 @@ function booleanLabel(value: string) {
   if (!normalized) return normalized;
   const sentence =
     normalized.charAt(0).toLocaleUpperCase("es-BO") + normalized.slice(1);
-  return sentence.replace(/\bia\b/gi, "IA").replace(/\bdevops\b/gi, "DevOps");
+  return sentence
+    .replace(/\bia\b/gi, "IA")
+    .replace(/\bdevops\b/gi, "DevOps")
+    .replace(/\b(modular|presencial|virtual)\(/gi, "$1 (");
 }
 
 export function DatasetAnalyticsPage({
