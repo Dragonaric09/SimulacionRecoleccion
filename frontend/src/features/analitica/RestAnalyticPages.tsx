@@ -27,6 +27,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -3938,34 +3946,38 @@ function CrossTable({
         </div>
       </CardHeader>
       <CardContent className="min-w-0 overflow-x-auto">
-        <table className="w-full min-w-[560px] text-sm">
-          <thead>
-            <tr className="bg-surface-container-low">
-              <th className="w-36 whitespace-nowrap p-2 text-left">Fila</th>
+        <Table className="min-w-[560px] text-sm">
+          <TableHeader>
+            <TableRow className="bg-surface-container-low hover:bg-surface-container-low">
+              <TableHead className="w-36 whitespace-nowrap p-2 text-left">
+                Fila
+              </TableHead>
               {cross.columnCategories.map((column) => (
-                <th
+                <TableHead
                   key={column}
                   className="max-w-32 whitespace-normal break-words p-2 text-right leading-tight"
                 >
                   {booleanLabel(column)}
-                </th>
+                </TableHead>
               ))}
               {includeTotals && (
-                <th className="w-20 break-words p-2 text-right">Total fila</th>
+                <TableHead className="w-20 break-words p-2 text-right">
+                  Total fila
+                </TableHead>
               )}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {cross.rowCategories.map((row) => (
-              <tr key={row} className="border-t">
-                <td className="max-w-40 whitespace-normal p-2 font-medium">
+              <TableRow key={row} className="border-t hover:bg-transparent">
+                <TableCell className="max-w-40 whitespace-normal p-2 font-medium">
                   {booleanLabel(row)}
-                </td>
+                </TableCell>
                 {cross.columnCategories.map((column) => {
                   const value = cellValue(row, column);
                   const intensity = value / max;
                   return (
-                    <td
+                    <TableCell
                       key={column}
                       className="tabular-nums p-2 text-right font-medium"
                       style={
@@ -3978,39 +3990,44 @@ function CrossTable({
                       }
                     >
                       {formatValue(value)}
-                    </td>
+                    </TableCell>
                   );
                 })}
                 {includeTotals && (
-                  <td className="tabular-nums bg-surface-container-low p-2 text-right font-semibold">
+                  <TableCell className="tabular-nums bg-surface-container-low p-2 text-right font-semibold">
                     {metric === "count"
                       ? rowTotal(row)
                       : metric === "rowPercent"
                         ? "100,0%"
                         : marginalPercent(rowTotal(row))}
-                  </td>
+                  </TableCell>
                 )}
-              </tr>
+              </TableRow>
             ))}
             {includeTotals && (
-              <tr className="border-t-2 bg-surface-container-low font-semibold">
-                <td className="whitespace-nowrap p-2">Total columna</td>
+              <TableRow className="border-t-2 bg-surface-container-low font-semibold hover:bg-surface-container-low">
+                <TableCell className="whitespace-nowrap p-2">
+                  Total columna
+                </TableCell>
                 {cross.columnCategories.map((column) => (
-                  <td key={column} className="tabular-nums p-2 text-right">
+                  <TableCell
+                    key={column}
+                    className="tabular-nums p-2 text-right"
+                  >
                     {metric === "count"
                       ? columnTotal(column)
                       : metric === "columnPercent"
                         ? "100,0%"
                         : marginalPercent(columnTotal(column))}
-                  </td>
+                  </TableCell>
                 ))}
-                <td className="tabular-nums p-2 text-right">
+                <TableCell className="tabular-nums p-2 text-right">
                   {metric === "count" ? cross.validCount : "100,0%"}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
         {colorHeatmap && (
           <div className="mt-4 border-t border-surface-container-high pt-3 text-xs text-ink-600">
             <div className="flex items-center justify-between">
