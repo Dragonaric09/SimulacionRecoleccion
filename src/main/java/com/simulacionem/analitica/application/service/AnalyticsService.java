@@ -71,6 +71,20 @@ public class AnalyticsService {
         return summarize(dataset, rows, List.of("tiempo_primer_empleo"));
     }
 
+    @Transactional(readOnly = true)
+    public AnalyticsSummaryDto entrepreneurshipSummary(UUID datasetId) {
+        DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
+        List<SurveyResponseEntity> rows = responses
+                .findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA")
+                .stream()
+                .filter(this::isEntrepreneur)
+                .toList();
+        return summarize(dataset, rows, List.of(
+                "origen_emprendimiento", "entregable_emprendimiento",
+                "financiamiento_emprendimiento", "satisfaccion_emprendimiento",
+                "importancia_formacion_emprendimiento"));
+    }
+
     private AnalyticsSummaryDto summarize(DatasetImportEntity dataset, List<SurveyResponseEntity> rows,
             List<String> fields) {
         Map<String, CategoryDistributionDto> distributions = new LinkedHashMap<>();
@@ -111,6 +125,11 @@ public class AnalyticsService {
         if (value == null) return false;
         String normalized = value.toLowerCase(Locale.ROOT).trim();
         return normalized.equals("true") || normalized.equals("si") || normalized.equals("sí");
+    }
+
+    private boolean isEntrepreneur(SurveyResponseEntity response) {
+        String status = value(response, "situacion_laboral_actual");
+        return status != null && status.toLowerCase(Locale.ROOT).contains("emprend");
     }
 
     @Transactional(readOnly = true)

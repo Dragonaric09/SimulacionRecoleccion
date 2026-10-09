@@ -138,6 +138,8 @@ export function EmploymentProfilePage() {
     useState<AnalyticsSummary | null>(null);
   const [firstEmploymentSummary, setFirstEmploymentSummary] =
     useState<AnalyticsSummary | null>(null);
+  const [entrepreneurshipSummary, setEntrepreneurshipSummary] =
+    useState<AnalyticsSummary | null>(null);
   const [profile, setProfile] = useState<EmploymentProfile | null>(null);
   const [activeTab, setActiveTab] = useState("perfil");
   const [yearMax, setYearMax] = useState<number | undefined>();
@@ -150,6 +152,7 @@ export function EmploymentProfilePage() {
       setSummary(null);
       setUnemploymentSummary(null);
       setFirstEmploymentSummary(null);
+      setEntrepreneurshipSummary(null);
       setProfile(null);
       return;
     }
@@ -167,12 +170,16 @@ export function EmploymentProfilePage() {
       apiRequest<AnalyticsSummary>(
         `/analytics/titulados/employment/first-employment${query}`,
       ),
+      apiRequest<AnalyticsSummary>(
+        `/analytics/titulados/employment/entrepreneurship${query}`,
+      ),
     ])
-      .then(([nextSummary, nextProfile, nextUnemploymentSummary, nextFirstEmploymentSummary]) => {
+      .then(([nextSummary, nextProfile, nextUnemploymentSummary, nextFirstEmploymentSummary, nextEntrepreneurshipSummary]) => {
         setSummary(nextSummary);
         setProfile(nextProfile);
         setUnemploymentSummary(nextUnemploymentSummary);
         setFirstEmploymentSummary(nextFirstEmploymentSummary);
+        setEntrepreneurshipSummary(nextEntrepreneurshipSummary);
       })
       .catch((cause) =>
         setError(cause instanceof Error ? cause.message : String(cause)),
@@ -299,6 +306,7 @@ export function EmploymentProfilePage() {
             unemployed={unemployed}
             unemploymentSummary={unemploymentSummary}
             firstEmploymentSummary={firstEmploymentSummary}
+            entrepreneurshipSummary={entrepreneurshipSummary}
           />
         </>
       )}
@@ -408,6 +416,7 @@ function EmploymentTabContent({
   unemployed,
   unemploymentSummary,
   firstEmploymentSummary,
+  entrepreneurshipSummary,
 }: {
   tab: string;
   summary: AnalyticsSummary;
@@ -417,15 +426,10 @@ function EmploymentTabContent({
   unemployed: number | null;
   unemploymentSummary: AnalyticsSummary | null;
   firstEmploymentSummary: AnalyticsSummary | null;
+  entrepreneurshipSummary: AnalyticsSummary | null;
 }) {
   if (tab === "emprendimiento")
-    return (
-      <StatusPanel
-        kind="info"
-        title="Emprendimiento"
-        description="Esta pestaña está prevista por el prototipo, pero el contrato actual todavía no expone las variables específicas de emprendimiento."
-      />
-    );
+    return <EntrepreneurshipPanel summary={entrepreneurshipSummary} />;
   if (tab === "trabajo")
     return <CurrentWorkPanel summary={summary} sectors={sectors} />;
   if (tab === "desempleo")
@@ -474,6 +478,122 @@ function EmploymentTabContent({
       </div>
     </>
   );
+}
+
+function EntrepreneurshipPanel({
+  summary,
+}: {
+  summary: AnalyticsSummary | null;
+}) {
+  const total = summary?.validResponses ?? 0;
+  const origin = topDistributionEntry(summary?.distributions.origen_emprendimiento);
+  const deliverable = topDistributionEntry(summary?.distributions.entregable_emprendimiento);
+  const financing = topDistributionEntry(summary?.distributions.financiamiento_emprendimiento);
+  const satisfaction = topDistributionEntry(summary?.distributions.satisfaccion_emprendimiento);
+  const importance = topDistributionEntry(summary?.distributions.importancia_formacion_emprendimiento);
+
+  return (
+    <Card className="rounded-xl border border-border-line shadow-sm">
+      <CardHeader className="border-b border-border-line">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="title-card">
+              Emprendimiento propio e iniciativas independientes (n = {total})
+            </CardTitle>
+            <CardDescription>
+              Características, financiamiento, satisfacción e impacto formativo
+            </CardDescription>
+          </div>
+          <span className="rounded-md bg-teal-50 px-3 py-1 text-xs font-semibold tabular-nums text-teal-700">
+            n = {total}
+          </span>
+        </div>
+      </CardHeader>
+      {total ? (
+        <CardContent className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+          <div>
+            <h3 className="mb-4 text-sm font-semibold text-ink-900">
+              Origen y fuentes de financiamiento
+            </h3>
+            <div className="rounded-lg border border-border-line bg-slate-50 p-4">
+              <EntrepreneurshipValue label="Origen del emprendimiento" entry={origin} />
+              <EntrepreneurshipValue label="Tipo de producto/entregable" entry={deliverable} />
+              <EntrepreneurshipValue label="Financiamiento inicial" entry={financing} />
+            </div>
+          </div>
+          <div>
+            <h3 className="mb-4 text-sm font-semibold text-ink-900">
+              Valoración formativa y satisfacción
+            </h3>
+            <div className="space-y-4">
+              <EntrepreneurshipBar label="Nivel de satisfacción con el emprendimiento" entry={satisfaction} color="#2fa866" />
+              <EntrepreneurshipBar label="Importancia de la formación universitaria" entry={importance} color="#1f6fb5" />
+            </div>
+          </div>
+        </CardContent>
+      ) : (
+        <Empty className="py-10">
+          <EmptyTitle>Sin respuestas de emprendimiento</EmptyTitle>
+          <EmptyDescription>
+            No hay personas clasificadas como emprendimiento propio en este dataset.
+          </EmptyDescription>
+        </Empty>
+      )}
+    </Card>
+  );
+}
+
+function EntrepreneurshipValue({
+  label,
+  entry,
+}: {
+  label: string;
+  entry: { label: string; count: number; total: number; percent: number } | null;
+}) {
+  return (
+    <div className="grid gap-1 py-1.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:items-start">
+      <span className="text-sm text-ink-600">{label}:</span>
+      <strong className="text-sm text-ink-900">
+        {entry ? `${entry.label} (${entry.count} de ${entry.total}, ${entry.percent}%)` : "—"}
+      </strong>
+    </div>
+  );
+}
+
+function EntrepreneurshipBar({
+  label,
+  entry,
+  color,
+}: {
+  label: string;
+  entry: { label: string; count: number; total: number; percent: number } | null;
+  color: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <span>{label}</span>
+        <strong style={{ color }}>
+          {entry ? `${entry.label}: ${entry.count} de ${entry.total} (${entry.percent}%)` : "—"}
+        </strong>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
+        <div className="h-full rounded-full" style={{ width: `${entry?.percent ?? 0}%`, backgroundColor: color }} />
+      </div>
+    </div>
+  );
+}
+
+function topDistributionEntry(distribution?: CategoryDistribution) {
+  const entry = Object.entries(distribution?.counts ?? {}).sort(([, left], [, right]) => right - left)[0];
+  if (!entry || !distribution?.validCount) return null;
+  const [label, count] = entry;
+  return {
+    label: booleanLabel(label),
+    count,
+    percent: Math.round((count * 1000) / distribution.validCount) / 10,
+    total: distribution.validCount,
+  };
 }
 
 function FirstEmploymentPanel({

@@ -57,7 +57,7 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
             new FieldMappingDefinition("entregable_emprendimiento", "tipo de entregable genera el negocio", MappingKind.TEXT),
             new FieldMappingDefinition("financiamiento_emprendimiento", "requerido financiamiento externo para su negocio", MappingKind.TEXT),
             new FieldMappingDefinition("satisfaccion_emprendimiento", "rendimiento actual de su negocio", MappingKind.LIKERT),
-            new FieldMappingDefinition("importancia_formacion_emprendimiento", "importante considera que fue su formación en ingeniería de sistemas", MappingKind.LIKERT),
+            new FieldMappingDefinition("importancia_formacion_emprendimiento", "importancia de ingeniería de sistemas", MappingKind.LIKERT),
             new FieldMappingDefinition("razon_no_trabaja", "razón por la que actualmente no trabaja", MappingKind.TEXT),
             new FieldMappingDefinition("tiene_formacion_complementaria", "ha realizado o se encuentra realizando", MappingKind.BOOLEAN),
             new FieldMappingDefinition("interes_posgrado", "estaría interesado en realizar estudios", MappingKind.BOOLEAN),

@@ -57,6 +57,11 @@ public class AnalyticsController {
         return analytics.firstEmploymentSummary(datasetId);
     }
 
+    @GetMapping("/titulados/employment/entrepreneurship")
+    public AnalyticsSummaryDto tituladosEntrepreneurship(@RequestParam(required = false) UUID datasetId) {
+        return analytics.entrepreneurshipSummary(datasetId);
+    }
+
     @GetMapping("/titulados/employment/profile")
     public EmploymentProfileDto tituladosEmploymentProfile(@RequestParam(required = false) UUID datasetId) {
         return analytics.employmentProfile(datasetId);
