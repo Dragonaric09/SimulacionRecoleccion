@@ -1,276 +1,4226 @@
-import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, BriefcaseBusiness, Download, FlaskConical, GraduationCap, Info, SlidersHorizontal, Users } from 'lucide-react'
-import { apiRequest } from '@/api/client'
-import { Badge } from '@/components/analytics/Badge'
-import { ExportActions } from '@/components/analytics/ExportActions'
-import { FilterToolbar } from '@/components/analytics/FilterToolbar'
-import { KpiCard } from '@/components/analytics/KpiCard'
-import { StatusPanel } from '@/components/analytics/StatusPanel'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { DatasetSummary } from '@/features/encuesta/api'
-import type { AnalyticsSummary, CategoryDistribution } from './api'
+import { useEffect, useMemo, useState } from "react";
+import {
+  BookOpen,
+  BriefcaseBusiness,
+  Download,
+  FlaskConical,
+  GraduationCap,
+  Info,
+  SlidersHorizontal,
+  Users,
+} from "lucide-react";
+import { apiRequest } from "@/api/client";
+import { Badge } from "@/components/analytics/Badge";
+import { ExportActions } from "@/components/analytics/ExportActions";
+import { FilterToolbar } from "@/components/analytics/FilterToolbar";
+import { KpiCard } from "@/components/analytics/KpiCard";
+import { StatusPanel } from "@/components/analytics/StatusPanel";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { DatasetSummary } from "@/features/encuesta/api";
+import type { AnalyticsSummary, CategoryDistribution } from "./api";
 
-type Domain = 'TITULADOS' | 'EMPLEADORES'
-type Tone = 'titulados' | 'empleadores'
-type Competence = { code: string; name: string; group: string; validCount: number; average: number; standardDeviation: number | null; median: number; modalLevel: number; levelCounts: Record<string, number> }
-type Cross = { validCount: number; rowCategories: string[]; columnCategories: string[]; counts: Record<string, Record<string, number>>; percentages: Record<string, Record<string, number>>; smallSample: boolean }
-type CrossMetric = 'count' | 'rowPercent' | 'columnPercent'
-type ChiResult = { estadistico: number; gradosLibertad: number; pValor: number; alfa: number; rechazaIndependencia: boolean }
-type Simulation = { sampleSize: number; repetitions: number; seed: number; categories: { category: string; observedPercentage: number; simulatedMean: number; lower95: number; upper95: number }[] }
-type EmploymentProfile = { datasetId: string; validResponses: number; cohortPoints: { graduationYear: number; professionalYears: number }[] }
+type Domain = "TITULADOS" | "EMPLEADORES";
+type Tone = "titulados" | "empleadores";
+type Competence = {
+  code: string;
+  name: string;
+  group: string;
+  validCount: number;
+  average: number;
+  standardDeviation: number | null;
+  median: number;
+  modalLevel: number;
+  levelCounts: Record<string, number>;
+};
+type Cross = {
+  validCount: number;
+  rowCategories: string[];
+  columnCategories: string[];
+  counts: Record<string, Record<string, number>>;
+  percentages: Record<string, Record<string, number>>;
+  smallSample: boolean;
+};
+type CrossMetric = "count" | "rowPercent" | "columnPercent";
+type ChiResult = {
+  estadistico: number;
+  gradosLibertad: number;
+  pValor: number;
+  alfa: number;
+  rechazaIndependencia: boolean;
+};
+type Simulation = {
+  sampleSize: number;
+  repetitions: number;
+  seed: number;
+  categories: {
+    category: string;
+    observedPercentage: number;
+    simulatedMean: number;
+    lower95: number;
+    upper95: number;
+  }[];
+};
+type EmploymentProfile = {
+  datasetId: string;
+  validResponses: number;
+  cohortPoints: { graduationYear: number; professionalYears: number }[];
+};
 
 export function EmploymentProfilePage() {
-  const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets('TITULADOS')
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null); const [profile, setProfile] = useState<EmploymentProfile | null>(null); const [activeTab, setActiveTab] = useState('perfil'); const [yearMax, setYearMax] = useState<number | undefined>(); const [laborFilter, setLaborFilter] = useState('todos'); const [sectorFilter, setSectorFilter] = useState('todos'); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null)
-  useEffect(() => { if (!datasetId) { setSummary(null); setProfile(null); return }; setLoading(true); setError(null); const query = `?datasetId=${encodeURIComponent(datasetId)}`; Promise.all([apiRequest<AnalyticsSummary>(`/analytics/titulados/employment${query}`), apiRequest<EmploymentProfile>(`/analytics/titulados/employment/profile${query}`)]).then(([nextSummary, nextProfile]) => { setSummary(nextSummary); setProfile(nextProfile) }).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setLoading(false)) }, [datasetId])
-  const labor = summary?.distributions.situacion_laboral_actual; const sectors = summary?.distributions.sector_trabajo; const employed = labor ? countMatching(labor, ['trabaja', 'organización', 'empresa', 'emprend'], ['no trabaja', 'búsqueda', 'desemple']) : null; const unemployed = labor ? countMatching(labor, ['no trabaja', 'búsqueda', 'desemple']) : null
-  const points = (profile?.cohortPoints ?? []).filter((point) => yearMax === undefined || point.graduationYear <= yearMax)
-  const tabs = [{ key: 'perfil', label: 'Perfil', icon: UsersIcon, count: summary?.validResponses }, { key: 'trabajo', label: 'Trabajo actual', icon: WorkIcon, count: employed }, { key: 'desempleo', label: 'Sin empleo', icon: UsersIcon, count: unemployed }, { key: 'primer-empleo', label: 'Primer empleo', icon: GraduationIcon, count: summary?.distributions.primera_experiencia_laboral?.validCount }, { key: 'emprendimiento', label: 'Emprendimiento', icon: BookIcon, count: labor ? countMatching(labor, ['emprend']) : null }]
-  const resetFilters = () => { setYearMax(undefined); setLaborFilter('todos'); setSectorFilter('todos') }
-  return <div className="mx-auto w-full max-w-7xl space-y-5"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><PageHeading title={`Perfil y empleabilidad (n = ${summary?.validResponses ?? '—'})`} description="Situación laboral y sectores de inserción de las personas tituladas." tone="titulados" /><div className="flex flex-wrap items-center gap-2"><Button variant="outline" size="sm"><Info />Definiciones</Button><ExportActions /></div></div><DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} />{summary && <EmploymentFilters summary={summary} sectors={sectors} yearMax={yearMax} setYearMax={setYearMax} laborFilter={laborFilter} setLaborFilter={setLaborFilter} sectorFilter={sectorFilter} setSectorFilter={setSectorFilter} onReset={resetFilters} />}{loading && <StatusPanel kind="loading" title="Cargando perfil" description="Consultando la situación laboral y el sector de trabajo." />}{error && <StatusPanel kind="warning" title="No se pudo cargar el perfil" description={error} />}{!loading && !error && !summary && <StatusPanel kind="info" title="Sin dataset de titulados" description="Importa un CSV de titulados desde Cargar datos para ver este perfil." />}{summary && <><div className="flex gap-1 overflow-x-auto border-b border-border-line">{tabs.map((tab) => { const Icon = tab.icon; return <button key={tab.key} type="button" onClick={() => setActiveTab(tab.key)} className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.key ? 'border-titulados text-titulados' : 'border-transparent text-ink-600 hover:border-slate-300 hover:text-ink-900'}`}><Icon className="size-4" />{tab.label}{tab.count != null && <span className={`rounded-full px-1.5 py-0.5 text-xs ${activeTab === tab.key ? 'bg-titulados-active text-titulados' : 'bg-surface-container-high text-ink-600'}`}>n={tab.count}</span>}</button> })}</div><EmploymentTabContent tab={activeTab} summary={summary} profile={{ ...(profile ?? { datasetId: '', validResponses: 0, cohortPoints: [] }), cohortPoints: points }} labor={labor} sectors={sectors} unemployed={unemployed} /></>}</div>
+  const {
+    datasets,
+    datasetId,
+    setDatasetId,
+    loading: datasetsLoading,
+  } = useDatasets("TITULADOS");
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [profile, setProfile] = useState<EmploymentProfile | null>(null);
+  const [activeTab, setActiveTab] = useState("perfil");
+  const [yearMax, setYearMax] = useState<number | undefined>();
+  const [laborFilter, setLaborFilter] = useState("todos");
+  const [sectorFilter, setSectorFilter] = useState("todos");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!datasetId) {
+      setSummary(null);
+      setProfile(null);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    const query = `?datasetId=${encodeURIComponent(datasetId)}`;
+    Promise.all([
+      apiRequest<AnalyticsSummary>(`/analytics/titulados/employment${query}`),
+      apiRequest<EmploymentProfile>(
+        `/analytics/titulados/employment/profile${query}`,
+      ),
+    ])
+      .then(([nextSummary, nextProfile]) => {
+        setSummary(nextSummary);
+        setProfile(nextProfile);
+      })
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : String(cause)),
+      )
+      .finally(() => setLoading(false));
+  }, [datasetId]);
+  const labor = summary?.distributions.situacion_laboral_actual;
+  const sectors = summary?.distributions.sector_trabajo;
+  const employed = labor
+    ? countMatching(
+        labor,
+        ["trabaja", "organización", "empresa", "emprend"],
+        ["no trabaja", "búsqueda", "desemple"],
+      )
+    : null;
+  const unemployed = labor
+    ? countMatching(labor, ["no trabaja", "búsqueda", "desemple"])
+    : null;
+  const points = (profile?.cohortPoints ?? []).filter(
+    (point) => yearMax === undefined || point.graduationYear <= yearMax,
+  );
+  const tabs = [
+    {
+      key: "perfil",
+      label: "Perfil",
+      icon: UsersIcon,
+      count: summary?.validResponses,
+    },
+    {
+      key: "trabajo",
+      label: "Trabajo actual",
+      icon: WorkIcon,
+      count: employed,
+    },
+    {
+      key: "desempleo",
+      label: "Sin empleo",
+      icon: UsersIcon,
+      count: unemployed,
+    },
+    {
+      key: "primer-empleo",
+      label: "Primer empleo",
+      icon: GraduationIcon,
+      count: summary?.distributions.primera_experiencia_laboral?.validCount,
+    },
+    {
+      key: "emprendimiento",
+      label: "Emprendimiento",
+      icon: BookIcon,
+      count: labor ? countMatching(labor, ["emprend"]) : null,
+    },
+  ];
+  const resetFilters = () => {
+    setYearMax(undefined);
+    setLaborFilter("todos");
+    setSectorFilter("todos");
+  };
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-5">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <PageHeading
+          title={`Perfil y empleabilidad (n = ${summary?.validResponses ?? "—"})`}
+          description="Situación laboral y sectores de inserción de las personas tituladas."
+          tone="titulados"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm">
+            <Info />
+            Definiciones
+          </Button>
+          <ExportActions />
+        </div>
+      </div>
+      <DatasetSelect
+        datasets={datasets}
+        value={datasetId}
+        onChange={setDatasetId}
+        loading={datasetsLoading}
+      />
+      {summary && (
+        <EmploymentFilters
+          summary={summary}
+          sectors={sectors}
+          yearMax={yearMax}
+          setYearMax={setYearMax}
+          laborFilter={laborFilter}
+          setLaborFilter={setLaborFilter}
+          sectorFilter={sectorFilter}
+          setSectorFilter={setSectorFilter}
+          onReset={resetFilters}
+        />
+      )}
+      {loading && (
+        <StatusPanel
+          kind="loading"
+          title="Cargando perfil"
+          description="Consultando la situación laboral y el sector de trabajo."
+        />
+      )}
+      {error && (
+        <StatusPanel
+          kind="warning"
+          title="No se pudo cargar el perfil"
+          description={error}
+        />
+      )}
+      {!loading && !error && !summary && (
+        <StatusPanel
+          kind="info"
+          title="Sin dataset de titulados"
+          description="Importa un CSV de titulados desde Cargar datos para ver este perfil."
+        />
+      )}
+      {summary && (
+        <>
+          <div className="flex gap-1 overflow-x-auto border-b border-border-line">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.key ? "border-titulados text-titulados" : "border-transparent text-ink-600 hover:border-slate-300 hover:text-ink-900"}`}
+                >
+                  <Icon className="size-4" />
+                  {tab.label}
+                  {tab.count != null && (
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-xs ${activeTab === tab.key ? "bg-titulados-active text-titulados" : "bg-surface-container-high text-ink-600"}`}
+                    >
+                      n={tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <EmploymentTabContent
+            tab={activeTab}
+            summary={summary}
+            profile={{
+              ...(profile ?? {
+                datasetId: "",
+                validResponses: 0,
+                cohortPoints: [],
+              }),
+              cohortPoints: points,
+            }}
+            labor={labor}
+            sectors={sectors}
+            unemployed={unemployed}
+          />
+        </>
+      )}
+    </div>
+  );
 }
 
-function EmploymentFilters({ summary, sectors, yearMax, setYearMax, laborFilter, setLaborFilter, sectorFilter, setSectorFilter, onReset }: { summary: AnalyticsSummary; sectors?: CategoryDistribution; yearMax?: number; setYearMax: (value?: number) => void; laborFilter: string; setLaborFilter: (value: string) => void; sectorFilter: string; setSectorFilter: (value: string) => void; onReset: () => void }) {
-  const years = Object.keys(summary.numericAverages).includes('anio_titulacion') ? [2018, 2023] : [2018, 2023]
-  return <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-line bg-surface-white p-3 shadow-sm"><div className="flex flex-wrap items-center gap-2"><label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs"><span className="font-semibold text-ink-900">Año titulación:</span><span className="font-medium tabular-nums text-titulados">{years[0]} - {yearMax ?? years[1]}</span><input className="w-20 accent-titulados" type="range" min={years[0]} max={years[1]} value={yearMax ?? years[1]} onChange={(event) => setYearMax(Number(event.target.value) === years[1] ? undefined : Number(event.target.value))} /></label><label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs"><span className="font-semibold text-ink-900">Estado laboral:</span><select className="bg-transparent font-medium outline-none" value={laborFilter} onChange={(event) => setLaborFilter(event.target.value)}><option value="todos">Todos los estados</option>{Object.keys(summary.distributions.situacion_laboral_actual?.counts ?? {}).map((key) => <option key={key} value={key}>{key}</option>)}</select></label><label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs"><span className="font-semibold text-ink-900">Sector:</span><select className="max-w-48 bg-transparent font-medium outline-none" value={sectorFilter} onChange={(event) => setSectorFilter(event.target.value)}><option value="todos">Todos los sectores</option>{Object.keys(sectors?.counts ?? {}).map((key) => <option key={key} value={key}>{key}</option>)}</select></label><Button variant="ghost" size="sm" onClick={onReset}><SlidersHorizontal />Limpiar filtros</Button></div><div className="flex items-center gap-2 text-xs text-ink-600"><span className="size-2 rounded-full bg-status-success" />Mostrando <strong className="tabular-nums text-ink-900">{summary.validResponses} de {summary.totalResponses}</strong> respuestas</div></div>
+function EmploymentFilters({
+  summary,
+  sectors,
+  yearMax,
+  setYearMax,
+  laborFilter,
+  setLaborFilter,
+  sectorFilter,
+  setSectorFilter,
+  onReset,
+}: {
+  summary: AnalyticsSummary;
+  sectors?: CategoryDistribution;
+  yearMax?: number;
+  setYearMax: (value?: number) => void;
+  laborFilter: string;
+  setLaborFilter: (value: string) => void;
+  sectorFilter: string;
+  setSectorFilter: (value: string) => void;
+  onReset: () => void;
+}) {
+  const years = Object.keys(summary.numericAverages).includes("anio_titulacion")
+    ? [2018, 2023]
+    : [2018, 2023];
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-line bg-surface-white p-3 shadow-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs">
+          <span className="font-semibold text-ink-900">Año titulación:</span>
+          <span className="font-medium tabular-nums text-titulados">
+            {years[0]} - {yearMax ?? years[1]}
+          </span>
+          <input
+            className="w-20 accent-titulados"
+            type="range"
+            min={years[0]}
+            max={years[1]}
+            value={yearMax ?? years[1]}
+            onChange={(event) =>
+              setYearMax(
+                Number(event.target.value) === years[1]
+                  ? undefined
+                  : Number(event.target.value),
+              )
+            }
+          />
+        </label>
+        <label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs">
+          <span className="font-semibold text-ink-900">Estado laboral:</span>
+          <select
+            className="bg-transparent font-medium outline-none"
+            value={laborFilter}
+            onChange={(event) => setLaborFilter(event.target.value)}
+          >
+            <option value="todos">Todos los estados</option>
+            {Object.keys(
+              summary.distributions.situacion_laboral_actual?.counts ?? {},
+            ).map((key) => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs">
+          <span className="font-semibold text-ink-900">Sector:</span>
+          <select
+            className="max-w-48 bg-transparent font-medium outline-none"
+            value={sectorFilter}
+            onChange={(event) => setSectorFilter(event.target.value)}
+          >
+            <option value="todos">Todos los sectores</option>
+            {Object.keys(sectors?.counts ?? {}).map((key) => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Button variant="ghost" size="sm" onClick={onReset}>
+          <SlidersHorizontal />
+          Limpiar filtros
+        </Button>
+      </div>
+      <div className="flex items-center gap-2 text-xs text-ink-600">
+        <span className="size-2 rounded-full bg-status-success" />
+        Mostrando{" "}
+        <strong className="tabular-nums text-ink-900">
+          {summary.validResponses} de {summary.totalResponses}
+        </strong>{" "}
+        respuestas
+      </div>
+    </div>
+  );
 }
 
-function EmploymentTabContent({ tab, summary, profile, labor, sectors, unemployed }: { tab: string; summary: AnalyticsSummary; profile: EmploymentProfile | null; labor?: CategoryDistribution; sectors?: CategoryDistribution; unemployed: number | null }) {
-  if (tab === 'emprendimiento') return <StatusPanel kind="info" title="Emprendimiento" description="Esta pestaña está prevista por el prototipo, pero el contrato actual todavía no expone las variables específicas de emprendimiento." />
-  if (tab === 'trabajo') return <CurrentWorkPanel summary={summary} sectors={sectors} />
-  if (tab === 'desempleo') return <div className="grid items-start gap-6 lg:grid-cols-12"><Card className="h-fit rounded-xl border-0 shadow-sm lg:col-span-5"><CardHeader><CardTitle className="title-card">Personas sin empleo</CardTitle><CardDescription>Conteo calculado desde la situación laboral · n = {summary.validResponses}</CardDescription></CardHeader><CardContent><p className="display-kpi tabular-nums text-ink-900">{unemployed ?? '—'}</p><p className="mt-1 text-sm text-ink-600">{formatPercentage(unemployed ?? 0, summary.validResponses)} de la muestra</p></CardContent></Card><NumericSummaryCard title="Tiempo de desempleo" field="anios_desempleo" summary={summary} className="lg:col-span-7" /></div>
-  if (tab === 'primer-empleo') return <div className="grid items-start gap-6 lg:grid-cols-12"><BooleanDistributionCard title="Primer empleo" distribution={summary.distributions.primera_experiencia_laboral} className="lg:col-span-5" /><NumericSummaryCard title="Año de titulación" field="anio_titulacion" summary={summary} className="lg:col-span-7" /></div>
-  return <><ProfileStatistics summary={summary} /><div className="grid items-start gap-5 lg:grid-cols-12"><CohortScatterCard points={profile?.cohortPoints ?? []} className="lg:col-span-7" /><SenioritySegmentationCard points={profile?.cohortPoints ?? []} className="lg:col-span-5" /></div><div className="grid items-start gap-5 lg:grid-cols-2"><EmploymentDonutCard distribution={labor} total={summary.validResponses} /><ProfileDistributionCard title="Sector de inserción laboral" description="Distribución sectorial de las personas tituladas ocupadas" distribution={sectors} /></div><div className="grid items-start gap-5 lg:grid-cols-3"><AgeDistributionCard distribution={summary.distributions.edad_rango} /><GenderDistributionCard distribution={summary.distributions.genero} /><CareerTrajectoryCard professional={summary} unemployment={summary} /></div></>
+function EmploymentTabContent({
+  tab,
+  summary,
+  profile,
+  labor,
+  sectors,
+  unemployed,
+}: {
+  tab: string;
+  summary: AnalyticsSummary;
+  profile: EmploymentProfile | null;
+  labor?: CategoryDistribution;
+  sectors?: CategoryDistribution;
+  unemployed: number | null;
+}) {
+  if (tab === "emprendimiento")
+    return (
+      <StatusPanel
+        kind="info"
+        title="Emprendimiento"
+        description="Esta pestaña está prevista por el prototipo, pero el contrato actual todavía no expone las variables específicas de emprendimiento."
+      />
+    );
+  if (tab === "trabajo")
+    return <CurrentWorkPanel summary={summary} sectors={sectors} />;
+  if (tab === "desempleo")
+    return (
+      <div className="grid items-start gap-6 lg:grid-cols-12">
+        <Card className="h-fit rounded-xl border-0 shadow-sm lg:col-span-5">
+          <CardHeader>
+            <CardTitle className="title-card">Personas sin empleo</CardTitle>
+            <CardDescription>
+              Conteo calculado desde la situación laboral · n ={" "}
+              {summary.validResponses}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="display-kpi tabular-nums text-ink-900">
+              {unemployed ?? "—"}
+            </p>
+            <p className="mt-1 text-sm text-ink-600">
+              {formatPercentage(unemployed ?? 0, summary.validResponses)} de la
+              muestra
+            </p>
+          </CardContent>
+        </Card>
+        <NumericSummaryCard
+          title="Tiempo de desempleo"
+          field="anios_desempleo"
+          summary={summary}
+          className="lg:col-span-7"
+        />
+      </div>
+    );
+  if (tab === "primer-empleo")
+    return (
+      <div className="grid items-start gap-6 lg:grid-cols-12">
+        <BooleanDistributionCard
+          title="Primer empleo"
+          distribution={summary.distributions.primera_experiencia_laboral}
+          className="lg:col-span-5"
+        />
+        <NumericSummaryCard
+          title="Año de titulación"
+          field="anio_titulacion"
+          summary={summary}
+          className="lg:col-span-7"
+        />
+      </div>
+    );
+  return (
+    <>
+      <ProfileStatistics summary={summary} />
+      <div className="grid items-start gap-5 lg:grid-cols-12">
+        <CohortScatterCard
+          points={profile?.cohortPoints ?? []}
+          className="lg:col-span-7"
+        />
+        <SenioritySegmentationCard
+          points={profile?.cohortPoints ?? []}
+          className="lg:col-span-5"
+        />
+      </div>
+      <div className="grid items-start gap-5 lg:grid-cols-2">
+        <EmploymentDonutCard
+          distribution={labor}
+          total={summary.validResponses}
+        />
+        <ProfileDistributionCard
+          title="Sector de inserción laboral"
+          description="Distribución sectorial de las personas tituladas ocupadas"
+          distribution={sectors}
+        />
+      </div>
+      <div className="grid items-start gap-5 lg:grid-cols-3">
+        <AgeDistributionCard distribution={summary.distributions.edad_rango} />
+        <GenderDistributionCard distribution={summary.distributions.genero} />
+        <CareerTrajectoryCard professional={summary} unemployment={summary} />
+      </div>
+    </>
+  );
 }
 
-function CurrentWorkPanel({ summary, sectors }: { summary: AnalyticsSummary; sectors?: CategoryDistribution }) {
-  const rubro = summary.distributions.rubro_trabajo_actual; const remuneration = summary.distributions.remuneracion_rango; const areas = summary.distributions.area_trabajo; const relevance = summary.distributions.pertinencia_trabajo_formacion; const workCount = rubro?.validCount ?? remuneration?.validCount ?? areas?.validCount ?? sectors?.validCount ?? 0
-  return <Card className="rounded-xl border border-border-line shadow-sm"><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="title-card">Trabajo actual en organizaciones o empresas (n = {workCount})</CardTitle><CardDescription>Detalles de contratación, áreas, remuneración y pertinencia</CardDescription></div><Badge tone="titulados">n = {workCount}</Badge></div></CardHeader><CardContent className="grid gap-x-6 gap-y-8 border-t border-surface-container-high pt-5 lg:grid-cols-2"><MiniDistribution title="Rubro de la empresa (barras ordenadas)" distribution={rubro} /><MiniDistribution title="Remuneración mensual líquida (orden natural)" distribution={remuneration} accent="teal" /><MiniDistribution title="Áreas dentro de la organización" distribution={areas} note="Varias respuestas posibles" /><StackedRelevanceCard distribution={relevance} /></CardContent></Card>
+function CurrentWorkPanel({
+  summary,
+  sectors,
+}: {
+  summary: AnalyticsSummary;
+  sectors?: CategoryDistribution;
+}) {
+  const rubro = summary.distributions.rubro_trabajo_actual;
+  const remuneration = summary.distributions.remuneracion_rango;
+  const areas = summary.distributions.area_trabajo;
+  const relevance = summary.distributions.pertinencia_trabajo_formacion;
+  const workCount =
+    rubro?.validCount ??
+    remuneration?.validCount ??
+    areas?.validCount ??
+    sectors?.validCount ??
+    0;
+  return (
+    <Card className="rounded-xl border border-border-line shadow-sm">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="title-card">
+              Trabajo actual en organizaciones o empresas (n = {workCount})
+            </CardTitle>
+            <CardDescription>
+              Detalles de contratación, áreas, remuneración y pertinencia
+            </CardDescription>
+          </div>
+          <Badge tone="titulados">n = {workCount}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="grid gap-x-6 gap-y-8 border-t border-surface-container-high pt-5 lg:grid-cols-2">
+        <MiniDistribution
+          title="Rubro de la empresa (barras ordenadas)"
+          distribution={rubro}
+        />
+        <MiniDistribution
+          title="Remuneración mensual líquida (orden natural)"
+          distribution={remuneration}
+          accent="teal"
+        />
+        <MiniDistribution
+          title="Áreas dentro de la organización"
+          distribution={areas}
+          note="Varias respuestas posibles"
+        />
+        <StackedRelevanceCard distribution={relevance} />
+      </CardContent>
+    </Card>
+  );
 }
 
-function MiniDistribution({ title, distribution, accent = 'blue', note }: { title: string; distribution?: CategoryDistribution; accent?: 'blue' | 'teal'; note?: string }) {
-  const entries = Object.entries(distribution?.counts ?? {}).sort(([, a], [, b]) => b - a)
-  return <div><div className="mb-3 flex items-center justify-between gap-2"><h3 className="text-sm font-semibold text-ink-900">{title}</h3>{note && <span className="text-xs text-ink-600">{note}</span>}</div>{entries.length ? <div className="space-y-3">{entries.map(([label, count]) => { const percentage = distribution?.percentages[label] ?? 0; return <div key={label} className="space-y-1"><div className="flex justify-between gap-3 text-sm"><span className="min-w-0 break-words">{label}</span><span className="whitespace-nowrap tabular-nums font-semibold">{count} de {distribution?.validCount} ({percentage}%)</span></div><div className="h-2 overflow-hidden rounded-full bg-surface-container-high"><div className={`h-full rounded-full ${accent === 'teal' ? 'bg-empleadores' : 'bg-titulados'}`} style={{ width: `${percentage}%` }} /></div></div> })}</div> : <p className="text-sm text-ink-600">Sin respuestas disponibles para esta variable.</p>}</div>
+function MiniDistribution({
+  title,
+  distribution,
+  accent = "blue",
+  note,
+}: {
+  title: string;
+  distribution?: CategoryDistribution;
+  accent?: "blue" | "teal";
+  note?: string;
+}) {
+  const entries = Object.entries(distribution?.counts ?? {}).sort(
+    ([, a], [, b]) => b - a,
+  );
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-ink-900">{title}</h3>
+        {note && <span className="text-xs text-ink-600">{note}</span>}
+      </div>
+      {entries.length ? (
+        <div className="space-y-3">
+          {entries.map(([label, count]) => {
+            const percentage = distribution?.percentages[label] ?? 0;
+            return (
+              <div key={label} className="space-y-1">
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="min-w-0 break-words">{label}</span>
+                  <span className="whitespace-nowrap tabular-nums font-semibold">
+                    {count} de {distribution?.validCount} ({percentage}%)
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
+                  <div
+                    className={`h-full rounded-full ${accent === "teal" ? "bg-empleadores" : "bg-titulados"}`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-sm text-ink-600">
+          Sin respuestas disponibles para esta variable.
+        </p>
+      )}
+    </div>
+  );
 }
 
-function StackedRelevanceCard({ distribution }: { distribution?: CategoryDistribution }) {
-  const entries = Object.entries(distribution?.counts ?? {}); const total = distribution?.validCount ?? 0; const colors = ['#1f6fb5', '#7db1dd', '#f2a33a', '#d64545']
-  return <div><div className="mb-3 flex items-center justify-between gap-2"><h3 className="text-sm font-semibold text-ink-900">Pertinencia de formación para el cargo</h3><Info className="size-4 text-ink-600" /></div>{entries.length ? <><div className="flex h-5 overflow-hidden rounded-md bg-surface-container-high">{entries.map(([label, count], index) => { const percentage = total ? count / total * 100 : 0; return <div key={label} className="h-full" style={{ width: `${percentage}%`, backgroundColor: colors[index % colors.length] }} title={`${label}: ${count} (${percentage.toFixed(1)}%)`} /> })}</div><div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-600">{entries.map(([label], index) => <span key={label} className="flex items-center gap-1"><i className="size-2 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />{label} ({distribution?.percentages[label]}%)</span>)}</div></> : <p className="text-sm text-ink-600">Sin respuestas disponibles para esta variable.</p>}</div>
+function StackedRelevanceCard({
+  distribution,
+}: {
+  distribution?: CategoryDistribution;
+}) {
+  const entries = Object.entries(distribution?.counts ?? {});
+  const total = distribution?.validCount ?? 0;
+  const colors = ["#1f6fb5", "#7db1dd", "#f2a33a", "#d64545"];
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-ink-900">
+          Pertinencia de formación para el cargo
+        </h3>
+        <Info className="size-4 text-ink-600" />
+      </div>
+      {entries.length ? (
+        <>
+          <div className="flex h-5 overflow-hidden rounded-md bg-surface-container-high">
+            {entries.map(([label, count], index) => {
+              const percentage = total ? (count / total) * 100 : 0;
+              return (
+                <div
+                  key={label}
+                  className="h-full"
+                  style={{
+                    width: `${percentage}%`,
+                    backgroundColor: colors[index % colors.length],
+                  }}
+                  title={`${label}: ${count} (${percentage.toFixed(1)}%)`}
+                />
+              );
+            })}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-600">
+            {entries.map(([label], index) => (
+              <span key={label} className="flex items-center gap-1">
+                <i
+                  className="size-2 rounded-full"
+                  style={{ backgroundColor: colors[index % colors.length] }}
+                />
+                {label} ({distribution?.percentages[label]}%)
+              </span>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="text-sm text-ink-600">
+          Sin respuestas disponibles para esta variable.
+        </p>
+      )}
+    </div>
+  );
 }
 
-function CohortScatterCard({ points, className = '' }: { points: EmploymentProfile['cohortPoints']; className?: string }) {
-  const width = 720; const height = 270; const pad = { left: 48, right: 18, top: 22, bottom: 38 }
-  const years = points.map((point) => point.graduationYear); const values = points.map((point) => point.professionalYears)
-  const minYear = years.length ? Math.min(...years) : 0; const maxYear = years.length ? Math.max(...years) : 1; const minValue = values.length ? Math.min(0, ...values) : 0; const maxValue = values.length ? Math.max(...values) : 1
-  const x = (year: number) => pad.left + ((year - minYear) / Math.max(1, maxYear - minYear)) * (width - pad.left - pad.right)
-  const y = (value: number) => height - pad.bottom - ((value - minValue) / Math.max(1, maxValue - minValue)) * (height - pad.top - pad.bottom)
-  const mean = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0
-  const sorted = [...values].sort((a, b) => a - b); const median = sorted.length ? sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2 : 0
-  const ticks = [...new Set(years)].sort((a, b) => a - b)
-  return <Card className={`rounded-xl border-0 shadow-sm ${className}`}><CardHeader><CardTitle className="title-card">Años de vida profesional por cohorte</CardTitle><CardDescription>Experiencia profesional según año de titulación · n = {points.length}</CardDescription></CardHeader><CardContent>{points.length ? <><div className="overflow-x-auto rounded-lg border border-border-line bg-slate-50 p-2"><svg viewBox={`0 0 ${width} ${height}`} className="h-64 min-w-[620px] w-full" role="img" aria-label="Dispersión de años de vida profesional por año de titulación"><line x1={pad.left} x2={width - pad.right} y1={y(mean)} y2={y(mean)} stroke="#ef4444" strokeDasharray="5 4" /><line x1={pad.left} x2={width - pad.right} y1={y(median)} y2={y(median)} stroke="#14a39a" strokeDasharray="3 4" />{ticks.map((tick) => <g key={tick}><line x1={x(tick)} x2={x(tick)} y1={pad.top} y2={height - pad.bottom} stroke="#dbe4ee" strokeDasharray="2 4" /><text x={x(tick)} y={height - 12} textAnchor="middle" className="fill-ink-900 text-[11px]">{tick}</text></g>)}{points.map((point, index) => <circle key={`${point.graduationYear}-${point.professionalYears}-${index}`} cx={x(point.graduationYear)} cy={y(point.professionalYears)} r="5" fill="#1f6fb5" stroke="white" strokeWidth="2" />)}<text x={pad.left + 4} y={y(mean) - 6} className="fill-red-600 text-[11px]">Media {mean.toFixed(1)} años</text><text x={pad.left + 4} y={y(median) + 14} className="fill-teal-600 text-[11px]">Mediana {median.toFixed(1)} años</text></svg></div><div className="mt-3 flex flex-wrap gap-4 text-xs text-ink-600"><span><i className="mr-1 inline-block size-2 rounded-full bg-titulados" />Titulado individual</span><span><i className="mr-1 inline-block w-4 border-t-2 border-dashed border-red-500" />Media</span><span><i className="mr-1 inline-block w-4 border-t-2 border-dashed border-teal-600" />Mediana</span></div></> : <p className="text-sm text-ink-600">No hay registros numéricos suficientes para dibujar la cohorte.</p>}</CardContent></Card>
+function CohortScatterCard({
+  points,
+  className = "",
+}: {
+  points: EmploymentProfile["cohortPoints"];
+  className?: string;
+}) {
+  const width = 720;
+  const height = 270;
+  const pad = { left: 48, right: 18, top: 22, bottom: 38 };
+  const years = points.map((point) => point.graduationYear);
+  const values = points.map((point) => point.professionalYears);
+  const minYear = years.length ? Math.min(...years) : 0;
+  const maxYear = years.length ? Math.max(...years) : 1;
+  const minValue = values.length ? Math.min(0, ...values) : 0;
+  const maxValue = values.length ? Math.max(...values) : 1;
+  const x = (year: number) =>
+    pad.left +
+    ((year - minYear) / Math.max(1, maxYear - minYear)) *
+      (width - pad.left - pad.right);
+  const y = (value: number) =>
+    height -
+    pad.bottom -
+    ((value - minValue) / Math.max(1, maxValue - minValue)) *
+      (height - pad.top - pad.bottom);
+  const mean = values.length
+    ? values.reduce((sum, value) => sum + value, 0) / values.length
+    : 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const median = sorted.length
+    ? sorted.length % 2
+      ? sorted[(sorted.length - 1) / 2]
+      : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+    : 0;
+  const ticks = [...new Set(years)].sort((a, b) => a - b);
+  return (
+    <Card className={`rounded-xl border-0 shadow-sm ${className}`}>
+      <CardHeader>
+        <CardTitle className="title-card">
+          Años de vida profesional por cohorte
+        </CardTitle>
+        <CardDescription>
+          Experiencia profesional según año de titulación · n = {points.length}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {points.length ? (
+          <>
+            <div className="overflow-x-auto rounded-lg border border-border-line bg-slate-50 p-2">
+              <svg
+                viewBox={`0 0 ${width} ${height}`}
+                className="h-64 min-w-[620px] w-full"
+                role="img"
+                aria-label="Dispersión de años de vida profesional por año de titulación"
+              >
+                <line
+                  x1={pad.left}
+                  x2={width - pad.right}
+                  y1={y(mean)}
+                  y2={y(mean)}
+                  stroke="#ef4444"
+                  strokeDasharray="5 4"
+                />
+                <line
+                  x1={pad.left}
+                  x2={width - pad.right}
+                  y1={y(median)}
+                  y2={y(median)}
+                  stroke="#14a39a"
+                  strokeDasharray="3 4"
+                />
+                {ticks.map((tick) => (
+                  <g key={tick}>
+                    <line
+                      x1={x(tick)}
+                      x2={x(tick)}
+                      y1={pad.top}
+                      y2={height - pad.bottom}
+                      stroke="#dbe4ee"
+                      strokeDasharray="2 4"
+                    />
+                    <text
+                      x={x(tick)}
+                      y={height - 12}
+                      textAnchor="middle"
+                      className="fill-ink-900 text-[11px]"
+                    >
+                      {tick}
+                    </text>
+                  </g>
+                ))}
+                {points.map((point, index) => (
+                  <circle
+                    key={`${point.graduationYear}-${point.professionalYears}-${index}`}
+                    cx={x(point.graduationYear)}
+                    cy={y(point.professionalYears)}
+                    r="5"
+                    fill="#1f6fb5"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                ))}
+                <text
+                  x={pad.left + 4}
+                  y={y(mean) - 6}
+                  className="fill-red-600 text-[11px]"
+                >
+                  Media {mean.toFixed(1)} años
+                </text>
+                <text
+                  x={pad.left + 4}
+                  y={y(median) + 14}
+                  className="fill-teal-600 text-[11px]"
+                >
+                  Mediana {median.toFixed(1)} años
+                </text>
+              </svg>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-4 text-xs text-ink-600">
+              <span>
+                <i className="mr-1 inline-block size-2 rounded-full bg-titulados" />
+                Titulado individual
+              </span>
+              <span>
+                <i className="mr-1 inline-block w-4 border-t-2 border-dashed border-red-500" />
+                Media
+              </span>
+              <span>
+                <i className="mr-1 inline-block w-4 border-t-2 border-dashed border-teal-600" />
+                Mediana
+              </span>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-ink-600">
+            No hay registros numéricos suficientes para dibujar la cohorte.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 function ProfileStatistics({ summary }: { summary: AnalyticsSummary }) {
-  const average = summary.numericAverages.anios_vida_profesional; const median = summary.numericMedians.anios_vida_profesional; const deviation = summary.numericStandardDeviations.anios_vida_profesional
-  return <div className="grid items-stretch gap-4 md:grid-cols-3"><ProfileStatCard title="Media de vida profesional" value={average} footer={deviation == null ? 'Desviación no disponible' : `± ${deviation.toFixed(1)} años desviación estándar`} n={summary.validResponses} /><ProfileStatCard title="Mediana de vida profesional" value={median} footer={`P50 de ${summary.validResponses} respuestas`} n={summary.validResponses} /><ProfileStatCard title="Desviación estándar" value={deviation} footer={deviation == null ? 'Se requieren al menos 2 valores' : `Rango observado en la muestra`} n={summary.validResponses} /></div>
+  const average = summary.numericAverages.anios_vida_profesional;
+  const median = summary.numericMedians.anios_vida_profesional;
+  const deviation = summary.numericStandardDeviations.anios_vida_profesional;
+  return (
+    <div className="grid items-stretch gap-4 md:grid-cols-3">
+      <ProfileStatCard
+        title="Media de vida profesional"
+        value={average}
+        footer={
+          deviation == null
+            ? "Desviación no disponible"
+            : `± ${deviation.toFixed(1)} años desviación estándar`
+        }
+        n={summary.validResponses}
+      />
+      <ProfileStatCard
+        title="Mediana de vida profesional"
+        value={median}
+        footer={`P50 de ${summary.validResponses} respuestas`}
+        n={summary.validResponses}
+      />
+      <ProfileStatCard
+        title="Desviación estándar"
+        value={deviation}
+        footer={
+          deviation == null
+            ? "Se requieren al menos 2 valores"
+            : `Rango observado en la muestra`
+        }
+        n={summary.validResponses}
+      />
+    </div>
+  );
 }
 
-function ProfileStatCard({ title, value, footer, n }: { title: string; value?: number | null; footer: string; n: number }) {
-  return <Card className="rounded-xl border border-border-line shadow-sm"><CardContent className="flex h-full flex-col justify-between p-4"><div className="mb-2 flex items-start justify-between gap-2"><span className="caption-bold uppercase tracking-wider text-ink-600">{title}</span><span className="flex size-7 items-center justify-center rounded bg-titulados-active text-titulados">{title.includes('Desviación') ? 'σ' : '◷'}</span></div><div className="mb-2 flex items-baseline gap-1.5"><span className="text-3xl font-bold leading-none tabular-nums text-ink-900">{value == null ? '—' : value.toFixed(1)}</span><span className="text-sm font-medium text-ink-600">años</span></div><div className="flex items-center justify-between border-t border-surface-container-high pt-2 text-[11px] text-ink-600"><span>{footer}</span><span className="font-bold tabular-nums text-titulados">n = {n}</span></div></CardContent></Card>
+function ProfileStatCard({
+  title,
+  value,
+  footer,
+  n,
+}: {
+  title: string;
+  value?: number | null;
+  footer: string;
+  n: number;
+}) {
+  return (
+    <Card className="rounded-xl border border-border-line shadow-sm">
+      <CardContent className="flex h-full flex-col justify-between p-4">
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <span className="caption-bold uppercase tracking-wider text-ink-600">
+            {title}
+          </span>
+          <span className="flex size-7 items-center justify-center rounded bg-titulados-active text-titulados">
+            {title.includes("Desviación") ? "σ" : "◷"}
+          </span>
+        </div>
+        <div className="mb-2 flex items-baseline gap-1.5">
+          <span className="text-3xl font-bold leading-none tabular-nums text-ink-900">
+            {value == null ? "—" : value.toFixed(1)}
+          </span>
+          <span className="text-sm font-medium text-ink-600">años</span>
+        </div>
+        <div className="flex items-center justify-between border-t border-surface-container-high pt-2 text-[11px] text-ink-600">
+          <span>{footer}</span>
+          <span className="font-bold tabular-nums text-titulados">n = {n}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-function SenioritySegmentationCard({ points, className = '' }: { points: EmploymentProfile['cohortPoints']; className?: string }) {
-  const [threshold, setThreshold] = useState(5); const junior = points.filter((point) => point.professionalYears <= threshold).length; const consolidated = Math.max(0, points.length - junior); const percent = (value: number) => points.length ? (value / points.length) * 100 : 0
-  return <Card className={`h-fit rounded-xl border border-border-line shadow-sm ${className}`}><CardHeader><CardTitle className="title-card">Segmentación de titulados por antigüedad</CardTitle><CardDescription>Clasificación según años de ejercicio profesional posterior al egreso</CardDescription></CardHeader><CardContent className="space-y-4"><div className="rounded-lg border border-border-line bg-slate-50 p-3"><div className="flex items-center justify-between text-sm font-semibold"><span>Umbral de corte experiencia</span><span className="rounded bg-white px-2 py-1 text-titulados">{threshold} años</span></div><input className="mt-3 w-full accent-titulados" type="range" min="3" max="8" step="1" value={threshold} onChange={(event) => setThreshold(Number(event.target.value))} /><div className="flex justify-between text-xs text-ink-600"><span>3 años (Reciente)</span><span>5 años (Estándar)</span><span>8 años (Senior)</span></div></div><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-lg border border-border-line bg-slate-50 p-3"><p className="caption-bold text-titulados">JUNIOR / RECIENTE</p><p className="display-kpi tabular-nums text-ink-900">{percent(junior).toFixed(1)}%</p><p className="text-xs text-ink-600">{junior} de {points.length} titulados (≤ {threshold}a)</p><div className="mt-2 h-1.5 rounded-full bg-slate-200"><div className="h-full rounded-full bg-titulados" style={{ width: `${percent(junior)}%` }} /></div></div><div className="rounded-lg border border-border-line bg-slate-50 p-3"><p className="caption-bold text-ink-900">CONSOLIDADO</p><p className="display-kpi tabular-nums text-ink-900">{percent(consolidated).toFixed(1)}%</p><p className="text-xs text-ink-600">{consolidated} de {points.length} titulados (&gt; {threshold}a)</p><div className="mt-2 h-1.5 rounded-full bg-slate-200"><div className="h-full rounded-full bg-slate-800" style={{ width: `${percent(consolidated)}%` }} /></div></div></div><div className="flex justify-between border-t border-surface-container-high pt-2 text-xs text-ink-600"><span>Corte metodológico parametrizable</span><strong className="text-ink-900">Total = {points.length}</strong></div></CardContent></Card>
+function SenioritySegmentationCard({
+  points,
+  className = "",
+}: {
+  points: EmploymentProfile["cohortPoints"];
+  className?: string;
+}) {
+  const [threshold, setThreshold] = useState(5);
+  const junior = points.filter(
+    (point) => point.professionalYears <= threshold,
+  ).length;
+  const consolidated = Math.max(0, points.length - junior);
+  const percent = (value: number) =>
+    points.length ? (value / points.length) * 100 : 0;
+  return (
+    <Card
+      className={`h-fit rounded-xl border border-border-line shadow-sm ${className}`}
+    >
+      <CardHeader>
+        <CardTitle className="title-card">
+          Segmentación de titulados por antigüedad
+        </CardTitle>
+        <CardDescription>
+          Clasificación según años de ejercicio profesional posterior al egreso
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="rounded-lg border border-border-line bg-slate-50 p-3">
+          <div className="flex items-center justify-between text-sm font-semibold">
+            <span>Umbral de corte experiencia</span>
+            <span className="rounded bg-white px-2 py-1 text-titulados">
+              {threshold} años
+            </span>
+          </div>
+          <input
+            className="mt-3 w-full accent-titulados"
+            type="range"
+            min="3"
+            max="8"
+            step="1"
+            value={threshold}
+            onChange={(event) => setThreshold(Number(event.target.value))}
+          />
+          <div className="flex justify-between text-xs text-ink-600">
+            <span>3 años (Reciente)</span>
+            <span>5 años (Estándar)</span>
+            <span>8 años (Senior)</span>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-border-line bg-slate-50 p-3">
+            <p className="caption-bold text-titulados">JUNIOR / RECIENTE</p>
+            <p className="display-kpi tabular-nums text-ink-900">
+              {percent(junior).toFixed(1)}%
+            </p>
+            <p className="text-xs text-ink-600">
+              {junior} de {points.length} titulados (≤ {threshold}a)
+            </p>
+            <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+              <div
+                className="h-full rounded-full bg-titulados"
+                style={{ width: `${percent(junior)}%` }}
+              />
+            </div>
+          </div>
+          <div className="rounded-lg border border-border-line bg-slate-50 p-3">
+            <p className="caption-bold text-ink-900">CONSOLIDADO</p>
+            <p className="display-kpi tabular-nums text-ink-900">
+              {percent(consolidated).toFixed(1)}%
+            </p>
+            <p className="text-xs text-ink-600">
+              {consolidated} de {points.length} titulados (&gt; {threshold}a)
+            </p>
+            <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+              <div
+                className="h-full rounded-full bg-slate-800"
+                style={{ width: `${percent(consolidated)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-between border-t border-surface-container-high pt-2 text-xs text-ink-600">
+          <span>Corte metodológico parametrizable</span>
+          <strong className="text-ink-900">Total = {points.length}</strong>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-function NumericSummaryCard({ title, field, summary, className = '' }: { title: string; field: string; summary: AnalyticsSummary; className?: string }) { const average = summary.numericAverages[field]; const median = summary.numericMedians[field]; const deviation = summary.numericStandardDeviations[field]; return <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}><CardHeader><CardTitle className="title-card">{title}</CardTitle><CardDescription>Estadísticos disponibles para la variable</CardDescription></CardHeader><CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3"><div className="min-w-0"><p className="caption-meta text-ink-600">Media</p><p className="title-card tabular-nums break-words">{average === undefined ? '—' : average.toFixed(2)}</p></div><div className="min-w-0"><p className="caption-meta text-ink-600">Mediana</p><p className="title-card tabular-nums break-words">{median === undefined ? '—' : median.toFixed(2)}</p></div><div className="min-w-0"><p className="caption-meta text-ink-600">Desv. estándar</p><p className="title-card tabular-nums break-words">{deviation == null ? '—' : deviation.toFixed(2)}</p></div></CardContent></Card> }
+function NumericSummaryCard({
+  title,
+  field,
+  summary,
+  className = "",
+}: {
+  title: string;
+  field: string;
+  summary: AnalyticsSummary;
+  className?: string;
+}) {
+  const average = summary.numericAverages[field];
+  const median = summary.numericMedians[field];
+  const deviation = summary.numericStandardDeviations[field];
+  return (
+    <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}>
+      <CardHeader>
+        <CardTitle className="title-card">{title}</CardTitle>
+        <CardDescription>
+          Estadísticos disponibles para la variable
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="min-w-0">
+          <p className="caption-meta text-ink-600">Media</p>
+          <p className="title-card tabular-nums break-words">
+            {average === undefined ? "—" : average.toFixed(2)}
+          </p>
+        </div>
+        <div className="min-w-0">
+          <p className="caption-meta text-ink-600">Mediana</p>
+          <p className="title-card tabular-nums break-words">
+            {median === undefined ? "—" : median.toFixed(2)}
+          </p>
+        </div>
+        <div className="min-w-0">
+          <p className="caption-meta text-ink-600">Desv. estándar</p>
+          <p className="title-card tabular-nums break-words">
+            {deviation == null ? "—" : deviation.toFixed(2)}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export function EducationProfilePage() {
-  const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets('TITULADOS')
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null); const [activeField, setActiveField] = useState('interes_posgrado'); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null)
-  useEffect(() => { if (!datasetId) { setSummary(null); return }; setLoading(true); setError(null); apiRequest<AnalyticsSummary>(`/analytics/titulados/education?datasetId=${encodeURIComponent(datasetId)}`).then(setSummary).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setLoading(false)) }, [datasetId])
-  const fields = [{ key: 'tiene_formacion_complementaria', label: 'Formación complementaria' }, { key: 'interes_posgrado', label: 'Interés en posgrado' }]; const selected = summary?.distributions[activeField]; const yes = selected ? booleanCount(selected, true) : null
-  return <div className="mx-auto w-full max-w-7xl space-y-6"><PageHeading title="Formación continua" description="Seguimiento de formación complementaria e interés en estudios de posgrado." tone="titulados" /><DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} />{summary && <FilterToolbar count={`${summary.validResponses} de ${summary.totalResponses} respuestas`} />}{loading && <StatusPanel kind="loading" title="Cargando formación" description="Consultando las respuestas académicas del dataset." />}{error && <StatusPanel kind="warning" title="No se pudo cargar formación" description={error} />}{!loading && !error && !summary && <StatusPanel kind="info" title="Sin dataset de titulados" description="Importa un CSV de titulados desde Cargar datos para ver esta sección." />}{summary && <><div className="grid rounded-xl bg-surface-container-high/50 p-1 sm:grid-cols-2">{fields.map((field) => <button key={field.key} type="button" onClick={() => setActiveField(field.key)} className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${activeField === field.key ? 'bg-surface-white text-titulados shadow-sm' : 'text-ink-600 hover:bg-surface-white/70 hover:text-ink-900'}`}>{field.label} <span className="ml-1 text-xs">(n = {summary.distributions[field.key]?.validCount ?? 0})</span></button>)}</div><div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4"><KpiCard label={fields.find((field) => field.key === activeField)?.label ?? 'Indicador'} value={yes === null ? '—' : `${yes} de ${summary.validResponses}`} detail={yes === null ? 'No disponible' : `${formatPercentage(yes, summary.validResponses)} de la muestra`} note={`n = ${summary.validResponses}`} icon={GraduationIcon} tone="titulados" /><KpiCard label="Respuestas válidas" value={String(selected?.validCount ?? 0)} detail="Base del indicador" note={`n = ${selected?.validCount ?? 0}`} icon={BookIcon} tone="titulados" /></div><BooleanDistributionCard title={fields.find((field) => field.key === activeField)?.label ?? 'Distribución'} distribution={selected} /></>}</div>
+  const {
+    datasets,
+    datasetId,
+    setDatasetId,
+    loading: datasetsLoading,
+  } = useDatasets("TITULADOS");
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [activeField, setActiveField] = useState("interes_posgrado");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!datasetId) {
+      setSummary(null);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    apiRequest<AnalyticsSummary>(
+      `/analytics/titulados/education?datasetId=${encodeURIComponent(datasetId)}`,
+    )
+      .then(setSummary)
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : String(cause)),
+      )
+      .finally(() => setLoading(false));
+  }, [datasetId]);
+  const fields = [
+    {
+      key: "tiene_formacion_complementaria",
+      label: "Formación complementaria",
+    },
+    { key: "interes_posgrado", label: "Interés en posgrado" },
+  ];
+  const selected = summary?.distributions[activeField];
+  const yes = selected ? booleanCount(selected, true) : null;
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-6">
+      <PageHeading
+        title="Formación continua"
+        description="Seguimiento de formación complementaria e interés en estudios de posgrado."
+        tone="titulados"
+      />
+      <DatasetSelect
+        datasets={datasets}
+        value={datasetId}
+        onChange={setDatasetId}
+        loading={datasetsLoading}
+      />
+      {summary && (
+        <FilterToolbar
+          count={`${summary.validResponses} de ${summary.totalResponses} respuestas`}
+        />
+      )}
+      {loading && (
+        <StatusPanel
+          kind="loading"
+          title="Cargando formación"
+          description="Consultando las respuestas académicas del dataset."
+        />
+      )}
+      {error && (
+        <StatusPanel
+          kind="warning"
+          title="No se pudo cargar formación"
+          description={error}
+        />
+      )}
+      {!loading && !error && !summary && (
+        <StatusPanel
+          kind="info"
+          title="Sin dataset de titulados"
+          description="Importa un CSV de titulados desde Cargar datos para ver esta sección."
+        />
+      )}
+      {summary && (
+        <>
+          <div className="grid rounded-xl bg-surface-container-high/50 p-1 sm:grid-cols-2">
+            {fields.map((field) => (
+              <button
+                key={field.key}
+                type="button"
+                onClick={() => setActiveField(field.key)}
+                className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${activeField === field.key ? "bg-surface-white text-titulados shadow-sm" : "text-ink-600 hover:bg-surface-white/70 hover:text-ink-900"}`}
+              >
+                {field.label}{" "}
+                <span className="ml-1 text-xs">
+                  (n = {summary.distributions[field.key]?.validCount ?? 0})
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <KpiCard
+              label={
+                fields.find((field) => field.key === activeField)?.label ??
+                "Indicador"
+              }
+              value={yes === null ? "—" : `${yes} de ${summary.validResponses}`}
+              detail={
+                yes === null
+                  ? "No disponible"
+                  : `${formatPercentage(yes, summary.validResponses)} de la muestra`
+              }
+              note={`n = ${summary.validResponses}`}
+              icon={GraduationIcon}
+              tone="titulados"
+            />
+            <KpiCard
+              label="Respuestas válidas"
+              value={String(selected?.validCount ?? 0)}
+              detail="Base del indicador"
+              note={`n = ${selected?.validCount ?? 0}`}
+              icon={BookIcon}
+              tone="titulados"
+            />
+          </div>
+          <BooleanDistributionCard
+            title={
+              fields.find((field) => field.key === activeField)?.label ??
+              "Distribución"
+            }
+            distribution={selected}
+          />
+        </>
+      )}
+    </div>
+  );
 }
 
-const UsersIcon = Users
-const WorkIcon = BriefcaseBusiness
-const GraduationIcon = GraduationCap
-const BookIcon = BookOpen
+const UsersIcon = Users;
+const WorkIcon = BriefcaseBusiness;
+const GraduationIcon = GraduationCap;
+const BookIcon = BookOpen;
 
-function ProfileDistributionCard({ title, description, distribution, className = '' }: { title: string; description: string; distribution?: CategoryDistribution; className?: string }) {
-  const entries = useMemo(() => Object.entries(distribution?.counts ?? {}), [distribution])
-  return <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}><CardHeader><CardTitle className="title-card">{title}</CardTitle><CardDescription>{description} <span className="whitespace-nowrap">· n = {distribution?.validCount ?? 0}</span></CardDescription></CardHeader><CardContent>{entries.length ? <div className="space-y-4">{entries.map(([label, count], index) => { const percent = distribution?.percentages[label] ?? 0; return <div key={label} className="space-y-1"><div className="flex items-start justify-between gap-4 text-sm"><span className="min-w-0 break-words font-medium">{label}</span><span className="tabular-nums whitespace-nowrap font-medium">{count} <span className="caption-meta text-ink-600">({percent}%)</span></span></div><div className="h-2.5 overflow-hidden rounded-full bg-surface-container-high"><div className="h-full rounded-full transition-all duration-500" style={{ width: `${percent}%`, backgroundColor: index === 0 ? '#1f6fb5' : index === 1 ? '#14a39a' : '#94a3b8' }} /></div></div> })}</div> : <p className="text-sm text-ink-600">Sin respuestas disponibles para esta variable.</p>}</CardContent></Card>
+function ProfileDistributionCard({
+  title,
+  description,
+  distribution,
+  className = "",
+}: {
+  title: string;
+  description: string;
+  distribution?: CategoryDistribution;
+  className?: string;
+}) {
+  const entries = useMemo(
+    () => Object.entries(distribution?.counts ?? {}),
+    [distribution],
+  );
+  return (
+    <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}>
+      <CardHeader>
+        <CardTitle className="title-card">{title}</CardTitle>
+        <CardDescription>
+          {description}{" "}
+          <span className="whitespace-nowrap">
+            · n = {distribution?.validCount ?? 0}
+          </span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {entries.length ? (
+          <div className="space-y-4">
+            {entries.map(([label, count], index) => {
+              const percent = distribution?.percentages[label] ?? 0;
+              return (
+                <div key={label} className="space-y-1">
+                  <div className="flex items-start justify-between gap-4 text-sm">
+                    <span className="min-w-0 break-words font-medium">
+                      {label}
+                    </span>
+                    <span className="tabular-nums whitespace-nowrap font-medium">
+                      {count}{" "}
+                      <span className="caption-meta text-ink-600">
+                        ({percent}%)
+                      </span>
+                    </span>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-surface-container-high">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${percent}%`,
+                        backgroundColor:
+                          index === 0
+                            ? "#1f6fb5"
+                            : index === 1
+                              ? "#14a39a"
+                              : "#94a3b8",
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-ink-600">
+            Sin respuestas disponibles para esta variable.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
-function EmploymentDonutCard({ distribution, total, className = '' }: { distribution?: CategoryDistribution; total: number; className?: string }) {
-  const entries = useMemo(() => Object.entries(distribution?.counts ?? {}), [distribution]); const employed = distribution ? countMatching(distribution, ['trabaja', 'organización', 'empresa', 'emprend'], ['no trabaja', 'búsqueda', 'desemple']) : 0; const occupiedPercent = total ? (employed / total) * 100 : 0; let offset = 0; const segments = entries.map(([label]) => { const percent = distribution?.percentages[label] ?? 0; const color = laborColor(label); const segment = `${color} ${offset}% ${offset + percent}%`; offset += percent; return segment })
-  return <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}><CardHeader><CardTitle className="title-card">Estado laboral</CardTitle><CardDescription>Situación ocupacional declarada · n = {total}</CardDescription></CardHeader><CardContent className="flex flex-col items-center gap-5 sm:flex-row"><div className="relative flex size-36 shrink-0 items-center justify-center rounded-full" style={{ background: entries.length ? `conic-gradient(${segments.join(', ')})` : '#e2e8f0' }}><div className="flex size-24 flex-col items-center justify-center rounded-full bg-white"><span className="title-card tabular-nums">{occupiedPercent.toFixed(1)}%</span><span className="caption-meta uppercase text-ink-600">Ocupados</span></div></div><div className="min-w-0 w-full space-y-2">{entries.map(([label, count]) => <div key={label} className="flex items-center justify-between gap-3 rounded-lg border border-border-line bg-surface-container-low px-3 py-2 text-sm"><div className="flex min-w-0 items-center gap-2"><span className="size-3 shrink-0 rounded-sm" style={{ backgroundColor: laborColor(label) }} /><span className="break-words">{label}</span></div><span className="tabular-nums whitespace-nowrap font-semibold">{count} <span className="caption-meta text-ink-600">({distribution?.percentages[label] ?? 0}%)</span></span></div>)}</div></CardContent><div className="mx-6 border-t border-surface-container-high py-3 text-xs text-ink-600">Tasa de personas ocupadas: {employed} de {total} titulados</div></Card>
+function EmploymentDonutCard({
+  distribution,
+  total,
+  className = "",
+}: {
+  distribution?: CategoryDistribution;
+  total: number;
+  className?: string;
+}) {
+  const entries = useMemo(
+    () => Object.entries(distribution?.counts ?? {}),
+    [distribution],
+  );
+  const employed = distribution
+    ? countMatching(
+        distribution,
+        ["trabaja", "organización", "empresa", "emprend"],
+        ["no trabaja", "búsqueda", "desemple"],
+      )
+    : 0;
+  const occupiedPercent = total ? (employed / total) * 100 : 0;
+  let offset = 0;
+  const segments = entries.map(([label]) => {
+    const percent = distribution?.percentages[label] ?? 0;
+    const color = laborColor(label);
+    const segment = `${color} ${offset}% ${offset + percent}%`;
+    offset += percent;
+    return segment;
+  });
+  return (
+    <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}>
+      <CardHeader>
+        <CardTitle className="title-card">Estado laboral</CardTitle>
+        <CardDescription>
+          Situación ocupacional declarada · n = {total}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center gap-5 sm:flex-row">
+        <div
+          className="relative flex size-36 shrink-0 items-center justify-center rounded-full"
+          style={{
+            background: entries.length
+              ? `conic-gradient(${segments.join(", ")})`
+              : "#e2e8f0",
+          }}
+        >
+          <div className="flex size-24 flex-col items-center justify-center rounded-full bg-white">
+            <span className="title-card tabular-nums">
+              {occupiedPercent.toFixed(1)}%
+            </span>
+            <span className="caption-meta uppercase text-ink-600">
+              Ocupados
+            </span>
+          </div>
+        </div>
+        <div className="min-w-0 w-full space-y-2">
+          {entries.map(([label, count]) => (
+            <div
+              key={label}
+              className="flex items-center justify-between gap-3 rounded-lg border border-border-line bg-surface-container-low px-3 py-2 text-sm"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className="size-3 shrink-0 rounded-sm"
+                  style={{ backgroundColor: laborColor(label) }}
+                />
+                <span className="break-words">{label}</span>
+              </div>
+              <span className="tabular-nums whitespace-nowrap font-semibold">
+                {count}{" "}
+                <span className="caption-meta text-ink-600">
+                  ({distribution?.percentages[label] ?? 0}%)
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+      <div className="mx-6 border-t border-surface-container-high py-3 text-xs text-ink-600">
+        Tasa de personas ocupadas: {employed} de {total} titulados
+      </div>
+    </Card>
+  );
 }
 
-function laborColor(label: string) { const normalized = label.toLowerCase(); if (normalized.includes('emprend')) return '#14a39a'; if (normalized.includes('busqueda') || normalized.includes('desemple') || normalized.includes('no trabaja')) return '#f2a33a'; return '#1f6fb5' }
-
-function AgeDistributionCard({ distribution }: { distribution?: CategoryDistribution }) {
-  return <Card className="h-fit rounded-xl border border-border-line shadow-sm"><CardHeader><CardTitle className="title-card">Distribución por edad (n = {distribution?.validCount ?? 0})</CardTitle><CardDescription>Rangos de edad en orden cronológico</CardDescription></CardHeader><CardContent><DistributionBars distribution={distribution} /></CardContent><CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600"><span>Grupo mayoritario: {majorityLabel(distribution)}</span><strong className="text-ink-900">n = {distribution?.validCount ?? 0}</strong></CardContent></Card>
+function laborColor(label: string) {
+  const normalized = label.toLowerCase();
+  if (normalized.includes("emprend")) return "#14a39a";
+  if (
+    normalized.includes("busqueda") ||
+    normalized.includes("desemple") ||
+    normalized.includes("no trabaja")
+  )
+    return "#f2a33a";
+  return "#1f6fb5";
 }
 
-function GenderDistributionCard({ distribution }: { distribution?: CategoryDistribution }) {
-  const entries = Object.entries(distribution?.counts ?? {}); const total = distribution?.validCount ?? 0; let offset = 0; const segments = entries.map(([label]) => { const percentage = distribution?.percentages[label] ?? 0; const segment = `${label.toLowerCase().includes('muj') ? '#8b5bd1' : '#1f6fb5'} ${offset}% ${offset + percentage}%`; offset += percentage; return segment })
-  return <Card className="h-fit rounded-xl border border-border-line shadow-sm"><CardHeader><CardTitle className="title-card">Género (n = {total})</CardTitle><CardDescription>Composición declarada en encuesta</CardDescription></CardHeader><CardContent className="flex items-center justify-center gap-5 py-5"><div className="relative flex size-28 shrink-0 items-center justify-center rounded-full" style={{ background: entries.length ? `conic-gradient(${segments.join(', ')})` : '#e2e8f0' }}><div className="flex size-20 flex-col items-center justify-center rounded-full bg-white"><span className="title-card tabular-nums">{total}</span><span className="caption-meta uppercase text-ink-600">Total</span></div></div><div className="min-w-0 space-y-2">{entries.map(([label, count]) => <div key={label} className="flex items-center gap-2 rounded border border-border-line bg-surface-container-low px-2.5 py-2 text-sm"><span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: label.toLowerCase().includes('muj') ? '#8b5bd1' : '#1f6fb5' }} /><span className="min-w-0 break-words">{label}: <strong>{count}</strong> <span className="text-xs">({distribution?.percentages[label]}%)</span></span></div>)}</div></CardContent><CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600"><span>{entries.map(([label]) => `${label}: ${distribution?.percentages[label]}%`).join(' · ')}</span><strong className="text-ink-900">n = {total}</strong></CardContent></Card>
+function AgeDistributionCard({
+  distribution,
+}: {
+  distribution?: CategoryDistribution;
+}) {
+  return (
+    <Card className="h-fit rounded-xl border border-border-line shadow-sm">
+      <CardHeader>
+        <CardTitle className="title-card">
+          Distribución por edad (n = {distribution?.validCount ?? 0})
+        </CardTitle>
+        <CardDescription>Rangos de edad en orden cronológico</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <DistributionBars distribution={distribution} />
+      </CardContent>
+      <CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600">
+        <span>Grupo mayoritario: {majorityLabel(distribution)}</span>
+        <strong className="text-ink-900">
+          n = {distribution?.validCount ?? 0}
+        </strong>
+      </CardContent>
+    </Card>
+  );
 }
 
-function CareerTrajectoryCard({ professional, unemployment }: { professional: AnalyticsSummary; unemployment: AnalyticsSummary }) {
-  const professionalDeviation = professional.numericStandardDeviations.anios_vida_profesional; const unemploymentDeviation = unemployment.numericStandardDeviations.anios_desempleo
-  return <Card className="h-fit rounded-xl border border-border-line shadow-sm"><CardHeader><CardTitle className="title-card">Trayectoria y búsqueda</CardTitle><CardDescription>Años de ejercicio y periodos sin empleo</CardDescription></CardHeader><CardContent className="space-y-3"><MetricPanel title="Vida profesional" average={professional.numericAverages.anios_vida_profesional} median={professional.numericMedians.anios_vida_profesional} deviation={professionalDeviation} /><MetricPanel title="Tiempo en búsqueda activa" average={unemployment.numericAverages.anios_desempleo} median={unemployment.numericMedians.anios_desempleo} deviation={unemploymentDeviation} /></CardContent><CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600"><span>Parámetros calculados en años calendario</span><strong className="text-ink-900">Muestra T</strong></CardContent></Card>
+function GenderDistributionCard({
+  distribution,
+}: {
+  distribution?: CategoryDistribution;
+}) {
+  const entries = Object.entries(distribution?.counts ?? {});
+  const total = distribution?.validCount ?? 0;
+  let offset = 0;
+  const segments = entries.map(([label]) => {
+    const percentage = distribution?.percentages[label] ?? 0;
+    const segment = `${label.toLowerCase().includes("muj") ? "#8b5bd1" : "#1f6fb5"} ${offset}% ${offset + percentage}%`;
+    offset += percentage;
+    return segment;
+  });
+  return (
+    <Card className="h-fit rounded-xl border border-border-line shadow-sm">
+      <CardHeader>
+        <CardTitle className="title-card">Género (n = {total})</CardTitle>
+        <CardDescription>Composición declarada en encuesta</CardDescription>
+      </CardHeader>
+      <CardContent className="flex items-center justify-center gap-5 py-5">
+        <div
+          className="relative flex size-28 shrink-0 items-center justify-center rounded-full"
+          style={{
+            background: entries.length
+              ? `conic-gradient(${segments.join(", ")})`
+              : "#e2e8f0",
+          }}
+        >
+          <div className="flex size-20 flex-col items-center justify-center rounded-full bg-white">
+            <span className="title-card tabular-nums">{total}</span>
+            <span className="caption-meta uppercase text-ink-600">Total</span>
+          </div>
+        </div>
+        <div className="min-w-0 space-y-2">
+          {entries.map(([label, count]) => (
+            <div
+              key={label}
+              className="flex items-center gap-2 rounded border border-border-line bg-surface-container-low px-2.5 py-2 text-sm"
+            >
+              <span
+                className="size-2.5 shrink-0 rounded-full"
+                style={{
+                  backgroundColor: label.toLowerCase().includes("muj")
+                    ? "#8b5bd1"
+                    : "#1f6fb5",
+                }}
+              />
+              <span className="min-w-0 break-words">
+                {label}: <strong>{count}</strong>{" "}
+                <span className="text-xs">
+                  ({distribution?.percentages[label]}%)
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+      <CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600">
+        <span>
+          {entries
+            .map(([label]) => `${label}: ${distribution?.percentages[label]}%`)
+            .join(" · ")}
+        </span>
+        <strong className="text-ink-900">n = {total}</strong>
+      </CardContent>
+    </Card>
+  );
 }
 
-function MetricPanel({ title, average, median, deviation }: { title: string; average?: number; median?: number; deviation: number | null | undefined }) {
-  return <div className="rounded-lg border border-border-line bg-slate-50 p-3"><div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold text-titulados">{title}</span><span className="text-xs text-ink-600">DE: ± {deviation == null ? '—' : `${deviation.toFixed(1)}a`}</span></div><div className="mt-2 flex flex-wrap gap-4 text-xs text-ink-600">Media: <strong className="text-base tabular-nums text-ink-900">{average == null ? '—' : average.toFixed(1)}</strong> años <span>Mediana: <strong className="text-base tabular-nums text-ink-900">{median == null ? '—' : median.toFixed(1)}</strong> años</span></div></div>
+function CareerTrajectoryCard({
+  professional,
+  unemployment,
+}: {
+  professional: AnalyticsSummary;
+  unemployment: AnalyticsSummary;
+}) {
+  const professionalDeviation =
+    professional.numericStandardDeviations.anios_vida_profesional;
+  const unemploymentDeviation =
+    unemployment.numericStandardDeviations.anios_desempleo;
+  return (
+    <Card className="h-fit rounded-xl border border-border-line shadow-sm">
+      <CardHeader>
+        <CardTitle className="title-card">Trayectoria y búsqueda</CardTitle>
+        <CardDescription>
+          Años de ejercicio y periodos sin empleo
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <MetricPanel
+          title="Vida profesional"
+          average={professional.numericAverages.anios_vida_profesional}
+          median={professional.numericMedians.anios_vida_profesional}
+          deviation={professionalDeviation}
+        />
+        <MetricPanel
+          title="Tiempo en búsqueda activa"
+          average={unemployment.numericAverages.anios_desempleo}
+          median={unemployment.numericMedians.anios_desempleo}
+          deviation={unemploymentDeviation}
+        />
+      </CardContent>
+      <CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600">
+        <span>Parámetros calculados en años calendario</span>
+        <strong className="text-ink-900">Muestra T</strong>
+      </CardContent>
+    </Card>
+  );
 }
 
-function DistributionBars({ distribution }: { distribution?: CategoryDistribution }) {
-  return Object.entries(distribution?.counts ?? {}).length ? <div className="space-y-3">{Object.entries(distribution?.counts ?? {}).map(([label, count]) => { const percentage = distribution?.percentages[label] ?? 0; return <div key={label} className="space-y-1"><div className="flex justify-between gap-3 text-sm"><span>{label}</span><span className="tabular-nums whitespace-nowrap">{count} de {distribution?.validCount} ({percentage}%)</span></div><div className="h-2 overflow-hidden rounded-full bg-surface-container-high"><div className="h-full rounded-full bg-titulados" style={{ width: `${percentage}%` }} /></div></div> })}</div> : <p className="text-sm text-ink-600">Sin respuestas disponibles.</p>
+function MetricPanel({
+  title,
+  average,
+  median,
+  deviation,
+}: {
+  title: string;
+  average?: number;
+  median?: number;
+  deviation: number | null | undefined;
+}) {
+  return (
+    <div className="rounded-lg border border-border-line bg-slate-50 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold text-titulados">{title}</span>
+        <span className="text-xs text-ink-600">
+          DE: ± {deviation == null ? "—" : `${deviation.toFixed(1)}a`}
+        </span>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-4 text-xs text-ink-600">
+        Media:{" "}
+        <strong className="text-base tabular-nums text-ink-900">
+          {average == null ? "—" : average.toFixed(1)}
+        </strong>{" "}
+        años{" "}
+        <span>
+          Mediana:{" "}
+          <strong className="text-base tabular-nums text-ink-900">
+            {median == null ? "—" : median.toFixed(1)}
+          </strong>{" "}
+          años
+        </span>
+      </div>
+    </div>
+  );
 }
 
-function majorityLabel(distribution?: CategoryDistribution) { const entry = Object.entries(distribution?.counts ?? {}).sort(([, a], [, b]) => b - a)[0]; return entry?.[0] ?? '—' }
-
-function BooleanDistributionCard({ title, distribution, className = '' }: { title: string; distribution?: CategoryDistribution; className?: string }) {
-  const entries = useMemo(() => Object.entries(distribution?.counts ?? {}), [distribution])
-  return <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}><CardHeader><CardTitle className="title-card">Distribución: {title}</CardTitle><CardDescription>Conteo y porcentaje de respuestas · n = {distribution?.validCount ?? 0}</CardDescription></CardHeader><CardContent>{entries.length ? <div className="space-y-4">{entries.map(([label, count], index) => { const percent = distribution?.percentages[label] ?? 0; return <div key={label} className="space-y-1"><div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="font-medium">{booleanLabel(label)}</span><span className="tabular-nums whitespace-nowrap font-medium">{count} <span className="caption-meta text-ink-600">({percent}%)</span></span></div><div className="h-3 overflow-hidden rounded-full bg-surface-container-high"><div className="h-full rounded-full" style={{ width: `${percent}%`, backgroundColor: index === 0 ? '#1f6fb5' : '#94a3b8' }} /></div></div> })}</div> : <p className="text-sm text-ink-600">Sin respuestas disponibles para esta variable.</p>}</CardContent></Card>
+function DistributionBars({
+  distribution,
+}: {
+  distribution?: CategoryDistribution;
+}) {
+  return Object.entries(distribution?.counts ?? {}).length ? (
+    <div className="space-y-3">
+      {Object.entries(distribution?.counts ?? {}).map(([label, count]) => {
+        const percentage = distribution?.percentages[label] ?? 0;
+        return (
+          <div key={label} className="space-y-1">
+            <div className="flex justify-between gap-3 text-sm">
+              <span>{label}</span>
+              <span className="tabular-nums whitespace-nowrap">
+                {count} de {distribution?.validCount} ({percentage}%)
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
+              <div
+                className="h-full rounded-full bg-titulados"
+                style={{ width: `${percentage}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  ) : (
+    <p className="text-sm text-ink-600">Sin respuestas disponibles.</p>
+  );
 }
 
-function countMatching(distribution: CategoryDistribution, fragments: string[], excluded: string[] = []) { return Object.entries(distribution.counts).filter(([label]) => { const normalized = label.toLowerCase(); return fragments.some((fragment) => normalized.includes(fragment)) && !excluded.some((fragment) => normalized.includes(fragment)) }).reduce((total, [, count]) => total + count, 0) }
-function formatPercentage(value: number, total: number) { return `${total ? ((value / total) * 100).toFixed(1) : 0}%` }
-function booleanCount(distribution: CategoryDistribution, value: boolean) { const key = Object.keys(distribution.counts).find((item) => item.toLowerCase() === String(value)); return key ? distribution.counts[key] : 0 }
-function booleanLabel(value: string) { if (value.toLowerCase() === 'true') return 'Sí'; if (value.toLowerCase() === 'false') return 'No'; const normalized = value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('es-BO'); if (!normalized) return normalized; const sentence = normalized.charAt(0).toLocaleUpperCase('es-BO') + normalized.slice(1); return sentence.replace(/\bia\b/gi, 'IA').replace(/\bdevops\b/gi, 'DevOps') }
+function majorityLabel(distribution?: CategoryDistribution) {
+  const entry = Object.entries(distribution?.counts ?? {}).sort(
+    ([, a], [, b]) => b - a,
+  )[0];
+  return entry?.[0] ?? "—";
+}
 
-export function DatasetAnalyticsPage({ title, description, domain, endpoint, fields, cards }: { title: string; description: string; domain: Domain; endpoint: string; fields?: string; cards: { key: string; label: string }[] }) {
-  const tone: Tone = domain === 'TITULADOS' ? 'titulados' : 'empleadores'
-  const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets(domain)
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  useEffect(() => { if (!datasetId) { setSummary(null); setLoading(false); return }; setLoading(true); setError(null); const suffix = fields ? `&fields=${encodeURIComponent(fields)}` : ''; apiRequest<AnalyticsSummary>(`${endpoint}?datasetId=${encodeURIComponent(datasetId)}${suffix}`).then(setSummary).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setLoading(false)) }, [datasetId, endpoint, fields])
-  return <div className="mx-auto max-w-6xl space-y-6"><PageHeading title={title} description={description} tone={tone} /><DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} />{loading && <StatusPanel kind="loading" title="Cargando datos" description="Consultando el dataset seleccionado." />}{error && <StatusPanel kind="warning" title="No se pudo cargar la pantalla" description={error} />}{!loading && !error && !summary && <StatusPanel kind="info" title={`Sin dataset de ${domain.toLowerCase()}`} description="Importa un dataset compatible para habilitar esta vista." />}{summary && <><FilterToolbar count={`${summary.validResponses} respuestas válidas`} /><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cards.map((card) => <KpiCard key={card.key} label={card.label} value={formatMetric(summary, card.key)} detail={summary.distributions[card.key] ? `${summary.distributions[card.key].validCount} respuestas` : 'Dato numérico'} note={`n = ${summary.distributions[card.key]?.validCount ?? summary.validResponses}`} tone={tone} />)}</div><div className="grid gap-6 lg:grid-cols-2">{Object.entries(summary.distributions).map(([key, distribution]) => <DistributionCard key={key} title={labelFor(key)} distribution={distribution} tone={tone} />)}</div></>}</div>
+function BooleanDistributionCard({
+  title,
+  distribution,
+  className = "",
+}: {
+  title: string;
+  distribution?: CategoryDistribution;
+  className?: string;
+}) {
+  const entries = useMemo(
+    () => Object.entries(distribution?.counts ?? {}),
+    [distribution],
+  );
+  return (
+    <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}>
+      <CardHeader>
+        <CardTitle className="title-card">Distribución: {title}</CardTitle>
+        <CardDescription>
+          Conteo y porcentaje de respuestas · n ={" "}
+          {distribution?.validCount ?? 0}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {entries.length ? (
+          <div className="space-y-4">
+            {entries.map(([label, count], index) => {
+              const percent = distribution?.percentages[label] ?? 0;
+              return (
+                <div key={label} className="space-y-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    <span className="font-medium">{booleanLabel(label)}</span>
+                    <span className="tabular-nums whitespace-nowrap font-medium">
+                      {count}{" "}
+                      <span className="caption-meta text-ink-600">
+                        ({percent}%)
+                      </span>
+                    </span>
+                  </div>
+                  <div className="h-3 overflow-hidden rounded-full bg-surface-container-high">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${percent}%`,
+                        backgroundColor: index === 0 ? "#1f6fb5" : "#94a3b8",
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-ink-600">
+            Sin respuestas disponibles para esta variable.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function countMatching(
+  distribution: CategoryDistribution,
+  fragments: string[],
+  excluded: string[] = [],
+) {
+  return Object.entries(distribution.counts)
+    .filter(([label]) => {
+      const normalized = label.toLowerCase();
+      return (
+        fragments.some((fragment) => normalized.includes(fragment)) &&
+        !excluded.some((fragment) => normalized.includes(fragment))
+      );
+    })
+    .reduce((total, [, count]) => total + count, 0);
+}
+function formatPercentage(value: number, total: number) {
+  return `${total ? ((value / total) * 100).toFixed(1) : 0}%`;
+}
+function booleanCount(distribution: CategoryDistribution, value: boolean) {
+  const key = Object.keys(distribution.counts).find(
+    (item) => item.toLowerCase() === String(value),
+  );
+  return key ? distribution.counts[key] : 0;
+}
+function booleanLabel(value: string) {
+  if (value.toLowerCase() === "true") return "Sí";
+  if (value.toLowerCase() === "false") return "No";
+  const normalized = value
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase("es-BO");
+  if (!normalized) return normalized;
+  const sentence =
+    normalized.charAt(0).toLocaleUpperCase("es-BO") + normalized.slice(1);
+  return sentence.replace(/\bia\b/gi, "IA").replace(/\bdevops\b/gi, "DevOps");
+}
+
+export function DatasetAnalyticsPage({
+  title,
+  description,
+  domain,
+  endpoint,
+  fields,
+  cards,
+}: {
+  title: string;
+  description: string;
+  domain: Domain;
+  endpoint: string;
+  fields?: string;
+  cards: { key: string; label: string }[];
+}) {
+  const tone: Tone = domain === "TITULADOS" ? "titulados" : "empleadores";
+  const {
+    datasets,
+    datasetId,
+    setDatasetId,
+    loading: datasetsLoading,
+  } = useDatasets(domain);
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!datasetId) {
+      setSummary(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    const suffix = fields ? `&fields=${encodeURIComponent(fields)}` : "";
+    apiRequest<AnalyticsSummary>(
+      `${endpoint}?datasetId=${encodeURIComponent(datasetId)}${suffix}`,
+    )
+      .then(setSummary)
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : String(cause)),
+      )
+      .finally(() => setLoading(false));
+  }, [datasetId, endpoint, fields]);
+  return (
+    <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeading title={title} description={description} tone={tone} />
+      <DatasetSelect
+        datasets={datasets}
+        value={datasetId}
+        onChange={setDatasetId}
+        loading={datasetsLoading}
+      />
+      {loading && (
+        <StatusPanel
+          kind="loading"
+          title="Cargando datos"
+          description="Consultando el dataset seleccionado."
+        />
+      )}
+      {error && (
+        <StatusPanel
+          kind="warning"
+          title="No se pudo cargar la pantalla"
+          description={error}
+        />
+      )}
+      {!loading && !error && !summary && (
+        <StatusPanel
+          kind="info"
+          title={`Sin dataset de ${domain.toLowerCase()}`}
+          description="Importa un dataset compatible para habilitar esta vista."
+        />
+      )}
+      {summary && (
+        <>
+          <FilterToolbar
+            count={`${summary.validResponses} respuestas válidas`}
+          />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {cards.map((card) => (
+              <KpiCard
+                key={card.key}
+                label={card.label}
+                value={formatMetric(summary, card.key)}
+                detail={
+                  summary.distributions[card.key]
+                    ? `${summary.distributions[card.key].validCount} respuestas`
+                    : "Dato numérico"
+                }
+                note={`n = ${summary.distributions[card.key]?.validCount ?? summary.validResponses}`}
+                tone={tone}
+              />
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {Object.entries(summary.distributions).map(
+              ([key, distribution]) => (
+                <DistributionCard
+                  key={key}
+                  title={labelFor(key)}
+                  distribution={distribution}
+                  tone={tone}
+                />
+              ),
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 export function CompetencePage({ domain }: { domain: Domain }) {
-  const tone: Tone = domain === 'TITULADOS' ? 'titulados' : 'empleadores'; const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets(domain); const [items, setItems] = useState<Competence[]>([]); const [satisfaction, setSatisfaction] = useState<AnalyticsSummary | null>(null); const [curriculum, setCurriculum] = useState<AnalyticsSummary | null>(null); const [activeGroup, setActiveGroup] = useState(''); const [activeTab, setActiveTab] = useState('hard'); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null)
-  useEffect(() => { if (!datasetId) { setItems([]); setSatisfaction(null); setCurriculum(null); setActiveGroup(''); return }; setLoading(true); setError(null); const satisfactionRequest = domain === 'TITULADOS' ? apiRequest<AnalyticsSummary>(`/analytics/titulados/satisfaction?datasetId=${encodeURIComponent(datasetId)}`) : Promise.resolve(null); const curriculumRequest = domain === 'TITULADOS' ? apiRequest<AnalyticsSummary>(`/analytics/titulados/curriculum?datasetId=${encodeURIComponent(datasetId)}`) : Promise.resolve(null); Promise.all([apiRequest<Competence[]>(`/analytics/competencies/gaps?datasetId=${encodeURIComponent(datasetId)}`), satisfactionRequest, curriculumRequest]).then(([next, nextSatisfaction, nextCurriculum]) => { setItems(next); setSatisfaction(nextSatisfaction); setCurriculum(nextCurriculum); const firstHard = next.find((item) => item.group.toLowerCase().includes('hard')); const firstSoft = next.find((item) => item.group.toLowerCase().includes('soft')); setActiveTab(firstHard ? 'hard' : firstSoft ? 'soft' : 'hard'); setActiveGroup((firstHard ?? firstSoft ?? next[0])?.group ?? '') }).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setLoading(false)) }, [datasetId, domain])
-  const groups = useMemo(() => [...new Set(items.map((item) => item.group))], [items]); const tabGroup = (tab: string) => tab === 'hard' ? groups.find((group) => group.toLowerCase().includes('hard')) : tab === 'soft' ? groups.find((group) => group.toLowerCase().includes('soft')) : undefined; const visibleItems = useMemo(() => items.filter((item) => item.group === activeGroup).sort((a, b) => b.average - a.average), [items, activeGroup]); const average = visibleItems.length ? visibleItems.reduce((sum, item) => sum + item.average, 0) / visibleItems.length : 0; const tabs = [{ key: 'hard', label: 'Hard skills' }, { key: 'soft', label: 'Soft skills' }, { key: 'satisfaccion', label: 'Satisfacción y pertinencia' }, { key: 'malla', label: 'Malla y asignaturas' }]
-  if (activeTab === 'satisfaccion' || activeTab === 'malla') return <div className="mx-auto w-full max-w-7xl space-y-6"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><PageHeading title="Brechas de competencias" description={activeTab === 'malla' ? 'Aspectos útiles, oportunidades de mejora y asignaturas relevantes de la carrera.' : 'Satisfacción global y pertinencia con el mercado laboral.'} tone={tone} /><div className="flex flex-wrap items-center gap-2"><Button variant="outline" size="sm"><Info />Definiciones</Button><ExportActions /></div></div><DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} /><div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-surface-container-low p-1">{tabs.map((tab) => <button key={tab.key} type="button" onClick={() => { setActiveTab(tab.key); const group = tabGroup(tab.key); if (group) setActiveGroup(group) }} className={`shrink-0 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.key ? 'bg-surface-white text-titulados shadow-sm' : 'text-ink-600 hover:bg-surface-white/70 hover:text-ink-900'}`}>{tab.label}</button>)}</div>{activeTab === 'satisfaccion' ? <SatisfactionPanel summary={satisfaction} /> : <CurriculumPanel summary={curriculum} />}</div>
-  return <div className="mx-auto w-full max-w-7xl space-y-6"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><PageHeading title="Brechas de competencias" description="Medias y desviaciones estándar por competencia. Los valores no observados se excluyen del cálculo." tone={tone} /><div className="flex flex-wrap items-center gap-2"><Button variant="outline" size="sm"><Info />Definiciones</Button><ExportActions /></div></div><DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} />{items.length > 0 && <FilterToolbar count={`${items[0]?.validCount ?? 0} respuestas válidas`} />}{loading && <StatusPanel kind="loading" title="Cargando competencias" description="Consultando las valoraciones del dataset." />}{error && <StatusPanel kind="warning" title="No se pudo cargar competencias" description={error} />}{!loading && !error && !datasetId && <StatusPanel kind="info" title="Sin dataset seleccionado" description="Selecciona o importa un dataset para mostrar la tabla." />}{items.length > 0 && <><div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-surface-container-low p-1">{tabs.map((tab) => { const group = tabGroup(tab.key); const available = Boolean(group) || (domain === 'TITULADOS' && (tab.key === 'satisfaccion' || tab.key === 'malla')); return <button key={tab.key} type="button" onClick={() => { setActiveTab(tab.key); if (group) setActiveGroup(group) }} className={`flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.key ? 'bg-surface-white text-titulados shadow-sm' : 'text-ink-600 hover:bg-surface-white/70 hover:text-ink-900'} ${!available ? 'opacity-60' : ''}`}><span>{tab.label}</span>{group && <span className="rounded-full bg-titulados-active px-1.5 py-0.5 text-xs">{items.filter((item) => item.group === group).length}</span>}{!available && <span className="text-[10px] uppercase tracking-wide">Próximamente</span>}</button> })}</div>{!tabGroup(activeTab) ? <StatusPanel kind="info" title="Sección preparada" description="Esta pestaña forma parte del prototipo, pero todavía no existe un endpoint con los datos necesarios para mostrarla." /> : <><div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3"><KpiCard label="Competencias evaluadas" value={String(visibleItems.length)} detail={groupLabel(activeGroup)} note={`n = ${visibleItems[0]?.validCount ?? 0}`} icon={GraduationIcon} tone={tone} /><KpiCard label="Media de la dimensión" value={average ? average.toFixed(2) : '—'} detail="Escala de 1 a 5" note="Promedio de competencias" icon={WorkIcon} tone={tone} /><KpiCard label="Muestra" value={String(visibleItems[0]?.validCount ?? 0)} detail="Respuestas válidas" note={visibleItems[0]?.validCount && visibleItems[0].validCount < 5 ? 'Muestra reducida' : 'Lectura descriptiva'} icon={UsersIcon} tone={tone} /></div><div className="grid items-start gap-6 lg:grid-cols-12"><CompetenceMatrix items={visibleItems} className="lg:col-span-7" /><CompetenceRadar items={visibleItems} className="lg:col-span-5" /></div><CompetenceStatsTable items={visibleItems} group={groupLabel(activeGroup)} /></>}</>}</div>
+  const tone: Tone = domain === "TITULADOS" ? "titulados" : "empleadores";
+  const {
+    datasets,
+    datasetId,
+    setDatasetId,
+    loading: datasetsLoading,
+  } = useDatasets(domain);
+  const [items, setItems] = useState<Competence[]>([]);
+  const [satisfaction, setSatisfaction] = useState<AnalyticsSummary | null>(
+    null,
+  );
+  const [curriculum, setCurriculum] = useState<AnalyticsSummary | null>(null);
+  const [activeGroup, setActiveGroup] = useState("");
+  const [activeTab, setActiveTab] = useState("hard");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!datasetId) {
+      setItems([]);
+      setSatisfaction(null);
+      setCurriculum(null);
+      setActiveGroup("");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    const satisfactionRequest =
+      domain === "TITULADOS"
+        ? apiRequest<AnalyticsSummary>(
+            `/analytics/titulados/satisfaction?datasetId=${encodeURIComponent(datasetId)}`,
+          )
+        : Promise.resolve(null);
+    const curriculumRequest =
+      domain === "TITULADOS"
+        ? apiRequest<AnalyticsSummary>(
+            `/analytics/titulados/curriculum?datasetId=${encodeURIComponent(datasetId)}`,
+          )
+        : Promise.resolve(null);
+    Promise.all([
+      apiRequest<Competence[]>(
+        `/analytics/competencies/gaps?datasetId=${encodeURIComponent(datasetId)}`,
+      ),
+      satisfactionRequest,
+      curriculumRequest,
+    ])
+      .then(([next, nextSatisfaction, nextCurriculum]) => {
+        setItems(next);
+        setSatisfaction(nextSatisfaction);
+        setCurriculum(nextCurriculum);
+        const firstHard = next.find((item) =>
+          item.group.toLowerCase().includes("hard"),
+        );
+        const firstSoft = next.find((item) =>
+          item.group.toLowerCase().includes("soft"),
+        );
+        setActiveTab(firstHard ? "hard" : firstSoft ? "soft" : "hard");
+        setActiveGroup((firstHard ?? firstSoft ?? next[0])?.group ?? "");
+      })
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : String(cause)),
+      )
+      .finally(() => setLoading(false));
+  }, [datasetId, domain]);
+  const groups = useMemo(
+    () => [...new Set(items.map((item) => item.group))],
+    [items],
+  );
+  const tabGroup = (tab: string) =>
+    tab === "hard"
+      ? groups.find((group) => group.toLowerCase().includes("hard"))
+      : tab === "soft"
+        ? groups.find((group) => group.toLowerCase().includes("soft"))
+        : undefined;
+  const visibleItems = useMemo(
+    () =>
+      items
+        .filter((item) => item.group === activeGroup)
+        .sort((a, b) => b.average - a.average),
+    [items, activeGroup],
+  );
+  const average = visibleItems.length
+    ? visibleItems.reduce((sum, item) => sum + item.average, 0) /
+      visibleItems.length
+    : 0;
+  const tabs = [
+    { key: "hard", label: "Hard skills" },
+    { key: "soft", label: "Soft skills" },
+    { key: "satisfaccion", label: "Satisfacción y pertinencia" },
+    { key: "malla", label: "Malla y asignaturas" },
+  ];
+  if (activeTab === "satisfaccion" || activeTab === "malla")
+    return (
+      <div className="mx-auto w-full max-w-7xl space-y-6">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <PageHeading
+            title="Brechas de competencias"
+            description={
+              activeTab === "malla"
+                ? "Aspectos útiles, oportunidades de mejora y asignaturas relevantes de la carrera."
+                : "Satisfacción global y pertinencia con el mercado laboral."
+            }
+            tone={tone}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm">
+              <Info />
+              Definiciones
+            </Button>
+            <ExportActions />
+          </div>
+        </div>
+        <DatasetSelect
+          datasets={datasets}
+          value={datasetId}
+          onChange={setDatasetId}
+          loading={datasetsLoading}
+        />
+        <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-surface-container-low p-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => {
+                setActiveTab(tab.key);
+                const group = tabGroup(tab.key);
+                if (group) setActiveGroup(group);
+              }}
+              className={`shrink-0 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.key ? "bg-surface-white text-titulados shadow-sm" : "text-ink-600 hover:bg-surface-white/70 hover:text-ink-900"}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {activeTab === "satisfaccion" ? (
+          <SatisfactionPanel summary={satisfaction} />
+        ) : (
+          <CurriculumPanel summary={curriculum} />
+        )}
+      </div>
+    );
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-6">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <PageHeading
+          title="Brechas de competencias"
+          description="Medias y desviaciones estándar por competencia. Los valores no observados se excluyen del cálculo."
+          tone={tone}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm">
+            <Info />
+            Definiciones
+          </Button>
+          <ExportActions />
+        </div>
+      </div>
+      <DatasetSelect
+        datasets={datasets}
+        value={datasetId}
+        onChange={setDatasetId}
+        loading={datasetsLoading}
+      />
+      {items.length > 0 && (
+        <FilterToolbar
+          count={`${items[0]?.validCount ?? 0} respuestas válidas`}
+        />
+      )}
+      {loading && (
+        <StatusPanel
+          kind="loading"
+          title="Cargando competencias"
+          description="Consultando las valoraciones del dataset."
+        />
+      )}
+      {error && (
+        <StatusPanel
+          kind="warning"
+          title="No se pudo cargar competencias"
+          description={error}
+        />
+      )}
+      {!loading && !error && !datasetId && (
+        <StatusPanel
+          kind="info"
+          title="Sin dataset seleccionado"
+          description="Selecciona o importa un dataset para mostrar la tabla."
+        />
+      )}
+      {items.length > 0 && (
+        <>
+          <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-surface-container-low p-1">
+            {tabs.map((tab) => {
+              const group = tabGroup(tab.key);
+              const available =
+                Boolean(group) ||
+                (domain === "TITULADOS" &&
+                  (tab.key === "satisfaccion" || tab.key === "malla"));
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(tab.key);
+                    if (group) setActiveGroup(group);
+                  }}
+                  className={`flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.key ? "bg-surface-white text-titulados shadow-sm" : "text-ink-600 hover:bg-surface-white/70 hover:text-ink-900"} ${!available ? "opacity-60" : ""}`}
+                >
+                  <span>{tab.label}</span>
+                  {group && (
+                    <span className="rounded-full bg-titulados-active px-1.5 py-0.5 text-xs">
+                      {items.filter((item) => item.group === group).length}
+                    </span>
+                  )}
+                  {!available && (
+                    <span className="text-[10px] uppercase tracking-wide">
+                      Próximamente
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {!tabGroup(activeTab) ? (
+            <StatusPanel
+              kind="info"
+              title="Sección preparada"
+              description="Esta pestaña forma parte del prototipo, pero todavía no existe un endpoint con los datos necesarios para mostrarla."
+            />
+          ) : (
+            <>
+              <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <KpiCard
+                  label="Competencias evaluadas"
+                  value={String(visibleItems.length)}
+                  detail={groupLabel(activeGroup)}
+                  note={`n = ${visibleItems[0]?.validCount ?? 0}`}
+                  icon={GraduationIcon}
+                  tone={tone}
+                />
+                <KpiCard
+                  label="Media de la dimensión"
+                  value={average ? average.toFixed(2) : "—"}
+                  detail="Escala de 1 a 5"
+                  note="Promedio de competencias"
+                  icon={WorkIcon}
+                  tone={tone}
+                />
+                <KpiCard
+                  label="Muestra"
+                  value={String(visibleItems[0]?.validCount ?? 0)}
+                  detail="Respuestas válidas"
+                  note={
+                    visibleItems[0]?.validCount &&
+                    visibleItems[0].validCount < 5
+                      ? "Muestra reducida"
+                      : "Lectura descriptiva"
+                  }
+                  icon={UsersIcon}
+                  tone={tone}
+                />
+              </div>
+              <div className="grid items-start gap-6 lg:grid-cols-12">
+                <CompetenceMatrix
+                  items={visibleItems}
+                  className="lg:col-span-7"
+                />
+                <CompetenceRadar
+                  items={visibleItems}
+                  className="lg:col-span-5"
+                />
+              </div>
+              <CompetenceStatsTable
+                items={visibleItems}
+                group={groupLabel(activeGroup)}
+              />
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
-function CompetenceMatrix({ items, className = '' }: { items: Competence[]; className?: string }) {
-  return <Card className={`rounded-xl border-0 shadow-sm ${className}`}><CardHeader><CardTitle className="title-card">Mapa de calor: Nivel de preparación técnica percibida</CardTitle><CardDescription>Distribución de frecuencias por nivel de la escala Likert · n = {items[0]?.validCount ?? 0}</CardDescription></CardHeader><CardContent><div className="overflow-x-auto"><table className="w-full min-w-[650px] text-sm"><thead><tr className="text-xs uppercase tracking-wider text-ink-600"><th className="w-56 p-2 text-left">Competencia técnica</th>{[1, 2, 3, 4, 5].map((level) => <th key={level} className={`rounded p-2 text-center ${level <= 2 ? 'bg-red-50 text-red-700' : level === 3 ? 'bg-slate-100 text-ink-600' : 'bg-blue-50 text-titulados'}`}>{level}<br /><span className="font-normal normal-case">{level === 1 ? 'Muy insuf.' : level === 2 ? 'Insuf.' : level === 3 ? 'Aceptable' : level === 4 ? 'Suficiente' : 'Muy suf.'}</span></th>)}<th className="p-2 text-right">Total</th></tr></thead><tbody>{items.map((item) => <tr key={item.code} className="border-t border-slate-100"><td className="max-w-56 whitespace-normal break-words p-2 font-medium leading-tight text-ink-900" title={item.name}>{matrixCompetenceName(item.name)}</td>{[1, 2, 3, 4, 5].map((current) => <td key={current} className={`p-2 text-center font-semibold ${matrixColor(current)}`}>{item.levelCounts[String(current)] ?? 0}</td>)}<td className="tabular-nums p-2 text-right font-semibold">{item.validCount}</td></tr>)}</tbody></table></div><div className="mt-4 flex flex-wrap items-center gap-3 border-t border-surface-container-high pt-3 text-xs text-ink-600"><span className="font-semibold">Escala:</span><span><i className="mr-1 inline-block size-3 rounded bg-red-200" />1 Muy insuficiente</span><span><i className="mr-1 inline-block size-3 rounded bg-slate-200" />3 Aceptable</span><span><i className="mr-1 inline-block size-3 rounded bg-blue-200" />5 Muy suficiente</span></div><p className="mt-3 text-xs text-ink-600">Las frecuencias excluyen respuestas “No observado” y “No sabe”.</p></CardContent></Card>
+function CompetenceMatrix({
+  items,
+  className = "",
+}: {
+  items: Competence[];
+  className?: string;
+}) {
+  return (
+    <Card className={`rounded-xl border-0 shadow-sm ${className}`}>
+      <CardHeader>
+        <CardTitle className="title-card">
+          Mapa de calor: Nivel de preparación técnica percibida
+        </CardTitle>
+        <CardDescription>
+          Distribución de frecuencias por nivel de la escala Likert · n ={" "}
+          {items[0]?.validCount ?? 0}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[650px] text-sm">
+            <thead>
+              <tr className="text-xs uppercase tracking-wider text-ink-600">
+                <th className="w-56 p-2 text-left">Competencia técnica</th>
+                {[1, 2, 3, 4, 5].map((level) => (
+                  <th
+                    key={level}
+                    className={`rounded p-2 text-center ${level <= 2 ? "bg-red-50 text-red-700" : level === 3 ? "bg-slate-100 text-ink-600" : "bg-blue-50 text-titulados"}`}
+                  >
+                    {level}
+                    <br />
+                    <span className="font-normal normal-case">
+                      {level === 1
+                        ? "Muy insuf."
+                        : level === 2
+                          ? "Insuf."
+                          : level === 3
+                            ? "Aceptable"
+                            : level === 4
+                              ? "Suficiente"
+                              : "Muy suf."}
+                    </span>
+                  </th>
+                ))}
+                <th className="p-2 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.code} className="border-t border-slate-100">
+                  <td
+                    className="max-w-56 whitespace-normal break-words p-2 font-medium leading-tight text-ink-900"
+                    title={item.name}
+                  >
+                    {matrixCompetenceName(item.name)}
+                  </td>
+                  {[1, 2, 3, 4, 5].map((current) => (
+                    <td
+                      key={current}
+                      className={`p-2 text-center font-semibold ${matrixColor(current)}`}
+                    >
+                      {item.levelCounts[String(current)] ?? 0}
+                    </td>
+                  ))}
+                  <td className="tabular-nums p-2 text-right font-semibold">
+                    {item.validCount}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-surface-container-high pt-3 text-xs text-ink-600">
+          <span className="font-semibold">Escala:</span>
+          <span>
+            <i className="mr-1 inline-block size-3 rounded bg-red-200" />1 Muy
+            insuficiente
+          </span>
+          <span>
+            <i className="mr-1 inline-block size-3 rounded bg-slate-200" />3
+            Aceptable
+          </span>
+          <span>
+            <i className="mr-1 inline-block size-3 rounded bg-blue-200" />5 Muy
+            suficiente
+          </span>
+        </div>
+        <p className="mt-3 text-xs text-ink-600">
+          Las frecuencias excluyen respuestas “No observado” y “No sabe”.
+        </p>
+      </CardContent>
+    </Card>
+  );
 }
 
 function CurriculumPanel({ summary }: { summary: AnalyticsSummary | null }) {
-  if (!summary) return <StatusPanel kind="loading" title="Cargando malla y asignaturas" description="Consultando las respuestas de selección múltiple." />
-  return <div className="grid gap-5 lg:grid-cols-2"><CurriculumCard title="Aspectos de la Carrera que resultaron útiles" field="aspectos_utiles" summary={summary} tone="blue" /><CurriculumCard title="Aspectos de la Carrera que pueden mejorarse" field="aspectos_mejorables" summary={summary} tone="orange" /><CurriculumCard title="Asignaturas que dieron ventaja competitiva" field="asignaturas_ventaja" summary={summary} tone="teal" /><CurriculumCard title="Asignaturas percibidas poco útiles o desactualizadas" field="asignaturas_poco_utiles" summary={summary} tone="orange" /></div>
+  if (!summary)
+    return (
+      <StatusPanel
+        kind="loading"
+        title="Cargando malla y asignaturas"
+        description="Consultando las respuestas de selección múltiple."
+      />
+    );
+  return (
+    <div className="grid gap-5 lg:grid-cols-2">
+      <CurriculumCard
+        title="Aspectos de la Carrera que resultaron útiles"
+        field="aspectos_utiles"
+        summary={summary}
+        tone="blue"
+      />
+      <CurriculumCard
+        title="Aspectos de la Carrera que pueden mejorarse"
+        field="aspectos_mejorables"
+        summary={summary}
+        tone="orange"
+      />
+      <CurriculumCard
+        title="Asignaturas que dieron ventaja competitiva"
+        field="asignaturas_ventaja"
+        summary={summary}
+        tone="teal"
+      />
+      <CurriculumCard
+        title="Asignaturas percibidas poco útiles o desactualizadas"
+        field="asignaturas_poco_utiles"
+        summary={summary}
+        tone="orange"
+      />
+    </div>
+  );
 }
 
-function CurriculumCard({ title, field, summary, tone }: { title: string; field: string; summary: AnalyticsSummary; tone: 'blue' | 'orange' | 'teal' }) {
-  const distribution = summary.distributions[field]; const entries = Object.entries(distribution?.counts ?? {}).sort(([, a], [, b]) => b - a).slice(0, 5); const colors = { blue: '#2878bd', orange: '#ed552f', teal: '#18a39a' }; const total = distribution?.validCount ?? 0
-  return <Card className="gap-3 rounded-xl border-0 py-4 shadow-sm"><CardHeader className="pb-0"><div className="flex items-start justify-between gap-3"><div><CardTitle className="title-card">{title}</CardTitle><CardDescription>Nota: Pregunta de opción múltiple (Varias respuestas posibles, n = {total})</CardDescription></div><Button variant="ghost" size="icon" aria-label={`Exportar ${title}`}><Download className="size-4" /></Button></div></CardHeader><CardContent className="space-y-2">{entries.length ? entries.map(([label, count]) => <div key={label} className="space-y-1"><div className="flex items-end justify-between gap-3 text-xs"><span className="min-w-0 font-semibold text-ink-900">{label}</span><span className="shrink-0 tabular-nums text-ink-600">{distribution?.percentages[label]}% ({count})</span></div><div className="h-2 overflow-hidden rounded-full bg-surface-container-high"><div className="h-full rounded-full" style={{ width: `${distribution?.percentages[label] ?? 0}%`, backgroundColor: colors[tone] }} /></div></div>) : <p className="py-4 text-sm text-ink-600">Sin respuestas disponibles para esta variable.</p>}</CardContent></Card>
+function CurriculumCard({
+  title,
+  field,
+  summary,
+  tone,
+}: {
+  title: string;
+  field: string;
+  summary: AnalyticsSummary;
+  tone: "blue" | "orange" | "teal";
+}) {
+  const distribution = summary.distributions[field];
+  const entries = Object.entries(distribution?.counts ?? {})
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5);
+  const colors = { blue: "#2878bd", orange: "#ed552f", teal: "#18a39a" };
+  const total = distribution?.validCount ?? 0;
+  return (
+    <Card className="gap-3 rounded-xl border-0 py-4 shadow-sm">
+      <CardHeader className="pb-0">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="title-card">{title}</CardTitle>
+            <CardDescription>
+              Nota: Pregunta de opción múltiple (Varias respuestas posibles, n ={" "}
+              {total})
+            </CardDescription>
+          </div>
+          <Button variant="ghost" size="icon" aria-label={`Exportar ${title}`}>
+            <Download className="size-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {entries.length ? (
+          entries.map(([label, count]) => (
+            <div key={label} className="space-y-1">
+              <div className="flex items-end justify-between gap-3 text-xs">
+                <span className="min-w-0 font-semibold text-ink-900">
+                  {label}
+                </span>
+                <span className="shrink-0 tabular-nums text-ink-600">
+                  {distribution?.percentages[label]}% ({count})
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${distribution?.percentages[label] ?? 0}%`,
+                    backgroundColor: colors[tone],
+                  }}
+                />
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="py-4 text-sm text-ink-600">
+            Sin respuestas disponibles para esta variable.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | null }) {
-  const satisfaction = summary?.distributions.satisfaccion_formacion; const concordance = summary?.distributions.concordancia_formacion_requerimientos; const pertinence = summary?.distributions.pertinencia_trabajo_formacion
-  if (!summary) return <StatusPanel kind="loading" title="Cargando satisfacción y pertinencia" description="Consultando las respuestas del dataset seleccionado." />
-  return <Card className="gap-3 rounded-xl border-0 py-4 shadow-sm"><CardHeader className="pb-0"><div className="flex items-start justify-between gap-4"><div><CardTitle className="title-card">Satisfacción global y pertinencia con el mercado laboral</CardTitle><CardDescription>Distribución de respuestas en escala Likert de 4 niveles de acuerdo (n = {summary.validResponses})</CardDescription></div><Button variant="ghost" size="icon" aria-label="Exportar vista"><Download className="size-4" /></Button></div></CardHeader><CardContent className="space-y-6"><LikertLegend /><LikertStatement number="1." title="Satisfacción global con la formación recibida en la carrera" distribution={satisfaction} /><LikertStatement number="2." title="Concordancia entre la formación académica y los requerimientos del mercado laboral" distribution={concordance} /><div className="grid gap-4 pt-1 md:grid-cols-2"><SummaryMetric title="Pertinencia con el cargo" value={`${favorablePercentage(pertinence)}%`} detail={`${favorableCount(pertinence)} de ${pertinence?.validCount ?? 0} respuestas favorables`} /><SummaryMetric title="Satisfacción con el plan" value={averageLikert(satisfaction)} detail="Media muestral continua (1-4)" /></div></CardContent></Card>
+  const satisfaction = summary?.distributions.satisfaccion_formacion;
+  const concordance =
+    summary?.distributions.concordancia_formacion_requerimientos;
+  const pertinence = summary?.distributions.pertinencia_trabajo_formacion;
+  if (!summary)
+    return (
+      <StatusPanel
+        kind="loading"
+        title="Cargando satisfacción y pertinencia"
+        description="Consultando las respuestas del dataset seleccionado."
+      />
+    );
+  return (
+    <Card className="gap-3 rounded-xl border-0 py-4 shadow-sm">
+      <CardHeader className="pb-0">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="title-card">
+              Satisfacción global y pertinencia con el mercado laboral
+            </CardTitle>
+            <CardDescription>
+              Distribución de respuestas en escala Likert de 4 niveles de
+              acuerdo (n = {summary.validResponses})
+            </CardDescription>
+          </div>
+          <Button variant="ghost" size="icon" aria-label="Exportar vista">
+            <Download className="size-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <LikertLegend />
+        <LikertStatement
+          number="1."
+          title="Satisfacción global con la formación recibida en la carrera"
+          distribution={satisfaction}
+        />
+        <LikertStatement
+          number="2."
+          title="Concordancia entre la formación académica y los requerimientos del mercado laboral"
+          distribution={concordance}
+        />
+        <div className="grid gap-4 pt-1 md:grid-cols-2">
+          <SummaryMetric
+            title="Pertinencia con el cargo"
+            value={`${favorablePercentage(pertinence)}%`}
+            detail={`${favorableCount(pertinence)} de ${pertinence?.validCount ?? 0} respuestas favorables`}
+          />
+          <SummaryMetric
+            title="Satisfacción con el plan"
+            value={averageLikert(satisfaction)}
+            detail="Media muestral continua (1-4)"
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-function LikertLegend() { return <div className="flex flex-wrap gap-x-5 gap-y-2 rounded-lg bg-surface-container-low px-3 py-2.5 text-xs font-medium text-ink-700"><span><i className="mr-1.5 inline-block size-3 rounded bg-[#ed552f]" />Totalmente en desacuerdo</span><span><i className="mr-1.5 inline-block size-3 rounded bg-[#f3a487]" />En desacuerdo</span><span><i className="mr-1.5 inline-block size-3 rounded bg-[#7db1dd]" />De acuerdo</span><span><i className="mr-1.5 inline-block size-3 rounded bg-[#1f6fb5]" />Totalmente de acuerdo</span></div> }
-
-function LikertStatement({ number, title, distribution }: { number: string; title: string; distribution?: CategoryDistribution }) {
-  const entries = orderedLikertEntries(distribution); const colors = ['#ed552f', '#f3a487', '#7db1dd', '#1f6fb5']; const total = distribution?.validCount ?? 0; const favorable = favorableCount(distribution)
-  return <div className="space-y-2 border-t border-surface-container-high pt-5 first:border-t-0 first:pt-0"><div className="flex flex-col justify-between gap-1 md:flex-row md:items-center"><span className="font-semibold text-ink-900">{number} {title}</span><span className="text-xs text-ink-600">Media: {averageLikert(distribution)} / 4,00 · {favorablePercentage(distribution)}% acuerdo favorable</span></div>{entries.length ? <><div className="flex h-11 overflow-hidden rounded-lg">{entries.map(([label, count], index) => <div key={label} className="flex min-w-0 items-center justify-center px-1 text-xs font-semibold" style={{ width: `${distribution?.percentages[label] ?? 0}%`, backgroundColor: colors[index], color: index < 2 ? '#0f172a' : 'white' }} title={`${label}: ${count} (${distribution?.percentages[label]}%)`}>{(distribution?.percentages[label] ?? 0) >= 8 ? `${count} (${distribution?.percentages[label]}%)` : ''}</div>)}</div><div className="flex justify-between px-1 text-xs text-ink-600"><span>Total desacuerdo: {total - favorable} (n={total - favorable})</span><span>Total acuerdo: {favorablePercentage(distribution)}% (n={favorable})</span></div></> : <p className="text-sm text-ink-600">Sin respuestas disponibles para esta afirmación.</p>}</div>
+function LikertLegend() {
+  return (
+    <div className="flex flex-wrap gap-x-5 gap-y-2 rounded-lg bg-surface-container-low px-3 py-2.5 text-xs font-medium text-ink-700">
+      <span>
+        <i className="mr-1.5 inline-block size-3 rounded bg-[#ed552f]" />
+        Totalmente en desacuerdo
+      </span>
+      <span>
+        <i className="mr-1.5 inline-block size-3 rounded bg-[#f3a487]" />
+        En desacuerdo
+      </span>
+      <span>
+        <i className="mr-1.5 inline-block size-3 rounded bg-[#7db1dd]" />
+        De acuerdo
+      </span>
+      <span>
+        <i className="mr-1.5 inline-block size-3 rounded bg-[#1f6fb5]" />
+        Totalmente de acuerdo
+      </span>
+    </div>
+  );
 }
 
-function orderedLikertEntries(distribution?: CategoryDistribution) { return Object.entries(distribution?.counts ?? {}).sort(([a], [b]) => likertLevel(a) - likertLevel(b)) }
-function likertLevel(label: string) { const value = label.toLowerCase(); return value.includes('totalmente') && value.includes('desacuerdo') ? 1 : value.includes('desacuerdo') ? 2 : value.includes('totalmente') && value.includes('acuerdo') ? 4 : value.includes('acuerdo') ? 3 : 5 }
-function favorableCount(distribution?: CategoryDistribution) { return Object.entries(distribution?.counts ?? {}).filter(([label]) => { const value = label.toLowerCase(); return value.includes('acuerdo') && !value.includes('desacuerdo') }).reduce((sum, [, count]) => sum + count, 0) }
-function favorablePercentage(distribution?: CategoryDistribution) { const total = distribution?.validCount ?? 0; return total ? ((favorableCount(distribution) / total) * 100).toFixed(1) : '—' }
-function averageLikert(distribution?: CategoryDistribution) { const entries = Object.entries(distribution?.counts ?? {}); const score = entries.reduce((sum, [label, count]) => sum + likertLevel(label) * count, 0); return distribution?.validCount ? (score / distribution.validCount).toFixed(2) : '—' }
-function SummaryMetric({ title, value, detail, tone = 'blue' }: { title: string; value: string; detail: string; tone?: 'blue' | 'green' }) { return <div className="rounded-lg bg-surface-container-low px-4 py-3.5"><span className="caption-bold text-ink-600">{title}</span><p className={`display-kpi tabular-nums ${tone === 'green' ? 'text-emerald-600' : 'text-titulados'}`}>{value}</p><span className="text-xs text-ink-600">{detail}</span></div> }
-
-function CompetenceStatsTable({ items, group }: { items: Competence[]; group: string }) {
-  const globalAverage = items.length ? items.reduce((sum, item) => sum + item.average, 0) / items.length : 0
-  return <Card className="rounded-xl border-0 shadow-sm"><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="title-card">Tabla descriptiva univariada por competencia técnica</CardTitle><CardDescription>Estadísticos univariados ordenados descendentemente por media muestral · {group} · n = {items[0]?.validCount ?? 0}</CardDescription></div><Button variant="ghost" size="sm">Σ Ver fórmulas estadísticas</Button></div></CardHeader><CardContent><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-sm"><thead><tr className="bg-surface-container-low text-xs text-ink-600"><th className="rounded-l-lg p-3 text-left">Competencia / Disciplina</th><th className="p-3 text-right">n<br />válido</th><th className="p-3 text-right">Media muestral<br />(x̄)</th><th className="p-3 text-right">Desv. estándar<br />(s)</th><th className="p-3 text-right">Mediana<br />(Me)</th><th className="rounded-r-lg p-3 text-right">Nivel modal (Mo)</th></tr></thead><tbody>{items.map((item) => <tr key={item.code} className="border-b border-surface-container-high"><td className="p-3 font-medium text-ink-900">{item.name}</td><td className="tabular-nums p-3 text-right">{item.validCount}</td><td className={`tabular-nums p-3 text-right font-semibold ${item.average < 2.5 ? 'text-red-600' : 'text-titulados'}`}>{item.average.toFixed(2)}</td><td className="tabular-nums p-3 text-right">{item.standardDeviation == null ? '—' : item.standardDeviation.toFixed(2)}</td><td className="tabular-nums p-3 text-right">{item.median.toFixed(2)}</td><td className="p-3 text-right">{item.modalLevel} - {levelLabel(item.modalLevel)} <span className="whitespace-nowrap">(n={item.levelCounts[String(item.modalLevel)] ?? 0})</span></td></tr>)}</tbody></table></div><div className="mt-4 flex flex-col justify-between gap-3 rounded-lg bg-surface-container-low p-3 text-xs text-ink-600 sm:flex-row"><span>Nota: la escala ordinal comprende valores de 1 a 5. Las medidas muestrales reflejan el cómputo aritmético estricto sobre respuestas válidas registradas.</span><strong className="whitespace-nowrap text-ink-900">Media global {group}: {globalAverage.toFixed(2)}</strong></div></CardContent></Card>
+function LikertStatement({
+  number,
+  title,
+  distribution,
+}: {
+  number: string;
+  title: string;
+  distribution?: CategoryDistribution;
+}) {
+  const entries = orderedLikertEntries(distribution);
+  const colors = ["#ed552f", "#f3a487", "#7db1dd", "#1f6fb5"];
+  const total = distribution?.validCount ?? 0;
+  const favorable = favorableCount(distribution);
+  return (
+    <div className="space-y-2 border-t border-surface-container-high pt-5 first:border-t-0 first:pt-0">
+      <div className="flex flex-col justify-between gap-1 md:flex-row md:items-center">
+        <span className="font-semibold text-ink-900">
+          {number} {title}
+        </span>
+        <span className="text-xs text-ink-600">
+          Media: {averageLikert(distribution)} / 4,00 ·{" "}
+          {favorablePercentage(distribution)}% acuerdo favorable
+        </span>
+      </div>
+      {entries.length ? (
+        <>
+          <div className="flex h-11 overflow-hidden rounded-lg">
+            {entries.map(([label, count], index) => (
+              <div
+                key={label}
+                className="flex min-w-0 items-center justify-center px-1 text-xs font-semibold"
+                style={{
+                  width: `${distribution?.percentages[label] ?? 0}%`,
+                  backgroundColor: colors[index],
+                  color: index < 2 ? "#0f172a" : "white",
+                }}
+                title={`${label}: ${count} (${distribution?.percentages[label]}%)`}
+              >
+                {(distribution?.percentages[label] ?? 0) >= 8
+                  ? `${count} (${distribution?.percentages[label]}%)`
+                  : ""}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between px-1 text-xs text-ink-600">
+            <span>
+              Total desacuerdo: {total - favorable} (n={total - favorable})
+            </span>
+            <span>
+              Total acuerdo: {favorablePercentage(distribution)}% (n={favorable}
+              )
+            </span>
+          </div>
+        </>
+      ) : (
+        <p className="text-sm text-ink-600">
+          Sin respuestas disponibles para esta afirmación.
+        </p>
+      )}
+    </div>
+  );
 }
 
-function levelLabel(level: number) { return level === 1 ? 'Muy insuficiente' : level === 2 ? 'Insuficiente' : level === 3 ? 'Aceptable' : level === 4 ? 'Suficiente' : 'Muy suficiente' }
-function groupLabel(group: string) { return group === 'HARD_SKILL' ? 'Hard skills' : group === 'SOFT_SKILL' ? 'Soft skills' : group.replaceAll('_', ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()) }
-function matrixCompetenceName(name: string) { return name }
+function orderedLikertEntries(distribution?: CategoryDistribution) {
+  return Object.entries(distribution?.counts ?? {}).sort(
+    ([a], [b]) => likertLevel(a) - likertLevel(b),
+  );
+}
+function likertLevel(label: string) {
+  const value = label.toLowerCase();
+  return value.includes("totalmente") && value.includes("desacuerdo")
+    ? 1
+    : value.includes("desacuerdo")
+      ? 2
+      : value.includes("totalmente") && value.includes("acuerdo")
+        ? 4
+        : value.includes("acuerdo")
+          ? 3
+          : 5;
+}
+function favorableCount(distribution?: CategoryDistribution) {
+  return Object.entries(distribution?.counts ?? {})
+    .filter(([label]) => {
+      const value = label.toLowerCase();
+      return value.includes("acuerdo") && !value.includes("desacuerdo");
+    })
+    .reduce((sum, [, count]) => sum + count, 0);
+}
+function favorablePercentage(distribution?: CategoryDistribution) {
+  const total = distribution?.validCount ?? 0;
+  return total
+    ? ((favorableCount(distribution) / total) * 100).toFixed(1)
+    : "—";
+}
+function averageLikert(distribution?: CategoryDistribution) {
+  const entries = Object.entries(distribution?.counts ?? {});
+  const score = entries.reduce(
+    (sum, [label, count]) => sum + likertLevel(label) * count,
+    0,
+  );
+  return distribution?.validCount
+    ? (score / distribution.validCount).toFixed(2)
+    : "—";
+}
+function SummaryMetric({
+  title,
+  value,
+  detail,
+  tone = "blue",
+}: {
+  title: string;
+  value: string;
+  detail: string;
+  tone?: "blue" | "green";
+}) {
+  return (
+    <div className="rounded-lg bg-surface-container-low px-4 py-3.5">
+      <span className="caption-bold text-ink-600">{title}</span>
+      <p
+        className={`display-kpi tabular-nums ${tone === "green" ? "text-emerald-600" : "text-titulados"}`}
+      >
+        {value}
+      </p>
+      <span className="text-xs text-ink-600">{detail}</span>
+    </div>
+  );
+}
 
-function matrixColor(level: number) { return level <= 2 ? 'bg-red-100 text-red-800' : level === 3 ? 'bg-slate-200 text-ink-900' : level === 4 ? 'bg-blue-100 text-titulados' : 'bg-blue-200 text-titulados' }
+function CompetenceStatsTable({
+  items,
+  group,
+}: {
+  items: Competence[];
+  group: string;
+}) {
+  const globalAverage = items.length
+    ? items.reduce((sum, item) => sum + item.average, 0) / items.length
+    : 0;
+  return (
+    <Card className="rounded-xl border-0 shadow-sm">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="title-card">
+              Tabla descriptiva univariada por competencia técnica
+            </CardTitle>
+            <CardDescription>
+              Estadísticos univariados ordenados descendentemente por media
+              muestral · {group} · n = {items[0]?.validCount ?? 0}
+            </CardDescription>
+          </div>
+          <Button variant="ghost" size="sm">
+            Σ Ver fórmulas estadísticas
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-sm">
+            <thead>
+              <tr className="bg-surface-container-low text-xs text-ink-600">
+                <th className="rounded-l-lg p-3 text-left">
+                  Competencia / Disciplina
+                </th>
+                <th className="p-3 text-right">
+                  n<br />
+                  válido
+                </th>
+                <th className="p-3 text-right">
+                  Media muestral
+                  <br />
+                  (x̄)
+                </th>
+                <th className="p-3 text-right">
+                  Desv. estándar
+                  <br />
+                  (s)
+                </th>
+                <th className="p-3 text-right">
+                  Mediana
+                  <br />
+                  (Me)
+                </th>
+                <th className="rounded-r-lg p-3 text-right">
+                  Nivel modal (Mo)
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr
+                  key={item.code}
+                  className="border-b border-surface-container-high"
+                >
+                  <td className="p-3 font-medium text-ink-900">{item.name}</td>
+                  <td className="tabular-nums p-3 text-right">
+                    {item.validCount}
+                  </td>
+                  <td
+                    className={`tabular-nums p-3 text-right font-semibold ${item.average < 2.5 ? "text-red-600" : "text-titulados"}`}
+                  >
+                    {item.average.toFixed(2)}
+                  </td>
+                  <td className="tabular-nums p-3 text-right">
+                    {item.standardDeviation == null
+                      ? "—"
+                      : item.standardDeviation.toFixed(2)}
+                  </td>
+                  <td className="tabular-nums p-3 text-right">
+                    {item.median.toFixed(2)}
+                  </td>
+                  <td className="p-3 text-right">
+                    {item.modalLevel} - {levelLabel(item.modalLevel)}{" "}
+                    <span className="whitespace-nowrap">
+                      (n={item.levelCounts[String(item.modalLevel)] ?? 0})
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-4 flex flex-col justify-between gap-3 rounded-lg bg-surface-container-low p-3 text-xs text-ink-600 sm:flex-row">
+          <span>
+            Nota: la escala ordinal comprende valores de 1 a 5. Las medidas
+            muestrales reflejan el cómputo aritmético estricto sobre respuestas
+            válidas registradas.
+          </span>
+          <strong className="whitespace-nowrap text-ink-900">
+            Media global {group}: {globalAverage.toFixed(2)}
+          </strong>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-function CompetenceRadar({ items, className = '' }: { items: Competence[]; className?: string }) {
-  const plotted = items.slice(0, 8); const width = 430; const height = 350; const center = width / 2; const centerY = 164; const radius = 100; const count = Math.max(1, plotted.length); const coordinates = (index: number, value: number) => { const angle = -Math.PI / 2 + index * (Math.PI * 2 / count); const distance = radius * Math.min(1, Math.max(0, value / 5)); return [center + Math.cos(angle) * distance, centerY + Math.sin(angle) * distance] }; const point = (index: number, value: number) => coordinates(index, value).join(','); const ring = (factor: number) => plotted.map((_, index) => point(index, factor * 5)).join(' '); const values = plotted.map((item, index) => point(index, item.average)).join(' ')
-  return <Card className={`min-w-0 overflow-hidden rounded-xl border-0 shadow-sm ${className}`}><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="title-card">Perfil medio muestral</CardTitle><CardDescription>Escala continua de 1,0 a 5,0 · máximo 8 competencias</CardDescription></div><Badge tone="neutral">Umbral 3,5</Badge></div></CardHeader><CardContent>{plotted.length ? <div className="flex min-w-0 flex-col items-center"><svg viewBox={`0 0 ${width} ${height}`} className="block h-auto max-h-80 w-full max-w-[430px]" role="img" aria-label="Perfil medio de competencias"><g fill="none" stroke="#cbd5e1" strokeWidth="1">{[0.25, 0.5, 0.75, 1].map((factor) => <polygon key={factor} points={ring(factor)} strokeDasharray="2 2" />)}<polygon points={ring(0.7)} stroke="#f2a33a" strokeDasharray="5 4" strokeWidth="1.5" />{plotted.map((_, index) => { const [x, y] = coordinates(index, 5); return <line key={index} x1={center} y1={centerY} x2={x} y2={y} /> })}</g><polygon points={values} fill="#1f6fb5" fillOpacity=".24" stroke="#1f6fb5" strokeWidth="2.25" />{plotted.map((item, index) => { const [x, y] = coordinates(index, item.average); const angle = -Math.PI / 2 + index * (Math.PI * 2 / count); const [labelX, labelY] = [center + Math.cos(angle) * 128, centerY + Math.sin(angle) * 128]; const anchor = Math.cos(angle) > 0.35 ? 'start' : Math.cos(angle) < -0.35 ? 'end' : 'middle'; const lines = radarLabel(item.name); return <g key={item.code}><circle cx={x} cy={y} r="3.5" fill="#1f6fb5" />{lines.map((line, lineIndex) => <text key={line} x={labelX} y={labelY + (lineIndex - (lines.length - 1) / 2) * 12} textAnchor={anchor} dominantBaseline="middle" className="fill-ink-900 text-[10px] font-semibold">{line}{lineIndex === lines.length - 1 ? ` (${item.average.toFixed(2)})` : ''}</text>)}</g> })}</svg><div className="mt-2 flex flex-wrap items-center justify-center gap-5 border-t border-surface-container-high pt-3 text-xs"><span className="flex items-center gap-1.5 font-medium text-ink-900"><i className="h-1.5 w-4 rounded-sm bg-titulados" />Media observada</span><span className="flex items-center gap-1.5 text-ink-600"><i className="h-0.5 w-4 border-t-2 border-dashed border-status-warning" />Umbral base (3,50)</span></div></div> : <p className="text-sm text-ink-600">Sin competencias disponibles.</p>}</CardContent></Card>
+function levelLabel(level: number) {
+  return level === 1
+    ? "Muy insuficiente"
+    : level === 2
+      ? "Insuficiente"
+      : level === 3
+        ? "Aceptable"
+        : level === 4
+          ? "Suficiente"
+          : "Muy suficiente";
+}
+function groupLabel(group: string) {
+  return group === "HARD_SKILL"
+    ? "Hard skills"
+    : group === "SOFT_SKILL"
+      ? "Soft skills"
+      : group
+          .replaceAll("_", " ")
+          .toLowerCase()
+          .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+function matrixCompetenceName(name: string) {
+  return name;
+}
+
+function matrixColor(level: number) {
+  return level <= 2
+    ? "bg-red-100 text-red-800"
+    : level === 3
+      ? "bg-slate-200 text-ink-900"
+      : level === 4
+        ? "bg-blue-100 text-titulados"
+        : "bg-blue-200 text-titulados";
+}
+
+function CompetenceRadar({
+  items,
+  className = "",
+}: {
+  items: Competence[];
+  className?: string;
+}) {
+  const plotted = items.slice(0, 8);
+  const width = 430;
+  const height = 350;
+  const center = width / 2;
+  const centerY = 164;
+  const radius = 100;
+  const count = Math.max(1, plotted.length);
+  const coordinates = (index: number, value: number) => {
+    const angle = -Math.PI / 2 + index * ((Math.PI * 2) / count);
+    const distance = radius * Math.min(1, Math.max(0, value / 5));
+    return [
+      center + Math.cos(angle) * distance,
+      centerY + Math.sin(angle) * distance,
+    ];
+  };
+  const point = (index: number, value: number) =>
+    coordinates(index, value).join(",");
+  const ring = (factor: number) =>
+    plotted.map((_, index) => point(index, factor * 5)).join(" ");
+  const values = plotted
+    .map((item, index) => point(index, item.average))
+    .join(" ");
+  return (
+    <Card
+      className={`min-w-0 overflow-hidden rounded-xl border-0 shadow-sm ${className}`}
+    >
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="title-card">Perfil medio muestral</CardTitle>
+            <CardDescription>
+              Escala continua de 1,0 a 5,0 · máximo 8 competencias
+            </CardDescription>
+          </div>
+          <Badge tone="neutral">Umbral 3,5</Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {plotted.length ? (
+          <div className="flex min-w-0 flex-col items-center">
+            <svg
+              viewBox={`0 0 ${width} ${height}`}
+              className="block h-auto max-h-80 w-full max-w-[430px]"
+              role="img"
+              aria-label="Perfil medio de competencias"
+            >
+              <g fill="none" stroke="#cbd5e1" strokeWidth="1">
+                {[0.25, 0.5, 0.75, 1].map((factor) => (
+                  <polygon
+                    key={factor}
+                    points={ring(factor)}
+                    strokeDasharray="2 2"
+                  />
+                ))}
+                <polygon
+                  points={ring(0.7)}
+                  stroke="#f2a33a"
+                  strokeDasharray="5 4"
+                  strokeWidth="1.5"
+                />
+                {plotted.map((_, index) => {
+                  const [x, y] = coordinates(index, 5);
+                  return (
+                    <line key={index} x1={center} y1={centerY} x2={x} y2={y} />
+                  );
+                })}
+              </g>
+              <polygon
+                points={values}
+                fill="#1f6fb5"
+                fillOpacity=".24"
+                stroke="#1f6fb5"
+                strokeWidth="2.25"
+              />
+              {plotted.map((item, index) => {
+                const [x, y] = coordinates(index, item.average);
+                const angle = -Math.PI / 2 + index * ((Math.PI * 2) / count);
+                const [labelX, labelY] = [
+                  center + Math.cos(angle) * 128,
+                  centerY + Math.sin(angle) * 128,
+                ];
+                const anchor =
+                  Math.cos(angle) > 0.35
+                    ? "start"
+                    : Math.cos(angle) < -0.35
+                      ? "end"
+                      : "middle";
+                const lines = radarLabel(item.name);
+                return (
+                  <g key={item.code}>
+                    <circle cx={x} cy={y} r="3.5" fill="#1f6fb5" />
+                    {lines.map((line, lineIndex) => (
+                      <text
+                        key={line}
+                        x={labelX}
+                        y={labelY + (lineIndex - (lines.length - 1) / 2) * 12}
+                        textAnchor={anchor}
+                        dominantBaseline="middle"
+                        className="fill-ink-900 text-[10px] font-semibold"
+                      >
+                        {line}
+                        {lineIndex === lines.length - 1
+                          ? ` (${item.average.toFixed(2)})`
+                          : ""}
+                      </text>
+                    ))}
+                  </g>
+                );
+              })}
+            </svg>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-5 border-t border-surface-container-high pt-3 text-xs">
+              <span className="flex items-center gap-1.5 font-medium text-ink-900">
+                <i className="h-1.5 w-4 rounded-sm bg-titulados" />
+                Media observada
+              </span>
+              <span className="flex items-center gap-1.5 text-ink-600">
+                <i className="h-0.5 w-4 border-t-2 border-dashed border-status-warning" />
+                Umbral base (3,50)
+              </span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-ink-600">Sin competencias disponibles.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 function radarLabel(name: string) {
-  const normalized = name.toLowerCase()
-  if (normalized.includes('programación')) return ['Programación']
-  if (normalized.includes('bases')) return ['Bases de datos']
-  if (normalized.includes('requisitos')) return ['Requisitos y', 'modelado']
-  if (normalized.includes('análisis')) return ['Análisis de', 'datos']
-  if (normalized.includes('gestión')) return ['Gestión de', 'proyectos']
-  if (normalized.includes('redes')) return ['Redes']
-  if (normalized.includes('seguridad')) return ['Seguridad']
-  if (normalized.includes('cloud')) return ['Cloud / DevOps']
-  return [name]
+  const normalized = name.toLowerCase();
+  if (normalized.includes("programación")) return ["Programación"];
+  if (normalized.includes("bases")) return ["Bases de datos"];
+  if (normalized.includes("requisitos")) return ["Requisitos y", "modelado"];
+  if (normalized.includes("análisis")) return ["Análisis de", "datos"];
+  if (normalized.includes("gestión")) return ["Gestión de", "proyectos"];
+  if (normalized.includes("redes")) return ["Redes"];
+  if (normalized.includes("seguridad")) return ["Seguridad"];
+  if (normalized.includes("cloud")) return ["Cloud / DevOps"];
+  return [name];
 }
 
 export function FinancingCompletePage() {
-  const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets('TITULADOS'); const [summary, setSummary] = useState<AnalyticsSummary | null>(null); const [cross, setCross] = useState<Cross | null>(null); const [chi, setChi] = useState<ChiResult | null>(null); const [error, setError] = useState<string | null>(null); const [includeTotals, setIncludeTotals] = useState(true); const [colorHeatmap, setColorHeatmap] = useState(false); const rowField = 'financiamiento_posgrado_estimado'; const [columnField, setColumnField] = useState('nivel_posgrado_interes'); const financingColumns = [{ key: 'nivel_posgrado_interes', label: 'Nivel de posgrado de interés' }, { key: 'area_posgrado_interes', label: 'Área de interés' }, { key: 'modalidad_posgrado', label: 'Modalidad' }]
-  useEffect(() => { if (!datasetId) { setSummary(null); setCross(null); setChi(null); return }; setError(null); Promise.all([apiRequest<AnalyticsSummary>('/analytics/titulados/financing?datasetId=' + encodeURIComponent(datasetId)), apiRequest<Cross>('/analytics/crosses?datasetId=' + encodeURIComponent(datasetId) + '&rowField=' + rowField + '&columnField=' + columnField)]).then(async ([nextSummary, nextCross]) => { setSummary(nextSummary); setCross(nextCross); const frequencies = nextCross.rowCategories.map((row) => nextCross.columnCategories.map((column) => nextCross.counts[row]?.[column] ?? 0)); try { setChi(await apiRequest<ChiResult>('/analitica/chi-cuadrado', { method: 'POST', body: JSON.stringify({ frecuencias: frequencies, alfa: 0.05 }) })) } catch { setChi(null) } }).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))) }, [datasetId, columnField])
-  return <div className="mx-auto w-full max-w-7xl space-y-5"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><PageHeading title={`Financiamiento${summary ? ` (n = ${summary.validResponses})` : ''}`} description="Fuente estimada para financiar estudios de posgrado y su relación con el nivel de interés." tone="titulados" /><div className="flex flex-wrap items-center gap-2"><Button variant="outline" size="sm"><Info />Definiciones</Button></div></div><DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} />{error && <StatusPanel kind="warning" title="No se pudo cargar financiamiento" description={error} />}{summary && <DistributionCard title="Fuente de financiamiento estimada para posgrado" distribution={summary.distributions.financiamiento_posgrado_estimado ?? { validCount: 0, counts: {}, percentages: {} }} tone="titulados" />}<Card className="rounded-xl border-0 shadow-sm"><CardContent className="flex flex-wrap items-center gap-4 py-4"><span className="label-default text-ink-600">FILAS (Y): <strong className="text-ink-900">Fuente de financiamiento estimada</strong></span><label className="label-default flex items-center gap-2">COLUMNAS (X):<select className="control min-w-56" value={columnField} onChange={(event) => setColumnField(event.target.value)}>{financingColumns.map((field) => <option key={field.key} value={field.key}>{field.label}</option>)}</select></label><label className="flex items-center gap-2 text-sm text-ink-600"><input type="checkbox" checked={includeTotals} onChange={(event) => setIncludeTotals(event.target.checked)} /> Totales</label><label className="flex items-center gap-2 text-sm text-ink-600"><input type="checkbox" checked={colorHeatmap} onChange={(event) => setColorHeatmap(event.target.checked)} /> Aplicar mapa de calor</label></CardContent></Card>{cross && <><CrossTable cross={cross} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric="count" /><div className="w-full"><ChiSquareCard result={chi} cross={cross} /></div></>}</div>
+  const {
+    datasets,
+    datasetId,
+    setDatasetId,
+    loading: datasetsLoading,
+  } = useDatasets("TITULADOS");
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [cross, setCross] = useState<Cross | null>(null);
+  const [chi, setChi] = useState<ChiResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [includeTotals, setIncludeTotals] = useState(true);
+  const [colorHeatmap, setColorHeatmap] = useState(false);
+  const rowField = "financiamiento_posgrado_estimado";
+  const [columnField, setColumnField] = useState("nivel_posgrado_interes");
+  const financingColumns = [
+    { key: "nivel_posgrado_interes", label: "Nivel de posgrado de interés" },
+    { key: "area_posgrado_interes", label: "Área de interés" },
+    { key: "modalidad_posgrado", label: "Modalidad" },
+  ];
+  useEffect(() => {
+    if (!datasetId) {
+      setSummary(null);
+      setCross(null);
+      setChi(null);
+      return;
+    }
+    setError(null);
+    Promise.all([
+      apiRequest<AnalyticsSummary>(
+        "/analytics/titulados/financing?datasetId=" +
+          encodeURIComponent(datasetId),
+      ),
+      apiRequest<Cross>(
+        "/analytics/crosses?datasetId=" +
+          encodeURIComponent(datasetId) +
+          "&rowField=" +
+          rowField +
+          "&columnField=" +
+          columnField,
+      ),
+    ])
+      .then(async ([nextSummary, nextCross]) => {
+        setSummary(nextSummary);
+        setCross(nextCross);
+        const frequencies = nextCross.rowCategories.map((row) =>
+          nextCross.columnCategories.map(
+            (column) => nextCross.counts[row]?.[column] ?? 0,
+          ),
+        );
+        try {
+          setChi(
+            await apiRequest<ChiResult>("/analitica/chi-cuadrado", {
+              method: "POST",
+              body: JSON.stringify({ frecuencias: frequencies, alfa: 0.05 }),
+            }),
+          );
+        } catch {
+          setChi(null);
+        }
+      })
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : String(cause)),
+      );
+  }, [datasetId, columnField]);
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-5">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <PageHeading
+          title={`Financiamiento${summary ? ` (n = ${summary.validResponses})` : ""}`}
+          description="Fuente estimada para financiar estudios de posgrado y su relación con el nivel de interés."
+          tone="titulados"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm">
+            <Info />
+            Definiciones
+          </Button>
+        </div>
+      </div>
+      <DatasetSelect
+        datasets={datasets}
+        value={datasetId}
+        onChange={setDatasetId}
+        loading={datasetsLoading}
+      />
+      {error && (
+        <StatusPanel
+          kind="warning"
+          title="No se pudo cargar financiamiento"
+          description={error}
+        />
+      )}
+      {summary && (
+        <DistributionCard
+          title="Fuente de financiamiento estimada para posgrado"
+          distribution={
+            summary.distributions.financiamiento_posgrado_estimado ?? {
+              validCount: 0,
+              counts: {},
+              percentages: {},
+            }
+          }
+          tone="titulados"
+        />
+      )}
+      <Card className="rounded-xl border-0 shadow-sm">
+        <CardContent className="flex flex-wrap items-center gap-4 py-4">
+          <span className="label-default text-ink-600">
+            FILAS (Y):{" "}
+            <strong className="text-ink-900">
+              Fuente de financiamiento estimada
+            </strong>
+          </span>
+          <label className="label-default flex items-center gap-2">
+            COLUMNAS (X):
+            <select
+              className="control min-w-56"
+              value={columnField}
+              onChange={(event) => setColumnField(event.target.value)}
+            >
+              {financingColumns.map((field) => (
+                <option key={field.key} value={field.key}>
+                  {field.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ink-600">
+            <input
+              type="checkbox"
+              checked={includeTotals}
+              onChange={(event) => setIncludeTotals(event.target.checked)}
+            />{" "}
+            Totales
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ink-600">
+            <input
+              type="checkbox"
+              checked={colorHeatmap}
+              onChange={(event) => setColorHeatmap(event.target.checked)}
+            />{" "}
+            Aplicar mapa de calor
+          </label>
+        </CardContent>
+      </Card>
+      {cross && (
+        <>
+          <CrossTable
+            cross={cross}
+            includeTotals={includeTotals}
+            colorHeatmap={colorHeatmap}
+            metric="count"
+          />
+          <div className="w-full">
+            <ChiSquareCard result={chi} cross={cross} />
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
-function expectedFrequencyWarning(cross: Cross) { const total = cross.validCount; if (!total) return null; const rowTotals = cross.rowCategories.map((row) => cross.columnCategories.reduce((sum, column) => sum + (cross.counts[row]?.[column] ?? 0), 0)); const columnTotals = cross.columnCategories.map((column) => cross.rowCategories.reduce((sum, row) => sum + (cross.counts[row]?.[column] ?? 0), 0)); const totalCells = cross.rowCategories.length * cross.columnCategories.length; const lowCells = rowTotals.reduce((count, rowTotal) => count + columnTotals.reduce((innerCount, columnTotal) => innerCount + (rowTotal * columnTotal / total < 5 ? 1 : 0), 0), 0); return { lowCells, totalCells } } function ChiSquareCard({ result, cross }: { result: ChiResult | null; cross: Cross }) { const warning = expectedFrequencyWarning(cross); const reason = !cross.validCount ? 'No hay celdas con observaciones válidas para evaluar.' : cross.rowCategories.length < 2 ? `La matriz solo tiene ${cross.rowCategories.length} categoría de fila; se requieren al menos 2.` : cross.columnCategories.length < 2 ? `La matriz solo tiene ${cross.columnCategories.length} categoría de columna; se requieren al menos 2.` : 'No se pudo completar el cálculo de χ² para esta matriz.'; return <Card className="gap-2 rounded-xl border-0 shadow-sm"><CardHeader className="grid-cols-[1fr_auto] gap-x-4 gap-y-1 pb-0"><CardTitle className="title-card">Prueba de independencia (χ²)</CardTitle><div className="flex flex-col items-end gap-1"><Badge tone="neutral">{result ? (result.rechazaIndependencia ? "p < α" : "p ≥ α") : "α = 0,05"}</Badge>{result && <span className="text-xs text-ink-600">α = 0,05</span>}</div></CardHeader><CardContent className="space-y-4">{result ? <><div>{warning?.lowCells ? <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><strong>Aviso de validez:</strong> {warning.lowCells} de {warning.totalCells} celdas tienen frecuencia esperada menor a 5; el resultado es orientativo.</div> : null}</div><div className="grid items-center gap-4 md:grid-cols-3"><div><p className="display-kpi tabular-nums text-ink-900">p = {result.pValor.toFixed(3).replace('.', ',')}</p></div><div className="rounded-lg bg-surface-container-low p-4"><span className="caption-meta">χ² calculado</span><p className="title-card tabular-nums">{result.estadistico.toFixed(2).replace('.', ',')}</p></div><div className="rounded-lg bg-surface-container-low p-4"><span className="caption-meta">Grados de libertad</span><p className="title-card tabular-nums">{result.gradosLibertad}</p></div></div><p className="text-xs text-ink-600">Prueba asintótica de Pearson para la tabla de contingencia.</p></> : <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><strong>No aplicable:</strong> {reason}</div>}</CardContent></Card> }
+function expectedFrequencyWarning(cross: Cross) {
+  const total = cross.validCount;
+  if (!total) return null;
+  const rowTotals = cross.rowCategories.map((row) =>
+    cross.columnCategories.reduce(
+      (sum, column) => sum + (cross.counts[row]?.[column] ?? 0),
+      0,
+    ),
+  );
+  const columnTotals = cross.columnCategories.map((column) =>
+    cross.rowCategories.reduce(
+      (sum, row) => sum + (cross.counts[row]?.[column] ?? 0),
+      0,
+    ),
+  );
+  const totalCells = cross.rowCategories.length * cross.columnCategories.length;
+  const lowCells = rowTotals.reduce(
+    (count, rowTotal) =>
+      count +
+      columnTotals.reduce(
+        (innerCount, columnTotal) =>
+          innerCount + ((rowTotal * columnTotal) / total < 5 ? 1 : 0),
+        0,
+      ),
+    0,
+  );
+  return { lowCells, totalCells };
+}
+function ChiSquareCard({
+  result,
+  cross,
+}: {
+  result: ChiResult | null;
+  cross: Cross;
+}) {
+  const warning = expectedFrequencyWarning(cross);
+  const reason = !cross.validCount
+    ? "No hay celdas con observaciones válidas para evaluar."
+    : cross.rowCategories.length < 2
+      ? `La matriz solo tiene ${cross.rowCategories.length} categoría de fila; se requieren al menos 2.`
+      : cross.columnCategories.length < 2
+        ? `La matriz solo tiene ${cross.columnCategories.length} categoría de columna; se requieren al menos 2.`
+        : "No se pudo completar el cálculo de χ² para esta matriz.";
+  return (
+    <Card className="gap-2 rounded-xl border-0 shadow-sm">
+      <CardHeader className="grid-cols-[1fr_auto] gap-x-4 gap-y-1 pb-0">
+        <CardTitle className="title-card">
+          Prueba de independencia (χ²)
+        </CardTitle>
+        <div className="flex flex-col items-end gap-1">
+          <Badge tone="neutral">
+            {result
+              ? result.rechazaIndependencia
+                ? "p < α"
+                : "p ≥ α"
+              : "α = 0,05"}
+          </Badge>
+          {result && <span className="text-xs text-ink-600">α = 0,05</span>}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {result ? (
+          <>
+            <div>
+              {warning?.lowCells ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                  <strong>Aviso de validez:</strong> {warning.lowCells} de{" "}
+                  {warning.totalCells} celdas tienen frecuencia esperada menor a
+                  5; el resultado es orientativo.
+                </div>
+              ) : null}
+            </div>
+            <div className="grid items-center gap-4 md:grid-cols-3">
+              <div>
+                <p className="display-kpi tabular-nums text-ink-900">
+                  p = {result.pValor.toFixed(3).replace(".", ",")}
+                </p>
+              </div>
+              <div className="rounded-lg bg-surface-container-low p-4">
+                <span className="caption-meta">χ² calculado</span>
+                <p className="title-card tabular-nums">
+                  {result.estadistico.toFixed(2).replace(".", ",")}
+                </p>
+              </div>
+              <div className="rounded-lg bg-surface-container-low p-4">
+                <span className="caption-meta">Grados de libertad</span>
+                <p className="title-card tabular-nums">
+                  {result.gradosLibertad}
+                </p>
+              </div>
+            </div>
+            <p className="text-xs text-ink-600">
+              Prueba asintótica de Pearson para la tabla de contingencia.
+            </p>
+          </>
+        ) : (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            <strong>No aplicable:</strong> {reason}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export function FinancingPage() {
-  const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets('TITULADOS'); const [summary, setSummary] = useState<AnalyticsSummary | null>(null); const [cross, setCross] = useState<Cross | null>(null); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null); const [rowField, setRowField] = useState('financiamiento_posgrado_estimado'); const [columnField, setColumnField] = useState('nivel_posgrado_interes')
-  useEffect(() => { if (!datasetId) { setSummary(null); return }; setLoading(true); setError(null); apiRequest<AnalyticsSummary>(`/analytics/titulados/financing?datasetId=${encodeURIComponent(datasetId)}`).then(setSummary).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setLoading(false)) }, [datasetId])
-  async function loadCross() { if (!datasetId || rowField === columnField) return; setLoading(true); setError(null); try { setCross(await apiRequest<Cross>(`/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}`)) } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)) } finally { setLoading(false) } }; useEffect(() => { void loadCross() }, [datasetId, rowField, columnField])
-  return <div className="mx-auto w-full max-w-7xl space-y-5"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><PageHeading title={`Financiamiento${summary ? ` (n = ${summary.validResponses})` : ''}`} description="Fuente estimada para financiar estudios de posgrado y su relación con el nivel de interés." tone="titulados" /><div className="flex flex-wrap items-center gap-2"><Button variant="outline" size="sm"><Info />Definiciones</Button><ExportActions /></div></div><DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} />{error && <StatusPanel kind="warning" title="No se pudo cargar financiamiento" description={error} />}{loading && <StatusPanel kind="loading" title="Cargando financiamiento" description="Consultando las respuestas del dataset." />}{summary && <><DistributionCard title="Fuente de financiamiento estimada para posgrado" distribution={summary.distributions.financiamiento_posgrado_estimado ?? { validCount: 0, counts: {}, percentages: {} }} tone="titulados" /><Card className="rounded-xl border-0 shadow-sm"><CardHeader><CardTitle className="title-card">Cruce: financiamiento vs. nivel de posgrado</CardTitle><CardDescription>Selecciona las variables y genera la tabla de contingencia.</CardDescription></CardHeader><CardContent className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end"><label className="label-default grid gap-1">Filas<select className="control" value={rowField} onChange={(event) => setRowField(event.target.value)}><option value="financiamiento_posgrado_estimado">Fuente de financiamiento estimada</option><option value="financiamiento_posgrado_cursado">Financiamiento del posgrado cursado</option></select></label><label className="label-default grid gap-1">Columnas<select className="control" value={columnField} onChange={(event) => setColumnField(event.target.value)}><option value="nivel_posgrado_interes">Nivel de posgrado de interés</option><option value="area_posgrado_interes">Área de interés</option><option value="modalidad_posgrado">Modalidad</option></select></label><Button onClick={loadCross} disabled={loading || !datasetId || rowField === columnField}>Generar tabla</Button></CardContent></Card>{cross && <CrossTable cross={cross} includeTotals colorHeatmap={false} metric="count" />}</>}</div>
+  const {
+    datasets,
+    datasetId,
+    setDatasetId,
+    loading: datasetsLoading,
+  } = useDatasets("TITULADOS");
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [cross, setCross] = useState<Cross | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [rowField, setRowField] = useState("financiamiento_posgrado_estimado");
+  const [columnField, setColumnField] = useState("nivel_posgrado_interes");
+  useEffect(() => {
+    if (!datasetId) {
+      setSummary(null);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    apiRequest<AnalyticsSummary>(
+      `/analytics/titulados/financing?datasetId=${encodeURIComponent(datasetId)}`,
+    )
+      .then(setSummary)
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : String(cause)),
+      )
+      .finally(() => setLoading(false));
+  }, [datasetId]);
+  async function loadCross() {
+    if (!datasetId || rowField === columnField) return;
+    setLoading(true);
+    setError(null);
+    try {
+      setCross(
+        await apiRequest<Cross>(
+          `/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}`,
+        ),
+      );
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => {
+    void loadCross();
+  }, [datasetId, rowField, columnField]);
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-5">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <PageHeading
+          title={`Financiamiento${summary ? ` (n = ${summary.validResponses})` : ""}`}
+          description="Fuente estimada para financiar estudios de posgrado y su relación con el nivel de interés."
+          tone="titulados"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm">
+            <Info />
+            Definiciones
+          </Button>
+          <ExportActions />
+        </div>
+      </div>
+      <DatasetSelect
+        datasets={datasets}
+        value={datasetId}
+        onChange={setDatasetId}
+        loading={datasetsLoading}
+      />
+      {error && (
+        <StatusPanel
+          kind="warning"
+          title="No se pudo cargar financiamiento"
+          description={error}
+        />
+      )}
+      {loading && (
+        <StatusPanel
+          kind="loading"
+          title="Cargando financiamiento"
+          description="Consultando las respuestas del dataset."
+        />
+      )}
+      {summary && (
+        <>
+          <DistributionCard
+            title="Fuente de financiamiento estimada para posgrado"
+            distribution={
+              summary.distributions.financiamiento_posgrado_estimado ?? {
+                validCount: 0,
+                counts: {},
+                percentages: {},
+              }
+            }
+            tone="titulados"
+          />
+          <Card className="rounded-xl border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="title-card">
+                Cruce: financiamiento vs. nivel de posgrado
+              </CardTitle>
+              <CardDescription>
+                Selecciona las variables y genera la tabla de contingencia.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+              <label className="label-default grid gap-1">
+                Filas
+                <select
+                  className="control"
+                  value={rowField}
+                  onChange={(event) => setRowField(event.target.value)}
+                >
+                  <option value="financiamiento_posgrado_estimado">
+                    Fuente de financiamiento estimada
+                  </option>
+                  <option value="financiamiento_posgrado_cursado">
+                    Financiamiento del posgrado cursado
+                  </option>
+                </select>
+              </label>
+              <label className="label-default grid gap-1">
+                Columnas
+                <select
+                  className="control"
+                  value={columnField}
+                  onChange={(event) => setColumnField(event.target.value)}
+                >
+                  <option value="nivel_posgrado_interes">
+                    Nivel de posgrado de interés
+                  </option>
+                  <option value="area_posgrado_interes">Área de interés</option>
+                  <option value="modalidad_posgrado">Modalidad</option>
+                </select>
+              </label>
+              <Button
+                onClick={loadCross}
+                disabled={loading || !datasetId || rowField === columnField}
+              >
+                Generar tabla
+              </Button>
+            </CardContent>
+          </Card>
+          {cross && (
+            <CrossTable
+              cross={cross}
+              includeTotals
+              colorHeatmap={false}
+              metric="count"
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
 export function CrossExportPage({ domain }: { domain: Domain }) {
-  const tone: Tone = domain === 'TITULADOS' ? 'titulados' : 'empleadores'; const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets(domain); const [rowField, setRowField] = useState(domain === 'TITULADOS' ? 'situacion_laboral_actual' : 'tipo_organizacion'); const [columnField, setColumnField] = useState(domain === 'TITULADOS' ? 'interes_posgrado' : 'tamano_organizacion'); const [cross, setCross] = useState<Cross | null>(null); const [includeTotals, setIncludeTotals] = useState(true); const [metric, setMetric] = useState<CrossMetric>('count'); const [colorHeatmap, setColorHeatmap] = useState(false); const [error, setError] = useState<string | null>(null); const [loading, setLoading] = useState(false); const [exportFormat, setExportFormat] = useState<"csv" | "xlsx" | "png">("csv")
-const fields = domain === 'TITULADOS' ? [{ key: 'edad_rango', label: 'Rango de edad', group: 'Perfil' }, { key: 'genero', label: 'Género', group: 'Perfil' }, { key: 'segmento_titulacion', label: 'Segmento (Junior / Consolidado)', group: 'Perfil' }, { key: 'situacion_laboral_actual', label: 'Estado laboral', group: 'Perfil' }, { key: 'sector_trabajo', label: 'Sector laboral', group: 'Perfil' }, { key: 'tiene_formacion_complementaria', label: 'Formación complementaria (Sí/No)', group: 'Formación' }, { key: 'interes_posgrado', label: 'Interés en posgrado (Sí/No)', group: 'Formación' }, { key: 'nivel_posgrado_interes', label: 'Nivel de posgrado de interés', group: 'Formación' }, { key: 'area_posgrado_interes', label: 'Área de interés', group: 'Formación' }, { key: 'modalidad_posgrado', label: 'Modalidad preferida', group: 'Formación' }, { key: 'financiamiento_posgrado_estimado', label: 'Fuente de financiamiento estimada', group: 'Formación' }, { key: 'rubro_trabajo_actual', label: 'Rubro de la organización', group: 'Trabajo' }, { key: 'antiguedad_trabajo', label: 'Antigüedad en el trabajo', group: 'Trabajo' }, { key: 'remuneracion_rango', label: 'Remuneración mensual', group: 'Trabajo' }, { key: 'primera_experiencia_laboral', label: '¿Es su primer empleo? (Sí/No)', group: 'Trabajo' }] : [{ key: 'tipo_organizacion', label: 'Tipo de organización', group: 'Perfil' }, { key: 'tamano_organizacion', label: 'Tamaño de organización', group: 'Perfil' }, { key: 'rubro_organizacion', label: 'Rubro de la organización', group: 'Perfil' }, { key: 'contrato_titulados_ultimos_5_anios', label: 'Contratación reciente', group: 'Perfil' }]
-  const fieldGroups = Array.from(new Set(fields.map((field) => field.group))).map((group) => ({ group, fields: fields.filter((field) => field.group === group) }))
-  async function loadCross() { if (!datasetId || rowField === columnField) return; setLoading(true); setError(null); try { setCross(await apiRequest<Cross>(`/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}`)) } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)) } finally { setLoading(false) } }; useEffect(() => { void loadCross() }, [datasetId, rowField, columnField])
-return <div className="mx-auto w-full max-w-7xl space-y-5"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><PageHeading title={`Cruces bivariados y exportación${cross ? ` (n = ${cross.validCount})` : ''}`} description="Configura una matriz de frecuencias y revisa sus porcentajes por fila." tone={tone} /><div className="flex flex-wrap items-center gap-2"><Button variant="outline" size="sm"><Info />Definiciones</Button></div></div><DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} /><div className="grid items-start gap-5 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)]"><div className="space-y-5"><Card className="rounded-xl border-0 shadow-sm"><CardHeader><CardTitle className="title-card flex items-center justify-between">Configurar cruce <SlidersHorizontal className="size-4 text-ink-600" /></CardTitle></CardHeader><CardContent className="space-y-4"><label className="label-default grid gap-1">Variable de filas<Select value={rowField} onValueChange={setRowField}><SelectTrigger className="w-full min-w-0"><SelectValue /></SelectTrigger><SelectContent>{fieldGroups.map(({ group, fields: groupFields }) => <SelectGroup key={group} className="border-t border-border-line px-1 first:border-t-0"><SelectLabel className="px-2 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-ink-600">{group}</SelectLabel>{groupFields.map((field) => <SelectItem key={field.key} value={field.key} disabled={field.key === columnField} className="data-[state=checked]:bg-slate-100 data-[state=checked]:font-semibold data-[state=checked]:text-titulados [&_[data-slot=select-item-indicator]]:hidden data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45">{field.label}</SelectItem>)}</SelectGroup>)}</SelectContent></Select></label><label className="label-default grid gap-1">Variable de columnas<Select value={columnField} onValueChange={setColumnField}><SelectTrigger className="w-full min-w-0"><SelectValue /></SelectTrigger><SelectContent>{fieldGroups.map(({ group, fields: groupFields }) => <SelectGroup key={group} className="border-t border-border-line px-1 first:border-t-0"><SelectLabel className="px-2 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-ink-600">{group}</SelectLabel>{groupFields.map((field) => <SelectItem key={field.key} value={field.key} disabled={field.key === rowField} className="data-[state=checked]:bg-slate-100 data-[state=checked]:font-semibold data-[state=checked]:text-titulados [&_[data-slot=select-item-indicator]]:hidden data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45">{field.label}</SelectItem>)}</SelectGroup>)}</SelectContent></Select></label><div className="space-y-3 border-t border-border-line pt-3 text-xs text-ink-600"><p className="caption-bold text-ink-600">MÉTRICA DE CELDA</p><RadioGroup value={metric} onValueChange={(value) => setMetric(value as CrossMetric)} className="gap-2"><label className="flex items-start gap-2"><RadioGroupItem value="count" /><span>Frecuencia absoluta<br />(conteos)</span></label><label className="flex items-center gap-2"><RadioGroupItem value="rowPercent" /><span>% por fila</span></label><label className="flex items-center gap-2"><RadioGroupItem value="columnPercent" /><span>% por columna</span></label></RadioGroup><div className="space-y-2 border-t border-border-line pt-3"><p className="caption-bold text-ink-600">OPCIONES DE CÁLCULO</p><label className="flex items-center gap-2"><Checkbox checked={includeTotals} onCheckedChange={(checked) => setIncludeTotals(checked === true)} /><span>Incluir marginales (totales)</span></label><label className="flex items-center gap-2"><Checkbox checked={colorHeatmap} onCheckedChange={(checked) => setColorHeatmap(checked === true)} /><span>Colorear mapa de calor</span></label></div></div></CardContent></Card><Card className="rounded-xl border-0 shadow-sm"><CardHeader><CardTitle className="title-card">Exportar resultados</CardTitle><CardDescription>Selecciona un formato para descargar la matriz.</CardDescription></CardHeader><CardContent className="space-y-3"><div className="flex items-center gap-2"><div className="min-w-0 flex-1"><Select value={exportFormat} onValueChange={(value) => setExportFormat(value as "csv" | "xlsx" | "png")}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="csv">Tabla CSV</SelectItem><SelectItem value="xlsx">Libro Excel (XLSX)</SelectItem><SelectItem value="png">Gráfico PNG</SelectItem></SelectContent></Select></div><Button size="icon" className="size-9" variant="secondary" title="Descargar" aria-label="Descargar" onClick={() => { if (!cross) return; if (exportFormat === "csv") exportCrossCsv(cross); else if (exportFormat === "xlsx") exportCrossExcel(cross); else exportCrossPng(cross) }} disabled={!cross}><Download /></Button></div>{cross && <p className="border-t border-border-line pt-3 text-xs text-ink-600">Registros incluidos: <strong>{cross.validCount}</strong><br />Cruce: {labelFor(rowField)} vs. {labelFor(columnField)}</p>}</CardContent></Card></div><div className="min-w-0 space-y-4"><div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-surface-container-low p-1 text-xs"><span className="shrink-0 whitespace-nowrap rounded-lg bg-surface-white px-4 py-2 font-semibold text-titulados shadow-sm">Tabla</span><span className="shrink-0 whitespace-nowrap px-4 py-2 text-ink-600">Barras comparativas</span></div>{loading && <StatusPanel kind="loading" title="Calculando cruce" description="Actualizando la matriz con las variables seleccionadas." />}{error && <StatusPanel kind="warning" title="No se pudo calcular el cruce" description={error} />}{cross ? <CrossTable cross={cross} totalResponses={datasets.find((dataset) => dataset.id === datasetId)?.rowsValid} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric={metric} /> : <StatusPanel kind="info" title="Genera una matriz de cruce" description="Selecciona las variables de filas y columnas para mostrar la tabla bivariada." />}</div></div></div>
+  const tone: Tone = domain === "TITULADOS" ? "titulados" : "empleadores";
+  const {
+    datasets,
+    datasetId,
+    setDatasetId,
+    loading: datasetsLoading,
+  } = useDatasets(domain);
+  const [rowField, setRowField] = useState(
+    domain === "TITULADOS" ? "situacion_laboral_actual" : "tipo_organizacion",
+  );
+  const [columnField, setColumnField] = useState(
+    domain === "TITULADOS" ? "interes_posgrado" : "tamano_organizacion",
+  );
+  const [cross, setCross] = useState<Cross | null>(null);
+  const [includeTotals, setIncludeTotals] = useState(true);
+  const [metric, setMetric] = useState<CrossMetric>("count");
+  const [colorHeatmap, setColorHeatmap] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [exportFormat, setExportFormat] = useState<"csv" | "xlsx" | "png">(
+    "csv",
+  );
+  const [activeView, setActiveView] = useState<"table" | "bars">("table");
+  const fields =
+    domain === "TITULADOS"
+      ? [
+          { key: "edad_rango", label: "Rango de edad", group: "Perfil" },
+          { key: "genero", label: "Género", group: "Perfil" },
+          {
+            key: "segmento_titulacion",
+            label: "Segmento (Junior / Consolidado)",
+            group: "Perfil",
+          },
+          {
+            key: "situacion_laboral_actual",
+            label: "Estado laboral",
+            group: "Perfil",
+          },
+          { key: "sector_trabajo", label: "Sector laboral", group: "Perfil" },
+          {
+            key: "tiene_formacion_complementaria",
+            label: "Formación complementaria (Sí/No)",
+            group: "Formación",
+          },
+          {
+            key: "interes_posgrado",
+            label: "Interés en posgrado (Sí/No)",
+            group: "Formación",
+          },
+          {
+            key: "nivel_posgrado_interes",
+            label: "Nivel de posgrado de interés",
+            group: "Formación",
+          },
+          {
+            key: "area_posgrado_interes",
+            label: "Área de interés",
+            group: "Formación",
+          },
+          {
+            key: "modalidad_posgrado",
+            label: "Modalidad preferida",
+            group: "Formación",
+          },
+          {
+            key: "financiamiento_posgrado_estimado",
+            label: "Fuente de financiamiento estimada",
+            group: "Formación",
+          },
+          {
+            key: "rubro_trabajo_actual",
+            label: "Rubro de la organización",
+            group: "Trabajo",
+          },
+          {
+            key: "antiguedad_trabajo",
+            label: "Antigüedad en el trabajo",
+            group: "Trabajo",
+          },
+          {
+            key: "remuneracion_rango",
+            label: "Remuneración mensual",
+            group: "Trabajo",
+          },
+          {
+            key: "primera_experiencia_laboral",
+            label: "¿Es su primer empleo? (Sí/No)",
+            group: "Trabajo",
+          },
+        ]
+      : [
+          {
+            key: "tipo_organizacion",
+            label: "Tipo de organización",
+            group: "Perfil",
+          },
+          {
+            key: "tamano_organizacion",
+            label: "Tamaño de organización",
+            group: "Perfil",
+          },
+          {
+            key: "rubro_organizacion",
+            label: "Rubro de la organización",
+            group: "Perfil",
+          },
+          {
+            key: "contrato_titulados_ultimos_5_anios",
+            label: "Contratación reciente",
+            group: "Perfil",
+          },
+        ];
+  const fieldGroups = Array.from(
+    new Set(fields.map((field) => field.group)),
+  ).map((group) => ({
+    group,
+    fields: fields.filter((field) => field.group === group),
+  }));
+  async function loadCross() {
+    if (!datasetId || rowField === columnField) return;
+    setLoading(true);
+    setError(null);
+    try {
+      setCross(
+        await apiRequest<Cross>(
+          `/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}`,
+        ),
+      );
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => {
+    void loadCross();
+  }, [datasetId, rowField, columnField]);
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-5">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <PageHeading
+          title={`Cruces bivariados y exportación${cross ? ` (n = ${cross.validCount})` : ""}`}
+          description="Configura una matriz de frecuencias y revisa su distribución en tabla o barras."
+          tone={tone}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm">
+            <Info />
+            Definiciones
+          </Button>
+        </div>
+      </div>
+      <DatasetSelect
+        datasets={datasets}
+        value={datasetId}
+        onChange={setDatasetId}
+        loading={datasetsLoading}
+      />
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+        <div className="space-y-5">
+          <Card className="rounded-xl border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="title-card flex items-center justify-between">
+                Configurar cruce{" "}
+                <SlidersHorizontal className="size-4 text-ink-600" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <label className="label-default grid gap-1">
+                Variable de filas
+                <Select value={rowField} onValueChange={setRowField}>
+                  <SelectTrigger className="w-full min-w-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fieldGroups.map(({ group, fields: groupFields }) => (
+                      <SelectGroup
+                        key={group}
+                        className="border-t border-border-line px-1 first:border-t-0"
+                      >
+                        <SelectLabel className="px-2 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-ink-600">
+                          {group}
+                        </SelectLabel>
+                        {groupFields.map((field) => (
+                          <SelectItem
+                            key={field.key}
+                            value={field.key}
+                            disabled={field.key === columnField}
+                            className="data-[state=checked]:bg-slate-100 data-[state=checked]:font-semibold data-[state=checked]:text-titulados [&_[data-slot=select-item-indicator]]:hidden data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45"
+                          >
+                            {field.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              <label className="label-default grid gap-1">
+                Variable de columnas
+                <Select value={columnField} onValueChange={setColumnField}>
+                  <SelectTrigger className="w-full min-w-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fieldGroups.map(({ group, fields: groupFields }) => (
+                      <SelectGroup
+                        key={group}
+                        className="border-t border-border-line px-1 first:border-t-0"
+                      >
+                        <SelectLabel className="px-2 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-ink-600">
+                          {group}
+                        </SelectLabel>
+                        {groupFields.map((field) => (
+                          <SelectItem
+                            key={field.key}
+                            value={field.key}
+                            disabled={field.key === rowField}
+                            className="data-[state=checked]:bg-slate-100 data-[state=checked]:font-semibold data-[state=checked]:text-titulados [&_[data-slot=select-item-indicator]]:hidden data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45"
+                          >
+                            {field.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              <div className="space-y-3 border-t border-border-line pt-3 text-xs text-ink-600">
+                <p className="caption-bold text-ink-600">MÉTRICA DE CELDA</p>
+                <RadioGroup
+                  value={metric}
+                  onValueChange={(value) => setMetric(value as CrossMetric)}
+                  className="gap-2"
+                >
+                  <label className="flex items-start gap-2">
+                    <RadioGroupItem value="count" />
+                    <span>
+                      Frecuencia absoluta
+                      <br />
+                      (conteos)
+                    </span>
+                  </label>
+                  {activeView === "table" && (
+                    <>
+                      <label className="flex items-center gap-2">
+                        <RadioGroupItem value="rowPercent" />
+                        <span>% por fila</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <RadioGroupItem value="columnPercent" />
+                        <span>% por columna</span>
+                      </label>
+                    </>
+                  )}
+                  {activeView === "bars" && (
+                    <label className="flex items-center gap-2">
+                      <RadioGroupItem value="rowPercent" />
+                      <span>% por fila</span>
+                    </label>
+                  )}
+                </RadioGroup>
+                <div
+                  className={
+                    activeView === "table"
+                      ? "space-y-2 border-t border-border-line pt-3"
+                      : "hidden"
+                  }
+                >
+                  <p className="caption-bold text-ink-600">
+                    OPCIONES DE CÁLCULO
+                  </p>
+                  <label className="flex items-center gap-2">
+                    <Checkbox
+                      checked={includeTotals}
+                      onCheckedChange={(checked) =>
+                        setIncludeTotals(checked === true)
+                      }
+                    />
+                    <span>Incluir marginales (totales)</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <Checkbox
+                      checked={colorHeatmap}
+                      onCheckedChange={(checked) =>
+                        setColorHeatmap(checked === true)
+                      }
+                    />
+                    <span>Colorear mapa de calor</span>
+                  </label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-xl border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="title-card">Exportar resultados</CardTitle>
+              <CardDescription>
+                Selecciona un formato para descargar la matriz.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <Select
+                    value={exportFormat}
+                    onValueChange={(value) =>
+                      setExportFormat(value as "csv" | "xlsx" | "png")
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="csv">Tabla CSV</SelectItem>
+                      <SelectItem value="xlsx">Libro Excel (XLSX)</SelectItem>
+                      <SelectItem value="png">Gráfico PNG</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  size="icon"
+                  className="size-9"
+                  variant="secondary"
+                  title="Descargar"
+                  aria-label="Descargar"
+                  onClick={() => {
+                    if (!cross) return;
+                    if (exportFormat === "csv") exportCrossCsv(cross);
+                    else if (exportFormat === "xlsx") exportCrossExcel(cross);
+                    else exportCrossPng(cross);
+                  }}
+                  disabled={!cross}
+                >
+                  <Download />
+                </Button>
+              </div>
+              {cross && (
+                <p className="border-t border-border-line pt-3 text-xs text-ink-600">
+                  Registros incluidos: <strong>{cross.validCount}</strong>
+                  <br />
+                  Cruce: {labelFor(rowField)} vs. {labelFor(columnField)}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        <div className="min-w-0 space-y-4">
+          <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-surface-container-low p-1 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveView("table");
+              }}
+              className={`shrink-0 whitespace-nowrap rounded-lg px-4 py-2 ${activeView === "table" ? "bg-surface-white font-semibold text-titulados shadow-sm" : "text-ink-600"}`}
+            >
+              Tabla
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveView("bars");
+                if (metric === "columnPercent") {
+                  setMetric("count");
+                }
+              }}
+              className={`shrink-0 whitespace-nowrap rounded-lg px-4 py-2 ${activeView === "bars" ? "bg-surface-white font-semibold text-titulados shadow-sm" : "text-ink-600"}`}
+            >
+              Barras comparativas
+            </button>
+          </div>
+          {loading && (
+            <StatusPanel
+              kind="loading"
+              title="Calculando cruce"
+              description="Actualizando la matriz con las variables seleccionadas."
+            />
+          )}
+          {error && (
+            <StatusPanel
+              kind="warning"
+              title="No se pudo calcular el cruce"
+              description={error}
+            />
+          )}
+          {cross ? (
+            activeView === "bars" ? (
+              <CrossBars cross={cross} metric={metric} />
+            ) : (
+              <CrossTable
+                cross={cross}
+                totalResponses={
+                  datasets.find((dataset) => dataset.id === datasetId)
+                    ?.rowsValid
+                }
+                includeTotals={includeTotals}
+                colorHeatmap={colorHeatmap}
+                metric={metric}
+              />
+            )
+          ) : (
+            <StatusPanel
+              kind="info"
+              title="Genera una matriz de cruce"
+              description="Selecciona las variables de filas y columnas para mostrar la tabla bivariada."
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function SimulationPage() {
-  const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets('TITULADOS')
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null); const [sampleSize, setSampleSize] = useState(100); const [repetitions, setRepetitions] = useState(1000); const [seed, setSeed] = useState(42); const [result, setResult] = useState<Simulation | null>(null); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null)
-  useEffect(() => { if (!datasetId) return; apiRequest<AnalyticsSummary>(`/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=interes_posgrado`).then(setSummary).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))) }, [datasetId])
-  async function run() { const distribution = summary?.distributions.interes_posgrado; if (!distribution) return; const categories = Object.keys(distribution.counts); const total = categories.reduce((sum, category) => sum + distribution.counts[category], 0); setLoading(true); setError(null); try { setResult(await apiRequest<Simulation>('/analytics/simulation/multinomial', { method: 'POST', body: JSON.stringify({ categories, probabilities: categories.map((category) => distribution.counts[category] / total), sampleSize, repetitions, seed }) })) } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)) } finally { setLoading(false) } }
-  return <div className="mx-auto max-w-6xl space-y-6"><PageHeading title="Simulación de escenarios" description="Simulación multinomial descriptiva usando las frecuencias observadas como probabilidades." tone="titulados" /><DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} /><Card><CardHeader><CardTitle className="title-card">Parámetros</CardTitle><CardDescription>La semilla permite repetir el mismo escenario. No es una predicción.</CardDescription></CardHeader><CardContent className="grid gap-4 sm:grid-cols-3"><label className="label-default grid gap-1">Personas a simular<input className="control" type="number" min="1" value={sampleSize} onChange={(event) => setSampleSize(Number(event.target.value))} /></label><label className="label-default grid gap-1">Repeticiones<input className="control" type="number" min="1" value={repetitions} onChange={(event) => setRepetitions(Number(event.target.value))} /></label><label className="label-default grid gap-1">Semilla<input className="control" type="number" value={seed} onChange={(event) => setSeed(Number(event.target.value))} /></label><div className="sm:col-span-3"><Button onClick={run} disabled={!summary || loading}>{loading ? 'Ejecutando…' : 'Ejecutar simulación'}</Button></div></CardContent></Card>{error && <StatusPanel kind="warning" title="No se pudo ejecutar la simulación" description={error} />}{result && <Card><CardHeader><CardTitle className="title-card">Resultado simulado</CardTitle><CardDescription>Promedio y rango del 95 % · n observado = {summary?.distributions.interes_posgrado?.validCount ?? 0}</CardDescription></CardHeader><CardContent><table className="w-full text-sm"><thead><tr className="border-b text-left text-xs text-ink-600"><th className="p-2">Categoría</th><th className="p-2 text-right">Observado</th><th className="p-2 text-right">Simulado</th><th className="p-2 text-right">Rango 95 %</th></tr></thead><tbody>{result.categories.map((category) => <tr key={category.category} className="border-b border-slate-100"><td className="p-2">{category.category}</td><td className="tabular-nums p-2 text-right">{category.observedPercentage}%</td><td className="tabular-nums p-2 text-right">{category.simulatedMean}%</td><td className="tabular-nums p-2 text-right">{category.lower95}% – {category.upper95}%</td></tr>)}</tbody></table></CardContent></Card>}</div>
+  const {
+    datasets,
+    datasetId,
+    setDatasetId,
+    loading: datasetsLoading,
+  } = useDatasets("TITULADOS");
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [sampleSize, setSampleSize] = useState(100);
+  const [repetitions, setRepetitions] = useState(1000);
+  const [seed, setSeed] = useState(42);
+  const [result, setResult] = useState<Simulation | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!datasetId) return;
+    apiRequest<AnalyticsSummary>(
+      `/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=interes_posgrado`,
+    )
+      .then(setSummary)
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : String(cause)),
+      );
+  }, [datasetId]);
+  async function run() {
+    const distribution = summary?.distributions.interes_posgrado;
+    if (!distribution) return;
+    const categories = Object.keys(distribution.counts);
+    const total = categories.reduce(
+      (sum, category) => sum + distribution.counts[category],
+      0,
+    );
+    setLoading(true);
+    setError(null);
+    try {
+      setResult(
+        await apiRequest<Simulation>("/analytics/simulation/multinomial", {
+          method: "POST",
+          body: JSON.stringify({
+            categories,
+            probabilities: categories.map(
+              (category) => distribution.counts[category] / total,
+            ),
+            sampleSize,
+            repetitions,
+            seed,
+          }),
+        }),
+      );
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setLoading(false);
+    }
+  }
+  return (
+    <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeading
+        title="Simulación de escenarios"
+        description="Simulación multinomial descriptiva usando las frecuencias observadas como probabilidades."
+        tone="titulados"
+      />
+      <DatasetSelect
+        datasets={datasets}
+        value={datasetId}
+        onChange={setDatasetId}
+        loading={datasetsLoading}
+      />
+      <Card>
+        <CardHeader>
+          <CardTitle className="title-card">Parámetros</CardTitle>
+          <CardDescription>
+            La semilla permite repetir el mismo escenario. No es una predicción.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-3">
+          <label className="label-default grid gap-1">
+            Personas a simular
+            <input
+              className="control"
+              type="number"
+              min="1"
+              value={sampleSize}
+              onChange={(event) => setSampleSize(Number(event.target.value))}
+            />
+          </label>
+          <label className="label-default grid gap-1">
+            Repeticiones
+            <input
+              className="control"
+              type="number"
+              min="1"
+              value={repetitions}
+              onChange={(event) => setRepetitions(Number(event.target.value))}
+            />
+          </label>
+          <label className="label-default grid gap-1">
+            Semilla
+            <input
+              className="control"
+              type="number"
+              value={seed}
+              onChange={(event) => setSeed(Number(event.target.value))}
+            />
+          </label>
+          <div className="sm:col-span-3">
+            <Button onClick={run} disabled={!summary || loading}>
+              {loading ? "Ejecutando…" : "Ejecutar simulación"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      {error && (
+        <StatusPanel
+          kind="warning"
+          title="No se pudo ejecutar la simulación"
+          description={error}
+        />
+      )}
+      {result && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="title-card">Resultado simulado</CardTitle>
+            <CardDescription>
+              Promedio y rango del 95 % · n observado ={" "}
+              {summary?.distributions.interes_posgrado?.validCount ?? 0}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-ink-600">
+                  <th className="p-2">Categoría</th>
+                  <th className="p-2 text-right">Observado</th>
+                  <th className="p-2 text-right">Simulado</th>
+                  <th className="p-2 text-right">Rango 95 %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.categories.map((category) => (
+                  <tr
+                    key={category.category}
+                    className="border-b border-slate-100"
+                  >
+                    <td className="p-2">{category.category}</td>
+                    <td className="tabular-nums p-2 text-right">
+                      {category.observedPercentage}%
+                    </td>
+                    <td className="tabular-nums p-2 text-right">
+                      {category.simulatedMean}%
+                    </td>
+                    <td className="tabular-nums p-2 text-right">
+                      {category.lower95}% – {category.upper95}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 }
 
-export function UnavailableAnalyticPage({ title, description, domain, items }: { title: string; description: string; domain: Domain; items: string[] }) { const tone: Tone = domain === 'TITULADOS' ? 'titulados' : 'empleadores'; return <div className="mx-auto max-w-6xl space-y-6"><PageHeading title={title} description={description} tone={tone} /><Card><CardHeader><CardTitle className="title-card flex items-center gap-2"><FlaskConical className="size-5" />Funcionalidad pendiente de contrato</CardTitle><CardDescription>La ruta está preparada, pero el backend todavía no expone los datos necesarios para mostrar resultados.</CardDescription></CardHeader><CardContent className="space-y-3"><StatusPanel kind="info" title="No disponible todavía" description="No se muestran valores manuales ni simulados como si fueran resultados reales." />{items.map((item) => <div key={item} className="rounded-lg border border-border-line bg-slate-50 p-3 text-sm text-ink-600">{item}</div>)}</CardContent></Card></div> }
+export function UnavailableAnalyticPage({
+  title,
+  description,
+  domain,
+  items,
+}: {
+  title: string;
+  description: string;
+  domain: Domain;
+  items: string[];
+}) {
+  const tone: Tone = domain === "TITULADOS" ? "titulados" : "empleadores";
+  return (
+    <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeading title={title} description={description} tone={tone} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="title-card flex items-center gap-2">
+            <FlaskConical className="size-5" />
+            Funcionalidad pendiente de contrato
+          </CardTitle>
+          <CardDescription>
+            La ruta está preparada, pero el backend todavía no expone los datos
+            necesarios para mostrar resultados.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <StatusPanel
+            kind="info"
+            title="No disponible todavía"
+            description="No se muestran valores manuales ni simulados como si fueran resultados reales."
+          />
+          {items.map((item) => (
+            <div
+              key={item}
+              className="rounded-lg border border-border-line bg-slate-50 p-3 text-sm text-ink-600"
+            >
+              {item}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
-function useDatasets(domain: Domain) { const [datasets, setDatasets] = useState<DatasetSummary[]>([]); const [datasetId, setDatasetIdState] = useState<string | undefined>(); const [loading, setLoading] = useState(true); useEffect(() => { apiRequest<DatasetSummary[]>('/datasets').then((items) => { const filtered = items.filter((item) => item.surveyType === domain); setDatasets(filtered); const stored = localStorage.getItem('simulacionem.activeDatasetId'); setDatasetIdState(filtered.some((item) => item.id === stored) ? stored ?? undefined : filtered.at(-1)?.id) }).finally(() => setLoading(false)) }, [domain]); const setDatasetId = (id?: string) => { setDatasetIdState(id); if (id) localStorage.setItem('simulacionem.activeDatasetId', id) }; return { datasets, datasetId, setDatasetId, loading } }
-function PageHeading({ title, description, tone }: { title: string; description: string; tone: Tone }) { return <div className="space-y-2"><div className="flex items-center gap-3"><p className="caption-bold uppercase tracking-wider text-ink-600">SimulacionEM</p><Badge tone={tone}>{tone === 'titulados' ? 'Titulados' : 'Empleadores'}</Badge></div><h1 className="headline-page">{title}</h1><p className="max-w-2xl text-sm text-ink-600">{description}</p></div> }
-function DatasetSelect({ datasets, value, onChange, loading }: { datasets: DatasetSummary[]; value?: string; onChange: (id?: string) => void; loading: boolean }) { return <div className="flex flex-wrap items-center gap-3"><label className="label-default text-ink-600">Dataset<select className="control ml-2" value={value ?? ''} disabled={loading} onChange={(event) => onChange(event.target.value || undefined)}><option value="">Seleccionar dataset</option>{datasets.map((dataset) => <option key={dataset.id} value={dataset.id}>{dataset.sourceFileName} · {dataset.rowsValid} válidas</option>)}</select></label></div> }
-function DistributionCard({ title, distribution, tone }: { title: string; distribution: CategoryDistribution; tone: Tone }) { return <Card><CardHeader><CardTitle className="title-card">{labelFor(title)}</CardTitle><CardDescription>Conteo y porcentaje · n = {distribution.validCount}</CardDescription></CardHeader><CardContent className="space-y-3">{Object.entries(distribution.counts).map(([key, count]) => <div key={key} className="space-y-1"><div className="flex justify-between text-sm"><span>{key}</span><span className="tabular-nums">{count} · {distribution.percentages[key]}%</span></div><div className="h-2 rounded-full bg-slate-100"><div className={`h-full rounded-full ${tone === 'titulados' ? 'bg-titulados' : 'bg-empleadores'}`} style={{ width: `${distribution.percentages[key]}%` }} /></div></div>)}</CardContent></Card> }
-function CrossTable({ cross, totalResponses, includeTotals, colorHeatmap, metric }: { cross: Cross; totalResponses?: number; includeTotals: boolean; colorHeatmap: boolean; metric: CrossMetric }) { const columnTotal = (column: string) => cross.rowCategories.reduce((sum, row) => sum + (cross.counts[row]?.[column] ?? 0), 0); const rowTotal = (row: string) => cross.columnCategories.reduce((sum, column) => sum + (cross.counts[row]?.[column] ?? 0), 0); const columnPercent = (row: string, column: string) => { const total = columnTotal(column); return total ? (cross.counts[row]?.[column] ?? 0) * 100 / total : 0 }; const cellValue = (row: string, column: string) => metric === 'count' ? (cross.counts[row]?.[column] ?? 0) : metric === 'rowPercent' ? (cross.percentages[row]?.[column] ?? 0) : columnPercent(row, column); const max = Math.max(1, ...cross.rowCategories.flatMap((row) => cross.columnCategories.map((column) => cellValue(row, column)))); const formatValue = (value: number) => metric === 'count' ? String(value) : `${value.toFixed(1).replace('.', ',')}%`; const metricLabel = metric === 'count' ? 'Frecuencia absoluta (conteos)' : metric === 'rowPercent' ? '% por fila' : '% por columna'; const marginalPercent = (value: number) => cross.validCount ? `${(value * 100 / cross.validCount).toFixed(1).replace('.', ',')}%` : '0,0%'; return <Card className="min-w-0"><CardHeader><div className="flex items-center justify-between gap-3"><CardTitle className="title-card">Vista previa de matriz</CardTitle><CardDescription className="shrink-0 text-right">n = {cross.validCount}{totalResponses != null ? ` de ${totalResponses}` : ""}{cross.smallSample ? " · muestra reducida" : ""}</CardDescription></div></CardHeader><CardContent className="min-w-0 overflow-x-auto"><table className="w-full min-w-[560px] text-sm"><thead><tr className="bg-surface-container-low"><th className="w-36 whitespace-nowrap p-2 text-left">Fila</th>{cross.columnCategories.map((column) => <th key={column} className="max-w-32 whitespace-normal break-words p-2 text-right leading-tight">{booleanLabel(column)}</th>)}{includeTotals && <th className="w-20 break-words p-2 text-right">Total fila</th>}</tr></thead><tbody>{cross.rowCategories.map((row) => <tr key={row} className="border-t"><td className="max-w-40 whitespace-normal p-2 font-medium">{booleanLabel(row)}</td>{cross.columnCategories.map((column) => { const value = cellValue(row, column); const intensity = value / max; return <td key={column} className="tabular-nums p-2 text-right font-medium" style={colorHeatmap ? { backgroundColor: `rgba(31,111,181,${0.08 + intensity * 0.75})`, color: intensity >= 0.98 ? 'white' : '#0f172a' } : undefined}>{formatValue(value)}</td> })}{includeTotals && <td className="tabular-nums bg-surface-container-low p-2 text-right font-semibold">{metric === 'count' ? rowTotal(row) : metric === 'rowPercent' ? '100,0%' : marginalPercent(rowTotal(row))}</td>}</tr>)}{includeTotals && <tr className="border-t-2 bg-surface-container-low font-semibold"><td className="whitespace-nowrap p-2">Total columna</td>{cross.columnCategories.map((column) => <td key={column} className="tabular-nums p-2 text-right">{metric === 'count' ? columnTotal(column) : metric === 'columnPercent' ? '100,0%' : marginalPercent(columnTotal(column))}</td>)}<td className="tabular-nums p-2 text-right">{metric === 'count' ? cross.validCount : '100,0%'}</td></tr>}</tbody></table>{colorHeatmap && <div className="mt-4 border-t border-surface-container-high pt-3 text-xs text-ink-600"><div className="flex items-center justify-between"><span>Escala de {metricLabel}</span><span>0 · {metric === 'count' ? max : `${max.toFixed(1).replace('.', ',')}%`}</span></div><div className="mt-1 h-2 rounded-full" style={{ background: 'linear-gradient(to right, rgba(31,111,181,0.08), rgba(31,111,181,0.83))' }} /></div>}</CardContent></Card> }
-function formatMetric(summary: AnalyticsSummary, key: string) { const distribution = summary.distributions[key]; if (distribution) return `${distribution.validCount}`; return summary.numericAverages[key] === undefined ? '—' : String(summary.numericAverages[key]) }
-function labelFor(key: string) { return key.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()) }
-function downloadFile(content: BlobPart, name: string, type: string) { const url = URL.createObjectURL(new Blob([content], { type })); const link = document.createElement('a'); link.href = url; link.download = name; link.click(); URL.revokeObjectURL(url) }
-function exportCrossCsv(cross: Cross) { const rows = [['Fila', ...cross.columnCategories.map(booleanLabel)], ...cross.rowCategories.map((row) => [booleanLabel(row), ...cross.columnCategories.map((column) => String(cross.counts[row]?.[column] ?? 0))])]; downloadFile(rows.map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(',')).join('\n'), 'cruce.csv', 'text/csv;charset=utf-8') }
-function exportCrossExcel(cross: Cross) { const rows = [['Fila', ...cross.columnCategories.map(booleanLabel)], ...cross.rowCategories.map((row) => [booleanLabel(row), ...cross.columnCategories.map((column) => String(cross.counts[row]?.[column] ?? 0))])]; const html = `<table>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`; downloadFile(`<!doctype html><html><body>${html}</body></html>`, 'cruce.xls', 'application/vnd.ms-excel') }
-function exportCrossPng(cross: Cross) { const width = 900; const height = Math.max(180, (cross.rowCategories.length + 1) * 42 + 40); const headers = ['Fila', ...cross.columnCategories.map(booleanLabel)]; const rows = [headers, ...cross.rowCategories.map((row) => [booleanLabel(row), ...cross.columnCategories.map((column) => String(cross.counts[row]?.[column] ?? 0))])]; const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/>${rows.map((row, rowIndex) => row.map((cell, columnIndex) => `<text x="${20 + columnIndex * (width / headers.length)}" y="${35 + rowIndex * 42}" font-family="Arial" font-size="14" fill="#0f172a">${cell}</text>`).join('')).join('')}</svg>`; const image = new Image(); image.onload = () => { const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; canvas.getContext('2d')?.drawImage(image, 0, 0); canvas.toBlob((blob) => blob && downloadFile(blob, 'cruce.png', 'image/png')) }; image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}` }
+function useDatasets(domain: Domain) {
+  const [datasets, setDatasets] = useState<DatasetSummary[]>([]);
+  const [datasetId, setDatasetIdState] = useState<string | undefined>();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    apiRequest<DatasetSummary[]>("/datasets")
+      .then((items) => {
+        const filtered = items.filter((item) => item.surveyType === domain);
+        setDatasets(filtered);
+        const stored = localStorage.getItem("simulacionem.activeDatasetId");
+        setDatasetIdState(
+          filtered.some((item) => item.id === stored)
+            ? (stored ?? undefined)
+            : filtered.at(-1)?.id,
+        );
+      })
+      .finally(() => setLoading(false));
+  }, [domain]);
+  const setDatasetId = (id?: string) => {
+    setDatasetIdState(id);
+    if (id) localStorage.setItem("simulacionem.activeDatasetId", id);
+  };
+  return { datasets, datasetId, setDatasetId, loading };
+}
+function PageHeading({
+  title,
+  description,
+  tone,
+}: {
+  title: string;
+  description: string;
+  tone: Tone;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        <p className="caption-bold uppercase tracking-wider text-ink-600">
+          SimulacionEM
+        </p>
+        <Badge tone={tone}>
+          {tone === "titulados" ? "Titulados" : "Empleadores"}
+        </Badge>
+      </div>
+      <h1 className="headline-page">{title}</h1>
+      <p className="max-w-2xl text-sm text-ink-600">{description}</p>
+    </div>
+  );
+}
+function DatasetSelect({
+  datasets,
+  value,
+  onChange,
+  loading,
+}: {
+  datasets: DatasetSummary[];
+  value?: string;
+  onChange: (id?: string) => void;
+  loading: boolean;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <label className="label-default text-ink-600">
+        Dataset
+        <select
+          className="control ml-2"
+          value={value ?? ""}
+          disabled={loading}
+          onChange={(event) => onChange(event.target.value || undefined)}
+        >
+          <option value="">Seleccionar dataset</option>
+          {datasets.map((dataset) => (
+            <option key={dataset.id} value={dataset.id}>
+              {dataset.sourceFileName} · {dataset.rowsValid} válidas
+            </option>
+          ))}
+        </select>
+      </label>
+    </div>
+  );
+}
+function DistributionCard({
+  title,
+  distribution,
+  tone,
+}: {
+  title: string;
+  distribution: CategoryDistribution;
+  tone: Tone;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="title-card">{labelFor(title)}</CardTitle>
+        <CardDescription>
+          Conteo y porcentaje · n = {distribution.validCount}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {Object.entries(distribution.counts).map(([key, count]) => (
+          <div key={key} className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span>{key}</span>
+              <span className="tabular-nums">
+                {count} · {distribution.percentages[key]}%
+              </span>
+            </div>
+            <div className="h-2 rounded-full bg-slate-100">
+              <div
+                className={`h-full rounded-full ${tone === "titulados" ? "bg-titulados" : "bg-empleadores"}`}
+                style={{ width: `${distribution.percentages[key]}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+function CrossTable({
+  cross,
+  totalResponses,
+  includeTotals,
+  colorHeatmap,
+  metric,
+}: {
+  cross: Cross;
+  totalResponses?: number;
+  includeTotals: boolean;
+  colorHeatmap: boolean;
+  metric: CrossMetric;
+}) {
+  const columnTotal = (column: string) =>
+    cross.rowCategories.reduce(
+      (sum, row) => sum + (cross.counts[row]?.[column] ?? 0),
+      0,
+    );
+  const rowTotal = (row: string) =>
+    cross.columnCategories.reduce(
+      (sum, column) => sum + (cross.counts[row]?.[column] ?? 0),
+      0,
+    );
+  const columnPercent = (row: string, column: string) => {
+    const total = columnTotal(column);
+    return total ? ((cross.counts[row]?.[column] ?? 0) * 100) / total : 0;
+  };
+  const cellValue = (row: string, column: string) =>
+    metric === "count"
+      ? (cross.counts[row]?.[column] ?? 0)
+      : metric === "rowPercent"
+        ? (cross.percentages[row]?.[column] ?? 0)
+        : columnPercent(row, column);
+  const max = Math.max(
+    1,
+    ...cross.rowCategories.flatMap((row) =>
+      cross.columnCategories.map((column) => cellValue(row, column)),
+    ),
+  );
+  const formatValue = (value: number) =>
+    metric === "count"
+      ? String(value)
+      : `${value.toFixed(1).replace(".", ",")}%`;
+  const metricLabel =
+    metric === "count"
+      ? "Frecuencia absoluta (conteos)"
+      : metric === "rowPercent"
+        ? "% por fila"
+        : "% por columna";
+  const marginalPercent = (value: number) =>
+    cross.validCount
+      ? `${((value * 100) / cross.validCount).toFixed(1).replace(".", ",")}%`
+      : "0,0%";
+  return (
+    <Card className="min-w-0">
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="title-card">Vista previa de matriz</CardTitle>
+          <CardDescription className="shrink-0 text-right">
+            n = {cross.validCount}
+            {totalResponses != null ? ` de ${totalResponses}` : ""}
+            {cross.smallSample ? " · muestra reducida" : ""}
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent className="min-w-0 overflow-x-auto">
+        <table className="w-full min-w-[560px] text-sm">
+          <thead>
+            <tr className="bg-surface-container-low">
+              <th className="w-36 whitespace-nowrap p-2 text-left">Fila</th>
+              {cross.columnCategories.map((column) => (
+                <th
+                  key={column}
+                  className="max-w-32 whitespace-normal break-words p-2 text-right leading-tight"
+                >
+                  {booleanLabel(column)}
+                </th>
+              ))}
+              {includeTotals && (
+                <th className="w-20 break-words p-2 text-right">Total fila</th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {cross.rowCategories.map((row) => (
+              <tr key={row} className="border-t">
+                <td className="max-w-40 whitespace-normal p-2 font-medium">
+                  {booleanLabel(row)}
+                </td>
+                {cross.columnCategories.map((column) => {
+                  const value = cellValue(row, column);
+                  const intensity = value / max;
+                  return (
+                    <td
+                      key={column}
+                      className="tabular-nums p-2 text-right font-medium"
+                      style={
+                        colorHeatmap
+                          ? {
+                              backgroundColor: `rgba(31,111,181,${0.08 + intensity * 0.75})`,
+                              color: intensity >= 0.98 ? "white" : "#0f172a",
+                            }
+                          : undefined
+                      }
+                    >
+                      {formatValue(value)}
+                    </td>
+                  );
+                })}
+                {includeTotals && (
+                  <td className="tabular-nums bg-surface-container-low p-2 text-right font-semibold">
+                    {metric === "count"
+                      ? rowTotal(row)
+                      : metric === "rowPercent"
+                        ? "100,0%"
+                        : marginalPercent(rowTotal(row))}
+                  </td>
+                )}
+              </tr>
+            ))}
+            {includeTotals && (
+              <tr className="border-t-2 bg-surface-container-low font-semibold">
+                <td className="whitespace-nowrap p-2">Total columna</td>
+                {cross.columnCategories.map((column) => (
+                  <td key={column} className="tabular-nums p-2 text-right">
+                    {metric === "count"
+                      ? columnTotal(column)
+                      : metric === "columnPercent"
+                        ? "100,0%"
+                        : marginalPercent(columnTotal(column))}
+                  </td>
+                ))}
+                <td className="tabular-nums p-2 text-right">
+                  {metric === "count" ? cross.validCount : "100,0%"}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        {colorHeatmap && (
+          <div className="mt-4 border-t border-surface-container-high pt-3 text-xs text-ink-600">
+            <div className="flex items-center justify-between">
+              <span>Escala de {metricLabel}</span>
+              <span>
+                0 ·{" "}
+                {metric === "count"
+                  ? max
+                  : `${max.toFixed(1).replace(".", ",")}%`}
+              </span>
+            </div>
+            <div
+              className="mt-1 h-2 rounded-full"
+              style={{
+                background:
+                  "linear-gradient(to right, rgba(31,111,181,0.08), rgba(31,111,181,0.83))",
+              }}
+            />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+function formatMetric(summary: AnalyticsSummary, key: string) {
+  const distribution = summary.distributions[key];
+  if (distribution) return `${distribution.validCount}`;
+  return summary.numericAverages[key] === undefined
+    ? "—"
+    : String(summary.numericAverages[key]);
+}
+function labelFor(key: string) {
+  return key
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+function downloadFile(content: BlobPart, name: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+function exportCrossCsv(cross: Cross) {
+  const rows = [
+    ["Fila", ...cross.columnCategories.map(booleanLabel)],
+    ...cross.rowCategories.map((row) => [
+      booleanLabel(row),
+      ...cross.columnCategories.map((column) =>
+        String(cross.counts[row]?.[column] ?? 0),
+      ),
+    ]),
+  ];
+  downloadFile(
+    rows
+      .map((row) =>
+        row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(","),
+      )
+      .join("\n"),
+    "cruce.csv",
+    "text/csv;charset=utf-8",
+  );
+}
+function exportCrossExcel(cross: Cross) {
+  const rows = [
+    ["Fila", ...cross.columnCategories.map(booleanLabel)],
+    ...cross.rowCategories.map((row) => [
+      booleanLabel(row),
+      ...cross.columnCategories.map((column) =>
+        String(cross.counts[row]?.[column] ?? 0),
+      ),
+    ]),
+  ];
+  const html = `<table>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</table>`;
+  downloadFile(
+    `<!doctype html><html><body>${html}</body></html>`,
+    "cruce.xls",
+    "application/vnd.ms-excel",
+  );
+}
+function exportCrossPng(cross: Cross) {
+  const width = 900;
+  const height = Math.max(180, (cross.rowCategories.length + 1) * 42 + 40);
+  const headers = ["Fila", ...cross.columnCategories.map(booleanLabel)];
+  const rows = [
+    headers,
+    ...cross.rowCategories.map((row) => [
+      booleanLabel(row),
+      ...cross.columnCategories.map((column) =>
+        String(cross.counts[row]?.[column] ?? 0),
+      ),
+    ]),
+  ];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/>${rows.map((row, rowIndex) => row.map((cell, columnIndex) => `<text x="${20 + columnIndex * (width / headers.length)}" y="${35 + rowIndex * 42}" font-family="Arial" font-size="14" fill="#0f172a">${cell}</text>`).join("")).join("")}</svg>`;
+  const image = new Image();
+  image.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext("2d")?.drawImage(image, 0, 0);
+    canvas.toBlob(
+      (blob) => blob && downloadFile(blob, "cruce.png", "image/png"),
+    );
+  };
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+function CrossBars({ cross, metric }: { cross: Cross; metric: CrossMetric }) {
+  const colors = [
+    "#1f6fb5",
+    "#7db1dd",
+    "#173f67",
+    "#8b5bd1",
+    "#ed552f",
+    "#18a39a",
+  ];
+  const total = cross.validCount || 1;
+  const rowTotal = (row: string) =>
+    cross.columnCategories.reduce(
+      (sum, column) => sum + (cross.counts[row]?.[column] ?? 0),
+      0,
+    );
+  const maxRowTotal = Math.max(1, ...cross.rowCategories.map(rowTotal));
+  const rowPercent = (row: string, column: string) =>
+    cross.percentages[row]?.[column] ?? 0;
+  const valueLabel = (row: string, column: string, value: number) =>
+    metric === "rowPercent"
+      ? `${rowPercent(row, column).toFixed(1).replace(".", ",")}%`
+      : String(value);
+  const subtitle =
+    metric === "rowPercent" ? "% por fila" : "Frecuencia absoluta";
+  return (
+    <Card className="min-w-0">
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="title-card">
+            Distribución agregada por categoría
+          </CardTitle>
+          <CardDescription className="shrink-0 text-right">
+            {subtitle} · n = {cross.validCount}
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {cross.rowCategories.map((row) => {
+          const totalRow = rowTotal(row);
+          return (
+            <div key={row} className="space-y-1.5">
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <span className="min-w-0 truncate font-medium text-ink-900">
+                  {booleanLabel(row)} (n = {totalRow})
+                </span>
+                <span className="shrink-0 text-ink-600">
+                  {((totalRow * 100) / total).toFixed(1).replace(".", ",")}% del
+                  total
+                </span>
+              </div>
+              {totalRow > 0 ? (
+                <div
+                  className="h-5 overflow-hidden rounded-md bg-surface-container-high"
+                  style={{ width: `${(totalRow * 100) / maxRowTotal}%` }}
+                >
+                  <div className="flex h-full w-full">
+                    {cross.columnCategories.map((column, index) => {
+                      const value = cross.counts[row]?.[column] ?? 0;
+                      if (value <= 0) return null;
+                      const width = (value * 100) / totalRow;
+                      const lightSegment = index === 1;
+                      return (
+                        <div
+                          key={column}
+                          className="flex min-w-0 items-center justify-center px-1 text-[10px] font-semibold text-white"
+                          style={{
+                            width: width + "%",
+                            backgroundColor: colors[index % colors.length],
+                            color: lightSegment ? "#173f67" : "white",
+                          }}
+                          title={
+                            booleanLabel(column) +
+                            ": " +
+                            valueLabel(row, column, value)
+                          }
+                        >
+                          <span className="truncate">
+                            {width >= 10
+                              ? valueLabel(row, column, value)
+                              : ""}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs italic text-ink-600">Sin respuestas</p>
+              )}
+            </div>
+          );
+        })}
+        <div className="flex flex-wrap gap-x-4 gap-y-2 border-t border-surface-container-high pt-3 text-[11px] text-ink-600">
+          {cross.columnCategories.map((column, index) => (
+            <span key={column} className="flex items-center gap-1">
+              <i
+                className="size-2 rounded-sm"
+                style={{ backgroundColor: colors[index % colors.length] }}
+              />
+              {booleanLabel(column)}
+            </span>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
