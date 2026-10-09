@@ -59,7 +59,8 @@ final class FieldMappingSupport {
             values.put("situacion_laboral_actual", "Trabaja en una organización");
         } else if (normalized.contains("emprend")) {
             values.put("situacion_laboral_actual", "Emprendimiento propio");
-        } else if (normalized.contains("busqueda") || normalized.contains("desemple") || normalized.contains("no trabaja")) {
+        } else if (normalized.contains("busqueda") || normalized.contains("desemple")
+                || normalized.contains("no trabaja") || normalized.contains("no trabajo")) {
             values.put("situacion_laboral_actual", "En búsqueda laboral");
         } else {
             values.put("situacion_laboral_actual", value);

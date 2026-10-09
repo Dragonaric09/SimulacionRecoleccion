@@ -168,7 +168,7 @@ export function EmploymentProfilePage() {
   const labor = summary?.distributions.situacion_laboral_actual;
   const sectors = summary?.distributions.sector_trabajo;
   const unemployed = labor
-    ? countMatching(labor, ["no trabaja", "búsqueda", "desemple"])
+    ? countMatching(labor, ["no trabaja", "no trabajo", "búsqueda", "desemple"])
     : null;
   const points = (profile?.cohortPoints ?? []).filter(
     (point) => yearMax === undefined || point.graduationYear <= yearMax,
@@ -507,8 +507,8 @@ function UnemploymentPanel({
           </span>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border-line bg-surface-container-low p-4">
+      <CardContent className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div className="h-fit rounded-xl border border-border-line bg-surface-container-low p-4">
           <p className="label-default uppercase tracking-wider text-titulados">
             Experiencia laboral previa
           </p>
