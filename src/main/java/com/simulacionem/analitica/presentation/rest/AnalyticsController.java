@@ -69,7 +69,12 @@ public class AnalyticsController {
 
     @GetMapping("/titulados/education")
     public AnalyticsSummaryDto tituladosEducation(@RequestParam(required = false) UUID datasetId) {
-        return analytics.summary(datasetId, "TITULADOS", List.of("tiene_formacion_complementaria", "interes_posgrado"));
+        return analytics.summary(datasetId, "TITULADOS", List.of(
+                "tiene_formacion_complementaria", "formacion_complementaria_nivel",
+                "institucion_formacion_complementaria", "financiamiento_posgrado_cursado",
+                "interes_posgrado", "nivel_posgrado_interes", "area_posgrado_interes",
+                "modalidad_posgrado", "financiamiento_posgrado_estimado",
+                "valoracion_formacion_1"));
     }
 
     @GetMapping("/titulados/satisfaction")

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  BookOpen,
   BriefcaseBusiness,
   Download,
   FlaskConical,
@@ -1262,7 +1261,7 @@ export function EducationProfilePage() {
     loading: datasetsLoading,
   } = useDatasets("TITULADOS");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
-  const [activeField, setActiveField] = useState("interes_posgrado");
+  const [activeTab, setActiveTab] = useState("cursado");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -1281,15 +1280,6 @@ export function EducationProfilePage() {
       )
       .finally(() => setLoading(false));
   }, [datasetId]);
-  const fields = [
-    {
-      key: "tiene_formacion_complementaria",
-      label: "Formación complementaria",
-    },
-    { key: "interes_posgrado", label: "Interés en posgrado" },
-  ];
-  const selected = summary?.distributions[activeField];
-  const yes = selected ? booleanCount(selected, true) : null;
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <PageHeading
@@ -1331,57 +1321,116 @@ export function EducationProfilePage() {
       )}
       {summary && (
         <>
-          <Tabs value={activeField} onValueChange={setActiveField}>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList variant="line" className="w-full justify-start">
-              {fields.map((field) => (
-                <TabsTrigger key={field.key} value={field.key}>
-                  {field.label}
-                </TabsTrigger>
-              ))}
+              <TabsTrigger value="cursado">Posgrado cursado</TabsTrigger>
+              <TabsTrigger value="interes">Interés en posgrado</TabsTrigger>
+              <TabsTrigger value="opinion">Opinión sobre el posgrado</TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCard
-              label={
-                fields.find((field) => field.key === activeField)?.label ??
-                "Indicador"
-              }
-              value={yes === null ? "—" : `${yes} de ${summary.validResponses}`}
-              detail={
-                yes === null
-                  ? "No disponible"
-                  : `${formatPercentage(yes, summary.validResponses)} de la muestra`
-              }
-              note={`n = ${summary.validResponses}`}
-              icon={GraduationIcon}
-              tone="titulados"
-            />
-            <KpiCard
-              label="Respuestas válidas"
-              value={String(selected?.validCount ?? 0)}
-              detail="Base del indicador"
-              note={`n = ${selected?.validCount ?? 0}`}
-              icon={BookIcon}
-              tone="titulados"
-            />
-          </div>
-          <BooleanDistributionCard
-            title={
-              fields.find((field) => field.key === activeField)?.label ??
-              "Distribución"
-            }
-            distribution={selected}
-          />
+          {activeTab === "cursado" && (
+            <EducationCompletedPanel summary={summary} />
+          )}
+          {activeTab === "interes" && (
+            <EducationInterestPanel summary={summary} />
+          )}
+          {activeTab === "opinion" && (
+            <EducationOpinionPanel summary={summary} />
+          )}
         </>
       )}
     </div>
   );
 }
 
+function EducationCompletedPanel({ summary }: { summary: AnalyticsSummary }) {
+  const active = summary.distributions.tiene_formacion_complementaria;
+  const level = summary.distributions.formacion_complementaria_nivel;
+  const total = active?.validCount ?? level?.validCount ?? 0;
+  const yes = active ? booleanCount(active, true) : 0;
+  return (
+    <>
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(220px,0.7fr)_minmax(0,1.3fr)]">
+        <KpiCard
+          label="Formación complementaria activa"
+          value={`${yes} de ${summary.validResponses}`}
+          detail={`${formatPercentage(yes, summary.validResponses)} de la muestra total`}
+          note={`Base total evaluada: n = ${summary.validResponses}`}
+          icon={GraduationIcon}
+          tone="titulados"
+        />
+        <ProfileDistributionCard
+          title={`Nivel más alto cursado (n = ${level?.validCount ?? 0})`}
+          description="Orden natural"
+          distribution={level}
+        />
+      </div>
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <ProfileDistributionCard
+          title={`Institución donde lo cursó (n = ${summary.distributions.institucion_formacion_complementaria?.validCount ?? total})`}
+          description="Distribución de instituciones"
+          distribution={summary.distributions.institucion_formacion_complementaria}
+        />
+        <ProfileDistributionCard
+          title={`Fuente principal de financiamiento (n = ${summary.distributions.financiamiento_posgrado_cursado?.validCount ?? total})`}
+          description="Financiamiento del posgrado cursado"
+          distribution={summary.distributions.financiamiento_posgrado_cursado}
+        />
+      </div>
+    </>
+  );
+}
+
+function EducationInterestPanel({ summary }: { summary: AnalyticsSummary }) {
+  const interest = summary.distributions.interes_posgrado;
+  return (
+    <>
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(220px,0.7fr)_minmax(0,1.3fr)]">
+        <KpiCard
+          label="Interés en realizar estudios de posgrado"
+          value={`${interest ? booleanCount(interest, true) : 0} de ${summary.validResponses}`}
+          detail={`${formatPercentage(interest ? booleanCount(interest, true) : 0, summary.validResponses)} de la muestra total`}
+          note={`n = ${interest?.validCount ?? 0}`}
+          icon={GraduationIcon}
+          tone="titulados"
+        />
+        <ProfileDistributionCard
+          title={`Nivel de posgrado de interés (n = ${summary.distributions.nivel_posgrado_interes?.validCount ?? 0})`}
+          description="Orden natural"
+          distribution={summary.distributions.nivel_posgrado_interes}
+        />
+      </div>
+      <div className="grid items-start gap-4 lg:grid-cols-3">
+        <ProfileDistributionCard title="Área de interés" description="Áreas de posgrado seleccionadas" distribution={summary.distributions.area_posgrado_interes} />
+        <ProfileDistributionCard title="Modalidad preferida" description="Preferencias de cursado" distribution={summary.distributions.modalidad_posgrado} />
+        <ProfileDistributionCard title="Fuente de financiamiento" description="Financiamiento estimado" distribution={summary.distributions.financiamiento_posgrado_estimado} />
+      </div>
+    </>
+  );
+}
+
+function EducationOpinionPanel({ summary }: { summary: AnalyticsSummary }) {
+  const opinion = summary.distributions.valoracion_formacion_1;
+  return (
+    <Card className="rounded-xl border border-border-line shadow-sm">
+      <CardHeader>
+        <CardTitle className="title-card">
+          Opinión sobre el posgrado de la FCyT (n = {opinion?.validCount ?? 0})
+        </CardTitle>
+        <CardDescription>
+          “Los programas de posgrado de la FCyT responden a las necesidades del medio profesional actual”
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <LikertStatement number="" title="" distribution={opinion} />
+      </CardContent>
+    </Card>
+  );
+}
+
 const UsersIcon = Users;
 const WorkIcon = BriefcaseBusiness;
 const GraduationIcon = GraduationCap;
-const BookIcon = BookOpen;
 
 function ProfileDistributionCard({
   title,
@@ -1785,67 +1834,6 @@ function majorityLabel(distribution?: CategoryDistribution) {
     ([, a], [, b]) => b - a,
   )[0];
   return entry?.[0] ?? "—";
-}
-
-function BooleanDistributionCard({
-  title,
-  distribution,
-  className = "",
-}: {
-  title: string;
-  distribution?: CategoryDistribution;
-  className?: string;
-}) {
-  const entries = useMemo(
-    () => Object.entries(distribution?.counts ?? {}),
-    [distribution],
-  );
-  return (
-    <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}>
-      <CardHeader>
-        <CardTitle className="title-card">Distribución: {title}</CardTitle>
-        <CardDescription>
-          Conteo y porcentaje de respuestas · n ={" "}
-          {distribution?.validCount ?? 0}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {entries.length ? (
-          <div className="space-y-4">
-            {entries.map(([label, count], index) => {
-              const percent = distribution?.percentages[label] ?? 0;
-              return (
-                <div key={label} className="space-y-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                    <span className="font-medium">{booleanLabel(label)}</span>
-                    <span className="tabular-nums whitespace-nowrap font-medium">
-                      {count}{" "}
-                      <span className="caption-meta text-ink-600">
-                        ({percent}%)
-                      </span>
-                    </span>
-                  </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-surface-container-high">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${percent}%`,
-                        backgroundColor: index === 0 ? "#1f6fb5" : "#94a3b8",
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <Empty className="py-6">
-            <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
-          </Empty>
-        )}
-      </CardContent>
-    </Card>
-  );
 }
 
 function countMatching(
