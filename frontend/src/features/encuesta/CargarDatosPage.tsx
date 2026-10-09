@@ -8,7 +8,26 @@ import {
   Trash2,
   UploadCloud,
 } from "lucide-react";
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+} from "@/components/ui/attachment";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Card,
@@ -37,6 +56,7 @@ export function CargarDatosPage() {
   const [datasets, setDatasets] = useState<DatasetSummary[]>([]);
   const [loading, setLoading] = useState<"validate" | "import" | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [datasetToDelete, setDatasetToDelete] = useState<DatasetSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -88,12 +108,6 @@ export function CargarDatosPage() {
   }
 
   async function removeDataset(dataset: DatasetSummary) {
-    if (
-      !window.confirm(
-        `¿Eliminar el dataset "${dataset.sourceFileName}"? También se eliminarán sus respuestas e incidencias.`,
-      )
-    )
-      return;
     setDeletingId(dataset.id);
     setError(null);
     try {
@@ -104,11 +118,16 @@ export function CargarDatosPage() {
       if (localStorage.getItem("simulacionem.activeDatasetId") === dataset.id)
         localStorage.removeItem("simulacionem.activeDatasetId");
       if (report?.datasetId === dataset.id) setReport(null);
+      setDatasetToDelete(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
       setDeletingId(null);
     }
+  }
+
+  function requestRemoveDataset(dataset: DatasetSummary) {
+    setDatasetToDelete(dataset);
   }
 
   const surveyLabel = surveyType === "TITULADOS" ? "Titulados" : "Empleadores";
@@ -239,19 +258,22 @@ export function CargarDatosPage() {
             </span>
           </button>
           {file && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-line bg-white p-3 text-sm">
-              <span>
-                <strong>{file.name}</strong> · {(file.size / 1024).toFixed(1)}{" "}
-                KB
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => chooseFile(null)}
-              >
-                Quitar archivo
-              </Button>
-            </div>
+            <Attachment className="w-full border-border-line bg-white">
+              <AttachmentMedia>
+                <FileSpreadsheet className="text-titulados" />
+              </AttachmentMedia>
+              <AttachmentContent>
+                <AttachmentTitle>{file.name}</AttachmentTitle>
+                <AttachmentDescription>
+                  {(file.size / 1024).toFixed(1)} KB · Archivo CSV seleccionado
+                </AttachmentDescription>
+              </AttachmentContent>
+              <AttachmentActions>
+                <AttachmentAction variant="outline" size="sm" onClick={() => chooseFile(null)}>
+                  Quitar archivo
+                </AttachmentAction>
+              </AttachmentActions>
+            </Attachment>
           )}
           <div className="flex flex-wrap gap-2">
             <Button onClick={validate} disabled={!file || loading !== null}>
@@ -293,8 +315,34 @@ export function CargarDatosPage() {
       <DatasetList
         datasets={datasets}
         deletingId={deletingId}
-        onDelete={removeDataset}
+        onDelete={requestRemoveDataset}
       />
+      <AlertDialog
+        open={datasetToDelete !== null}
+        onOpenChange={(open) => !open && setDatasetToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar este dataset?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {datasetToDelete && (
+                <>
+                  Se eliminará <strong>{datasetToDelete.sourceFileName}</strong> junto con sus respuestas e incidencias. Esta acción no se puede deshacer.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => datasetToDelete && void removeDataset(datasetToDelete)}
+            >
+              Eliminar dataset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -321,8 +369,8 @@ function ImportReportView({
         </CardTitle>
         <CardDescription>
           {typeMismatch
-            ? `El archivo fue detectado como ${report.surveyType}, pero se esperaba ${expectedType}.`
-            : `Tipo detectado: ${report.surveyType}`}
+            ? `El archivo fue detectado como ${formatSurveyType(report.surveyType)}, pero se esperaba ${formatSurveyType(expectedType)}.`
+            : `Tipo detectado: ${formatSurveyType(report.surveyType)}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -354,7 +402,7 @@ function ImportReportView({
                   className={`rounded-lg border p-3 text-sm ${issue.severity === "ERROR" ? "border-red-200 bg-red-50 text-red-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}
                 >
                   <p className="font-medium">
-                    {issue.severity} · {issue.code}
+                    {formatIssueSeverity(issue.severity)} · {formatIssueCode(issue.code)}
                     {issue.count > 1 ? ` · ${issue.count} casos` : ""}
                   </p>
                   <p>{issue.message}</p>
@@ -440,8 +488,8 @@ function DatasetList({
                         {dataset.sourceFileName}
                       </span>
                       <span className="block text-xs text-ink-600">
-                        {dataset.surveyType} · {dataset.rowsValid} válidas ·{" "}
-                        {dataset.status}
+                        {formatSurveyType(dataset.surveyType)} · {dataset.rowsValid} válidas ·{" "}
+                        {formatDatasetStatus(dataset.status)}
                       </span>
                     </span>
                     <span className="hidden text-xs text-ink-600 md:block">
@@ -465,4 +513,57 @@ function DatasetList({
       </CardContent>
     </Card>
   );
+}
+
+function formatSurveyType(value: string) {
+  const labels: Record<string, string> = {
+    TITULADOS: "Titulados",
+    EMPLEADORES: "Empleadores",
+  };
+  return labels[value] ?? formatTechnicalLabel(value);
+}
+
+function formatDatasetStatus(value: string) {
+  const labels: Record<string, string> = {
+    CARGADO: "Cargado",
+    VALIDANDO: "Validando",
+    CON_ADVERTENCIAS: "Con advertencias",
+    CON_ERRORES: "Con errores",
+    LISTO: "Listo",
+    VALIDADO: "Validado",
+    VALIDADA: "Validada",
+    PROCESADO: "Procesado",
+    PROCESADA: "Procesada",
+    IMPORTADO: "Importado",
+    IMPORTADA: "Importada",
+  };
+  return labels[value] ?? formatTechnicalLabel(value);
+}
+
+function formatIssueSeverity(value: string) {
+  const labels: Record<string, string> = {
+    ERROR: "Error",
+    ADVERTENCIA: "Advertencia",
+    WARNING: "Advertencia",
+  };
+  return labels[value] ?? formatTechnicalLabel(value);
+}
+
+function formatIssueCode(value: string) {
+  const labels: Record<string, string> = {
+    TIPO_NO_RECONOCIDO: "Tipo no reconocido",
+    COLUMNA_SIN_NOMBRE: "Columna sin nombre",
+    ENCABEZADO_DUPLICADO: "Encabezado duplicado",
+    FILA_DESALINEADA: "Fila desalineada",
+    FECHA_NO_RECONOCIDA: "Fecha no reconocida",
+    NUMERO_NO_RECONOCIDO: "Número no reconocido",
+  };
+  return labels[value] ?? formatTechnicalLabel(value);
+}
+
+function formatTechnicalLabel(value: string) {
+  return value
+    .toLocaleLowerCase("es")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toLocaleUpperCase("es"));
 }

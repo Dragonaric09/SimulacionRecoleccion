@@ -1,34 +1,32 @@
 import * as React from "react";
 import { cn } from "cn";
+import { Progress as ProgressPrimitive } from "radix-ui";
 
-type ProgressProps = React.ComponentProps<"div"> & {
-  value?: number;
-};
-
-function Progress({ className, value = 0, children, ...props }: ProgressProps) {
-  const clampedValue = Math.max(0, Math.min(100, value));
+function Progress({ className, value, children, ...props }: React.ComponentProps<typeof ProgressPrimitive.Root>) {
+  const clampedValue = Math.max(0, Math.min(100, value ?? 0));
   return (
-    <div
+    <ProgressPrimitive.Root
       data-slot="progress"
-      role="progressbar"
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={value}
       className={cn(
         "relative h-5 w-full overflow-hidden rounded-md bg-surface-container-high",
         className,
       )}
+      value={clampedValue}
       {...props}
-      style={{ width: `${clampedValue}%`, ...props.style }}
     >
-      {children ?? (
-        <div
+      <ProgressPrimitive.Indicator
+        data-slot="progress-indicator"
+        className="h-full transition-all"
+        style={{ width: `${clampedValue}%` }}
+      >
+        {children ?? (
+          <div
           data-slot="progress-indicator"
-          className="h-full bg-primary transition-all"
-          style={{ width: `${clampedValue}%` }}
-        />
-      )}
-    </div>
+            className="h-full w-full bg-primary"
+          />
+        )}
+      </ProgressPrimitive.Indicator>
+    </ProgressPrimitive.Root>
   );
 }
 

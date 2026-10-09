@@ -11,6 +11,7 @@ import { Badge } from "@/components/analytics/Badge";
 import { FilterToolbar } from "@/components/analytics/FilterToolbar";
 import { KpiCard } from "@/components/analytics/KpiCard";
 import { StatusPanel } from "@/components/analytics/StatusPanel";
+import { Empty, EmptyTitle } from "@/components/ui/empty";
 import {
   Select,
   SelectContent,
@@ -293,9 +294,9 @@ function EmploymentCard({
               </div>
             ))
           ) : (
-            <p className="text-sm text-ink-600">
-              Sin respuestas disponibles para esta variable.
-            </p>
+            <Empty className="py-6">
+              <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
+            </Empty>
           )}
         </div>
       </CardContent>
@@ -365,9 +366,9 @@ function PostgraduateCard({
             })}
           </div>
         ) : (
-          <p className="text-sm text-ink-600">
-            Sin respuestas disponibles para esta variable.
-          </p>
+          <Empty className="py-6">
+            <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
+          </Empty>
         )}
       </CardContent>
     </Card>

@@ -6,6 +6,7 @@ import {
   FlaskConical,
   GraduationCap,
   Info,
+  Inbox,
   SlidersHorizontal,
   Users,
 } from "lucide-react";
@@ -15,6 +16,13 @@ import { ExportActions } from "@/components/analytics/ExportActions";
 import { FilterToolbar } from "@/components/analytics/FilterToolbar";
 import { KpiCard } from "@/components/analytics/KpiCard";
 import { StatusPanel } from "@/components/analytics/StatusPanel";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Card,
   CardContent,
@@ -574,9 +582,9 @@ function MiniDistribution({
           })}
         </div>
       ) : (
-        <p className="text-sm text-ink-600">
-          Sin respuestas disponibles para esta variable.
-        </p>
+        <Empty className="py-6">
+          <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
+        </Empty>
       )}
     </div>
   );
@@ -629,9 +637,9 @@ function StackedRelevanceCard({
           </div>
         </>
       ) : (
-        <p className="text-sm text-ink-600">
-          Sin respuestas disponibles para esta variable.
-        </p>
+        <Empty className="py-6">
+          <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
+        </Empty>
       )}
     </div>
   );
@@ -1148,9 +1156,9 @@ function ProfileDistributionCard({
             })}
           </div>
         ) : (
-          <p className="text-sm text-ink-600">
-            Sin respuestas disponibles para esta variable.
-          </p>
+          <Empty className="py-6">
+            <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
+          </Empty>
         )}
       </CardContent>
     </Card>
@@ -1464,7 +1472,17 @@ function DistributionBars({
       })}
     </div>
   ) : (
-    <p className="text-sm text-ink-600">Sin respuestas disponibles.</p>
+    <Empty className="py-8">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Inbox />
+        </EmptyMedia>
+        <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
+        <EmptyDescription>
+          No hay respuestas válidas para mostrar esta distribución.
+        </EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   );
 }
 
@@ -1527,9 +1545,9 @@ function BooleanDistributionCard({
             })}
           </div>
         ) : (
-          <p className="text-sm text-ink-600">
-            Sin respuestas disponibles para esta variable.
-          </p>
+          <Empty className="py-6">
+            <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
+          </Empty>
         )}
       </CardContent>
     </Card>
@@ -1898,11 +1916,6 @@ export function CompetencePage({ domain }: { domain: Domain }) {
                 return (
                   <TabsTrigger key={tab.key} value={tab.key} disabled={!available}>
                     {tab.label}
-                    {group && (
-                      <span className="rounded-full bg-surface-container-high px-1.5 py-0.5 text-xs leading-none text-ink-600 group-data-[state=active]:bg-titulados-active group-data-[state=active]:text-titulados">
-                        {items.filter((item) => item.group === group).length}
-                      </span>
-                    )}
                     {!available && (
                       <span className="text-[10px] uppercase tracking-wide">
                         Próximamente
@@ -2196,9 +2209,9 @@ function CurriculumCard({
             </div>
           ))
         ) : (
-          <p className="py-4 text-sm text-ink-600">
-            Sin respuestas disponibles para esta variable.
-          </p>
+          <Empty className="py-6">
+            <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
+          </Empty>
         )}
       </CardContent>
     </Card>
@@ -2343,9 +2356,9 @@ function LikertStatement({
           </div>
         </>
       ) : (
-        <p className="text-sm text-ink-600">
-          Sin respuestas disponibles para esta afirmación.
-        </p>
+        <Empty className="py-6">
+          <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
+        </Empty>
       )}
     </div>
   );
@@ -2604,7 +2617,17 @@ function CompetenceRadar({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-ink-600">Sin competencias disponibles.</p>
+          <Empty className="py-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Inbox />
+              </EmptyMedia>
+              <EmptyTitle>Sin competencias disponibles</EmptyTitle>
+              <EmptyDescription>
+                No hay datos suficientes para mostrar este radar.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </CardContent>
     </Card>
@@ -4209,7 +4232,9 @@ function CrossBars({
                   </div>
                 </Progress>
               ) : (
-                <p className="text-xs italic text-ink-600">Sin respuestas</p>
+                <Empty className="min-h-12 py-2">
+                  <EmptyTitle>Sin respuestas</EmptyTitle>
+                </Empty>
               )}
             </div>
           );
