@@ -7,5 +7,8 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${await res.text()}`)
   }
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    return undefined as T
+  }
   return res.json() as Promise<T>
 }

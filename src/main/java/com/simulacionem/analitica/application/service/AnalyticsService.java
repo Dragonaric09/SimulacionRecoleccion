@@ -30,7 +30,7 @@ public class AnalyticsService {
     private final CompetenceRatingRepository ratings;
 
     public AnalyticsService(DatasetImportRepository datasets, SurveyResponseRepository responses,
-                            CompetenceRatingRepository ratings) {
+            CompetenceRatingRepository ratings) {
         this.datasets = datasets;
         this.responses = responses;
         this.ratings = ratings;
@@ -40,13 +40,15 @@ public class AnalyticsService {
     public AnalyticsSummaryDto summary(UUID datasetId, String surveyType, List<String> fields) {
         DatasetImportEntity dataset = resolveDataset(datasetId, surveyType);
         List<SurveyResponseEntity> rows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
-        if (fields == null || fields.isEmpty()) fields = defaultFields(dataset.getSurveyType());
+        if (fields == null || fields.isEmpty())
+            fields = defaultFields(dataset.getSurveyType());
         Map<String, CategoryDistributionDto> distributions = new LinkedHashMap<>();
         Map<String, Double> averages = new LinkedHashMap<>();
         Map<String, Double> medians = new LinkedHashMap<>();
         Map<String, Double> standardDeviations = new LinkedHashMap<>();
         for (String field : fields) {
-            List<String> values = rows.stream().map(r -> value(r, field)).filter(v -> v != null && !v.isBlank()).toList();
+            List<String> values = rows.stream().map(r -> value(r, field)).filter(v -> v != null && !v.isBlank())
+                    .toList();
             if (numericField(field)) {
                 List<Double> numbers = values.stream().map(this::number).filter(java.util.Objects::nonNull).toList();
                 if (!numbers.isEmpty()) {
@@ -58,7 +60,8 @@ public class AnalyticsService {
                 distributions.put(field, distribution(values));
             }
         }
-        return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), rows.size(), rows.size(), distributions, averages, medians, standardDeviations,
+        return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), rows.size(), rows.size(),
+                distributions, averages, medians, standardDeviations,
                 rows.size() < MINIMUM_SAMPLE_SIZE);
     }
 
@@ -85,13 +88,21 @@ public class AnalyticsService {
         DatasetImportEntity dataset = resolveDataset(datasetId, null);
         Map<String, List<CompetenceRatingEntity>> grouped = ratings.findByResponse_Dataset_Id(dataset.getId()).stream()
                 .filter(r -> !r.isNotObserved() && r.getNumericValue() != null)
-                .collect(Collectors.groupingBy(r -> r.getCompetence().getCode(), LinkedHashMap::new, Collectors.toList()));
+                .collect(Collectors.groupingBy(r -> r.getCompetence().getCode(), LinkedHashMap::new,
+                        Collectors.toList()));
         List<CompetenceAverageDto> result = new ArrayList<>();
         grouped.forEach((code, values) -> {
             var competence = values.get(0).getCompetence();
             double average = values.stream().mapToInt(r -> r.getNumericValue()).average().orElse(0);
-            result.add(new CompetenceAverageDto(code, competence.getName(), competence.getCompetenceGroup(), values.size(), round(average),
-                    sampleStandardDeviation(values.stream().map(r -> r.getNumericValue().doubleValue()).toList())));
+            List<Double> numbers = values.stream().map(r -> r.getNumericValue().doubleValue()).toList();
+            Map<Integer, Long> levelCounts = values.stream().collect(Collectors
+                    .groupingBy(r -> r.getNumericValue().intValue(), java.util.TreeMap::new, Collectors.counting()));
+            int modalLevel = levelCounts.entrySet().stream()
+                    .max(Map.Entry.<Integer, Long>comparingByValue().thenComparing(Map.Entry.comparingByKey()))
+                    .map(Map.Entry::getKey).orElse(0);
+            result.add(new CompetenceAverageDto(code, competence.getName(), competence.getCompetenceGroup(),
+                    values.size(), round(average),
+                    sampleStandardDeviation(numbers), median(numbers), modalLevel, levelCounts));
         });
         return result;
     }
@@ -103,7 +114,8 @@ public class AnalyticsService {
             throw new IllegalArgumentException("rowField y columnField son obligatorios");
         }
         List<SurveyResponseEntity> valid = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
-        List<SurveyResponseEntity> usable = valid.stream().filter(r -> value(r, rowField) != null && value(r, columnField) != null).toList();
+        List<SurveyResponseEntity> usable = valid.stream()
+                .filter(r -> value(r, rowField) != null && value(r, columnField) != null).toList();
         List<String> rowCategories = usable.stream().map(r -> value(r, rowField)).distinct().sorted().toList();
         List<String> columnCategories = usable.stream().map(r -> value(r, columnField)).distinct().sorted().toList();
         Map<String, Map<String, Long>> counts = new LinkedHashMap<>();
@@ -113,21 +125,26 @@ public class AnalyticsService {
             Map<String, Double> rowPercentages = new LinkedHashMap<>();
             long rowTotal = usable.stream().filter(r -> row.equals(value(r, rowField))).count();
             for (String column : columnCategories) {
-                long count = usable.stream().filter(r -> row.equals(value(r, rowField)) && column.equals(value(r, columnField))).count();
+                long count = usable.stream()
+                        .filter(r -> row.equals(value(r, rowField)) && column.equals(value(r, columnField))).count();
                 rowCounts.put(column, count);
                 rowPercentages.put(column, round(count * 100.0 / rowTotal));
             }
             counts.put(row, rowCounts);
             percentages.put(row, rowPercentages);
         }
-        return new CrossTabulationDto(dataset.getId(), rowField, columnField, usable.size(), rowCategories, columnCategories, counts, percentages,
+        return new CrossTabulationDto(dataset.getId(), rowField, columnField, usable.size(), rowCategories,
+                columnCategories, counts, percentages,
                 usable.size() < MINIMUM_SAMPLE_SIZE);
     }
 
     private DatasetImportEntity resolveDataset(UUID id, String type) {
-        if (id != null) return datasets.findById(id).orElseThrow();
-        return datasets.findAll().stream().filter(d -> type == null || type.equals(d.getSurveyType())).reduce((a, b) -> b)
-                .orElseThrow(() -> new IllegalArgumentException("No existe un dataset importado para el filtro solicitado"));
+        if (id != null)
+            return datasets.findById(id).orElseThrow();
+        return datasets.findAll().stream().filter(d -> type == null || type.equals(d.getSurveyType()))
+                .reduce((a, b) -> b)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("No existe un dataset importado para el filtro solicitado"));
     }
 
     private String value(SurveyResponseEntity response, String field) {
@@ -136,7 +153,8 @@ public class AnalyticsService {
     }
 
     private CategoryDistributionDto distribution(List<String> values) {
-        Map<String, Long> counts = values.stream().collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
+        Map<String, Long> counts = values.stream()
+                .collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
         Map<String, Double> percentages = new LinkedHashMap<>();
         counts.forEach((key, count) -> percentages.put(key, round(count * 100.0 / values.size())));
         return new CategoryDistributionDto(values.size(), counts, percentages);
@@ -144,26 +162,44 @@ public class AnalyticsService {
 
     private List<String> defaultFields(String type) {
         return "EMPLEADORES".equals(type)
-                ? List.of("tipo_organizacion", "tamano_organizacion", "rubro_organizacion", "contrato_titulados_ultimos_5_anios")
-                : List.of("edad_rango", "sector_trabajo", "situacion_laboral_actual", "tiene_formacion_complementaria", "interes_posgrado");
+                ? List.of("tipo_organizacion", "tamano_organizacion", "rubro_organizacion",
+                        "contrato_titulados_ultimos_5_anios")
+                : List.of("edad_rango", "sector_trabajo", "situacion_laboral_actual", "tiene_formacion_complementaria",
+                        "interes_posgrado");
     }
 
-    private boolean numericField(String field) { return field.equals("anio_titulacion") || field.equals("anios_vida_profesional") || field.equals("anios_desempleo") || field.endsWith("_puntaje"); }
-    private Double number(String value) {
-        if (value == null || value.isBlank()) return null;
-        try { return Double.valueOf(value.trim()); } catch (NumberFormatException ex) { return null; }
+    private boolean numericField(String field) {
+        return field.equals("anio_titulacion") || field.equals("anios_vida_profesional")
+                || field.equals("anios_desempleo") || field.endsWith("_puntaje");
     }
+
+    private Double number(String value) {
+        if (value == null || value.isBlank())
+            return null;
+        try {
+            return Double.valueOf(value.trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
     private Double sampleStandardDeviation(List<Double> values) {
-        if (values.size() < 2) return null;
+        if (values.size() < 2)
+            return null;
         double average = values.stream().mapToDouble(Double::doubleValue).average().orElse(0);
-        double variance = values.stream().mapToDouble(value -> Math.pow(value - average, 2)).sum() / (values.size() - 1);
+        double variance = values.stream().mapToDouble(value -> Math.pow(value - average, 2)).sum()
+                / (values.size() - 1);
         return round(Math.sqrt(variance));
     }
+
     private Double median(List<Double> values) {
         List<Double> sorted = values.stream().sorted().toList();
         int middle = sorted.size() / 2;
         double result = sorted.size() % 2 == 0 ? (sorted.get(middle - 1) + sorted.get(middle)) / 2 : sorted.get(middle);
         return round(result);
     }
-    private double round(double value) { return Math.round(value * 100.0) / 100.0; }
+
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
 }

@@ -282,7 +282,14 @@ public class CsvImportService {
         String slug = slug(value);
         return switch (slug) {
             case "programacion_y_desarrollo_de_software" -> "programacion_software";
+            case "bases_de_datos" -> "bases_datos";
+            case "redes_e_infraestructura" -> "redes_infraestructura";
+            case "analisis_de_datos" -> "analisis_datos";
             case "ingenieria_de_requisitos_y_modelado_de_sistemas" -> "ingenieria_requisitos";
+            case "gestion_de_proyectos" -> "gestion_proyectos";
+            case "comunicacion_oral_y_escrita" -> "comunicacion";
+            case "trabajo_en_equipo" -> "trabajo_equipo";
+            case "resolucion_de_problemas" -> "resolucion_problemas";
             default -> slug;
         };
     }
