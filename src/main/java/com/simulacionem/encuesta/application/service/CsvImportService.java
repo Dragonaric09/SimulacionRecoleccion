@@ -212,6 +212,8 @@ public class CsvImportService {
         putKnown(values, headers, record, "satisfaccion_formacion", "de manera global");
         putKnown(values, headers, record, "concordancia_formacion_requerimientos", "existe concordancia entre");
         putKnown(values, headers, record, "nivel_posgrado_interes", "qué nivel de posgrado le interesa");
+        putKnown(values, headers, record, "area_posgrado_interes", "en cuál de las siguientes áreas le interesaría realizar el programa");
+        putKnown(values, headers, record, "modalidad_posgrado", "modalidad preferida");
         putKnown(values, headers, record, "financiamiento_posgrado_estimado", "cómo financiaría sus estudios");
         putKnown(values, headers, record, "financiamiento_posgrado_cursado", "fuente de financiamiento para cursar el programa");
         putKnown(values, headers, record, "aspectos_utiles", "aspectos de la Carrera les resultaron de bastante utilidad");
