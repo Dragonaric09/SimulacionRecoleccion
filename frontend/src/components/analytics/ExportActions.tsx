@@ -1,4 +1,4 @@
-import { Download, FileImage, FileSpreadsheet, FileText } from 'lucide-react'
+import { FileImage, FileSpreadsheet, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export function ExportActions() {
@@ -6,7 +6,6 @@ export function ExportActions() {
     <Button variant="outline" size="sm"><FileText />CSV</Button>
     <Button variant="outline" size="sm"><FileSpreadsheet />Excel</Button>
     <Button variant="outline" size="sm"><FileImage />PNG</Button>
-    <Button variant="secondary" size="sm"><Download />Exportar</Button>
   </div>
 }
 

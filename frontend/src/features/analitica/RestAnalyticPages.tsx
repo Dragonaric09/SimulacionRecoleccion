@@ -1865,7 +1865,11 @@ export function CompetencePage({ domain }: { domain: Domain }) {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PageHeading
           title="Brechas de competencias"
-          description="Medias y desviaciones estándar por competencia. Los valores no observados se excluyen del cálculo."
+        description={
+          domain === "EMPLEADORES"
+            ? "Medias y desviaciones estándar por competencia. Los valores no observados se excluyen del cálculo."
+            : "Medias y desviaciones estándar por competencia."
+        }
           tone={tone}
         />
         <div className="flex flex-wrap items-center gap-2">
@@ -1971,12 +1975,6 @@ export function CompetencePage({ domain }: { domain: Domain }) {
                   label="Muestra"
                   value={String(visibleItems[0]?.validCount ?? 0)}
                   detail="Respuestas válidas"
-                  note={
-                    visibleItems[0]?.validCount &&
-                    visibleItems[0].validCount < 5
-                      ? "Muestra reducida"
-                      : "Lectura descriptiva"
-                  }
                   icon={UsersIcon}
                   tone={tone}
                 />
@@ -2467,11 +2465,10 @@ function CompetenceStatsTable({
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle className="title-card">
-              Tabla descriptiva univariada por competencia técnica
+              Estadísticos por competencia técnica
             </CardTitle>
             <CardDescription>
-              Estadísticos univariados ordenados descendentemente por media
-              muestral · {group} · n = {items[0]?.validCount ?? 0}
+              Ordenados descendentemente por media · {group} · n = {items[0]?.validCount ?? 0}
             </CardDescription>
           </div>
           <Button variant="ghost" size="sm">
@@ -2492,22 +2489,15 @@ function CompetenceStatsTable({
                   válido
                 </th>
                 <th className="p-3 text-right">
-                  Media muestral
-                  <br />
-                  (x̄)
+                  Media
                 </th>
                 <th className="p-3 text-right">
                   Desv. estándar
-                  <br />
-                  (s)
                 </th>
                 <th className="p-3 text-right">
                   Mediana
                   <br />
                   (Me)
-                </th>
-                <th className="rounded-r-lg p-3 text-right">
-                  Nivel modal (Mo)
                 </th>
               </tr>
             </thead>
@@ -2534,23 +2524,12 @@ function CompetenceStatsTable({
                   <td className="tabular-nums p-3 text-right">
                     {formatDecimal(item.median)}
                   </td>
-                  <td className="p-3 text-right">
-                    {item.modalLevel} - {levelLabel(item.modalLevel)}{" "}
-                    <span className="whitespace-nowrap">
-                      (n={item.levelCounts[String(item.modalLevel)] ?? 0})
-                    </span>
-                  </td>
                 </tr>
               ))}
             </tbody>
           </Table>
         </div>
         <div className="mt-4 flex flex-col justify-between gap-3 rounded-lg bg-surface-container-low p-3 text-xs text-ink-600 sm:flex-row">
-          <span>
-            Nota: la escala ordinal comprende valores de 1 a 5. Las medidas
-            muestrales reflejan el cómputo aritmético estricto sobre respuestas
-            válidas registradas.
-          </span>
           <strong className="whitespace-nowrap text-ink-900">
             Media global {group}: {formatDecimal(globalAverage)}
           </strong>
@@ -2560,17 +2539,6 @@ function CompetenceStatsTable({
   );
 }
 
-function levelLabel(level: number) {
-  return level === 1
-    ? "Muy insuficiente"
-    : level === 2
-      ? "Insuficiente"
-      : level === 3
-        ? "Aceptable"
-        : level === 4
-          ? "Suficiente"
-          : "Muy suficiente";
-}
 function formatDecimal(value: number, digits = 2) {
   return value.toFixed(digits).replace(".", ",");
 }
@@ -2637,13 +2605,13 @@ function CompetenceRadar({
           <div className="flex min-w-0 flex-col items-center">
             <ChartContainer
               config={chartConfig}
-              className="h-[350px] w-full max-w-[430px] aspect-auto"
+              className="h-[380px] w-full max-w-[520px] aspect-auto"
             >
-              <RadarChart data={chartData} outerRadius="62%">
+              <RadarChart data={chartData} outerRadius="60%">
                 <PolarGrid stroke="#cbd5e1" strokeDasharray="2 2" />
                 <PolarAngleAxis
                   dataKey="subject"
-                  tick={{ fill: "#0f172a", fontSize: 10, fontWeight: 600 }}
+                  tick={<RadarTick />}
                 />
                 <PolarRadiusAxis
                   domain={[0, 5]}
@@ -2673,6 +2641,56 @@ function CompetenceRadar({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+type RadarTickProps = {
+  x?: number;
+  y?: number;
+  textAnchor?: "start" | "middle" | "end";
+  payload?: { value?: string };
+};
+
+function RadarTick({
+  x = 0,
+  y = 0,
+  textAnchor = "middle",
+  payload,
+}: RadarTickProps) {
+  const value = String(payload?.value ?? "");
+  if (value.length <= 22) {
+    return (
+      <text x={x} y={y} textAnchor={textAnchor} fill="#0f172a" fontSize={10} fontWeight={600}>
+        {value}
+      </text>
+    );
+  }
+
+  const words = value.split(" ");
+  const score = words.pop() ?? "";
+  const midpoint = Math.ceil(words.join(" ").length / 2);
+  let splitAt = 0;
+  let distance = Number.POSITIVE_INFINITY;
+  words.forEach((_, index) => {
+    const candidate = words.slice(0, index + 1).join(" ");
+    const candidateDistance = Math.abs(candidate.length - midpoint);
+    if (candidateDistance < distance) {
+      distance = candidateDistance;
+      splitAt = index + 1;
+    }
+  });
+  const firstLine = words.slice(0, splitAt).join(" ");
+  const secondLine = `${words.slice(splitAt).join(" ")} ${score}`.trim();
+
+  return (
+    <text x={x} y={y} textAnchor={textAnchor} fill="#0f172a" fontSize={10} fontWeight={600}>
+      <tspan x={x} dy="-0.55em">
+        {firstLine}
+      </tspan>
+      <tspan x={x} dy="1.1em">
+        {secondLine}
+      </tspan>
+    </text>
   );
 }
 
