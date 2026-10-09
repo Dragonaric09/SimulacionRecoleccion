@@ -28,7 +28,7 @@ import type { DatasetSummary } from "@/features/encuesta/api";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
 
 const fields =
-  "situacion_laboral_actual,interes_posgrado,sector_trabajo,anio_titulacion";
+  "situacion_laboral_actual,interes_posgrado,area_posgrado_interes,sector_trabajo,anio_titulacion";
 
 export function TituladosSummaryPage() {
   const [datasets, setDatasets] = useState<DatasetSummary[]>([]);
@@ -82,6 +82,7 @@ export function TituladosSummaryPage() {
 
   const laboral = summary?.distributions.situacion_laboral_actual;
   const posgrado = summary?.distributions.interes_posgrado;
+  const areasPosgrado = summary?.distributions.area_posgrado_interes;
   const trabajo = laboral
     ? firstCount(laboral, ["Trabaja en una organización", "Trabaja"])
     : null;
@@ -211,7 +212,7 @@ export function TituladosSummaryPage() {
           </div>
           <div className="grid items-start gap-6 lg:grid-cols-12">
             <EmploymentCard distribution={laboral} />
-            <PostgraduateCard distribution={posgrado} />
+            <PostgraduateCard distribution={areasPosgrado} />
           </div>
         </>
       )}
@@ -322,16 +323,16 @@ function PostgraduateCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <CardTitle className="title-card">
-              Interés en estudios de posgrado
+              Áreas de posgrado de interés
             </CardTitle>
             <CardDescription>
-              Personas interesadas en continuar su formación{" "}
+              Demanda de especialización académica y tecnológica{" "}
               <span className="whitespace-nowrap">
                 · n = {distribution?.validCount ?? 0}
               </span>
             </CardDescription>
           </div>
-          <Badge tone="neutral">Respuesta Sí/No</Badge>
+          <Badge tone="neutral">Multirrespuesta</Badge>
         </div>
       </CardHeader>
       <CardContent>
@@ -343,7 +344,7 @@ function PostgraduateCard({
                 <div key={label} className="space-y-1">
                   <div className="flex items-start justify-between gap-4 text-sm">
                     <span className="min-w-0 break-words font-medium">
-                      {booleanLabel(label)}
+                      {label}
                     </span>
                     <span className="tabular-nums whitespace-nowrap font-medium">
                       {count} de {distribution?.validCount ?? 0}{" "}
@@ -357,7 +358,7 @@ function PostgraduateCard({
                       className="h-full rounded-full transition-all duration-500"
                       style={{
                         width: `${percent}%`,
-                        backgroundColor: index === 0 ? "#1f6fb5" : "#94a3b8",
+                        backgroundColor: colorForPostgraduate(index),
                       }}
                     />
                   </div>
@@ -371,6 +372,10 @@ function PostgraduateCard({
           </Empty>
         )}
       </CardContent>
+      <div className="mx-6 flex flex-wrap justify-between gap-2 border-t border-surface-container-high py-3 text-xs text-ink-600">
+        <span>Varias respuestas posibles · n = {distribution?.validCount ?? 0}</span>
+        <span>Frecuencias sobre total encuestados</span>
+      </div>
     </Card>
   );
 }
@@ -378,12 +383,9 @@ function PostgraduateCard({
 function colorForEmployment(index: number) {
   return ["#1f6fb5", "#14a39a", "#94a3b8", "#f2a33a"][index % 4];
 }
-function booleanLabel(value: string) {
-  if (value.toLowerCase() === "true") return "Sí";
-  if (value.toLowerCase() === "false") return "No";
-  return value;
+function colorForPostgraduate(index: number) {
+  return ["#1f6fb5", "#4b91c9", "#74acd4", "#14a39a", "#8c57d3"][index % 5];
 }
-
 function firstCount(distribution: CategoryDistribution, candidates: string[]) {
   const key = Object.keys(distribution.counts).find(
     (item) =>
