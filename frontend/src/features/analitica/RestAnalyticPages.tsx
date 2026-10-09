@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -4168,9 +4169,9 @@ function CrossBars({ cross, metric }: { cross: Cross; metric: CrossMetric }) {
                 </span>
               </div>
               {totalRow > 0 ? (
-                <div
-                  className="h-5 overflow-hidden rounded-md bg-surface-container-high"
-                  style={{ width: `${(totalRow * 100) / maxRowTotal}%` }}
+                <Progress
+                  value={(totalRow * 100) / maxRowTotal}
+                  className="bg-surface-container-high"
                 >
                   <div className="flex h-full w-full">
                     {cross.columnCategories.map((column, index) => {
@@ -4202,7 +4203,7 @@ function CrossBars({ cross, metric }: { cross: Cross; metric: CrossMetric }) {
                       );
                     })}
                   </div>
-                </div>
+                </Progress>
               ) : (
                 <p className="text-xs italic text-ink-600">Sin respuestas</p>
               )}
