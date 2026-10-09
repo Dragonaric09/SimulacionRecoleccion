@@ -3525,7 +3525,14 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
           )}
           {cross ? (
             activeView === "bars" ? (
-              <CrossBars cross={cross} metric={metric} />
+              <CrossBars
+                cross={cross}
+                metric={metric}
+                totalResponses={
+                  datasets.find((dataset) => dataset.id === datasetId)
+                    ?.rowsValid
+                }
+              />
             ) : (
               <CrossTable
                 cross={cross}
@@ -3939,7 +3946,7 @@ function CrossTable({
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="title-card">Vista previa de matriz</CardTitle>
           <CardDescription className="shrink-0 text-right">
-            n = {cross.validCount}
+            {metricLabel.replace(" (conteos)", "")} · n = {cross.validCount}
             {totalResponses != null ? ` de ${totalResponses}` : ""}
             {cross.smallSample ? " · muestra reducida" : ""}
           </CardDescription>
@@ -4135,7 +4142,15 @@ function exportCrossPng(cross: Cross) {
   };
   image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
-function CrossBars({ cross, metric }: { cross: Cross; metric: CrossMetric }) {
+function CrossBars({
+  cross,
+  metric,
+  totalResponses,
+}: {
+  cross: Cross;
+  metric: CrossMetric;
+  totalResponses?: number;
+}) {
   const colors = [
     "#1f6fb5",
     "#7db1dd",
@@ -4168,6 +4183,7 @@ function CrossBars({ cross, metric }: { cross: Cross; metric: CrossMetric }) {
           </CardTitle>
           <CardDescription className="shrink-0 text-right">
             {subtitle} · n = {cross.validCount}
+            {totalResponses != null ? ` de ${totalResponses}` : ""}
           </CardDescription>
         </div>
       </CardHeader>
