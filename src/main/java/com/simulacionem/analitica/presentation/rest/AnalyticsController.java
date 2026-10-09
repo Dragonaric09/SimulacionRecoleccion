@@ -41,7 +41,7 @@ public class AnalyticsController {
     public AnalyticsSummaryDto tituladosEmployment(@RequestParam(required = false) UUID datasetId) {
         return analytics.summary(datasetId, "TITULADOS", List.of(
                 "anio_titulacion", "anios_vida_profesional", "anios_desempleo",
-                "situacion_laboral_actual", "sector_trabajo", "primera_experiencia_laboral",
+                "situacion_laboral_actual", "sector_trabajo", "es_primer_empleo", "primera_experiencia_laboral",
                 "razon_no_trabaja", "experiencia_laboral_previa", "tiempo_primer_empleo", "cantidad_empleos",
                 "edad_rango", "genero", "rubro_trabajo_actual", "remuneracion_rango",
                 "area_trabajo", "pertinencia_trabajo_formacion"));
@@ -50,6 +50,11 @@ public class AnalyticsController {
     @GetMapping("/titulados/employment/unemployment")
     public AnalyticsSummaryDto tituladosUnemployment(@RequestParam(required = false) UUID datasetId) {
         return analytics.unemploymentSummary(datasetId);
+    }
+
+    @GetMapping("/titulados/employment/first-employment")
+    public AnalyticsSummaryDto tituladosFirstEmployment(@RequestParam(required = false) UUID datasetId) {
+        return analytics.firstEmploymentSummary(datasetId);
     }
 
     @GetMapping("/titulados/employment/profile")

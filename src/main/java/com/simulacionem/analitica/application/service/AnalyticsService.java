@@ -60,6 +60,17 @@ public class AnalyticsService {
                 "primera_experiencia_laboral", "razon_no_trabaja", "anios_desempleo"));
     }
 
+    @Transactional(readOnly = true)
+    public AnalyticsSummaryDto firstEmploymentSummary(UUID datasetId) {
+        DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
+        List<SurveyResponseEntity> rows = responses
+                .findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA")
+                .stream()
+                .filter(this::isFirstEmployment)
+                .toList();
+        return summarize(dataset, rows, List.of("tiempo_primer_empleo"));
+    }
+
     private AnalyticsSummaryDto summarize(DatasetImportEntity dataset, List<SurveyResponseEntity> rows,
             List<String> fields) {
         Map<String, CategoryDistributionDto> distributions = new LinkedHashMap<>();
@@ -92,6 +103,14 @@ public class AnalyticsService {
                 java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
         return normalized.contains("no trabaja") || normalized.contains("no trabajo")
                 || normalized.contains("busqueda") || normalized.contains("desemple");
+    }
+
+    private boolean isFirstEmployment(SurveyResponseEntity response) {
+        String value = value(response, "es_primer_empleo");
+        if (value == null) value = value(response, "primera_experiencia_laboral");
+        if (value == null) return false;
+        String normalized = value.toLowerCase(Locale.ROOT).trim();
+        return normalized.equals("true") || normalized.equals("si") || normalized.equals("sí");
     }
 
     @Transactional(readOnly = true)

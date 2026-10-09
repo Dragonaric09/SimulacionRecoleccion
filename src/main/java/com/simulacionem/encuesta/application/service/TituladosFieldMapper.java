@@ -62,6 +62,7 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
             new FieldMappingDefinition("tiene_formacion_complementaria", "ha realizado o se encuentra realizando", MappingKind.BOOLEAN),
             new FieldMappingDefinition("interes_posgrado", "estaría interesado en realizar estudios", MappingKind.BOOLEAN),
             new FieldMappingDefinition("experiencia_laboral_previa", "ha tenido algún trabajo antes", MappingKind.BOOLEAN),
+            new FieldMappingDefinition("es_primer_empleo", "el trabajo que ejerce actualmente es su primer empleo", MappingKind.BOOLEAN),
             new FieldMappingDefinition("primera_experiencia_laboral", "primer empleo", MappingKind.BOOLEAN),
             new FieldMappingDefinition("anios_vida_profesional", "años de vida profesional", MappingKind.NUMBER),
             new FieldMappingDefinition("anios_desempleo", "cantidad corresponde al total de tiempo", MappingKind.NUMBER),

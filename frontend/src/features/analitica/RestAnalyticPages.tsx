@@ -136,6 +136,8 @@ export function EmploymentProfilePage() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [unemploymentSummary, setUnemploymentSummary] =
     useState<AnalyticsSummary | null>(null);
+  const [firstEmploymentSummary, setFirstEmploymentSummary] =
+    useState<AnalyticsSummary | null>(null);
   const [profile, setProfile] = useState<EmploymentProfile | null>(null);
   const [activeTab, setActiveTab] = useState("perfil");
   const [yearMax, setYearMax] = useState<number | undefined>();
@@ -147,6 +149,7 @@ export function EmploymentProfilePage() {
     if (!datasetId) {
       setSummary(null);
       setUnemploymentSummary(null);
+      setFirstEmploymentSummary(null);
       setProfile(null);
       return;
     }
@@ -161,11 +164,15 @@ export function EmploymentProfilePage() {
       apiRequest<AnalyticsSummary>(
         `/analytics/titulados/employment/unemployment${query}`,
       ),
+      apiRequest<AnalyticsSummary>(
+        `/analytics/titulados/employment/first-employment${query}`,
+      ),
     ])
-      .then(([nextSummary, nextProfile, nextUnemploymentSummary]) => {
+      .then(([nextSummary, nextProfile, nextUnemploymentSummary, nextFirstEmploymentSummary]) => {
         setSummary(nextSummary);
         setProfile(nextProfile);
         setUnemploymentSummary(nextUnemploymentSummary);
+        setFirstEmploymentSummary(nextFirstEmploymentSummary);
       })
       .catch((cause) =>
         setError(cause instanceof Error ? cause.message : String(cause)),
@@ -291,6 +298,7 @@ export function EmploymentProfilePage() {
             sectors={sectors}
             unemployed={unemployed}
             unemploymentSummary={unemploymentSummary}
+            firstEmploymentSummary={firstEmploymentSummary}
           />
         </>
       )}
@@ -399,6 +407,7 @@ function EmploymentTabContent({
   sectors,
   unemployed,
   unemploymentSummary,
+  firstEmploymentSummary,
 }: {
   tab: string;
   summary: AnalyticsSummary;
@@ -407,6 +416,7 @@ function EmploymentTabContent({
   sectors?: CategoryDistribution;
   unemployed: number | null;
   unemploymentSummary: AnalyticsSummary | null;
+  firstEmploymentSummary: AnalyticsSummary | null;
 }) {
   if (tab === "emprendimiento")
     return (
@@ -427,19 +437,11 @@ function EmploymentTabContent({
     );
   if (tab === "primer-empleo")
     return (
-      <div className="grid items-start gap-6 lg:grid-cols-12">
-        <BooleanDistributionCard
-          title="Primer empleo"
-          distribution={summary.distributions.primera_experiencia_laboral}
-          className="lg:col-span-5"
-        />
-        <NumericSummaryCard
-          title="Año de titulación"
-          field="anio_titulacion"
-          summary={summary}
-          className="lg:col-span-7"
-        />
-      </div>
+      <FirstEmploymentPanel
+        summary={summary}
+        unemployed={unemployed}
+        firstEmploymentSummary={firstEmploymentSummary}
+      />
     );
   return (
     <>
@@ -471,6 +473,113 @@ function EmploymentTabContent({
         <CareerTrajectoryCard professional={summary} unemployment={summary} />
       </div>
     </>
+  );
+}
+
+function FirstEmploymentPanel({
+  summary,
+  unemployed,
+  firstEmploymentSummary,
+}: {
+  summary: AnalyticsSummary;
+  unemployed: number | null;
+  firstEmploymentSummary: AnalyticsSummary | null;
+}) {
+  const experience =
+    summary.distributions.es_primer_empleo ??
+    summary.distributions.primera_experiencia_laboral;
+  const timing = firstEmploymentSummary?.distributions.tiempo_primer_empleo;
+  const employedTotal = Math.max(
+    summary.validResponses - (unemployed ?? 0),
+    0,
+  );
+  const continued = experience ? booleanCount(experience, true) : 0;
+  const continuedPercent = formatPercentage(continued, employedTotal);
+  const timingEntries = Object.entries(timing?.counts ?? {}).sort(
+    ([left], [right]) => firstEmploymentTimingOrder(left) - firstEmploymentTimingOrder(right),
+  );
+  const branchTotal = timing?.validCount ?? 0;
+
+  return (
+    <Card className="rounded-xl border border-border-line shadow-sm">
+      <CardHeader className="border-b border-border-line">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="title-card">
+              Transición al primer empleo (rama n = {branchTotal})
+            </CardTitle>
+            <CardDescription>
+              Tiempo transcurrido desde titulación/egreso hasta la primera contratación laboral
+            </CardDescription>
+          </div>
+          <span className="rounded-md bg-surface-container-high px-3 py-1 text-xs font-semibold tabular-nums text-ink-900">
+            n = {branchTotal}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <Card className="h-fit rounded-xl border border-border-line bg-slate-50 shadow-none">
+          <CardContent className="p-4">
+            <p className="caption-bold uppercase tracking-wide text-primary">
+              Continuidad primer empleo
+            </p>
+            <p className="mt-4 text-4xl font-semibold tabular-nums text-ink-900">
+              {continued} de {employedTotal}{" "}
+              <span className="text-base font-normal text-ink-600">
+                ({continuedPercent})
+              </span>
+            </p>
+            <p className="mt-2 text-sm text-ink-600">
+              De los titulados actualmente ocupados, continúan trabajando en su primer empleo.
+            </p>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-container-high">
+              <div
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${employedTotal ? (continued / employedTotal) * 100 : 0}%` }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+        <div className="min-w-0">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-ink-900">
+              Tiempo hasta el primer empleo (orden natural)
+            </h3>
+            <span className="text-xs tabular-nums text-ink-600">n = {branchTotal}</span>
+          </div>
+          {timingEntries.length ? (
+            <div className="space-y-3">
+              {timingEntries.map(([label, count], index) => {
+                const percent = timing?.percentages[label] ?? 0;
+                return (
+                  <div key={label} className="space-y-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <span>{label}</span>
+                      <span className="tabular-nums whitespace-nowrap font-medium">
+                        {count} de {branchTotal} ({formatPercentage(count, branchTotal)})
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{
+                          width: `${percent}%`,
+                          opacity: Math.max(0.45, 1 - index * 0.12),
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <Empty className="py-6">
+              <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
+            </Empty>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -1019,52 +1128,6 @@ function SenioritySegmentationCard({
         <div className="flex justify-between border-t border-surface-container-high pt-2 text-xs text-ink-600">
           <span>Corte metodológico parametrizable</span>
           <strong className="text-ink-900">Total = {points.length}</strong>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function NumericSummaryCard({
-  title,
-  field,
-  summary,
-  className = "",
-}: {
-  title: string;
-  field: string;
-  summary: AnalyticsSummary;
-  className?: string;
-}) {
-  const average = summary.numericAverages[field];
-  const median = summary.numericMedians[field];
-  const deviation = summary.numericStandardDeviations[field];
-  return (
-    <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}>
-      <CardHeader>
-        <CardTitle className="title-card">{title}</CardTitle>
-        <CardDescription>
-          Estadísticos disponibles para la variable
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="min-w-0">
-          <p className="caption-meta text-ink-600">Media</p>
-          <p className="title-card tabular-nums break-words">
-            {average === undefined ? "—" : average.toFixed(2)}
-          </p>
-        </div>
-        <div className="min-w-0">
-          <p className="caption-meta text-ink-600">Mediana</p>
-          <p className="title-card tabular-nums break-words">
-            {median === undefined ? "—" : median.toFixed(2)}
-          </p>
-        </div>
-        <div className="min-w-0">
-          <p className="caption-meta text-ink-600">Desv. estándar</p>
-          <p className="title-card tabular-nums break-words">
-            {deviation == null ? "—" : deviation.toFixed(2)}
-          </p>
         </div>
       </CardContent>
     </Card>
@@ -1683,6 +1746,19 @@ function countMatching(
 function formatPercentage(value: number, total: number) {
   return `${total ? ((value / total) * 100).toFixed(1) : 0}%`;
 }
+
+function firstEmploymentTimingOrder(label: string) {
+  const normalized = label
+    .toLocaleLowerCase("es-BO")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  if (normalized.includes("antes") || normalized.includes("ya trabajaba")) return 0;
+  if (normalized.includes("menos de 6")) return 1;
+  if (normalized.includes("6 a 12")) return 2;
+  if (normalized.includes("mas de 1")) return 3;
+  return 10;
+}
+
 function booleanCount(distribution: CategoryDistribution, value: boolean) {
   const key = Object.keys(distribution.counts).find(
     (item) => item.toLowerCase() === String(value),
