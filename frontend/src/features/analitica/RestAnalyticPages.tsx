@@ -26,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import {
   Table,
   TableBody,
@@ -34,6 +36,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  CartesianGrid,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  Cell,
+  Pie,
+  PieChart,
+  ReferenceLine,
+  Scatter,
+  ScatterChart,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   Select,
   SelectContent,
@@ -318,52 +341,49 @@ function EmploymentFilters({
           <span className="font-medium tabular-nums text-titulados">
             {years[0]} - {yearMax ?? years[1]}
           </span>
-          <input
-            className="w-20 accent-titulados"
-            type="range"
+          <Slider
+            className="w-20"
             min={years[0]}
             max={years[1]}
-            value={yearMax ?? years[1]}
-            onChange={(event) =>
-              setYearMax(
-                Number(event.target.value) === years[1]
-                  ? undefined
-                  : Number(event.target.value),
-              )
+            value={[yearMax ?? years[1]]}
+            onValueChange={([value]) =>
+              setYearMax(value === years[1] ? undefined : value)
             }
           />
         </label>
         <label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs">
           <span className="font-semibold text-ink-900">Estado laboral:</span>
-          <select
-            className="bg-transparent font-medium outline-none"
-            value={laborFilter}
-            onChange={(event) => setLaborFilter(event.target.value)}
-          >
-            <option value="todos">Todos los estados</option>
-            {Object.keys(
-              summary.distributions.situacion_laboral_actual?.counts ?? {},
-            ).map((key) => (
-              <option key={key} value={key}>
-                {key}
-              </option>
-            ))}
-          </select>
+          <Select value={laborFilter} onValueChange={setLaborFilter}>
+            <SelectTrigger className="h-8 w-auto border-0 bg-transparent px-1 font-medium shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los estados</SelectItem>
+              {Object.keys(
+                summary.distributions.situacion_laboral_actual?.counts ?? {},
+              ).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {key}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
         <label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs">
           <span className="font-semibold text-ink-900">Sector:</span>
-          <select
-            className="max-w-48 bg-transparent font-medium outline-none"
-            value={sectorFilter}
-            onChange={(event) => setSectorFilter(event.target.value)}
-          >
-            <option value="todos">Todos los sectores</option>
-            {Object.keys(sectors?.counts ?? {}).map((key) => (
-              <option key={key} value={key}>
-                {key}
-              </option>
-            ))}
-          </select>
+          <Select value={sectorFilter} onValueChange={setSectorFilter}>
+            <SelectTrigger className="h-8 w-auto max-w-48 border-0 bg-transparent px-1 font-medium shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los sectores</SelectItem>
+              {Object.keys(sectors?.counts ?? {}).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {key}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
         <Button variant="ghost" size="sm" onClick={onReset}>
           <SlidersHorizontal />
@@ -651,24 +671,8 @@ function CohortScatterCard({
   points: EmploymentProfile["cohortPoints"];
   className?: string;
 }) {
-  const width = 720;
-  const height = 270;
-  const pad = { left: 48, right: 18, top: 22, bottom: 38 };
   const years = points.map((point) => point.graduationYear);
   const values = points.map((point) => point.professionalYears);
-  const minYear = years.length ? Math.min(...years) : 0;
-  const maxYear = years.length ? Math.max(...years) : 1;
-  const minValue = values.length ? Math.min(0, ...values) : 0;
-  const maxValue = values.length ? Math.max(...values) : 1;
-  const x = (year: number) =>
-    pad.left +
-    ((year - minYear) / Math.max(1, maxYear - minYear)) *
-      (width - pad.left - pad.right);
-  const y = (value: number) =>
-    height -
-    pad.bottom -
-    ((value - minValue) / Math.max(1, maxValue - minValue)) *
-      (height - pad.top - pad.bottom);
   const mean = values.length
     ? values.reduce((sum, value) => sum + value, 0) / values.length
     : 0;
@@ -678,7 +682,18 @@ function CohortScatterCard({
       ? sorted[(sorted.length - 1) / 2]
       : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
     : 0;
-  const ticks = [...new Set(years)].sort((a, b) => a - b);
+  const yearMin = years.length ? Math.min(...years) : 0;
+  const yearMax = years.length ? Math.max(...years) : 1;
+  const chartData = points.map((point) => ({
+    graduationYear: point.graduationYear,
+    professionalYears: point.professionalYears,
+  }));
+  const chartConfig = {
+    professionalYears: {
+      label: "Años de vida profesional",
+      color: "#1f6fb5",
+    },
+  };
   return (
     <Card className={`rounded-xl border-0 shadow-sm ${className}`}>
       <CardHeader>
@@ -693,74 +708,47 @@ function CohortScatterCard({
         {points.length ? (
           <>
             <div className="overflow-x-auto rounded-lg border border-border-line bg-slate-50 p-2">
-              <svg
-                viewBox={`0 0 ${width} ${height}`}
-                className="h-64 min-w-[620px] w-full"
-                role="img"
-                aria-label="Dispersión de años de vida profesional por año de titulación"
+              <ChartContainer
+                config={chartConfig}
+                className="h-64 min-w-[620px] w-full aspect-auto"
               >
-                <line
-                  x1={pad.left}
-                  x2={width - pad.right}
-                  y1={y(mean)}
-                  y2={y(mean)}
-                  stroke="#ef4444"
-                  strokeDasharray="5 4"
-                />
-                <line
-                  x1={pad.left}
-                  x2={width - pad.right}
-                  y1={y(median)}
-                  y2={y(median)}
-                  stroke="#14a39a"
-                  strokeDasharray="3 4"
-                />
-                {ticks.map((tick) => (
-                  <g key={tick}>
-                    <line
-                      x1={x(tick)}
-                      x2={x(tick)}
-                      y1={pad.top}
-                      y2={height - pad.bottom}
-                      stroke="#dbe4ee"
-                      strokeDasharray="2 4"
-                    />
-                    <text
-                      x={x(tick)}
-                      y={height - 12}
-                      textAnchor="middle"
-                      className="fill-ink-900 text-[11px]"
-                    >
-                      {tick}
-                    </text>
-                  </g>
-                ))}
-                {points.map((point, index) => (
-                  <circle
-                    key={`${point.graduationYear}-${point.professionalYears}-${index}`}
-                    cx={x(point.graduationYear)}
-                    cy={y(point.professionalYears)}
-                    r="5"
-                    fill="#1f6fb5"
-                    stroke="white"
-                    strokeWidth="2"
+                <ScatterChart margin={{ top: 18, right: 18, bottom: 12, left: 8 }}>
+                  <CartesianGrid stroke="#dbe4ee" strokeDasharray="2 4" />
+                  <XAxis
+                    type="number"
+                    dataKey="graduationYear"
+                    domain={[yearMin - 0.5, yearMax + 0.5]}
+                    tick={{ fill: "#0f172a", fontSize: 11 }}
+                    tickCount={Math.min(10, Math.max(2, yearMax - yearMin + 1))}
                   />
-                ))}
-                <text
-                  x={pad.left + 4}
-                  y={y(mean) - 6}
-                  className="fill-red-600 text-[11px]"
-                >
-                  Media {mean.toFixed(1)} años
-                </text>
-                <text
-                  x={pad.left + 4}
-                  y={y(median) + 14}
-                  className="fill-teal-600 text-[11px]"
-                >
-                  Mediana {median.toFixed(1)} años
-                </text>
-              </svg>
+                  <YAxis
+                    type="number"
+                    dataKey="professionalYears"
+                    domain={[0, "auto"]}
+                    tick={{ fill: "#64748b", fontSize: 10 }}
+                    width={28}
+                  />
+                  <ReferenceLine
+                    y={mean}
+                    stroke="#ef4444"
+                    strokeDasharray="5 4"
+                    label={{ value: `Media ${mean.toFixed(1)} años`, fill: "#ef4444", fontSize: 11, position: "insideTopLeft" }}
+                  />
+                  <ReferenceLine
+                    y={median}
+                    stroke="#14a39a"
+                    strokeDasharray="3 4"
+                    label={{ value: `Mediana ${median.toFixed(1)} años`, fill: "#0f766e", fontSize: 11, position: "insideBottomLeft" }}
+                  />
+                  <Scatter
+                    name="Titulado individual"
+                    data={chartData}
+                    dataKey="professionalYears"
+                    fill="#1f6fb5"
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </ScatterChart>
+              </ChartContainer>
             </div>
             <div className="mt-3 flex flex-wrap gap-4 text-xs text-ink-600">
               <span>
@@ -894,14 +882,13 @@ function SenioritySegmentationCard({
               {threshold} años
             </span>
           </div>
-          <input
-            className="mt-3 w-full accent-titulados"
-            type="range"
-            min="3"
-            max="8"
-            step="1"
-            value={threshold}
-            onChange={(event) => setThreshold(Number(event.target.value))}
+          <Slider
+            className="mt-3"
+            min={3}
+            max={8}
+            step={1}
+            value={[threshold]}
+            onValueChange={([value]) => setThreshold(value)}
           />
           <div className="flex justify-between text-xs text-ink-600">
             <span>3 años (Reciente)</span>
@@ -1224,14 +1211,10 @@ function EmploymentDonutCard({
       )
     : 0;
   const occupiedPercent = total ? (employed / total) * 100 : 0;
-  let offset = 0;
-  const segments = entries.map(([label]) => {
-    const percent = distribution?.percentages[label] ?? 0;
-    const color = laborColor(label);
-    const segment = `${color} ${offset}% ${offset + percent}%`;
-    offset += percent;
-    return segment;
-  });
+  const chartData = entries.map(([label, value]) => ({ label, value }));
+  const chartConfig = Object.fromEntries(
+    entries.map(([label]) => [label, { label, color: laborColor(label) }]),
+  );
   return (
     <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}>
       <CardHeader>
@@ -1241,15 +1224,27 @@ function EmploymentDonutCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-5 sm:flex-row">
-        <div
-          className="relative flex size-36 shrink-0 items-center justify-center rounded-full"
-          style={{
-            background: entries.length
-              ? `conic-gradient(${segments.join(", ")})`
-              : "#e2e8f0",
-          }}
-        >
-          <div className="flex size-24 flex-col items-center justify-center rounded-full bg-white">
+        <div className="relative size-36 shrink-0">
+          <ChartContainer
+            config={chartConfig}
+            className="absolute inset-0 aspect-square"
+          >
+            <PieChart>
+              <Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="label"
+                innerRadius={48}
+                outerRadius={68}
+                stroke="none"
+              >
+                {chartData.map((entry) => (
+                  <Cell key={entry.label} fill={laborColor(entry.label)} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ChartContainer>
+          <div className="absolute inset-0 m-auto flex size-24 flex-col items-center justify-center rounded-full bg-white">
             <span className="title-card tabular-nums">
               {occupiedPercent.toFixed(1)}%
             </span>
@@ -2027,7 +2022,7 @@ function CompetenceMatrix({
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[650px] text-sm">
+          <Table className="min-w-[650px] text-sm">
             <thead>
               <tr className="text-xs uppercase tracking-wider text-ink-600">
                 <th className="w-56 p-2 text-left">Competencia técnica</th>
@@ -2077,7 +2072,7 @@ function CompetenceMatrix({
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-surface-container-high pt-3 text-xs text-ink-600">
           <span className="font-semibold">Escala:</span>
@@ -2448,7 +2443,7 @@ function CompetenceStatsTable({
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-sm">
+          <Table className="min-w-[760px] text-sm">
             <thead>
               <tr className="bg-surface-container-low text-xs text-ink-600">
                 <th className="rounded-l-lg p-3 text-left">
@@ -2510,7 +2505,7 @@ function CompetenceStatsTable({
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
         <div className="mt-4 flex flex-col justify-between gap-3 rounded-lg bg-surface-container-low p-3 text-xs text-ink-600 sm:flex-row">
           <span>
@@ -2570,27 +2565,16 @@ function CompetenceRadar({
   className?: string;
 }) {
   const plotted = items.slice(0, 8);
-  const width = 430;
-  const height = 350;
-  const center = width / 2;
-  const centerY = 164;
-  const radius = 100;
-  const count = Math.max(1, plotted.length);
-  const coordinates = (index: number, value: number) => {
-    const angle = -Math.PI / 2 + index * ((Math.PI * 2) / count);
-    const distance = radius * Math.min(1, Math.max(0, value / 5));
-    return [
-      center + Math.cos(angle) * distance,
-      centerY + Math.sin(angle) * distance,
-    ];
+  const chartData = plotted.map((item) => ({
+    subject: `${radarLabel(item.name).join(" ")} (${item.average.toFixed(2)})`,
+    average: item.average,
+    threshold: 3.5,
+    name: item.name,
+  }));
+  const chartConfig = {
+    average: { label: "Media observada", color: "#1f6fb5" },
+    threshold: { label: "Umbral base", color: "#f2a33a" },
   };
-  const point = (index: number, value: number) =>
-    coordinates(index, value).join(",");
-  const ring = (factor: number) =>
-    plotted.map((_, index) => point(index, factor * 5)).join(" ");
-  const values = plotted
-    .map((item, index) => point(index, item.average))
-    .join(" ");
   return (
     <Card
       className={`min-w-0 overflow-hidden rounded-xl border-0 shadow-sm ${className}`}
@@ -2609,76 +2593,40 @@ function CompetenceRadar({
       <CardContent>
         {plotted.length ? (
           <div className="flex min-w-0 flex-col items-center">
-            <svg
-              viewBox={`0 0 ${width} ${height}`}
-              className="block h-auto max-h-80 w-full max-w-[430px]"
-              role="img"
-              aria-label="Perfil medio de competencias"
+            <ChartContainer
+              config={chartConfig}
+              className="h-[350px] w-full max-w-[430px] aspect-auto"
             >
-              <g fill="none" stroke="#cbd5e1" strokeWidth="1">
-                {[0.25, 0.5, 0.75, 1].map((factor) => (
-                  <polygon
-                    key={factor}
-                    points={ring(factor)}
-                    strokeDasharray="2 2"
-                  />
-                ))}
-                <polygon
-                  points={ring(0.7)}
-                  stroke="#f2a33a"
-                  strokeDasharray="5 4"
-                  strokeWidth="1.5"
+              <RadarChart data={chartData} outerRadius="62%">
+                <PolarGrid stroke="#cbd5e1" strokeDasharray="2 2" />
+                <PolarAngleAxis
+                  dataKey="subject"
+                  tick={{ fill: "#0f172a", fontSize: 10, fontWeight: 600 }}
                 />
-                {plotted.map((_, index) => {
-                  const [x, y] = coordinates(index, 5);
-                  return (
-                    <line key={index} x1={center} y1={centerY} x2={x} y2={y} />
-                  );
-                })}
-              </g>
-              <polygon
-                points={values}
-                fill="#1f6fb5"
-                fillOpacity=".24"
-                stroke="#1f6fb5"
-                strokeWidth="2.25"
-              />
-              {plotted.map((item, index) => {
-                const [x, y] = coordinates(index, item.average);
-                const angle = -Math.PI / 2 + index * ((Math.PI * 2) / count);
-                const [labelX, labelY] = [
-                  center + Math.cos(angle) * 128,
-                  centerY + Math.sin(angle) * 128,
-                ];
-                const anchor =
-                  Math.cos(angle) > 0.35
-                    ? "start"
-                    : Math.cos(angle) < -0.35
-                      ? "end"
-                      : "middle";
-                const lines = radarLabel(item.name);
-                return (
-                  <g key={item.code}>
-                    <circle cx={x} cy={y} r="3.5" fill="#1f6fb5" />
-                    {lines.map((line, lineIndex) => (
-                      <text
-                        key={line}
-                        x={labelX}
-                        y={labelY + (lineIndex - (lines.length - 1) / 2) * 12}
-                        textAnchor={anchor}
-                        dominantBaseline="middle"
-                        className="fill-ink-900 text-[10px] font-semibold"
-                      >
-                        {line}
-                        {lineIndex === lines.length - 1
-                          ? ` (${item.average.toFixed(2)})`
-                          : ""}
-                      </text>
-                    ))}
-                  </g>
-                );
-              })}
-            </svg>
+                <PolarRadiusAxis
+                  domain={[0, 5]}
+                  tick={false}
+                  axisLine={false}
+                />
+                <Radar
+                  name="Umbral base"
+                  dataKey="threshold"
+                  stroke="#f2a33a"
+                  fill="none"
+                  strokeDasharray="5 4"
+                  strokeWidth={1.5}
+                />
+                <Radar
+                  name="Media observada"
+                  dataKey="average"
+                  stroke="#1f6fb5"
+                  fill="#1f6fb5"
+                  fillOpacity={0.24}
+                  strokeWidth={2.25}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </RadarChart>
+            </ChartContainer>
             <div className="mt-2 flex flex-wrap items-center justify-center gap-5 border-t border-surface-container-high pt-3 text-xs">
               <span className="flex items-center gap-1.5 font-medium text-ink-900">
                 <i className="h-1.5 w-4 rounded-sm bg-titulados" />
@@ -2827,31 +2775,30 @@ export function FinancingCompletePage() {
           </span>
           <label className="label-default flex items-center gap-2">
             COLUMNAS (X):
-            <select
-              className="control min-w-56"
-              value={columnField}
-              onChange={(event) => setColumnField(event.target.value)}
-            >
-              {financingColumns.map((field) => (
-                <option key={field.key} value={field.key}>
-                  {field.label}
-                </option>
-              ))}
-            </select>
+            <Select value={columnField} onValueChange={setColumnField}>
+              <SelectTrigger className="w-56">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {financingColumns.map((field) => (
+                  <SelectItem key={field.key} value={field.key}>
+                    {field.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </label>
           <label className="flex items-center gap-2 text-sm text-ink-600">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={includeTotals}
-              onChange={(event) => setIncludeTotals(event.target.checked)}
+              onCheckedChange={(checked) => setIncludeTotals(checked === true)}
             />{" "}
             Totales
           </label>
           <label className="flex items-center gap-2 text-sm text-ink-600">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={colorHeatmap}
-              onChange={(event) => setColorHeatmap(event.target.checked)}
+              onCheckedChange={(checked) => setColorHeatmap(checked === true)}
             />{" "}
             Aplicar mapa de calor
           </label>
@@ -3088,32 +3035,38 @@ export function FinancingPage() {
             <CardContent className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
               <label className="label-default grid gap-1">
                 Filas
-                <select
-                  className="control"
-                  value={rowField}
-                  onChange={(event) => setRowField(event.target.value)}
-                >
-                  <option value="financiamiento_posgrado_estimado">
-                    Fuente de financiamiento estimada
-                  </option>
-                  <option value="financiamiento_posgrado_cursado">
-                    Financiamiento del posgrado cursado
-                  </option>
-                </select>
+                <Select value={rowField} onValueChange={setRowField}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="financiamiento_posgrado_estimado">
+                      Fuente de financiamiento estimada
+                    </SelectItem>
+                    <SelectItem value="financiamiento_posgrado_cursado">
+                      Financiamiento del posgrado cursado
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </label>
               <label className="label-default grid gap-1">
                 Columnas
-                <select
-                  className="control"
-                  value={columnField}
-                  onChange={(event) => setColumnField(event.target.value)}
-                >
-                  <option value="nivel_posgrado_interes">
-                    Nivel de posgrado de interés
-                  </option>
-                  <option value="area_posgrado_interes">Área de interés</option>
-                  <option value="modalidad_posgrado">Modalidad</option>
-                </select>
+                <Select value={columnField} onValueChange={setColumnField}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nivel_posgrado_interes">
+                      Nivel de posgrado de interés
+                    </SelectItem>
+                    <SelectItem value="area_posgrado_interes">
+                      Área de interés
+                    </SelectItem>
+                    <SelectItem value="modalidad_posgrado">
+                      Modalidad
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </label>
               <Button
                 onClick={loadCross}
@@ -3326,7 +3279,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                             key={field.key}
                             value={field.key}
                             disabled={field.key === columnField}
-                            className="data-[state=checked]:bg-slate-100 data-[state=checked]:font-semibold data-[state=checked]:text-titulados [&_[data-slot=select-item-indicator]]:hidden data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45"
+                            className="data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45"
                           >
                             {field.label}
                           </SelectItem>
@@ -3356,7 +3309,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                             key={field.key}
                             value={field.key}
                             disabled={field.key === rowField}
-                            className="data-[state=checked]:bg-slate-100 data-[state=checked]:font-semibold data-[state=checked]:text-titulados [&_[data-slot=select-item-indicator]]:hidden data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45"
+                            className="data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45"
                           >
                             {field.label}
                           </SelectItem>
@@ -3636,7 +3589,7 @@ export function SimulationPage() {
         <CardContent className="grid gap-4 sm:grid-cols-3">
           <label className="label-default grid gap-1">
             Personas a simular
-            <input
+            <Input
               className="control"
               type="number"
               min="1"
@@ -3646,7 +3599,7 @@ export function SimulationPage() {
           </label>
           <label className="label-default grid gap-1">
             Repeticiones
-            <input
+            <Input
               className="control"
               type="number"
               min="1"
@@ -3656,7 +3609,7 @@ export function SimulationPage() {
           </label>
           <label className="label-default grid gap-1">
             Semilla
-            <input
+            <Input
               className="control"
               type="number"
               value={seed}
@@ -3687,7 +3640,7 @@ export function SimulationPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <table className="w-full text-sm">
+            <Table className="text-sm">
               <thead>
                 <tr className="border-b text-left text-xs text-ink-600">
                   <th className="p-2">Categoría</th>
@@ -3715,7 +3668,7 @@ export function SimulationPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </Table>
           </CardContent>
         </Card>
       )}
@@ -3828,23 +3781,34 @@ function DatasetSelect({
   onChange: (id?: string) => void;
   loading: boolean;
 }) {
+  const selectedDataset = datasets.find((dataset) => dataset.id === value);
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <label className="label-default text-ink-600">
+    <div className="flex w-full flex-wrap items-center gap-3">
+      <label className="label-default grid w-full max-w-sm gap-1 text-ink-600">
         Dataset
-        <select
-          className="control ml-2"
-          value={value ?? ""}
+        <Select
+          value={value}
           disabled={loading}
-          onChange={(event) => onChange(event.target.value || undefined)}
+          onValueChange={(nextValue) => onChange(nextValue || undefined)}
         >
-          <option value="">Seleccionar dataset</option>
-          {datasets.map((dataset) => (
-            <option key={dataset.id} value={dataset.id}>
-              {dataset.sourceFileName} · {dataset.rowsValid} válidas
-            </option>
-          ))}
-        </select>
+          <SelectTrigger
+            className="w-full min-w-0 max-w-full"
+            title={
+              selectedDataset
+                ? `${selectedDataset.sourceFileName} · ${selectedDataset.rowsValid} válidas`
+                : "Seleccionar dataset"
+            }
+          >
+            <SelectValue placeholder="Seleccionar dataset" />
+          </SelectTrigger>
+          <SelectContent>
+            {datasets.map((dataset) => (
+              <SelectItem key={dataset.id} value={dataset.id}>
+                {dataset.sourceFileName} · {dataset.rowsValid} válidas
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </label>
     </div>
   );
@@ -3986,7 +3950,7 @@ function CrossTable({
                   return (
                     <TableCell
                       key={column}
-                      className="tabular-nums p-2 text-right font-medium"
+                      className="tabular-nums p-2 text-right font-medium transition-[background-color,color] duration-300 ease-out"
                       style={
                         colorHeatmap
                           ? {
