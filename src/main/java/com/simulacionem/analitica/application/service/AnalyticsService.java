@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 @Service
 public class AnalyticsService {
     public static final int MINIMUM_SAMPLE_SIZE = 5;
+    private static final int SEGMENT_REFERENCE_YEAR = 2024;
     private final DatasetImportRepository datasets;
     private final SurveyResponseRepository responses;
     private final CompetenceRatingRepository ratings;
@@ -148,6 +149,15 @@ public class AnalyticsService {
     }
 
     private String value(SurveyResponseEntity response, String field) {
+        if ("segmento_titulacion".equals(field)) {
+            Double graduationYear = number(value(response, "anio_titulacion"));
+            if (graduationYear == null) {
+                return null;
+            }
+            return SEGMENT_REFERENCE_YEAR - graduationYear <= 5
+                    ? "Junior / Reciente"
+                    : "Consolidado";
+        }
         Object value = response.getNormalizedPayload().get(field);
         return value == null ? null : String.valueOf(value);
     }
