@@ -69,6 +69,12 @@ public class AnalyticsController {
                 "aspectos_utiles", "aspectos_mejorables", "asignaturas_ventaja", "asignaturas_poco_utiles"));
     }
 
+    @GetMapping("/titulados/financing")
+    public AnalyticsSummaryDto tituladosFinancing(@RequestParam(required = false) UUID datasetId) {
+        return analytics.summary(datasetId, "TITULADOS", List.of(
+                "financiamiento_posgrado_estimado", "nivel_posgrado_interes"));
+    }
+
     @GetMapping("/employers/summary")
     public AnalyticsSummaryDto employersSummary(@RequestParam(required = false) UUID datasetId,
                                                 @RequestParam(required = false) String fields) {
