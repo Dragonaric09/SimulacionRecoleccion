@@ -209,6 +209,8 @@ public class CsvImportService {
         putKnown(values, headers, record, "rubro_trabajo_actual", "rubro de la organización");
         putKnown(values, headers, record, "area_trabajo", "área dentro de la organización");
         putKnown(values, headers, record, "pertinencia_trabajo_formacion", "peritnentes a sus formación");
+        putKnown(values, headers, record, "satisfaccion_formacion", "de manera global");
+        putKnown(values, headers, record, "concordancia_formacion_requerimientos", "existe concordancia entre");
         putKnown(values, headers, record, "remuneracion_rango", "remuneración promedio mensual");
         putKnown(values, headers, record, "tipo_organizacion", "tipo de organización");
         putKnown(values, headers, record, "tamano_organizacion", "tamaño de la organización");

@@ -56,6 +56,13 @@ public class AnalyticsController {
         return analytics.summary(datasetId, "TITULADOS", List.of("tiene_formacion_complementaria", "interes_posgrado"));
     }
 
+    @GetMapping("/titulados/satisfaction")
+    public AnalyticsSummaryDto tituladosSatisfaction(@RequestParam(required = false) UUID datasetId) {
+        return analytics.summary(datasetId, "TITULADOS", List.of(
+                "satisfaccion_formacion", "concordancia_formacion_requerimientos",
+                "pertinencia_trabajo_formacion"));
+    }
+
     @GetMapping("/employers/summary")
     public AnalyticsSummaryDto employersSummary(@RequestParam(required = false) UUID datasetId,
                                                 @RequestParam(required = false) String fields) {
