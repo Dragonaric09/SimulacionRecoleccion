@@ -66,6 +66,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DatasetSummary } from "@/features/encuesta/api";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import { contrastTextColor } from "@/lib/utils";
@@ -158,13 +159,6 @@ export function EmploymentProfilePage() {
   }, [datasetId]);
   const labor = summary?.distributions.situacion_laboral_actual;
   const sectors = summary?.distributions.sector_trabajo;
-  const employed = labor
-    ? countMatching(
-        labor,
-        ["trabaja", "organización", "empresa", "emprend"],
-        ["no trabaja", "búsqueda", "desemple"],
-      )
-    : null;
   const unemployed = labor
     ? countMatching(labor, ["no trabaja", "búsqueda", "desemple"])
     : null;
@@ -175,32 +169,22 @@ export function EmploymentProfilePage() {
     {
       key: "perfil",
       label: "Perfil",
-      icon: UsersIcon,
-      count: summary?.validResponses,
     },
     {
       key: "trabajo",
       label: "Trabajo actual",
-      icon: WorkIcon,
-      count: employed,
     },
     {
       key: "desempleo",
       label: "Sin empleo",
-      icon: UsersIcon,
-      count: unemployed,
     },
     {
       key: "primer-empleo",
       label: "Primer empleo",
-      icon: GraduationIcon,
-      count: summary?.distributions.primera_experiencia_laboral?.validCount,
     },
     {
       key: "emprendimiento",
       label: "Emprendimiento",
-      icon: BookIcon,
-      count: labor ? countMatching(labor, ["emprend"]) : null,
     },
   ];
   const resetFilters = () => {
@@ -266,29 +250,17 @@ export function EmploymentProfilePage() {
       )}
       {summary && (
         <>
-          <div className="flex gap-1 overflow-x-auto border-b border-border-line">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.key ? "border-titulados text-titulados" : "border-transparent text-ink-600 hover:border-slate-300 hover:text-ink-900"}`}
-                >
-                  <Icon className="size-4" />
-                  {tab.label}
-                  {tab.count != null && (
-                    <span
-                      className={`rounded-full px-1.5 py-0.5 text-xs ${activeTab === tab.key ? "bg-titulados-active text-titulados" : "bg-surface-container-high text-ink-600"}`}
-                    >
-                      n={tab.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList variant="line" className="w-full justify-start">
+              {tabs.map((tab) => {
+                return (
+                  <TabsTrigger key={tab.key} value={tab.key}>
+                    {tab.label}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
           <EmploymentTabContent
             tab={activeTab}
             summary={summary}
@@ -1061,21 +1033,15 @@ export function EducationProfilePage() {
       )}
       {summary && (
         <>
-          <div className="grid rounded-xl bg-surface-container-high/50 p-1 sm:grid-cols-2">
-            {fields.map((field) => (
-              <button
-                key={field.key}
-                type="button"
-                onClick={() => setActiveField(field.key)}
-                className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${activeField === field.key ? "bg-surface-white text-titulados shadow-sm" : "text-ink-600 hover:bg-surface-white/70 hover:text-ink-900"}`}
-              >
-                {field.label}{" "}
-                <span className="ml-1 text-xs">
-                  (n = {summary.distributions[field.key]?.validCount ?? 0})
-                </span>
-              </button>
-            ))}
-          </div>
+          <Tabs value={activeField} onValueChange={setActiveField}>
+            <TabsList variant="line" className="w-full justify-start">
+              {fields.map((field) => (
+                <TabsTrigger key={field.key} value={field.key}>
+                  {field.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
           <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               label={
@@ -1837,22 +1803,22 @@ export function CompetencePage({ domain }: { domain: Domain }) {
           onChange={setDatasetId}
           loading={datasetsLoading}
         />
-        <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-surface-container-low p-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => {
-                setActiveTab(tab.key);
-                const group = tabGroup(tab.key);
-                if (group) setActiveGroup(group);
-              }}
-              className={`shrink-0 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.key ? "bg-surface-white text-titulados shadow-sm" : "text-ink-600 hover:bg-surface-white/70 hover:text-ink-900"}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          value={activeTab}
+          onValueChange={(key) => {
+            setActiveTab(key);
+            const group = tabGroup(key);
+            if (group) setActiveGroup(group);
+          }}
+        >
+          <TabsList variant="line" className="w-full justify-start">
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.key} value={tab.key}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
         {activeTab === "satisfaccion" ? (
           <SatisfactionPanel summary={satisfaction} />
         ) : (
@@ -1914,38 +1880,39 @@ export function CompetencePage({ domain }: { domain: Domain }) {
       )}
       {items.length > 0 && (
         <>
-          <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-surface-container-low p-1">
-            {tabs.map((tab) => {
-              const group = tabGroup(tab.key);
-              const available =
-                Boolean(group) ||
-                (domain === "TITULADOS" &&
-                  (tab.key === "satisfaccion" || tab.key === "malla"));
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => {
-                    setActiveTab(tab.key);
-                    if (group) setActiveGroup(group);
-                  }}
-                  className={`flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.key ? "bg-surface-white text-titulados shadow-sm" : "text-ink-600 hover:bg-surface-white/70 hover:text-ink-900"} ${!available ? "opacity-60" : ""}`}
-                >
-                  <span>{tab.label}</span>
-                  {group && (
-                    <span className="rounded-full bg-titulados-active px-1.5 py-0.5 text-xs">
-                      {items.filter((item) => item.group === group).length}
-                    </span>
-                  )}
-                  {!available && (
-                    <span className="text-[10px] uppercase tracking-wide">
-                      Próximamente
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <Tabs
+            value={activeTab}
+            onValueChange={(key) => {
+              setActiveTab(key);
+              const group = tabGroup(key);
+              if (group) setActiveGroup(group);
+            }}
+          >
+            <TabsList variant="line" className="w-full justify-start">
+              {tabs.map((tab) => {
+                const group = tabGroup(tab.key);
+                const available =
+                  Boolean(group) ||
+                  (domain === "TITULADOS" &&
+                    (tab.key === "satisfaccion" || tab.key === "malla"));
+                return (
+                  <TabsTrigger key={tab.key} value={tab.key} disabled={!available}>
+                    {tab.label}
+                    {group && (
+                      <span className="rounded-full bg-surface-container-high px-1.5 py-0.5 text-xs leading-none text-ink-600 group-data-[state=active]:bg-titulados-active group-data-[state=active]:text-titulados">
+                        {items.filter((item) => item.group === group).length}
+                      </span>
+                    )}
+                    {!available && (
+                      <span className="text-[10px] uppercase tracking-wide">
+                        Próximamente
+                      </span>
+                    )}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
           {!tabGroup(activeTab) ? (
             <StatusPanel
               kind="info"
@@ -3487,29 +3454,20 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
           </Card>
         </div>
         <div className="min-w-0 space-y-4">
-          <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-surface-container-low p-1 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveView("table");
-              }}
-              className={`shrink-0 whitespace-nowrap rounded-lg px-4 py-2 ${activeView === "table" ? "bg-surface-white font-semibold text-titulados shadow-sm" : "text-ink-600"}`}
-            >
-              Tabla
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveView("bars");
-                if (metric === "columnPercent") {
-                  setMetric("count");
-                }
-              }}
-              className={`shrink-0 whitespace-nowrap rounded-lg px-4 py-2 ${activeView === "bars" ? "bg-surface-white font-semibold text-titulados shadow-sm" : "text-ink-600"}`}
-            >
-              Barras comparativas
-            </button>
-          </div>
+          <Tabs
+            value={activeView}
+            onValueChange={(view) => {
+              setActiveView(view as "table" | "bars");
+              if (view === "bars" && metric === "columnPercent") {
+                setMetric("count");
+              }
+            }}
+          >
+            <TabsList variant="line" className="w-full justify-start text-xs">
+              <TabsTrigger value="table">Tabla</TabsTrigger>
+              <TabsTrigger value="bars">Barras comparativas</TabsTrigger>
+            </TabsList>
+          </Tabs>
           {loading && (
             <StatusPanel
               kind="loading"
