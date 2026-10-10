@@ -270,15 +270,15 @@ function EmploymentTabContent({
     );
   return (
     <>
-      <ProfileStatistics summary={summary} />
-      <div className="grid items-start gap-5 lg:grid-cols-12">
+      <div className="grid items-start gap-6 lg:grid-cols-12">
         <CohortScatterCard
           points={profile?.cohortPoints ?? []}
-          className="lg:col-span-7"
+          summary={summary}
+          className="lg:col-span-8"
         />
-        <SenioritySegmentationCard points={profile?.cohortPoints ?? []} className="lg:col-span-5" />
+        <SenioritySegmentationCard points={profile?.cohortPoints ?? []} className="lg:col-span-4" />
       </div>
-      <div className="grid items-start gap-5 lg:grid-cols-2">
+      <div className="mt-1 grid items-start gap-6 lg:grid-cols-2">
         <EmploymentDonutCard
           distribution={labor}
           total={summary.validResponses}
@@ -519,7 +519,7 @@ function UnemploymentPanel({
         <div className="flex items-start justify-between gap-4">
           <div>
             <CardTitle className="title-card">
-              Población sin empleo / En búsqueda activa (n = {unemployed ?? 0})
+              Población sin empleo (n = {unemployed ?? 0})
             </CardTitle>
             <CardDescription>
               Motivos y antecedentes laborales previos
@@ -665,9 +665,11 @@ function CurrentWorkPanel({
 
 function CohortScatterCard({
   points,
+  summary,
   className = "",
 }: {
   points: EmploymentProfile["cohortPoints"];
+  summary: AnalyticsSummary;
   className?: string;
 }) {
   const years = points.map((point) => point.graduationYear);
@@ -787,6 +789,13 @@ function CohortScatterCard({
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 grid grid-cols-3 divide-x divide-border-line rounded-lg border border-border-line bg-slate-50 py-3">
+          {[
+            ["Media", summary.numericAverages.anios_vida_profesional],
+            ["Mediana", summary.numericMedians.anios_vida_profesional],
+            ["Desviación estándar", summary.numericStandardDeviations.anios_vida_profesional],
+          ].map(([label, value]) => <div key={label} className="px-3 text-center"><p className="text-xs text-ink-600">{label}</p><p className="mt-1 text-xl font-bold tabular-nums text-ink-900">{typeof value === "number" ? formatDecimal(value, 1) : "—"}<span className="ml-1 text-xs font-medium text-ink-600">años</span></p></div>)}
+        </div>
         {points.length ? (
           <>
             <div className="overflow-hidden rounded-lg border border-border-line bg-slate-50 p-2">
@@ -827,58 +836,6 @@ function CohortScatterCard({
             No hay registros numéricos suficientes para dibujar la cohorte.
           </p>
         )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function ProfileStatistics({ summary }: { summary: AnalyticsSummary }) {
-  const average = summary.numericAverages.anios_vida_profesional;
-  const median = summary.numericMedians.anios_vida_profesional;
-  const deviation = summary.numericStandardDeviations.anios_vida_profesional;
-  const sameCentralValue =
-    average != null && median != null && Math.abs(average - median) < 0.0001;
-  return (
-    <Card className="rounded-xl border border-border-line shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="caption-bold uppercase tracking-wider text-ink-600">
-              Vida profesional (años)
-            </p>
-            <p className="mt-1 text-xs text-ink-600">
-              {sameCentralValue
-                ? `Media y mediana: ${formatDecimal(average!, 1)} años`
-                : "Medidas descriptivas de la experiencia profesional"}
-            </p>
-          </div>
-          <span className="font-bold tabular-nums text-titulados">
-            n = {summary.validResponses}
-          </span>
-        </div>
-        <div className="mt-4 grid grid-cols-3 divide-x divide-border-line border-t border-border-line pt-4">
-          <div className="px-3 first:pl-0">
-            <p className="text-xs text-ink-600">Media</p>
-            <p className="mt-1 text-2xl font-bold tabular-nums text-ink-900">
-              {average == null ? "—" : formatDecimal(average, 1)}
-              <span className="ml-1 text-sm font-medium text-ink-600">años</span>
-            </p>
-          </div>
-          <div className="px-3">
-            <p className="text-xs text-ink-600">Mediana</p>
-            <p className="mt-1 text-2xl font-bold tabular-nums text-ink-900">
-              {median == null ? "—" : formatDecimal(median, 1)}
-              <span className="ml-1 text-sm font-medium text-ink-600">años</span>
-            </p>
-          </div>
-          <div className="px-3 last:pr-0">
-            <p className="text-xs text-ink-600">Desviación estándar</p>
-            <p className="mt-1 text-2xl font-bold tabular-nums text-ink-900">
-              {deviation == null ? "—" : formatDecimal(deviation, 1)}
-              <span className="ml-1 text-sm font-medium text-ink-600">años</span>
-            </p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
@@ -1156,7 +1113,10 @@ function EmploymentDonutCard({
 }
 
 function laborColor(label: string) {
-  const normalized = label.toLowerCase();
+  const normalized = label
+    .toLocaleLowerCase("es-BO")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
   if (normalized.includes("emprend")) return "#14a39a";
   if (
     normalized.includes("busqueda") ||
