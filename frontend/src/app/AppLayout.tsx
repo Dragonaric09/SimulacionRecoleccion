@@ -3,6 +3,9 @@ import { Database, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { navigation, navigate, sectionLabels, type NavigationItem } from './navigation'
 import { PlaceholderPage } from './PlaceholderPage'
+import { PrintButton } from '@/components/analytics/PrintButton'
+import { CompetencePage, DatasetAnalyticsPage, EducationProfilePage, EmploymentProfilePage, FinancingCompletePage } from '@/features/analitica/RestAnalyticPages'
+import { TituladosSummaryPage } from '@/features/analitica/TituladosSummaryPage'
 
 type Props = { route: NavigationItem }
 
@@ -105,9 +108,40 @@ export function AppLayout({ route }: Props) {
                 <p className="text-xs text-ink-600">{route.description}</p>
               </div>
             </div>
+            {route.section !== 'general' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
+              <div className="print-hide flex items-center gap-2">
+                <PrintButton domain={route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'} />
+              </div>
+            )}
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
-            <PlaceholderPage route={route} />
+            {route.section !== 'general' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
+              <section className="print-only print-cover mb-6" aria-label="Portada del informe">
+                <p className="caption-bold uppercase tracking-wider text-ink-600">SimulacionEM · Informe analítico</p>
+                <h1 className="headline-page">{route.section === 'titulados' ? 'Titulados' : 'Empleadores'}</h1>
+                <p>Sección: {route.label}</p>
+                <p>Fecha de generación: {new Intl.DateTimeFormat('es-BO', { dateStyle: 'long', timeZone: 'America/La_Paz' }).format(new Date())}</p>
+                <p>Filtros activos: Año: Todos · Estado laboral: Todos · Sector: Todos</p>
+                <p>Mostrando las respuestas válidas del dataset seleccionado.</p>
+                <p className="mt-4 text-xs text-ink-600">Los porcentajes excluyen “No sabe” y “No observado”. Con menos de 5 respuestas, las gráficas son solo referenciales.</p>
+              </section>
+            )}
+            <div className="screen-content"><PlaceholderPage route={route} /></div>
+            {route.section !== 'general' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
+              <div className="print-bundle" aria-label="Informe completo para impresión">
+                {route.section === 'titulados' ? <>
+                  <section className="print-page"><TituladosSummaryPage /></section>
+                  <section className="print-page"><EmploymentProfilePage /></section>
+                  <section className="print-page"><EducationProfilePage /></section>
+                  <section className="print-page"><FinancingCompletePage /></section>
+                  <section className="print-page"><CompetencePage domain="TITULADOS" /></section>
+                </> : <>
+                  <section className="print-page"><DatasetAnalyticsPage title="Resumen de contratación" description="Indicadores descriptivos de tipo, tamaño y contratación." domain="EMPLEADORES" endpoint="/analytics/employers/summary" fields="tipo_organizacion,tamano_organizacion,contrato_titulados_ultimos_5_anios" cards={[{ key: 'tipo_organizacion', label: 'Tipo de organización' }, { key: 'contrato_titulados_ultimos_5_anios', label: 'Contratación reciente' }]} /></section>
+                  <section className="print-page"><DatasetAnalyticsPage title="Valoración de la carrera" description="Distribuciones categóricas por afirmación de la encuesta." domain="EMPLEADORES" endpoint="/analytics/employers/valuation" cards={[{ key: 'valoracion_formacion_1', label: 'Valoración de formación' }, { key: 'valoracion_relacion_1', label: 'Relación con la carrera' }]} /></section>
+                  <section className="print-page"><CompetencePage domain="EMPLEADORES" /></section>
+                </>}
+              </div>
+            )}
           </main>
         </div>
       </div>

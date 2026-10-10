@@ -27,17 +27,32 @@ export function FilterToolbar({ summary, onQueryChange, count, onReset }: { summ
 
 function TituladosFilterToolbar({ summary, onQueryChange }: { summary: AnalyticsSummary; onQueryChange?: (query: string) => void }) {
   const [filters, setFilters] = useState<TituladosFilterState>({ laborStatuses: [], sectors: [] });
+  const [initialized, setInitialized] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  // Jackson serializa los límites ausentes como null; normalizarlos evita
-  // mostrar "null – null" y mantiene el control en estado neutral.
   const minYear = summary.yearMin ?? undefined;
   const maxYear = summary.yearMax ?? undefined;
-  useEffect(() => setFilters({ yearFrom: minYear, yearTo: maxYear, laborStatuses: [], sectors: [] }), [summary.datasetId, minYear, maxYear]);
+  useEffect(() => {
+    const saved = localStorage.getItem(`simulacionem.tituladosFilters.${summary.datasetId}`);
+    const params = saved ? new URLSearchParams(saved.replace(/^&/, "")) : null;
+    const savedFrom = params?.get("yearFrom");
+    const savedTo = params?.get("yearTo");
+    setFilters({
+      yearFrom: savedFrom ? Number(savedFrom) : minYear,
+      yearTo: savedTo ? Number(savedTo) : maxYear,
+      laborStatuses: params?.getAll("laborStatus") ?? [],
+      sectors: params?.getAll("sector") ?? [],
+    });
+    setInitialized(true);
+  }, [summary.datasetId, minYear, maxYear]);
   const query = useMemo(() => tituladosFilterQuery({ ...filters,
     yearFrom: filters.yearFrom === minYear ? undefined : filters.yearFrom,
     yearTo: filters.yearTo === maxYear ? undefined : filters.yearTo,
   }), [filters, minYear, maxYear]);
-  useEffect(() => onQueryChange?.(query), [query, onQueryChange]);
+  useEffect(() => {
+    if (!initialized) return;
+    onQueryChange?.(query);
+    localStorage.setItem(`simulacionem.tituladosFilters.${summary.datasetId}`, query);
+  }, [initialized, query, onQueryChange, summary.datasetId]);
   const update = (next: TituladosFilterState) => setFilters(next);
   const toggle = (key: "laborStatuses" | "sectors", value: string) => update({ ...filters, [key]: filters[key].includes(value) ? filters[key].filter((item) => item !== value) : [...filters[key], value] });
   const reset = () => update({ yearFrom: minYear, yearTo: maxYear, laborStatuses: [], sectors: [] });

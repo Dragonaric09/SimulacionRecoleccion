@@ -76,6 +76,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DatasetSummary } from "@/features/encuesta/api";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import { contrastTextColor } from "@/lib/utils";
+import { PrintButton } from "@/components/analytics/PrintButton";
 
 type Domain = "TITULADOS" | "EMPLEADORES";
 type Tone = "titulados" | "empleadores";
@@ -267,12 +268,6 @@ export function EmploymentProfilePage() {
           description="Situación laboral y sectores de inserción de las personas tituladas."
           tone="titulados"
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Info />
-            Definiciones
-          </Button>
-        </div>
       </div>
       <DatasetSelect
         datasets={datasets}
@@ -2301,12 +2296,10 @@ export function CompetencePage({ domain }: { domain: Domain }) {
         }
           tone={tone}
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Info />
-            Definiciones
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" className="print-hide">
+          <Info />
+          Definiciones
+        </Button>
       </div>
       <DatasetSelect
         datasets={datasets}
@@ -3700,6 +3693,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
           tone={tone}
         />
         <div className="flex flex-wrap items-center gap-2">
+          <PrintButton domain={domain} kind="cruce" disabled={!cross || loading} />
           <Button variant="outline" size="sm">
             <Info />
             Definiciones
@@ -3960,6 +3954,14 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
               description="Selecciona las variables de filas y columnas para mostrar la tabla bivariada."
             />
           )}
+          {cross && (
+            <div className="print-only print-page space-y-4" aria-label="Versión de impresión del cruce">
+              <h2 className="title-card">{labelFor(rowField)} × {labelFor(columnField)}</h2>
+              <p className="text-sm text-ink-600">{crossMetricLabel(metric)} · n = {cross.validCount}{includeTotals ? " · totales incluidos" : ""}{colorHeatmap ? " · mapa de calor" : ""}</p>
+              <CrossTable cross={cross} totalResponses={datasets.find((dataset) => dataset.id === datasetId)?.rowsValid} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric={metric} />
+              <div className="print-card"><CrossBars cross={cross} metric={metric} totalResponses={datasets.find((dataset) => dataset.id === datasetId)?.rowsValid} /></div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -4041,14 +4043,17 @@ export function SimulationPage() {
     }
   }
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-5">
+      <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <PageHeading
           title={`Simulación de escenarios${summary ? ` (n = ${summary.validResponses})` : ""}`}
           description="Escenarios hipotéticos mediante muestreo Monte Carlo con transformada inversa."
           tone="titulados"
         />
-        <Badge tone="titulados">Algoritmo: Monte Carlo</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <PrintButton domain="TITULADOS" kind="simulacion" disabled={!result || loading} />
+          <Badge tone="titulados">Algoritmo: Monte Carlo</Badge>
+        </div>
       </div>
       <DatasetSelect
         datasets={datasets}
@@ -4604,6 +4609,12 @@ function labelFor(key: string) {
   return key
     .replaceAll("_", " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function crossMetricLabel(metric: CrossMetric) {
+  if (metric === "rowPercent") return "valores en % por fila";
+  if (metric === "columnPercent") return "valores en % por columna";
+  return "conteos";
 }
 function downloadFile(content: BlobPart, name: string, type: string) {
   const url = URL.createObjectURL(new Blob([content], { type }));
