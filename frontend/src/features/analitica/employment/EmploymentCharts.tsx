@@ -7,13 +7,19 @@ export function MiniDistribution({
   distribution,
   accent = "blue",
   note,
+  order,
 }: {
   title: string;
   distribution?: CategoryDistribution;
   accent?: "blue" | "teal" | "purple" | "amber";
   note?: string;
+  order?: string[];
 }) {
-  const entries = Object.entries(distribution?.counts ?? {}).sort(([, a], [, b]) => b - a);
+  const counts = distribution?.counts ?? {};
+  const entries = order ? order.map((label) => {
+    const source = Object.keys(counts).find((candidate) => normalizeLabel(candidate) === normalizeLabel(label));
+    return [source ?? label, source ? counts[source] : 0] as [string, number];
+  }) : Object.entries(counts).sort(([, a], [, b]) => b - a);
   const accentColor = {
     blue: "#1f6fb5",
     teal: "#0f766e",
@@ -34,7 +40,7 @@ export function MiniDistribution({
               <div key={label} className="space-y-1">
                 <div className="flex justify-between gap-3 text-sm">
                   <span className="min-w-0 break-words">{label}</span>
-                  <span className="whitespace-nowrap tabular-nums font-semibold">{count} de {distribution?.validCount} ({percentage}%)</span>
+                  <span className="whitespace-nowrap tabular-nums font-semibold">{count} de {distribution?.validCount} ({formatPercent(percentage)})</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
                   <div className="h-full rounded-full" style={{ width: `${percentage}%`, backgroundColor: accentColor }} />
@@ -50,10 +56,19 @@ export function MiniDistribution({
   );
 }
 
+function normalizeLabel(value: string) {
+  return value.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+}
+
 export function StackedRelevanceCard({ distribution }: { distribution?: CategoryDistribution }) {
-  const entries = Object.entries(distribution?.counts ?? {});
+  const scale = ["Totalmente en desacuerdo", "En desacuerdo", "De acuerdo", "Totalmente de acuerdo"];
+  const counts = distribution?.counts ?? {};
+  const entries = scale.map((label) => {
+    const source = Object.keys(counts).find((candidate) => normalizeLabel(candidate) === normalizeLabel(label));
+    return [source ?? label, source ? counts[source] : 0] as [string, number];
+  });
   const total = distribution?.validCount ?? 0;
-  const colors = ["#1f6fb5", "#7db1dd", "#f2a33a", "#d64545"];
+  const colors = ["#ed552f", "#f3a487", "#7db1dd", "#1f6fb5"];
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-2">
@@ -65,11 +80,11 @@ export function StackedRelevanceCard({ distribution }: { distribution?: Category
           <div className="flex h-5 overflow-hidden rounded-md bg-surface-container-high">
             {entries.map(([label, count], index) => {
               const percentage = total ? (count / total) * 100 : 0;
-              return <div key={label} className="h-full" style={{ width: `${percentage}%`, backgroundColor: colors[index % colors.length] }} title={`${label}: ${count} (${percentage.toFixed(1)}%)`} />;
+              return <div key={label} className="h-full" style={{ width: `${percentage}%`, backgroundColor: colors[index % colors.length] }} title={`${label}: ${count} (${formatPercent(percentage)})`} />;
             })}
           </div>
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-600">
-            {entries.map(([label], index) => <span key={label} className="flex items-center gap-1"><i className="size-2 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />{label} ({distribution?.percentages[label]}%)</span>)}
+            {entries.map(([label], index) => <span key={label} className="flex items-center gap-1"><i className="size-2 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />{label} ({formatPercent(distribution?.percentages[label] ?? 0)})</span>)}
           </div>
         </>
       ) : (
@@ -77,4 +92,8 @@ export function StackedRelevanceCard({ distribution }: { distribution?: Category
       )}
     </div>
   );
+}
+
+function formatPercent(value: number) {
+  return `${value.toFixed(1).replace(".", ",")} %`;
 }

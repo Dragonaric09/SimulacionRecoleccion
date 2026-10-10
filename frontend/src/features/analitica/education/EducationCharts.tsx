@@ -97,7 +97,7 @@ export function DivergingAgreementCard({ distribution }: { distribution?: Catego
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3 text-xs text-ink-600"><span>Desacuerdo: {negativeTotal} ({formatPercentage(negativeTotal, total)})</span><span className="text-right">De acuerdo: {positiveTotal} ({formatPercentage(positiveTotal, total)})</span></div>
-      <div className="grid grid-cols-2 gap-1" aria-label="Escala divergente de acuerdo"><div className="flex h-9 justify-end overflow-hidden rounded-l-md bg-surface-container-high">{negative.slice().reverse().map(([label, count]) => <div key={label} className="flex items-center justify-center text-[11px] font-semibold text-white" style={{ width: `${negativeTotal ? count * 100 / negativeTotal : 0}%`, backgroundColor: colors[entries.findIndex(([entryLabel]) => entryLabel === label)] }} title={`${label}: ${count}`}>{count || ""}</div>)}</div><div className="flex h-9 overflow-hidden rounded-r-md bg-surface-container-high">{positive.map(([label, count]) => <div key={label} className="flex items-center justify-center text-[11px] font-semibold text-white" style={{ width: `${positiveTotal ? count * 100 / positiveTotal : 0}%`, backgroundColor: colors[entries.findIndex(([entryLabel]) => entryLabel === label)] }} title={`${label}: ${count}`}>{count || ""}</div>)}</div></div>
+      <div className="grid grid-cols-2 gap-1" aria-label="Escala divergente de acuerdo"><div className="flex h-9 overflow-hidden rounded-l-md bg-surface-container-high">{negative.map(([label, count]) => <div key={label} className="flex items-center justify-center text-[11px] font-semibold text-white" style={{ width: `${negativeTotal ? count * 100 / negativeTotal : 0}%`, backgroundColor: colors[entries.findIndex(([entryLabel]) => entryLabel === label)] }} title={`${label}: ${count}`}>{count || ""}</div>)}</div><div className="flex h-9 overflow-hidden rounded-r-md bg-surface-container-high">{positive.map(([label, count]) => <div key={label} className="flex items-center justify-center text-[11px] font-semibold text-white" style={{ width: `${positiveTotal ? count * 100 / positiveTotal : 0}%`, backgroundColor: colors[entries.findIndex(([entryLabel]) => entryLabel === label)] }} title={`${label}: ${count}`}>{count || ""}</div>)}</div></div>
       <div className="grid grid-cols-2 gap-4 text-xs text-ink-600"><div className="space-y-1">{negative.map(([label, count]) => <div key={label} className="flex justify-between gap-2"><span>{label}</span><span className="tabular-nums">{count}</span></div>)}</div><div className="space-y-1">{positive.map(([label, count]) => <div key={label} className="flex justify-between gap-2"><span>{label}</span><span className="tabular-nums">{count}</span></div>)}</div></div>
       <p className="border-t border-surface-container-high pt-2 text-xs text-ink-600">Escala de acuerdo de 4 niveles · n = {total}</p>
     </div>
@@ -105,9 +105,12 @@ export function DivergingAgreementCard({ distribution }: { distribution?: Catego
 }
 
 function orderedScaleEntries(distribution?: CategoryDistribution) {
-  const entries = Object.entries(distribution?.counts ?? {});
-  const order = ["totalmente en desacuerdo", "en desacuerdo", "de acuerdo", "totalmente de acuerdo"];
-  return entries.sort(([left], [right]) => order.indexOf(normalizeEducationLabel(left)) - order.indexOf(normalizeEducationLabel(right)));
+  const counts = distribution?.counts ?? {};
+  const labels = ["Totalmente en desacuerdo", "En desacuerdo", "De acuerdo", "Totalmente de acuerdo"];
+  return labels.map((label) => {
+    const source = Object.keys(counts).find((candidate) => normalizeEducationLabel(candidate) === normalizeEducationLabel(label));
+    return [label, source ? counts[source] : 0] as [string, number];
+  });
 }
 
 function formatPercentage(value: number, total: number) {

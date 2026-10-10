@@ -362,7 +362,12 @@ function EntrepreneurshipPanel({
 }
 
 function EntrepreneurshipDistribution({ label, distribution, color = "#1f6fb5" }: { label: string; distribution?: CategoryDistribution; color?: string }) {
-  const entries = Object.entries(distribution?.counts ?? {}).sort(([, left], [, right]) => right - left);
+  const counts = distribution?.counts ?? {};
+  const orderedLabels = label.includes("satisfacción") ? ["Insatisfecho", "Algo satisfecho", "Satisfecho"] : label.includes("Importancia") ? ["Nada importante", "Poco importante", "Importante", "Muy importante"] : undefined;
+  const entries = orderedLabels ? orderedLabels.map((option) => {
+    const source = Object.keys(counts).find((candidate) => normalizeAnalyticLabel(candidate) === normalizeAnalyticLabel(option));
+    return [source ?? option, source ? counts[source] : 0] as [string, number];
+  }) : Object.entries(counts).sort(([, left], [, right]) => right - left);
   const total = distribution?.validCount ?? 0;
   return (
     <div className="entrepreneurship-distribution space-y-2 py-1.5">
@@ -397,9 +402,11 @@ function FirstEmploymentPanel({
   );
   const continued = experience ? booleanCount(experience, true) : 0;
   const continuedPercent = formatPercentage(continued, employedTotal);
-  const timingEntries = Object.entries(timing?.counts ?? {}).sort(
-    ([left], [right]) => firstEmploymentTimingOrder(left) - firstEmploymentTimingOrder(right),
-  );
+  const timingLabels = ["Ya trabajaba antes de titularse", "Menos de 1 mes", "Entre 1 - 4 meses", "Entre 4 - 8 meses", "Entre 8 - 12 meses", "Más de 12 meses"];
+  const timingEntries = timingLabels.map((label) => {
+    const source = Object.keys(timing?.counts ?? {}).find((candidate) => normalizeAnalyticLabel(candidate) === normalizeAnalyticLabel(label));
+    return [source ?? label, source ? timing?.counts[source] ?? 0 : 0] as [string, number];
+  });
   const branchTotal = timing?.validCount ?? 0;
 
   return (
@@ -907,7 +914,7 @@ function SenioritySegmentationCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="rounded-lg border border-border-line bg-slate-50 p-3">
+        <div className="print-hide rounded-lg border border-border-line bg-slate-50 p-3">
           <div className="flex items-center justify-between text-sm font-semibold">
             <span>Umbral de corte experiencia</span>
             <span className="rounded bg-white px-2 py-1 text-titulados">
@@ -932,7 +939,7 @@ function SenioritySegmentationCard({
           <div className="rounded-lg border border-border-line bg-slate-50 p-3">
             <p className="caption-bold text-titulados">JUNIOR / RECIENTE</p>
             <p className="display-kpi tabular-nums text-ink-900">
-              {percent(junior).toFixed(1)}%
+              {formatPercentValue(percent(junior))}
             </p>
             <p className="text-xs text-ink-600">
               {junior} de {points.length} titulados (≤ {threshold}a)
@@ -947,7 +954,7 @@ function SenioritySegmentationCard({
           <div className="rounded-lg border border-border-line bg-slate-50 p-3">
             <p className="caption-bold text-ink-900">CONSOLIDADO</p>
             <p className="display-kpi tabular-nums text-ink-900">
-              {percent(consolidated).toFixed(1)}%
+              {formatPercentValue(percent(consolidated))}
             </p>
             <p className="text-xs text-ink-600">
               {consolidated} de {points.length} titulados (&gt; {threshold}a)
@@ -1114,7 +1121,7 @@ function EmploymentDonutCard({
           </div>
           <div className="absolute inset-0 m-auto flex size-24 flex-col items-center justify-center rounded-full bg-white">
             <span className="title-card tabular-nums">
-              {occupiedPercent.toFixed(1)}%
+              {formatPercentValue(occupiedPercent)}
             </span>
             <span className="caption-meta uppercase text-ink-600">
               Ocupados
@@ -1181,7 +1188,7 @@ function AgeDistributionCard({
         <CardDescription>Rangos de edad en orden cronológico</CardDescription>
       </CardHeader>
       <CardContent>
-        <DistributionBars distribution={distribution} />
+        <DistributionBars distribution={distribution} order={["15–18", "19–22", "23–26", "27–30", "31–34", "35+"]} />
       </CardContent>
       <CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600">
         <span>Grupo mayoritario: {majorityLabel(distribution)}</span>
@@ -1320,19 +1327,19 @@ function MetricPanel({
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-semibold text-titulados">{title}</span>
         <span className="text-xs text-ink-600">
-          DE: ± {deviation == null ? "—" : `${deviation.toFixed(1)}a`}
+          DE: ± {deviation == null ? "—" : `${formatDecimal(deviation, 1)} años`}
         </span>
       </div>
       <div className="mt-2 flex flex-wrap gap-4 text-xs text-ink-600">
         Media:{" "}
         <strong className="text-base tabular-nums text-ink-900">
-          {average == null ? "—" : average.toFixed(1)}
+            {average == null ? "—" : formatDecimal(average, 1)}
         </strong>{" "}
         años{" "}
         <span>
           Mediana:{" "}
           <strong className="text-base tabular-nums text-ink-900">
-            {median == null ? "—" : median.toFixed(1)}
+            {median == null ? "—" : formatDecimal(median, 1)}
           </strong>{" "}
           años
         </span>
@@ -1343,19 +1350,31 @@ function MetricPanel({
 
 function DistributionBars({
   distribution,
+  order,
 }: {
   distribution?: CategoryDistribution;
+  order?: string[];
 }) {
-  return Object.entries(distribution?.counts ?? {}).length ? (
+  const counts = distribution?.counts ?? {};
+  const orderedEntries = order ? order.map((label) => {
+    const source = Object.keys(counts).find((candidate) => label.includes("+")
+      ? normalizeAnalyticLabel(candidate).startsWith(normalizeAnalyticLabel(label.replace("+", ""))) && normalizeAnalyticLabel(candidate).includes("mas")
+      : normalizeAnalyticLabel(candidate).replace(" anos", "") === normalizeAnalyticLabel(label).replace(" anos", ""));
+    return [source ?? label, source ? counts[source] : 0] as [string, number];
+  }) : Object.entries(counts);
+  const assigned = orderedEntries.reduce((sum, [, count]) => sum + count, 0);
+  const unclassified = Math.max(0, (distribution?.validCount ?? assigned) - assigned);
+  const entries = unclassified ? [...orderedEntries, ["Sin clasificar", unclassified] as [string, number]] : orderedEntries;
+  return entries.length ? (
     <div className="space-y-3">
-      {Object.entries(distribution?.counts ?? {}).map(([label, count]) => {
+      {entries.map(([label, count]) => {
         const percentage = distribution?.percentages[label] ?? 0;
         return (
           <div key={label} className="space-y-1">
             <div className="flex justify-between gap-3 text-sm">
               <span>{label}</span>
               <span className="tabular-nums whitespace-nowrap">
-                {count} de {distribution?.validCount} ({percentage}%)
+                {count} de {distribution?.validCount} ({formatPercentValue(percentage)})
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
@@ -1407,18 +1426,6 @@ function countMatching(
 }
 function formatPercentage(value: number, total: number) {
   return `${total ? ((value / total) * 100).toFixed(1).replace(".", ",") : "0,0"} %`;
-}
-
-function firstEmploymentTimingOrder(label: string) {
-  const normalized = label
-    .toLocaleLowerCase("es-BO")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  if (normalized.includes("antes") || normalized.includes("ya trabajaba")) return 0;
-  if (normalized.includes("menos de 6")) return 1;
-  if (normalized.includes("6 a 12")) return 2;
-  if (normalized.includes("mas de 1")) return 3;
-  return 10;
 }
 
 function booleanCount(distribution: CategoryDistribution, value: boolean) {
@@ -1654,12 +1661,12 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
                 <div className="h-full"><KpiCard
                   label="Competencias evaluadas"
                   value={String(visibleItems.length)}
-                  detail="competencias técnicas evaluadas"
+                  detail={`${groupDisplayName(activeGroup)} evaluadas`}
                   icon={ListChecks}
                   tone={tone}
                 /></div>
                 <div className="h-full"><KpiCard
-                  label="Promedio de hard skills"
+                  label={`Promedio de ${groupDisplayName(activeGroup)}`}
                   value={average ? `${formatDecimal(average)} de 5` : "—"}
                   detail={`Promedio de las ${visibleItems.length} competencias`}
                   icon={BarChart3}
@@ -1749,8 +1756,8 @@ function CompetencePrintGroup({ items, group, tone }: { items: Competence[]; gro
   const highest = items.length ? items.reduce((current, item) => item.average > current.average ? item : current) : undefined;
   return <>
     <div className="competence-kpi-grid grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div className="h-full"><KpiCard label="Competencias evaluadas" value={String(items.length)} detail="competencias técnicas evaluadas" icon={ListChecks} tone={tone} /></div>
-      <div className="h-full"><KpiCard label="Promedio de hard skills" value={average ? `${formatDecimal(average)} de 5` : "—"} detail={`Promedio de las ${items.length} competencias`} icon={BarChart3} tone={tone} /></div>
+      <div className="h-full"><KpiCard label="Competencias evaluadas" value={String(items.length)} detail={`${groupDisplayName(group)} evaluadas`} icon={ListChecks} tone={tone} /></div>
+      <div className="h-full"><KpiCard label={`Promedio de ${groupDisplayName(group)}`} value={average ? `${formatDecimal(average)} de 5` : "—"} detail={`Promedio de las ${items.length} competencias`} icon={BarChart3} tone={tone} /></div>
       <div className="h-full"><KpiCard label="Competencia más baja" value={lowest ? formatDecimal(lowest.average) : "—"} detail={lowest?.name ?? "Sin datos"} icon={TrendingDown} tone={tone} /></div>
       <div className="h-full"><KpiCard label="Competencia más alta" value={highest ? formatDecimal(highest.average) : "—"} detail={highest?.name ?? "Sin datos"} icon={TrendingUp} tone={tone} /></div>
     </div>
@@ -2013,6 +2020,14 @@ export function SimulationPage() {
       )}
     </div>
   );
+}
+
+function normalizeAnalyticLabel(value: string) {
+  return value.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[‐‑‒–—-]/g, "-").replace(/\s*-\s*/g, "-").replace(/\s+/g, " ").trim();
+}
+
+function groupDisplayName(group: string) {
+  return group === "HARD_SKILL" || group === "Hard skills" ? "hard skills" : group === "SOFT_SKILL" || group === "Soft skills" ? "soft skills" : groupLabel(group).toLowerCase();
 }
 
 

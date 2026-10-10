@@ -286,13 +286,13 @@
   .print-page .print-tab-section > .grid[class*="grid-cols-3"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
   .print-page .work-current-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
   .print-page .work-current-grid > * { min-width: 0 !important; break-inside: avoid; page-break-inside: avoid; }
-  .print-page [data-slot="card"]:has(.work-current-grid) { break-inside: auto !important; page-break-inside: auto !important; }
+  .print-page [data-slot="card"]:has(.work-current-grid) { break-inside: avoid !important; page-break-inside: avoid !important; }
   .print-page .first-employment-grid, .print-page .unemployment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
   .print-page .first-employment-grid > *, .print-page .unemployment-grid > * { min-width: 0 !important; break-inside: avoid; page-break-inside: avoid; }
-  .print-page [data-slot="card"]:has(.first-employment-grid), .print-page [data-slot="card"]:has(.unemployment-grid) { break-inside: auto !important; page-break-inside: auto !important; }
+  .print-page [data-slot="card"]:has(.first-employment-grid), .print-page [data-slot="card"]:has(.unemployment-grid) { break-inside: avoid !important; page-break-inside: avoid !important; }
   .print-page .entrepreneurship-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
   .print-page .entrepreneurship-grid > * { min-width: 0 !important; break-inside: avoid; page-break-inside: avoid; }
-  .print-page [data-slot="card"]:has(.entrepreneurship-grid) { break-inside: auto !important; page-break-inside: auto !important; }
+  .print-page [data-slot="card"]:has(.entrepreneurship-grid) { break-inside: avoid !important; page-break-inside: avoid !important; }
   .print-pareto-card { grid-column: 1 / -1 !important; }
   .print-page .print-tab-section > .grid > .print-pareto-card { grid-column: 1 / -1 !important; width: 100% !important; min-width: 0 !important; overflow: visible !important; }
   .print-pareto-card .overflow-x-auto { overflow: visible !important; }

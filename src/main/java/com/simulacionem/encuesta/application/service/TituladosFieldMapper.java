@@ -76,6 +76,7 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
     public Map<String, Object> map(List<String> headers, CSVRecord record, List<FieldMappingSupport.MappingIssue> issues) {
         Map<String, Object> values = FieldMappingSupport.baseValues(headers, record);
         applyMappings(values, headers, record, DEFINITIONS, issues);
+        canonicalizeEducationLevel(values);
         inferLaborStatusWhenMissing(values);
         if (!isUnemployed(headers, record)) {
             values.remove("razon_no_trabaja");
@@ -84,6 +85,21 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
         }
         applyBranchGuards(values);
         return values;
+    }
+
+    private void canonicalizeEducationLevel(Map<String, Object> values) {
+        Object raw = values.get("formacion_complementaria_nivel");
+        if (raw == null) return;
+        String normalized = FieldMappingSupport.matchable(String.valueOf(raw)).replace(" ", "");
+        String canonical = switch (normalized) {
+            case "diplomado" -> "Diplomado";
+            case "especialidad" -> "Especialidad";
+            case "maestria" -> "Maestría";
+            case "doctorado" -> "Doctorado";
+            case "posdoctorado", "posdoctor" -> "Posdoctorado";
+            default -> String.valueOf(raw).trim();
+        };
+        values.put("formacion_complementaria_nivel", canonical);
     }
 
     private void applyBranchGuards(Map<String, Object> values) {

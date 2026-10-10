@@ -356,7 +356,7 @@ function CompetenceSummaryCard({ items }: { items: Competence[] }) {
 
 function SatisfactionSummaryCard({ distribution }: { distribution?: CategoryDistribution }) {
   const entries = satisfactionEntries(distribution);
-  const colors = ["#ed552f", "#d7dce3", "#1f6fb5"];
+  const colors = ["#ed552f", "#f3a487", "#1f6fb5"];
   const total = distribution?.validCount ?? 0;
   return (
     <Card className="h-full rounded-xl border border-border-line shadow-sm">

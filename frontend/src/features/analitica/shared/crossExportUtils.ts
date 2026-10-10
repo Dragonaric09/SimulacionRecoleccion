@@ -150,13 +150,13 @@ function crossExportValue(cross: Cross, row: string, column: string, metric: Cro
 }
 
 function formatExportValue(value: number, metric: CrossMetric) {
-  return metric === "count" ? String(value) : `${value.toFixed(1).replace(".", ",")}%`;
+  return metric === "count" ? String(value) : `${value.toFixed(1).replace(".", ",")} %`;
 }
 
 function formatExportMarginal(cross: Cross, value: number, metric: CrossMetric, side: "row" | "column") {
   if (metric === "count") return String(value);
-  if (metric === "rowPercent") return side === "row" ? "100,0%" : `${cross.validCount ? ((value * 100) / cross.validCount).toFixed(1).replace(".", ",") : "0,0"}%`;
-  return side === "column" ? "100,0%" : `${cross.validCount ? ((value * 100) / cross.validCount).toFixed(1).replace(".", ",") : "0,0"}%`;
+  if (metric === "rowPercent") return side === "row" ? "100,0 %" : `${cross.validCount ? ((value * 100) / cross.validCount).toFixed(1).replace(".", ",") : "0,0"} %`;
+  return side === "column" ? "100,0 %" : `${cross.validCount ? ((value * 100) / cross.validCount).toFixed(1).replace(".", ",") : "0,0"} %`;
 }
 
 function crossExportMax(cross: Cross, metric: CrossMetric) {
