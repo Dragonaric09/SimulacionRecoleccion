@@ -82,6 +82,7 @@ import type { DatasetSummary } from "@/features/encuesta/api";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import { contrastTextColor } from "@/lib/utils";
 import { PrintButton } from "@/components/analytics/PrintButton";
+import { useDatasetContext } from "@/app/DatasetContext";
 
 type Domain = "TITULADOS" | "EMPLEADORES";
 type Tone = "titulados" | "empleadores";
@@ -1245,11 +1246,6 @@ export function EducationProfilePage({ printAll = false }: { printAll?: boolean 
   }, [datasetId, filterQuery]);
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <PageHeading
-        title="Formación continua"
-        description="Seguimiento de formación complementaria e interés en estudios de posgrado."
-        tone="titulados"
-      />
       <DatasetSelect
         datasets={datasets}
         value={datasetId}
@@ -1307,7 +1303,6 @@ export function EducationProfilePage({ printAll = false }: { printAll?: boolean 
 function EducationCompletedPanel({ summary }: { summary: AnalyticsSummary }) {
   const active = summary.distributions.tiene_formacion_complementaria;
   const level = summary.distributions.formacion_complementaria_nivel;
-  const total = active?.validCount ?? level?.validCount ?? 0;
   const yes = active ? booleanCount(active, true) : 0;
   return (
     <>
@@ -1321,19 +1316,19 @@ function EducationCompletedPanel({ summary }: { summary: AnalyticsSummary }) {
           tone="titulados"
         />
         <ProfileDistributionCard
-          title={`Nivel más alto cursado (n = ${level?.validCount ?? 0})`}
-          description="Orden natural"
+          title="Nivel más alto cursado"
+          description="Respuestas por nivel"
           distribution={level}
         />
       </div>
       <div className="grid items-start gap-4 lg:grid-cols-2">
         <ProfileDistributionCard
-          title={`Institución donde lo cursó (n = ${summary.distributions.institucion_formacion_complementaria?.validCount ?? total})`}
+          title="Institución donde lo cursó"
           description="Distribución de instituciones"
           distribution={summary.distributions.institucion_formacion_complementaria}
         />
         <ProfileDistributionCard
-          title={`Fuente principal de financiamiento (n = ${summary.distributions.financiamiento_posgrado_cursado?.validCount ?? total})`}
+          title="Fuente principal de financiamiento"
           description="Financiamiento del posgrado cursado"
           distribution={summary.distributions.financiamiento_posgrado_cursado}
         />
@@ -4408,28 +4403,13 @@ export function UnavailableAnalyticPage({
 }
 
 function useDatasets(domain: Domain) {
-  const [datasets, setDatasets] = useState<DatasetSummary[]>([]);
-  const [datasetId, setDatasetIdState] = useState<string | undefined>();
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    apiRequest<DatasetSummary[]>("/datasets")
-      .then((items) => {
-        const filtered = items.filter((item) => item.surveyType === domain);
-        setDatasets(filtered);
-        const stored = localStorage.getItem("simulacionem.activeDatasetId");
-        setDatasetIdState(
-          filtered.some((item) => item.id === stored)
-            ? (stored ?? undefined)
-            : filtered.at(-1)?.id,
-        );
-      })
-      .finally(() => setLoading(false));
-  }, [domain]);
-  const setDatasetId = (id?: string) => {
-    setDatasetIdState(id);
-    if (id) localStorage.setItem("simulacionem.activeDatasetId", id);
+  const { datasets: datasetGroups, activeIds, setActiveDataset } = useDatasetContext();
+  return {
+    datasets: datasetGroups[domain],
+    datasetId: activeIds[domain],
+    setDatasetId: (id?: string) => setActiveDataset(domain, id),
+    loading: false,
   };
-  return { datasets, datasetId, setDatasetId, loading };
 }
 function PageHeading({
   title,
@@ -4448,47 +4428,17 @@ function PageHeading({
   );
 }
 function DatasetSelect({
-  datasets,
-  value,
-  onChange,
-  loading,
+  datasets: _datasets,
+  value: _value,
+  onChange: _onChange,
+  loading: _loading,
 }: {
   datasets: DatasetSummary[];
   value?: string;
   onChange: (id?: string) => void;
   loading: boolean;
 }) {
-  const selectedDataset = datasets.find((dataset) => dataset.id === value);
-  return (
-    <div className="flex w-full flex-wrap items-center gap-3">
-      <label className="label-default grid w-full max-w-sm gap-1 text-ink-600">
-        Dataset
-        <Select
-          value={value}
-          disabled={loading}
-          onValueChange={(nextValue) => onChange(nextValue || undefined)}
-        >
-          <SelectTrigger
-            className="w-full min-w-0 max-w-full"
-            title={
-              selectedDataset
-                ? `${selectedDataset.sourceFileName} · ${selectedDataset.rowsValid} válidas`
-                : "Seleccionar dataset"
-            }
-          >
-            <SelectValue placeholder="Seleccionar dataset" />
-          </SelectTrigger>
-          <SelectContent>
-            {datasets.map((dataset) => (
-              <SelectItem key={dataset.id} value={dataset.id}>
-                {dataset.sourceFileName} · {dataset.rowsValid} válidas
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </label>
-    </div>
-  );
+  return null;
 }
 function DistributionCard({
   title,

@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   FileSpreadsheet,
   FileUp,
+  Pencil,
   RefreshCw,
   Trash2,
   UploadCloud,
@@ -38,10 +39,12 @@ import {
 } from "@/components/ui/card";
 import { StatusPanel } from "@/components/analytics/StatusPanel";
 import { Badge } from "@/components/analytics/Badge";
+import { useDatasetContext } from "@/app/DatasetContext";
 import {
   deleteDataset,
   importDataset,
   listDatasets,
+  renameDataset,
   validateDataset,
   type DatasetSummary,
   type ImportReport,
@@ -50,6 +53,7 @@ import {
 type SurveyType = "TITULADOS" | "EMPLEADORES";
 
 export function CargarDatosPage() {
+  const { refreshDatasets, setActiveDataset } = useDatasetContext();
   const [surveyType, setSurveyType] = useState<SurveyType>("TITULADOS");
   const [file, setFile] = useState<File | null>(null);
   const [report, setReport] = useState<ImportReport | null>(null);
@@ -96,10 +100,8 @@ export function CargarDatosPage() {
       const nextDatasets = await listDatasets();
       setDatasets(nextDatasets);
       if (imported.datasetId)
-        localStorage.setItem(
-          "simulacionem.activeDatasetId",
-          imported.datasetId,
-        );
+        setActiveDataset(imported.surveyType as SurveyType, imported.datasetId);
+      refreshDatasets();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -117,12 +119,25 @@ export function CargarDatosPage() {
       );
       if (localStorage.getItem("simulacionem.activeDatasetId") === dataset.id)
         localStorage.removeItem("simulacionem.activeDatasetId");
+      refreshDatasets();
       if (report?.datasetId === dataset.id) setReport(null);
       setDatasetToDelete(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function rename(dataset: DatasetSummary) {
+    const name = window.prompt("Nombre visible del dataset", dataset.displayName ?? dataset.sourceFileName);
+    if (name === null || !name.trim()) return;
+    try {
+      const updated = await renameDataset(dataset.id, name);
+      setDatasets((current) => current.map((item) => item.id === updated.id ? updated : item));
+      refreshDatasets();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
     }
   }
 
@@ -316,6 +331,7 @@ export function CargarDatosPage() {
         datasets={datasets}
         deletingId={deletingId}
         onDelete={requestRemoveDataset}
+        onRename={rename}
       />
       <AlertDialog
         open={datasetToDelete !== null}
@@ -447,10 +463,12 @@ function DatasetList({
   datasets,
   deletingId,
   onDelete,
+  onRename,
 }: {
   datasets: DatasetSummary[];
   deletingId: string | null;
   onDelete: (dataset: DatasetSummary) => void;
+  onRename: (dataset: DatasetSummary) => void;
 }) {
   return (
     <Card className="rounded-xl border-0 shadow-sm">
@@ -485,17 +503,21 @@ function DatasetList({
                     <RadioGroupItem value={dataset.id} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">
-                        {dataset.sourceFileName}
+                        {dataset.displayName ?? dataset.sourceFileName}
                       </span>
                       <span className="block text-xs text-ink-600">
-                        {formatSurveyType(dataset.surveyType)} · {dataset.rowsValid} válidas ·{" "}
-                        {formatDatasetStatus(dataset.status)}
+                        {formatSurveyType(dataset.surveyType)} · {dataset.rowsValid} válidas · {formatDatasetStatus(dataset.status)}
+                        {dataset.importedAt ? ` · ${new Intl.DateTimeFormat("es-BO").format(new Date(dataset.importedAt))}` : ""}
                       </span>
                     </span>
                     <span className="hidden text-xs text-ink-600 md:block">
                       {dataset.id}
                     </span>
                   </label>
+                  <Button variant="outline" size="sm" onClick={() => onRename(dataset)} aria-label={`Renombrar ${dataset.displayName ?? dataset.sourceFileName}`}>
+                    <Pencil />
+                    Renombrar
+                  </Button>
                   <Button
                     variant="destructive"
                     size="sm"

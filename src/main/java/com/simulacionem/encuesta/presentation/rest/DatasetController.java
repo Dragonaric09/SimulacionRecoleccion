@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -72,13 +74,26 @@ public class DatasetController {
         datasets.deleteById(id);
     }
 
-    public record DatasetSummary(UUID id, String surveyType, String sourceFileName, Short period, String status,
-                                 int rowsRead, int rowsValid, int rowsRejected, int warnings, int errors) {
+    @PatchMapping("/{id}/name")
+    public DatasetSummary rename(@PathVariable UUID id, @RequestBody RenameDatasetRequest request) {
+        DatasetImportEntity dataset = datasets.findById(id).orElseThrow();
+        String name = request.name() == null ? "" : request.name().trim();
+        if (name.isBlank()) throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre no puede estar vacío");
+        dataset.setDisplayName(name);
+        return DatasetSummary.from(datasets.save(dataset));
+    }
+
+    public record DatasetSummary(UUID id, String surveyType, String sourceFileName, String displayName, Short period,
+                                 java.time.OffsetDateTime importedAt, String status, int rowsRead, int rowsValid,
+                                 int rowsRejected, int warnings, int errors) {
         static DatasetSummary from(DatasetImportEntity d) {
-            return new DatasetSummary(d.getId(), d.getSurveyType(), d.getSourceFileName(), d.getPeriod(), d.getStatus(),
-                    d.getRowsRead(), d.getRowsValid(), d.getRowsRejected(), d.getWarningsCount(), d.getErrorsCount());
+            return new DatasetSummary(d.getId(), d.getSurveyType(), d.getSourceFileName(), d.getDisplayName(), d.getPeriod(),
+                    d.getImportedAt(), d.getStatus(), d.getRowsRead(), d.getRowsValid(), d.getRowsRejected(),
+                    d.getWarningsCount(), d.getErrorsCount());
         }
     }
+
+    public record RenameDatasetRequest(String name) { }
 
     public record QualitySummary(UUID datasetId, int rowsRead, int rowsValid, int rowsRejected,
                                  int warnings, int errors, long issueCount) { }

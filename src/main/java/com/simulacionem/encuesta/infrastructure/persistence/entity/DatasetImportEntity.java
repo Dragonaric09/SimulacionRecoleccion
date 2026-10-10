@@ -20,6 +20,8 @@ public class DatasetImportEntity {
     private String surveyType;
     @Column(name = "source_file_name", nullable = false)
     private String sourceFileName;
+    @Column(name = "display_name", nullable = false)
+    private String displayName;
     @Column(name = "source_file_sha256", length = 64, unique = true)
     private String sourceFileSha256;
     private Short period;
@@ -43,6 +45,7 @@ public class DatasetImportEntity {
     public DatasetImportEntity(String surveyType, String sourceFileName, String status) {
         this.surveyType = surveyType;
         this.sourceFileName = sourceFileName;
+        this.displayName = sourceFileName;
         this.status = status;
         this.importedAt = OffsetDateTime.now();
     }
@@ -50,6 +53,8 @@ public class DatasetImportEntity {
     public UUID getId() { return id; }
     public String getSurveyType() { return surveyType; }
     public String getSourceFileName() { return sourceFileName; }
+    public String getDisplayName() { return displayName; }
+    public OffsetDateTime getImportedAt() { return importedAt; }
     public String getStatus() { return status; }
     public int getRowsRead() { return rowsRead; }
     public int getRowsValid() { return rowsValid; }
@@ -60,6 +65,7 @@ public class DatasetImportEntity {
     public void setRowsRead(int rowsRead) { this.rowsRead = rowsRead; }
     public void setRowsValid(int rowsValid) { this.rowsValid = rowsValid; }
     public void setSourceFileSha256(String sourceFileSha256) { this.sourceFileSha256 = sourceFileSha256; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
     public void setPeriod(Short period) { this.period = period; }
     public void setStatus(String status) { this.status = status; }
     public void setRowsRejected(int rowsRejected) { this.rowsRejected = rowsRejected; }

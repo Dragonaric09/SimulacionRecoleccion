@@ -13,52 +13,24 @@ import { KpiCard } from "@/components/analytics/KpiCard";
 import { StatusPanel } from "@/components/analytics/StatusPanel";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   ChartContainer,
 } from "@/components/ui/chart";
 import { Cell, Pie, PieChart } from "recharts";
 import { apiRequest } from "@/api/client";
-import type { DatasetSummary } from "@/features/encuesta/api";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
+import { useDatasetContext } from "@/app/DatasetContext";
 
 const fields =
   "situacion_laboral_actual,interes_posgrado,area_posgrado_interes,sector_trabajo,anio_titulacion";
 
 export function TituladosSummaryPage() {
-  const [datasets, setDatasets] = useState<DatasetSummary[]>([]);
-  const [datasetId, setDatasetId] = useState<string | undefined>(
-    () => localStorage.getItem("simulacionem.activeDatasetId") ?? undefined,
-  );
+  const { activeIds, setActiveDataset } = useDatasetContext();
+  const datasetId = activeIds.TITULADOS;
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [datasetsReady, setDatasetsReady] = useState(false);
-
   useEffect(() => {
-    apiRequest<DatasetSummary[]>("/datasets")
-      .then((items) => {
-        const titulados = items.filter(
-          (item) => item.surveyType === "TITULADOS",
-        );
-        setDatasets(titulados);
-        if (!datasetId || !titulados.some((item) => item.id === datasetId))
-          setDatasetId(titulados.at(-1)?.id);
-      })
-      .catch((cause) =>
-        setError(cause instanceof Error ? cause.message : String(cause)),
-      )
-      .finally(() => setDatasetsReady(true));
-  }, [datasetId]);
-
-  useEffect(() => {
-    if (!datasetsReady) return;
     if (!datasetId) {
       setLoading(false);
       setError(null);
@@ -75,7 +47,7 @@ export function TituladosSummaryPage() {
         const message = cause instanceof Error ? cause.message : String(cause);
         if (message.includes("HTTP 404")) {
           localStorage.removeItem("simulacionem.activeDatasetId");
-          setDatasetId(undefined);
+          setActiveDataset("TITULADOS", undefined);
           setSummary(null);
           setError(null);
           return;
@@ -83,7 +55,7 @@ export function TituladosSummaryPage() {
         setError(message);
       })
       .finally(() => setLoading(false));
-  }, [datasetId, datasetsReady, filterQuery]);
+  }, [datasetId, filterQuery]);
 
   const laboral = summary?.distributions.situacion_laboral_actual;
   const posgrado = summary?.distributions.interes_posgrado;
@@ -111,31 +83,6 @@ export function TituladosSummaryPage() {
             Indicadores de inserción laboral, formación e interés de posgrado.
           </p>
         </div>
-        <label className="label-default grid gap-1 text-ink-600">
-          Dataset
-          <Select
-            value={datasetId}
-            onValueChange={(value) => {
-              setDatasetId(value || undefined);
-              if (value)
-                localStorage.setItem("simulacionem.activeDatasetId", value);
-            }}
-          >
-            <SelectTrigger
-              className="min-w-56"
-              aria-label="Dataset de titulados"
-            >
-              <SelectValue placeholder="Seleccionar dataset" />
-            </SelectTrigger>
-            <SelectContent>
-              {datasets.map((dataset) => (
-                <SelectItem key={dataset.id} value={dataset.id}>
-                  {dataset.sourceFileName} · {dataset.rowsValid} válidas
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </label>
       </div>
       {summary && (
         <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />
@@ -316,6 +263,8 @@ function EmploymentCard({
     </Card>
   );
 }
+
+void EmploymentCard;
 
 function PostgraduateCard({
   distribution,

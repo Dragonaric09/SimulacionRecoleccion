@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Database, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DatasetProvider, useDatasetContext, type DatasetDomain } from './DatasetContext'
 import { navigation, navigate, sectionLabels, type NavigationItem } from './navigation'
 import { PlaceholderPage } from './PlaceholderPage'
 import { PrintButton } from '@/components/analytics/PrintButton'
@@ -9,9 +11,18 @@ import { TituladosSummaryPage } from '@/features/analitica/TituladosSummaryPage'
 
 type Props = { route: NavigationItem }
 
-export function AppLayout({ route }: Props) {
+export function AppLayout(props: Props) {
+  return <DatasetProvider><AppLayoutContent {...props} /></DatasetProvider>
+}
+
+function AppLayoutContent({ route }: Props) {
+  const { datasets, activeIds } = useDatasetContext()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const reportDomain = route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'
+  const activeReportDataset = route.section !== 'general'
+    ? datasets[reportDomain].find((dataset) => dataset.id === activeIds[reportDomain])
+    : undefined
 
   return (
     <div className="min-h-screen bg-background text-ink-900">
@@ -108,9 +119,10 @@ export function AppLayout({ route }: Props) {
                 <p className="text-xs text-ink-600">{route.description}</p>
               </div>
             </div>
-            {route.section !== 'general' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
-              <div className="print-hide flex items-center gap-2">
-                <PrintButton domain={route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'} />
+            {route.section !== 'general' && (
+              <div className="print-hide flex min-w-0 flex-wrap items-center justify-end gap-2">
+                <GlobalDatasetSelector domain={route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'} />
+                {!route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && <PrintButton domain={route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'} />}
               </div>
             )}
           </header>
@@ -119,9 +131,10 @@ export function AppLayout({ route }: Props) {
               <section className="print-only print-cover mb-6" aria-label="Portada del informe">
                 <p className="caption-bold uppercase tracking-wider text-ink-600">SimulacionEM · Informe analítico</p>
                 <h1 className="headline-page">{route.section === 'titulados' ? 'Titulados' : 'Empleadores'}</h1>
-                <p>Sección: {route.label}</p>
+                <p>Informe completo de análisis</p>
                 <p>Fecha de generación: {new Intl.DateTimeFormat('es-BO', { dateStyle: 'long', timeZone: 'America/La_Paz' }).format(new Date())}</p>
                 <p>Filtros activos: Año: Todos · Estado laboral: Todos · Sector: Todos</p>
+                <p>Dataset: {activeReportDataset ? `${datasetDisplayName(activeReportDataset, reportDomain)} · ${activeReportDataset.rowsValid} válidas` : 'No seleccionado'}</p>
                 <p>Mostrando las respuestas válidas del dataset seleccionado.</p>
                 <p className="mt-4 text-xs text-ink-600">Los porcentajes excluyen “No sabe” y “No observado”. Con menos de 5 respuestas, las gráficas son solo referenciales.</p>
               </section>
@@ -147,4 +160,42 @@ export function AppLayout({ route }: Props) {
       </div>
     </div>
   )
+}
+
+function GlobalDatasetSelector({ domain }: { domain: DatasetDomain }) {
+  const { datasets, activeIds, setActiveDataset } = useDatasetContext()
+  const available = datasets[domain]
+  const active = available.find((dataset) => dataset.id === activeIds[domain])
+  if (!available.length) return null
+  if (available.length === 1) {
+    return <span className="max-w-[260px] truncate rounded-md border border-border-line bg-white px-3 py-2 text-xs text-ink-600">Datos: {active ? `${datasetDisplayName(active, domain)} · ${active.rowsValid} válidas` : 'Sin dataset'}</span>
+  }
+  return (
+    <Select value={active?.id ?? ''} onValueChange={(value) => {
+      if (value === '__new__') {
+        navigate('/cargar-datos')
+        return
+      }
+      setActiveDataset(domain, value)
+    }}>
+      <SelectTrigger className="h-9 w-[280px] min-w-0 text-xs" aria-label="Dataset activo">
+        <span className="shrink-0 text-ink-600">Datos:</span>
+        <SelectValue placeholder="Seleccionar dataset" />
+      </SelectTrigger>
+      <SelectContent>
+        {available.map((dataset) => (
+          <SelectItem key={dataset.id} value={dataset.id}>
+            {datasetDisplayName(dataset, domain)} · {dataset.importedAt ? new Intl.DateTimeFormat('es-BO').format(new Date(dataset.importedAt)) : 'sin fecha'} · {dataset.rowsValid} válidas
+          </SelectItem>
+        ))}
+        <SelectItem value="__new__">Cargar nuevo archivo…</SelectItem>
+      </SelectContent>
+    </Select>
+  )
+}
+
+function datasetDisplayName(dataset: { sourceFileName: string; displayName?: string; period: number | null }, domain: DatasetDomain) {
+  if (dataset.displayName) return dataset.displayName
+  if (dataset.period) return `${domain === 'TITULADOS' ? 'Encuesta titulados' : 'Encuesta empleadores'} ${dataset.period}`
+  return dataset.sourceFileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ')
 }
