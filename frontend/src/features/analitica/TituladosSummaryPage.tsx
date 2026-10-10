@@ -93,17 +93,13 @@ export function TituladosSummaryPage() {
     : null;
   const interes = posgrado ? firstCount(posgrado, ["Sí", "SI", "Si"]) : null;
   const medianYear = summary?.numericMedians.anio_titulacion;
-  const yearsSince = medianYear ? new Date().getFullYear() - medianYear : null;
+  const yearsSince = medianYear ? Math.round(new Date().getFullYear() - medianYear) : null;
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <div className="flex flex-col justify-between gap-4 pt-1 md:flex-row md:items-end">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Badge tone="titulados">Titulados</Badge>
-            <span className="caption-meta text-ink-600">
-              Resultados descriptivos del dataset seleccionado
-            </span>
           </div>
           <h1 className="headline-page tracking-tight">
             Resumen general: titulados
@@ -253,10 +249,8 @@ function EmploymentCard({
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
         <div className="relative size-36 shrink-0">
-          <ChartContainer
-            config={chartConfig}
-            className="absolute inset-0 aspect-square"
-          >
+          <div className="employment-donut-responsive absolute inset-0">
+          <ChartContainer config={chartConfig} className="aspect-square">
             <PieChart>
               <Pie
                 data={chartData}
@@ -265,6 +259,7 @@ function EmploymentCard({
                 innerRadius={48}
                 outerRadius={68}
                 stroke="none"
+                isAnimationActive={false}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={entry.label} fill={colorForEmployment(index)} />
@@ -272,6 +267,14 @@ function EmploymentCard({
               </Pie>
             </PieChart>
           </ChartContainer>
+          </div>
+          <div className="employment-donut-fixed absolute inset-0" aria-label="Dona de estado laboral para impresión">
+            <PieChart width={144} height={144}>
+              <Pie data={chartData} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={48} outerRadius={68} stroke="none" isAnimationActive={false}>
+                {chartData.map((entry, index) => <Cell key={entry.label} fill={colorForEmployment(index)} />)}
+              </Pie>
+            </PieChart>
+          </div>
           <div className="absolute inset-0 m-auto flex size-24 flex-col items-center justify-center rounded-full bg-white">
             <span className="title-card tabular-nums">{total}</span>
             <span className="caption-meta uppercase text-ink-600">Total</span>
@@ -354,7 +357,7 @@ function PostgraduateCard({
                     <span className="tabular-nums whitespace-nowrap font-medium">
                       {count} de {distribution?.validCount ?? 0}{" "}
                       <span className="caption-meta text-ink-600">
-                        ({percent}%)
+                        ({percent.toFixed(1).replace(".", ",")} %)
                       </span>
                     </span>
                   </div>
@@ -418,5 +421,5 @@ function formatCount(value: number | null, total: number) {
 function formatPercent(value: number | null, total: number) {
   return value === null
     ? "No disponible"
-    : `${total ? ((value / total) * 100).toFixed(2) : 0}%`;
+    : `${total ? ((value / total) * 100).toFixed(1).replace(".", ",") : "0,0"} %`;
 }

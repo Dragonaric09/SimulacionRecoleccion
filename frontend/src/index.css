@@ -224,6 +224,10 @@
 
 .print-only { display: none; }
 .print-bundle { display: none; }
+.cohort-fixed-chart { display: none; }
+.employment-donut-fixed { display: none; }
+.radar-fixed-chart { display: none; }
+.radar-responsive-chart { display: block; width: 100%; min-width: 0; }
 
 @media print {
   @page {
@@ -240,14 +244,48 @@
   html, body { width: 100%; min-width: 0; overflow: visible !important; background: white !important; }
   body { font-size: 11px; line-height: 15px; }
   aside, header, .print-hide, .filter-toolbar, [role="tablist"], button, input, select, textarea, [data-radix-select-viewport] { display: none !important; }
+  .print-page label:has([data-slot="select-trigger"]), .print-page label:has([role="slider"]), .print-page label:has(input) { display: none !important; }
   main { padding: 0 !important; overflow: visible !important; }
   main > * { max-width: 1000px !important; margin: 0 auto !important; }
   .screen-content { display: none !important; }
   .print-bundle { display: block !important; }
   .print-only { display: block !important; }
+  .cohort-responsive-chart { display: none !important; }
+  .cohort-fixed-chart { display: block !important; width: 100%; height: 256px; max-width: 100%; overflow: hidden; }
+  .cohort-fixed-chart svg { display: block; width: 100%; height: auto; }
+  .employment-donut-responsive { display: none !important; }
+  .employment-donut-fixed { display: block !important; width: 144px; height: 144px; }
+  .radar-responsive-chart { display: none !important; }
+  .radar-fixed-chart { display: block !important; width: 100%; min-width: 0; max-width: 100%; height: auto; overflow: visible; aspect-ratio: 760 / 400; }
+  .radar-fixed-chart svg { display: block; width: 100% !important; max-width: 100%; height: auto; }
+  .print-radar-card { grid-column: 1 / -1 !important; min-width: 0 !important; width: 100% !important; position: static !important; overflow: visible !important; }
+  .print-competence-matrix, .print-competence-radar { display: block !important; width: 100% !important; min-width: 0 !important; clear: both !important; }
+  .print-competence-radar { break-before: auto; page-break-before: auto; margin-top: 12px; }
+  .print-page [data-slot="card"]:has(.radar-fixed-chart) { grid-column: 1 / -1 !important; min-width: 0 !important; }
   .print-cover { break-after: page; page-break-after: always; min-height: 150mm; padding-top: 35mm; }
   .print-page { break-before: page; page-break-before: always; overflow: visible !important; }
   .print-page:first-child { break-before: auto; page-break-before: auto; }
+  .print-page > div > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
+  .print-page .print-tab-section > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
+  .print-page .print-tab-section > .grid > * { grid-column: auto !important; min-width: 0 !important; }
+  .print-page .print-tab-section > .grid[class*="grid-cols-12"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .print-page .print-tab-section > .grid[class*="grid-cols-3"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .print-page .work-current-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
+  .print-page .work-current-grid > * { min-width: 0 !important; break-inside: avoid; page-break-inside: avoid; }
+  .print-page [data-slot="card"]:has(.work-current-grid) { break-inside: auto !important; page-break-inside: auto !important; }
+  .print-page .first-employment-grid, .print-page .unemployment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
+  .print-page .first-employment-grid > *, .print-page .unemployment-grid > * { min-width: 0 !important; break-inside: avoid; page-break-inside: avoid; }
+  .print-page [data-slot="card"]:has(.first-employment-grid), .print-page [data-slot="card"]:has(.unemployment-grid) { break-inside: auto !important; page-break-inside: auto !important; }
+  .print-page .entrepreneurship-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
+  .print-page .entrepreneurship-grid > * { min-width: 0 !important; break-inside: avoid; page-break-inside: avoid; }
+  .print-page [data-slot="card"]:has(.entrepreneurship-grid) { break-inside: auto !important; page-break-inside: auto !important; }
+  .print-pareto-card { grid-column: 1 / -1 !important; }
+  .print-page [data-slot="card"]:has(.cohort-fixed-chart) { grid-column: 1 / -1 !important; min-width: 0 !important; }
+  .print-page > div > .grid[class*="grid-cols-4"] { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .print-page > div > .grid[class*="grid-cols-3"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .print-page > div > .grid[class*="grid-cols-12"] { grid-template-columns: 1fr 1fr !important; }
+  .print-tab-section { break-inside: auto; page-break-inside: auto; margin-top: 12px; }
+  .print-tab-section > h2 { border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
   .print-card, .kpi-card, [data-slot="card"] { break-inside: avoid; page-break-inside: avoid; overflow: visible !important; box-shadow: none !important; }
   h1, h2, h3, [data-slot="card-title"] { break-after: avoid; page-break-after: avoid; }
   table { width: 100% !important; font-size: 10px; border-collapse: collapse; }
@@ -256,5 +294,6 @@
   svg { max-width: 100%; }
   .recharts-responsive-container { width: 1000px !important; height: auto !important; }
   .overflow-auto, .overflow-x-auto, .overflow-y-auto { overflow: visible !important; }
+  .print-page [class*="truncate"] { white-space: normal !important; overflow-wrap: anywhere; text-overflow: clip !important; }
   .status-panel { break-inside: avoid; }
 }

@@ -189,7 +189,7 @@ type EmploymentProfile = {
   cohortPoints: { graduationYear: number; professionalYears: number }[];
 };
 
-export function EmploymentProfilePage() {
+export function EmploymentProfilePage({ printAll = false }: { printAll?: boolean } = {}) {
   const {
     datasets,
     datasetId,
@@ -310,24 +310,12 @@ export function EmploymentProfilePage() {
               ))}
             </TabsList>
           </Tabs>
-          <EmploymentTabContent
-            tab={activeTab}
-            summary={summary}
-            profile={{
-              ...(profile ?? {
-                datasetId: "",
-                validResponses: 0,
-                cohortPoints: [],
-              }),
-              cohortPoints: points,
-            }}
-            labor={labor}
-            sectors={sectors}
-            unemployed={unemployed}
-            unemploymentSummary={unemploymentSummary}
-            firstEmploymentSummary={firstEmploymentSummary}
-            entrepreneurshipSummary={entrepreneurshipSummary}
-          />
+          {printAll ? tabs.map((tab) => (
+            <section key={tab.key} className="print-tab-section">
+              <h2 className="title-card mb-3">{tab.label}</h2>
+              <EmploymentTabContent tab={tab.key} summary={summary} profile={{ ...(profile ?? { datasetId: "", validResponses: 0, cohortPoints: [] }), cohortPoints: points }} labor={labor} sectors={sectors} unemployed={unemployed} unemploymentSummary={unemploymentSummary} firstEmploymentSummary={firstEmploymentSummary} entrepreneurshipSummary={entrepreneurshipSummary} />
+            </section>
+          )) : <EmploymentTabContent tab={activeTab} summary={summary} profile={{ ...(profile ?? { datasetId: "", validResponses: 0, cohortPoints: [] }), cohortPoints: points }} labor={labor} sectors={sectors} unemployed={unemployed} unemploymentSummary={unemploymentSummary} firstEmploymentSummary={firstEmploymentSummary} entrepreneurshipSummary={entrepreneurshipSummary} />}
         </>
       )}
     </div>
@@ -413,11 +401,11 @@ function EntrepreneurshipPanel({
   summary: AnalyticsSummary | null;
 }) {
   const total = summary?.validResponses ?? 0;
-  const origin = topDistributionEntry(summary?.distributions.origen_emprendimiento);
-  const deliverable = topDistributionEntry(summary?.distributions.entregable_emprendimiento);
-  const financing = topDistributionEntry(summary?.distributions.financiamiento_emprendimiento);
-  const satisfaction = topDistributionEntry(summary?.distributions.satisfaccion_emprendimiento);
-  const importance = topDistributionEntry(summary?.distributions.importancia_formacion_emprendimiento);
+  const origin = summary?.distributions.origen_emprendimiento;
+  const deliverable = summary?.distributions.entregable_emprendimiento;
+  const financing = summary?.distributions.financiamiento_emprendimiento;
+  const satisfaction = summary?.distributions.satisfaccion_emprendimiento;
+  const importance = summary?.distributions.importancia_formacion_emprendimiento;
 
   return (
     <Card className="rounded-xl border border-border-line shadow-sm">
@@ -437,15 +425,15 @@ function EntrepreneurshipPanel({
         </div>
       </CardHeader>
       {total ? (
-        <CardContent className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+        <CardContent className="entrepreneurship-grid grid items-start gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
           <div>
             <h3 className="mb-4 text-sm font-semibold text-ink-900">
               Origen y fuentes de financiamiento
             </h3>
             <div className="rounded-lg border border-border-line bg-slate-50 p-4">
-              <EntrepreneurshipValue label="Origen del emprendimiento" entry={origin} />
-              <EntrepreneurshipValue label="Tipo de producto/entregable" entry={deliverable} />
-              <EntrepreneurshipValue label="Financiamiento inicial" entry={financing} />
+              <EntrepreneurshipDistribution label="Origen del emprendimiento" distribution={origin} />
+              <EntrepreneurshipDistribution label="Tipo de producto/entregable" distribution={deliverable} />
+              <EntrepreneurshipDistribution label="Financiamiento inicial" distribution={financing} />
             </div>
           </div>
           <div>
@@ -453,8 +441,8 @@ function EntrepreneurshipPanel({
               Valoración formativa y satisfacción
             </h3>
             <div className="space-y-4">
-              <EntrepreneurshipBar label="Nivel de satisfacción con el emprendimiento" entry={satisfaction} color="#2fa866" />
-              <EntrepreneurshipBar label="Importancia de la formación universitaria" entry={importance} color="#1f6fb5" />
+              <EntrepreneurshipDistribution label="Nivel de satisfacción con el emprendimiento" distribution={satisfaction} color="#2fa866" />
+              <EntrepreneurshipDistribution label="Importancia de la formación universitaria" distribution={importance} color="#1f6fb5" />
             </div>
           </div>
         </CardContent>
@@ -470,43 +458,19 @@ function EntrepreneurshipPanel({
   );
 }
 
-function EntrepreneurshipValue({
-  label,
-  entry,
-}: {
-  label: string;
-  entry: { label: string; count: number; total: number; percent: number } | null;
-}) {
+function EntrepreneurshipDistribution({ label, distribution, color = "#1f6fb5" }: { label: string; distribution?: CategoryDistribution; color?: string }) {
+  const entries = Object.entries(distribution?.counts ?? {}).sort(([, left], [, right]) => right - left);
+  const total = distribution?.validCount ?? 0;
   return (
-    <div className="grid gap-1 py-1.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:items-start">
-      <span className="text-sm text-ink-600">{label}:</span>
-      <strong className="text-sm text-ink-900">
-        {entry ? `${entry.label} (${entry.count} de ${entry.total}, ${entry.percent}%)` : "—"}
-      </strong>
-    </div>
-  );
-}
-
-function EntrepreneurshipBar({
-  label,
-  entry,
-  color,
-}: {
-  label: string;
-  entry: { label: string; count: number; total: number; percent: number } | null;
-  color: string;
-}) {
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-        <span>{label}</span>
-        <strong style={{ color }}>
-          {entry ? `${entry.label}: ${entry.count} de ${entry.total} (${entry.percent}%)` : "—"}
-        </strong>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
-        <div className="h-full rounded-full" style={{ width: `${entry?.percent ?? 0}%`, backgroundColor: color }} />
-      </div>
+    <div className="entrepreneurship-distribution space-y-2 py-1.5">
+      <div className="text-sm font-medium text-ink-900">{label} <span className="text-xs font-normal text-ink-600">(n = {total})</span></div>
+      {entries.length ? entries.map(([option, count]) => {
+        const percent = distribution?.percentages[option] ?? 0;
+        return <div key={option} className="space-y-1">
+          <div className="flex flex-wrap justify-between gap-2 text-sm"><span className="min-w-0 break-words">{booleanLabel(option)}</span><strong className="whitespace-nowrap tabular-nums">{count} de {total} ({formatPercentValue(percent)})</strong></div>
+          <div className="h-2 overflow-hidden rounded-full bg-surface-container-high"><div className="h-full rounded-full" style={{ width: `${percent}%`, backgroundColor: color }} /></div>
+        </div>;
+      }) : <span className="text-sm text-ink-600">Sin respuestas disponibles</span>}
     </div>
   );
 }
@@ -564,7 +528,7 @@ function FirstEmploymentPanel({
           </span>
         </div>
       </CardHeader>
-      <CardContent className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+      <CardContent className="first-employment-grid grid items-start gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <Card className="h-fit rounded-xl border border-border-line bg-slate-50 shadow-none">
           <CardContent className="p-4">
             <p className="caption-bold uppercase tracking-wide text-primary">
@@ -590,7 +554,7 @@ function FirstEmploymentPanel({
         <div className="min-w-0">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="text-sm font-semibold text-ink-900">
-              Tiempo hasta el primer empleo (orden natural)
+              Tiempo hasta el primer empleo
             </h3>
             <span className="text-xs tabular-nums text-ink-600">n = {branchTotal}</span>
           </div>
@@ -671,7 +635,7 @@ function UnemploymentPanel({
           </span>
         </div>
       </CardHeader>
-      <CardContent className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+      <CardContent className="unemployment-grid grid items-start gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
         <div className="h-fit rounded-xl border border-border-line bg-surface-container-low p-4">
           <p className="label-default uppercase tracking-wider text-titulados">
             Experiencia laboral previa
@@ -698,7 +662,7 @@ function UnemploymentPanel({
         <div className="min-w-0">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-sm font-semibold text-ink-900">
-              Razones por las que no trabaja (ordenadas)
+              Razones por las que no trabaja
             </h3>
             <span className="text-xs text-ink-600">n = {reasons?.validCount ?? 0}</span>
           </div>
@@ -781,13 +745,13 @@ function CurrentWorkPanel({
           <Badge tone="titulados">n = {workCount}</Badge>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-x-6 gap-y-8 border-t border-surface-container-high pt-5 lg:grid-cols-2">
+      <CardContent className="work-current-grid grid gap-x-6 gap-y-8 border-t border-surface-container-high pt-5 lg:grid-cols-2">
         <MiniDistribution
-          title="Rubro de la empresa (barras ordenadas)"
+          title="Rubro de la empresa"
           distribution={rubro}
         />
         <MiniDistribution
-          title="Remuneración mensual líquida (orden natural)"
+          title="Remuneración mensual líquida"
           distribution={remuneration}
           accent="teal"
         />
@@ -938,6 +902,48 @@ function CohortScatterCard({
       color: "#1f6fb5",
     },
   };
+  const renderScatterChart = (fixed = false) => (
+    <ScatterChart
+      {...(fixed ? { width: 760, height: 256 } : {})}
+      margin={{ top: 18, right: 18, bottom: 12, left: 8 }}
+    >
+      <CartesianGrid stroke="#dbe4ee" strokeDasharray="2 4" />
+      <XAxis
+        type="number"
+        dataKey="graduationYear"
+        domain={[yearMin - 0.5, yearMax + 0.5]}
+        tick={{ fill: "#0f172a", fontSize: 11 }}
+        tickCount={Math.min(10, Math.max(2, yearMax - yearMin + 1))}
+      />
+      <YAxis
+        type="number"
+        dataKey="professionalYears"
+        domain={[0, "auto"]}
+        tick={{ fill: "#64748b", fontSize: 10 }}
+        width={28}
+      />
+      <ReferenceLine
+        y={mean}
+        stroke="#ef4444"
+        strokeDasharray="5 4"
+        label={{ value: `Media ${mean.toFixed(1)} años`, fill: "#ef4444", fontSize: 11, position: "insideTopLeft" }}
+      />
+      <ReferenceLine
+        y={median}
+        stroke="#14a39a"
+        strokeDasharray="3 4"
+        label={{ value: `Mediana ${median.toFixed(1)} años`, fill: "#0f766e", fontSize: 11, position: "insideBottomLeft" }}
+      />
+      <Scatter
+        name="Titulado individual"
+        data={chartData}
+        dataKey="professionalYears"
+        fill="#1f6fb5"
+        isAnimationActive={false}
+      />
+      {!fixed && <ChartTooltip content={<ChartTooltipContent />} />}
+    </ScatterChart>
+  );
   return (
     <Card className={`rounded-xl border-0 shadow-sm ${className}`}>
       <CardHeader>
@@ -952,47 +958,18 @@ function CohortScatterCard({
         {points.length ? (
           <>
             <div className="overflow-x-auto rounded-lg border border-border-line bg-slate-50 p-2">
-              <ChartContainer
+              <div className="cohort-responsive-chart">
+                <ChartContainer
                 config={chartConfig}
                 className="h-64 min-w-[620px] w-full aspect-auto"
+                initialDimension={{ width: 1000, height: 256 }}
               >
-                <ScatterChart margin={{ top: 18, right: 18, bottom: 12, left: 8 }}>
-                  <CartesianGrid stroke="#dbe4ee" strokeDasharray="2 4" />
-                  <XAxis
-                    type="number"
-                    dataKey="graduationYear"
-                    domain={[yearMin - 0.5, yearMax + 0.5]}
-                    tick={{ fill: "#0f172a", fontSize: 11 }}
-                    tickCount={Math.min(10, Math.max(2, yearMax - yearMin + 1))}
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="professionalYears"
-                    domain={[0, "auto"]}
-                    tick={{ fill: "#64748b", fontSize: 10 }}
-                    width={28}
-                  />
-                  <ReferenceLine
-                    y={mean}
-                    stroke="#ef4444"
-                    strokeDasharray="5 4"
-                    label={{ value: `Media ${mean.toFixed(1)} años`, fill: "#ef4444", fontSize: 11, position: "insideTopLeft" }}
-                  />
-                  <ReferenceLine
-                    y={median}
-                    stroke="#14a39a"
-                    strokeDasharray="3 4"
-                    label={{ value: `Mediana ${median.toFixed(1)} años`, fill: "#0f766e", fontSize: 11, position: "insideBottomLeft" }}
-                  />
-                  <Scatter
-                    name="Titulado individual"
-                    data={chartData}
-                    dataKey="professionalYears"
-                    fill="#1f6fb5"
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </ScatterChart>
+                {renderScatterChart()}
               </ChartContainer>
+              </div>
+              <div className="cohort-fixed-chart" aria-label="Gráfico de cohorte para impresión">
+                {renderScatterChart(true)}
+              </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-4 text-xs text-ink-600">
               <span>
@@ -1031,7 +1008,7 @@ function ProfileStatistics({ summary }: { summary: AnalyticsSummary }) {
         footer={
           deviation == null
             ? "Desviación no disponible"
-            : `± ${deviation.toFixed(1)} años desviación estándar`
+            : `Dispersión respecto a la media: ± ${formatDecimal(deviation, 1)} años`
         }
         n={summary.validResponses}
       />
@@ -1181,7 +1158,7 @@ function SenioritySegmentationCard({
   );
 }
 
-export function EducationProfilePage() {
+export function EducationProfilePage({ printAll = false }: { printAll?: boolean } = {}) {
   const {
     datasets,
     datasetId,
@@ -1255,15 +1232,15 @@ export function EducationProfilePage() {
               <TabsTrigger value="opinion">Opinión sobre el posgrado</TabsTrigger>
             </TabsList>
           </Tabs>
-          {activeTab === "cursado" && (
-            <EducationCompletedPanel summary={summary} />
-          )}
-          {activeTab === "interes" && (
-            <EducationInterestPanel summary={summary} />
-          )}
-          {activeTab === "opinion" && (
-            <EducationOpinionPanel summary={summary} />
-          )}
+          {printAll ? <>
+            <section className="print-tab-section"><h2 className="title-card mb-3">Posgrado cursado</h2><EducationCompletedPanel summary={summary} /></section>
+            <section className="print-tab-section"><h2 className="title-card mb-3">Interés en posgrado</h2><EducationInterestPanel summary={summary} /></section>
+            <section className="print-tab-section"><h2 className="title-card mb-3">Opinión sobre el posgrado</h2><EducationOpinionPanel summary={summary} /></section>
+          </> : <>
+            {activeTab === "cursado" && <EducationCompletedPanel summary={summary} />}
+            {activeTab === "interes" && <EducationInterestPanel summary={summary} />}
+            {activeTab === "opinion" && <EducationOpinionPanel summary={summary} />}
+          </>}
         </>
       )}
     </div>
@@ -1395,12 +1372,12 @@ function EducationAreaPanel({ distribution }: { distribution?: CategoryDistribut
   });
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.9fr)]">
-      <Card className="rounded-xl border-0 shadow-sm">
+      <Card className="print-pareto-card rounded-xl border-0 shadow-sm">
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
             <div>
               <CardTitle className="title-card">Distribución de demanda por área temática y porcentaje acumulado (Pareto)</CardTitle>
-              <CardDescription>Frecuencia absoluta y % acumulado de menciones · n = {totalBase} interesados</CardDescription>
+              <CardDescription>Frecuencia absoluta y % acumulado de menciones · base real n = {totalBase}</CardDescription>
             </div>
             <span className="text-xs text-ink-600">{totalMentions} menciones</span>
           </div>
@@ -1440,7 +1417,7 @@ function ParetoAreaChart({
   rows: { label: string; count: number; percent: number; accumulated: number; accumulatedPercent: number }[];
   totalBase: number;
 }) {
-  const width = 760;
+  const width = 1000;
   const height = 300;
   const left = 52;
   const right = 48;
@@ -1465,7 +1442,7 @@ function ParetoAreaChart({
 
   return (
     <div className="overflow-x-auto">
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-auto min-w-[620px] w-full" role="img" aria-label="Pareto de áreas de posgrado">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-auto min-w-0 w-full" role="img" aria-label="Pareto de áreas de posgrado">
         {yGrid.map((value) => {
           const y = top + chartHeight - (value / 100) * chartHeight;
           return (
@@ -1614,7 +1591,7 @@ function ProfileDistributionCard({
                     <span className="tabular-nums whitespace-nowrap font-medium">
                       {count}{" "}
                       <span className="caption-meta text-ink-600">
-                        ({percent}%)
+                        ({formatPercentValue(percent)})
                       </span>
                     </span>
                   </div>
@@ -1681,10 +1658,8 @@ function EmploymentDonutCard({
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-5 sm:flex-row">
         <div className="relative size-36 shrink-0">
-          <ChartContainer
-            config={chartConfig}
-            className="absolute inset-0 aspect-square"
-          >
+          <div className="employment-donut-responsive absolute inset-0">
+          <ChartContainer config={chartConfig} className="aspect-square">
             <PieChart>
               <Pie
                 data={chartData}
@@ -1693,6 +1668,7 @@ function EmploymentDonutCard({
                 innerRadius={48}
                 outerRadius={68}
                 stroke="none"
+                isAnimationActive={false}
               >
                 {chartData.map((entry) => (
                   <Cell key={entry.label} fill={laborColor(entry.label)} />
@@ -1700,6 +1676,14 @@ function EmploymentDonutCard({
               </Pie>
             </PieChart>
           </ChartContainer>
+          </div>
+          <div className="employment-donut-fixed absolute inset-0" aria-label="Dona de estado laboral para impresión">
+            <PieChart width={144} height={144}>
+              <Pie data={chartData} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={48} outerRadius={68} stroke="none" isAnimationActive={false}>
+                {chartData.map((entry) => <Cell key={entry.label} fill={laborColor(entry.label)} />)}
+              </Pie>
+            </PieChart>
+          </div>
           <div className="absolute inset-0 m-auto flex size-24 flex-col items-center justify-center rounded-full bg-white">
             <span className="title-card tabular-nums">
               {occupiedPercent.toFixed(1)}%
@@ -1832,7 +1816,7 @@ function GenderDistributionCard({
               <span className="min-w-0 break-words">
                 {label}: <strong>{count}</strong>{" "}
                 <span className="text-xs">
-                  ({distribution?.percentages[label]}%)
+                  ({formatPercentValue(distribution?.percentages[label] ?? 0)})
                 </span>
               </span>
             </div>
@@ -1886,7 +1870,7 @@ function CareerTrajectoryCard({
       </CardContent>
       <CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600">
         <span>Parámetros calculados en años calendario</span>
-        <strong className="text-ink-900">Muestra T</strong>
+        <strong className="text-ink-900">Base válida</strong>
       </CardContent>
     </Card>
   );
@@ -2142,7 +2126,7 @@ export function DatasetAnalyticsPage({
   );
 }
 
-export function CompetencePage({ domain }: { domain: Domain }) {
+export function CompetencePage({ domain, printAll = false }: { domain: Domain; printAll?: boolean }) {
   const tone: Tone = domain === "TITULADOS" ? "titulados" : "empleadores";
   const {
     datasets,
@@ -2234,6 +2218,20 @@ export function CompetencePage({ domain }: { domain: Domain }) {
     { key: "satisfaccion", label: "Satisfacción y pertinencia" },
     { key: "malla", label: "Malla y asignaturas" },
   ];
+  if (printAll && domain === "TITULADOS")
+    return (
+      <div className="mx-auto w-full max-w-7xl space-y-6">
+        <PageHeading title="Brechas de competencias" description="Competencias, satisfacción, pertinencia y malla curricular." tone={tone} />
+        {satisfaction && <FilterToolbar summary={satisfaction} onQueryChange={setFilterQuery} />}
+        {(["hard", "soft"] as const).map((key) => {
+          const group = tabGroup(key);
+          const groupItems = items.filter((item) => item.group === group).sort((a, b) => b.average - a.average);
+          return <section key={key} className="print-tab-section"><h2 className="title-card mb-3">{key === "hard" ? "Hard skills" : "Soft skills"}</h2><CompetencePrintGroup items={groupItems} group={group ?? ""} tone={tone} /></section>;
+        })}
+        <section className="print-tab-section"><h2 className="title-card mb-3">Satisfacción y pertinencia</h2><SatisfactionPanel summary={satisfaction} /></section>
+        <section className="print-tab-section"><h2 className="title-card mb-3">Malla y asignaturas</h2><CurriculumPanel summary={curriculum} /></section>
+      </div>
+    );
   if (activeTab === "satisfaccion" || activeTab === "malla")
     return (
       <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -2260,6 +2258,12 @@ export function CompetencePage({ domain }: { domain: Domain }) {
           onChange={setDatasetId}
           loading={datasetsLoading}
         />
+        {domain === "TITULADOS" && (satisfaction ?? curriculum) && (
+          <FilterToolbar
+            summary={(satisfaction ?? curriculum)!}
+            onQueryChange={setFilterQuery}
+          />
+        )}
         <Tabs
           value={activeTab}
           onValueChange={(key) => {
@@ -2276,7 +2280,6 @@ export function CompetencePage({ domain }: { domain: Domain }) {
             ))}
           </TabsList>
         </Tabs>
-        {domain === "TITULADOS" && (satisfaction || curriculum) && <FilterToolbar summary={(activeTab === "satisfaccion" ? satisfaction : curriculum)!} onQueryChange={setFilterQuery} />}
         {activeTab === "satisfaccion" ? (
           <SatisfactionPanel summary={satisfaction} />
         ) : (
@@ -2307,9 +2310,10 @@ export function CompetencePage({ domain }: { domain: Domain }) {
         onChange={setDatasetId}
         loading={datasetsLoading}
       />
-      {items.length > 0 && (
+      {domain === "TITULADOS" && (satisfaction || curriculum) && (
         <FilterToolbar
-          count={`${items[0]?.validCount ?? 0} respuestas válidas`}
+          summary={(satisfaction ?? curriculum)!}
+          onQueryChange={setFilterQuery}
         />
       )}
       {loading && (
@@ -2440,7 +2444,7 @@ function CompetenceMatrix({
     <Card className={`rounded-xl border-0 shadow-sm ${className}`}>
       <CardHeader>
         <CardTitle className="title-card">
-          Mapa de calor: Nivel de preparación técnica percibida
+          Mapa de calor: Nivel de preparación {groupLabel(items[0]?.group ?? "").toLowerCase()} percibida
         </CardTitle>
         <CardDescription>
           Distribución de frecuencias por nivel de la escala Likert · n ={" "}
@@ -2452,7 +2456,7 @@ function CompetenceMatrix({
           <Table className="min-w-[820px] text-sm">
             <thead>
               <tr className="text-xs uppercase tracking-wider text-ink-600">
-                <th className="w-56 p-2 text-left">Competencia técnica</th>
+                <th className="w-56 p-2 text-left">Competencia {groupLabel(items[0]?.group ?? "").toLowerCase()}</th>
                 {[1, 2, 3, 4, 5].map((level) => (
                   <th
                     key={level}
@@ -2795,6 +2799,24 @@ function orderedLikertEntries(distribution?: CategoryDistribution) {
     ? entries.sort(([a], [b]) => likertLevel(a) - likertLevel(b))
     : entries;
 }
+
+function CompetencePrintGroup({ items, group, tone }: { items: Competence[]; group: string; tone: Tone }) {
+  const average = items.length ? items.reduce((sum, item) => sum + item.average, 0) / items.length : 0;
+  return <>
+    <div className="grid items-start gap-4 sm:grid-cols-3">
+      <KpiCard label="Competencias evaluadas" value={String(items.length)} detail={group || "Sin grupo"} note={`n = ${items[0]?.validCount ?? 0}`} icon={GraduationCap} tone={tone} />
+      <KpiCard label="Media de la dimensión" value={average ? formatDecimal(average) : "—"} detail="Escala de 1 a 5" note="Promedio de competencias" icon={BriefcaseBusiness} tone={tone} />
+      <KpiCard label="Muestra" value={String(items[0]?.validCount ?? 0)} detail="Respuestas válidas" icon={Users} tone={tone} />
+    </div>
+    <div className="print-competence-matrix">
+      <CompetenceMatrix items={items} />
+    </div>
+    <div className="print-competence-radar">
+      <CompetenceRadar items={items} />
+    </div>
+    <CompetenceStatsTable items={items} group={group} />
+  </>;
+}
 function likertLevel(label: string) {
   const normalized = label
     .toLocaleLowerCase("es-BO")
@@ -2843,7 +2865,7 @@ function CompetenceStatsTable({
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle className="title-card">
-              Estadísticos por competencia técnica
+              Estadísticos por competencia {groupLabel(group).toLowerCase()}
             </CardTitle>
             <CardDescription>
               Ordenados descendentemente por media · {group} · n = {items[0]?.validCount ?? 0}
@@ -2921,6 +2943,10 @@ function formatDecimal(value: number, digits = 2) {
   return value.toFixed(digits).replace(".", ",");
 }
 
+function formatPercentValue(value: number, digits = 1) {
+  return `${value.toFixed(digits).replace(".", ",")} %`;
+}
+
 function parseInteger(value: string, fallback: number) {
   if (value.trim() === "") return fallback;
   const parsed = Number(value);
@@ -2970,9 +2996,30 @@ function CompetenceRadar({
   const chartConfig = {
     average: { label: "Media observada", color: "#1f6fb5" },
   };
+  const renderRadarChart = (fixed = false) => (
+    <RadarChart
+      {...(fixed ? { width: 460, height: 320 } : {})}
+      data={chartData}
+      outerRadius="60%"
+    >
+      <PolarGrid stroke="#cbd5e1" strokeDasharray="2 2" />
+      <PolarAngleAxis dataKey="subject" tick={<RadarTick />} />
+      <PolarRadiusAxis domain={[0, 5]} tick={false} axisLine={false} />
+      <Radar
+        name="Media observada"
+        dataKey="average"
+        stroke="#1f6fb5"
+        fill="#1f6fb5"
+        fillOpacity={0.24}
+        strokeWidth={2.25}
+        isAnimationActive={false}
+      />
+      {!fixed && <ChartTooltip content={<ChartTooltipContent />} />}
+    </RadarChart>
+  );
   return (
     <Card
-      className={`min-w-0 overflow-hidden rounded-xl border-0 shadow-sm ${className}`}
+      className={`print-radar-card min-w-0 overflow-hidden rounded-xl border-0 shadow-sm ${className}`}
     >
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
@@ -2987,32 +3034,14 @@ function CompetenceRadar({
       <CardContent>
         {plotted.length ? (
           <div className="flex min-w-0 flex-col items-center">
-            <ChartContainer
-              config={chartConfig}
-              className="h-[380px] w-full max-w-[520px] aspect-auto"
-            >
-              <RadarChart data={chartData} outerRadius="60%">
-                <PolarGrid stroke="#cbd5e1" strokeDasharray="2 2" />
-                <PolarAngleAxis
-                  dataKey="subject"
-                  tick={<RadarTick />}
-                />
-                <PolarRadiusAxis
-                  domain={[0, 5]}
-                  tick={false}
-                  axisLine={false}
-                />
-                <Radar
-                  name="Media observada"
-                  dataKey="average"
-                  stroke="#1f6fb5"
-                  fill="#1f6fb5"
-                  fillOpacity={0.24}
-                  strokeWidth={2.25}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </RadarChart>
-            </ChartContainer>
+            <div className="radar-responsive-chart">
+              <ChartContainer config={chartConfig} className="h-[380px] w-full max-w-[520px] aspect-auto" initialDimension={{ width: 1000, height: 380 }}>
+                {renderRadarChart()}
+              </ChartContainer>
+            </div>
+            <div className="radar-fixed-chart" aria-label="Radar de medias por competencia para impresión">
+              <RadarPrintSvg items={plotted} />
+            </div>
             <div className="mt-2 flex flex-wrap items-center justify-center gap-5 border-t border-surface-container-high pt-3 text-xs">
               <span className="flex items-center gap-1.5 font-medium text-ink-900">
                 <i className="h-1.5 w-4 rounded-sm bg-titulados" />
@@ -3036,6 +3065,50 @@ function CompetenceRadar({
       </CardContent>
     </Card>
   );
+}
+
+function RadarPrintSvg({ items }: { items: Competence[] }) {
+  const width = 760;
+  const height = 400;
+  const centerX = width / 2;
+  const centerY = 200;
+  const radius = 120;
+  const count = Math.max(items.length, 1);
+  const point = (index: number, value: number, scale = radius) => {
+    const angle = -Math.PI / 2 + (index * Math.PI * 2) / count;
+    return { x: centerX + Math.cos(angle) * scale * (value / 5), y: centerY + Math.sin(angle) * scale * (value / 5) };
+  };
+  const axisPoint = (index: number, scale = radius) => {
+    const angle = -Math.PI / 2 + (index * Math.PI * 2) / count;
+    return { x: centerX + Math.cos(angle) * scale, y: centerY + Math.sin(angle) * scale };
+  };
+  const polygon = items.map((item, index) => {
+    const p = point(index, item.average);
+    return `${p.x},${p.y}`;
+  }).join(" ");
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Media por competencia" preserveAspectRatio="xMidYMid meet">
+      {[1, 2, 3, 4, 5].map((level) => (
+        <polygon key={level} points={items.map((_, index) => { const p = point(index, 5, radius * level / 5); return `${p.x},${p.y}`; }).join(" ")} fill="none" stroke="#cbd5e1" strokeDasharray="2 2" />
+      ))}
+      {items.map((item, index) => { const p = axisPoint(index); const label = radarLabel(item.name); const labelLines = radarLabelLines(label); const labelPoint = axisPoint(index, radius + 38); const angle = -Math.PI / 2 + (index * Math.PI * 2) / count; const anchor = Math.cos(angle) > 0.25 ? "start" : Math.cos(angle) < -0.25 ? "end" : "middle"; return <g key={item.code}>
+        <line x1={centerX} y1={centerY} x2={p.x} y2={p.y} stroke="#cbd5e1" />
+        <text x={labelPoint.x} y={labelPoint.y} textAnchor={anchor} fontSize="11" fill="#334155">
+          {labelLines.map((line, lineIndex) => <tspan key={line} x={labelPoint.x} dy={lineIndex === 0 ? 0 : 13}>{line}</tspan>)}
+          <tspan x={labelPoint.x} dy="13" fontWeight="700" fill="#0f3f6d">{formatDecimal(item.average)}</tspan>
+        </text>
+      </g>; })}
+      <polygon points={polygon} fill="#1f6fb5" fillOpacity="0.24" stroke="#1f6fb5" strokeWidth="2.25" />
+      {items.map((item, index) => { const p = point(index, item.average); return <circle key={`${item.code}-point`} cx={p.x} cy={p.y} r="3.5" fill="#1f6fb5" />; })}
+    </svg>
+  );
+}
+
+function radarLabelLines(label: string) {
+  const words = label.split(/\s+/);
+  if (label.length <= 17 || words.length < 2) return [label];
+  const midpoint = Math.ceil(words.length / 2);
+  return [words.slice(0, midpoint).join(" "), words.slice(midpoint).join(" ")];
 }
 
 type RadarTickProps = {
@@ -3214,13 +3287,13 @@ export function FinancingCompletePage() {
       <Card className="rounded-xl border-0 shadow-sm">
         <CardContent className="flex flex-wrap items-center gap-4 py-4">
           <span className="label-default text-ink-600">
-            FILAS (Y):{" "}
+            FILAS:{" "}
             <strong className="text-ink-900">
               Fuente de financiamiento estimada
             </strong>
           </span>
           <label className="label-default flex items-center gap-2">
-            COLUMNAS (X):
+            COLUMNAS:
             <Select value={columnField} onValueChange={setColumnField}>
               <SelectTrigger className="w-56">
                 <SelectValue />
@@ -4306,7 +4379,7 @@ function useDatasets(domain: Domain) {
 function PageHeading({
   title,
   description,
-  tone,
+  tone: _tone,
 }: {
   title: string;
   description: string;
@@ -4314,14 +4387,6 @@ function PageHeading({
 }) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-3">
-        <p className="caption-bold uppercase tracking-wider text-ink-600">
-          SimulacionEM
-        </p>
-        <Badge tone={tone}>
-          {tone === "titulados" ? "Titulados" : "Empleadores"}
-        </Badge>
-      </div>
       <h1 className="headline-page">{title}</h1>
       <p className="max-w-2xl text-sm text-ink-600">{description}</p>
     </div>

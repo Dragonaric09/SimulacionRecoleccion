@@ -113,7 +113,7 @@ public class AnalyticsService {
         Map<String, Double> medians = new LinkedHashMap<>();
         Map<String, Double> standardDeviations = new LinkedHashMap<>();
         for (String field : fields) {
-            List<String> values = rows.stream().map(r -> value(r, field)).filter(v -> v != null && !v.isBlank())
+            List<String> values = rows.stream().map(r -> value(r, field)).filter(this::isAnalyticValue)
                     .toList();
             if (numericField(field)) {
                 List<Double> numbers = values.stream().map(this::number).filter(java.util.Objects::nonNull).toList();
@@ -170,6 +170,14 @@ public class AnalyticsService {
         if (value == null) return "";
         return Normalizer.normalize(value, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
                 .toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
+    }
+
+    private boolean isAnalyticValue(String value) {
+        String normalized = normalize(value);
+        return !normalized.isBlank()
+                && !normalized.equals("no sabe")
+                && !normalized.equals("no observado")
+                && !normalized.equals("no observada");
     }
 
     private Integer validYear(String raw) {

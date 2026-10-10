@@ -131,10 +131,10 @@ export function AppLayout({ route }: Props) {
               <div className="print-bundle" aria-label="Informe completo para impresión">
                 {route.section === 'titulados' ? <>
                   <section className="print-page"><TituladosSummaryPage /></section>
-                  <section className="print-page"><EmploymentProfilePage /></section>
-                  <section className="print-page"><EducationProfilePage /></section>
+                  <section className="print-page"><EmploymentProfilePage printAll /></section>
+                  <section className="print-page"><EducationProfilePage printAll /></section>
                   <section className="print-page"><FinancingCompletePage /></section>
-                  <section className="print-page"><CompetencePage domain="TITULADOS" /></section>
+                  <section className="print-page"><CompetencePage domain="TITULADOS" printAll /></section>
                 </> : <>
                   <section className="print-page"><DatasetAnalyticsPage title="Resumen de contratación" description="Indicadores descriptivos de tipo, tamaño y contratación." domain="EMPLEADORES" endpoint="/analytics/employers/summary" fields="tipo_organizacion,tamano_organizacion,contrato_titulados_ultimos_5_anios" cards={[{ key: 'tipo_organizacion', label: 'Tipo de organización' }, { key: 'contrato_titulados_ultimos_5_anios', label: 'Contratación reciente' }]} /></section>
                   <section className="print-page"><DatasetAnalyticsPage title="Valoración de la carrera" description="Distribuciones categóricas por afirmación de la encuesta." domain="EMPLEADORES" endpoint="/analytics/employers/valuation" cards={[{ key: 'valoracion_formacion_1', label: 'Valoración de formación' }, { key: 'valoracion_relacion_1', label: 'Relación con la carrera' }]} /></section>
