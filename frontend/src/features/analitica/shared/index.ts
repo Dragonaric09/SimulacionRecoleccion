@@ -6,6 +6,7 @@ export {
   UnavailableAnalyticPage,
 } from "../RestAnalyticPages";
 export { DatasetAnalyticsPage, DatasetSelect, DistributionCard, PageHeading, formatMetric, labelFor, useDatasets } from "./AnalyticsPrimitives";
+export { booleanLabel, crossMetricLabel, exportCrossCsv, exportCrossExcel, exportCrossPng } from "./crossExportUtils";
 export type {
   CohortChartPoint,
   Competence,
