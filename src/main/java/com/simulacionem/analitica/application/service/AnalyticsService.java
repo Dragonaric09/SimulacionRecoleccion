@@ -408,12 +408,12 @@ public class AnalyticsService {
 
     private String canonicalAgeRange(String value) {
         String normalized = normalize(value);
-        if (normalized.startsWith("15") && normalized.contains("18")) return "15–18";
-        if (normalized.startsWith("19") && normalized.contains("22")) return "19–22";
-        if (normalized.startsWith("23") && normalized.contains("26")) return "23–26";
-        if (normalized.startsWith("27") && normalized.contains("30")) return "27–30";
-        if (normalized.startsWith("31") && normalized.contains("34")) return "31–34";
-        if (normalized.startsWith("35") && normalized.contains("mas")) return "35+";
+        if (normalized.startsWith("15") && normalized.contains("18")) return "15 - 18 años";
+        if (normalized.startsWith("19") && normalized.contains("22")) return "19 - 22 años";
+        if (normalized.startsWith("23") && normalized.contains("26")) return "23 - 26 años";
+        if (normalized.startsWith("27") && normalized.contains("30")) return "27 - 30 años";
+        if (normalized.startsWith("31") && normalized.contains("34")) return "31 - 34 años";
+        if (normalized.startsWith("35") && normalized.contains("mas")) return "35 años o más";
         return value.trim();
     }
 

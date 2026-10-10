@@ -104,9 +104,31 @@ class AnalyticsServiceStatisticsTest {
                 .summary(datasetId, "TITULADOS", List.of("edad_rango"))
                 .distributions().get("edad_rango");
 
-        assertThat(distribution.counts()).containsEntry("19–22", 1L)
-                .containsEntry("23–26", 1L)
-                .containsEntry("35+", 1L);
+        assertThat(distribution.counts()).containsEntry("19 - 22 años", 1L)
+                .containsEntry("23 - 26 años", 1L)
+                .containsEntry("35 años o más", 1L);
+        assertThat(distribution.counts().values().stream().mapToLong(Long::longValue).sum())
+                .isEqualTo(distribution.validCount());
+    }
+
+    @Test
+    void normalizaPosDoctoradoSegunLaEtiquetaDelFormulario() {
+        UUID datasetId = UUID.randomUUID();
+        DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getId()).thenReturn(datasetId);
+        SurveyResponseEntity response = new SurveyResponseEntity(dataset, "TITULADOS", 1, "VALIDA",
+                Map.of("tiene_formacion_complementaria", true, "formacion_complementaria_nivel", "Pos Doctorado"));
+        DatasetImportRepository datasets = mock(DatasetImportRepository.class);
+        SurveyResponseRepository responses = mock(SurveyResponseRepository.class);
+        CompetenceRatingRepository ratings = mock(CompetenceRatingRepository.class);
+        when(datasets.findById(datasetId)).thenReturn(Optional.of(dataset));
+        when(responses.findByDataset_IdAndResponseStatus(datasetId, "VALIDA")).thenReturn(List.of(response));
+
+        CategoryDistributionDto distribution = new AnalyticsService(datasets, responses, ratings)
+                .summary(datasetId, "TITULADOS", List.of("formacion_complementaria_nivel"))
+                .distributions().get("formacion_complementaria_nivel");
+
+        assertThat(distribution.counts()).containsEntry("Posdoctorado", 1L);
         assertThat(distribution.counts().values().stream().mapToLong(Long::longValue).sum())
                 .isEqualTo(distribution.validCount());
     }

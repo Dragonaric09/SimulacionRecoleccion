@@ -1188,7 +1188,7 @@ function AgeDistributionCard({
         <CardDescription>Rangos de edad en orden cronológico</CardDescription>
       </CardHeader>
       <CardContent>
-        <DistributionBars distribution={distribution} order={["15–18", "19–22", "23–26", "27–30", "31–34", "35+"]} />
+        <DistributionBars distribution={distribution} order={["15 - 18 años", "19 - 22 años", "23 - 26 años", "27 - 30 años", "31 - 34 años", "35 años o más"]} />
       </CardContent>
       <CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600">
         <span>Grupo mayoritario: {majorityLabel(distribution)}</span>
@@ -1357,9 +1357,7 @@ function DistributionBars({
 }) {
   const counts = distribution?.counts ?? {};
   const orderedEntries = order ? order.map((label) => {
-    const source = Object.keys(counts).find((candidate) => label.includes("+")
-      ? normalizeAnalyticLabel(candidate).startsWith(normalizeAnalyticLabel(label.replace("+", ""))) && normalizeAnalyticLabel(candidate).includes("mas")
-      : normalizeAnalyticLabel(candidate).replace(" anos", "") === normalizeAnalyticLabel(label).replace(" anos", ""));
+    const source = Object.keys(counts).find((candidate) => normalizeAnalyticLabel(candidate) === normalizeAnalyticLabel(label));
     return [source ?? label, source ? counts[source] : 0] as [string, number];
   }) : Object.entries(counts);
   const assigned = orderedEntries.reduce((sum, [, count]) => sum + count, 0);
