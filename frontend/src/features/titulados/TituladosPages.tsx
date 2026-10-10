@@ -1,5 +1,6 @@
 import type { NavigationItem } from '@/app/navigation'
-import { CompetencePage, CrossExportPage, EmploymentProfilePage, FinancingCompletePage, SimulationPage } from '@/features/analitica/RestAnalyticPages'
+import { CompetencePage, CrossExportPage, FinancingCompletePage, SimulationPage } from '@/features/analitica/RestAnalyticPages'
+import { EmploymentProfilePage } from '@/features/analitica/employment/EmploymentProfilePage'
 import { EducationProfilePage } from '@/features/analitica/education/EducationProfilePage'
 import { TituladosSummaryPage } from '@/features/analitica/TituladosSummaryPage'
 

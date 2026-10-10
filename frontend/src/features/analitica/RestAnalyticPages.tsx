@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
   Dices,
@@ -60,13 +60,16 @@ import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import type { CohortChartPoint, Competence, Domain, EmploymentProfile, Simulation, Tone } from "./shared/analyticsTypes";
 import { DatasetSelect, PageHeading, useDatasets } from "./shared/AnalyticsPrimitives";
 import { MiniDistribution, StackedRelevanceCard } from "./employment/EmploymentCharts";
-import { useTituladosEmploymentAnalytics } from "./employment/useTituladosEmploymentAnalytics";
+import { countMatching, displayLaborLabel, formatPercentage, laborColor } from "./employment/employmentHelpers";
 import { useCompetenceData } from "./competence/useCompetenceData";
 import { CompetenceMatrix as CompetenceHeatmap } from "./competence/CompetenceMatrix";
 import { CompetenceStatsTable as CompetenceStatsTableView } from "./competence/CompetenceStatsTable";
 import { CurriculumCard as CurriculumCardView } from "./competence/CurriculumCard";
 import { SatisfactionPanel as SatisfactionPanelView } from "./competence/SatisfactionPanels";
 import { CompetenceRadar as CompetenceRadarView } from "./competence/CompetenceRadar";
+import { groupDisplayName, groupLabel } from "./competence/competenceHelpers";
+import { parseSimulationInteger as parseInteger } from "./simulation/simulationUtils";
+import { normalizeAnalyticsLabel } from "./shared/analyticsLabels";
 import { SimulationComparisonTable, SimulationDistribution, SimulationWeights } from "./simulation/SimulationComponents";
 import { simulationCategories, simulationCategoryLabel, simulationPercent, simulationVariableLabel } from "./simulation/simulationUtils";
 import { SimulationDownloadMenu, type SimulationRun } from "./simulation/SimulationDownloads";
@@ -96,100 +99,7 @@ function CohortTooltip({
   );
 }
 
-export function EmploymentProfilePage({ printAll = false }: { printAll?: boolean } = {}) {
-  const {
-    datasets,
-    datasetId,
-    setDatasetId,
-    loading: datasetsLoading,
-  } = useDatasets("TITULADOS");
-  const [activeTab, setActiveTab] = useState("perfil");
-  const [filterQuery, setFilterQuery] = useState("");
-  const {
-    summary,
-    profile,
-    unemploymentSummary,
-    firstEmploymentSummary,
-    entrepreneurshipSummary,
-    loading,
-    error,
-  } = useTituladosEmploymentAnalytics(datasetId, filterQuery);
-  const labor = summary?.distributions.situacion_laboral_actual;
-  const sectors = summary?.distributions.sector_trabajo_actual ?? summary?.distributions.sector_trabajo;
-  const unemployed = labor
-    ? countMatching(labor, ["no trabaja", "no trabajo", "búsqueda", "desemple"])
-    : null;
-  const points = profile?.cohortPoints ?? [];
-  const tabs = [
-    { key: "perfil", label: "Perfil" },
-    { key: "trabajo", label: "Trabajo actual" },
-    { key: "desempleo", label: "Sin empleo" },
-    { key: "primer-empleo", label: "Primer empleo" },
-    { key: "emprendimiento", label: "Emprendimiento" },
-  ];
-  return (
-    <div className="employment-profile-root mx-auto w-full max-w-7xl space-y-5">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <PageHeading
-          title="Perfil y empleabilidad"
-          description="Situación laboral y sectores de inserción de las personas tituladas."
-          tone="titulados"
-        />
-      </div>
-      <DatasetSelect
-        datasets={datasets}
-        value={datasetId}
-        onChange={setDatasetId}
-        loading={datasetsLoading}
-      />
-      {summary && !printAll && (
-        <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />
-      )}
-      {loading && (
-        <StatusPanel
-          kind="loading"
-          title="Cargando perfil"
-          description="Consultando la situación laboral y el sector de trabajo."
-        />
-      )}
-      {error && (
-        <StatusPanel
-          kind="warning"
-          title="No se pudo cargar el perfil"
-          description={error}
-        />
-      )}
-      {!loading && !error && !summary && (
-        <StatusPanel
-          kind="info"
-          title="Sin dataset de titulados"
-          description="Importa un CSV de titulados desde Cargar datos para ver este perfil."
-        />
-      )}
-      {summary && (
-        <>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList variant="line" className="grid w-full grid-cols-5 border-b border-border-line bg-transparent">
-              {tabs.map((tab) => (
-                <TabsTrigger key={tab.key} value={tab.key} className="min-w-0 px-2 text-center text-sm">
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          {printAll ? tabs.map((tab) => (
-            <section key={tab.key} className="print-tab-section">
-              <h2 className="title-card mb-3">{tab.label}</h2>
-              <EmploymentTabContent tab={tab.key} summary={summary} profile={{ ...(profile ?? { datasetId: "", validResponses: 0, cohortPoints: [] }), cohortPoints: points }} labor={labor} sectors={sectors} unemployed={unemployed} unemploymentSummary={unemploymentSummary} firstEmploymentSummary={firstEmploymentSummary} entrepreneurshipSummary={entrepreneurshipSummary} />
-            </section>
-          )) : <EmploymentTabContent tab={activeTab} summary={summary} profile={{ ...(profile ?? { datasetId: "", validResponses: 0, cohortPoints: [] }), cohortPoints: points }} labor={labor} sectors={sectors} unemployed={unemployed} unemploymentSummary={unemploymentSummary} firstEmploymentSummary={firstEmploymentSummary} entrepreneurshipSummary={entrepreneurshipSummary} />}
-        </>
-      )}
-    </div>
-  );
-}
-
-function EmploymentTabContent({
+export function EmploymentTabContent({
   tab,
   summary,
   profile,
@@ -323,7 +233,7 @@ function EntrepreneurshipDistribution({ label, distribution, color = "#1f6fb5" }
   const counts = distribution?.counts ?? {};
   const orderedLabels = label.includes("satisfacción") ? ["Insatisfecho", "Algo satisfecho", "Satisfecho"] : label.includes("Importancia") ? ["Nada importante", "Poco importante", "Importante", "Muy importante"] : undefined;
   const entries = orderedLabels ? orderedLabels.map((option) => {
-    const source = Object.keys(counts).find((candidate) => normalizeAnalyticLabel(candidate) === normalizeAnalyticLabel(option));
+    const source = Object.keys(counts).find((candidate) => normalizeAnalyticsLabel(candidate) === normalizeAnalyticsLabel(option));
     return [source ?? option, source ? counts[source] : 0] as [string, number];
   }) : Object.entries(counts).sort(([, left], [, right]) => right - left);
   const total = distribution?.validCount ?? 0;
@@ -362,7 +272,7 @@ function FirstEmploymentPanel({
   const continuedPercent = formatPercentage(continued, employedTotal);
   const timingLabels = ["Ya trabajaba antes de titularse", "Menos de 1 mes", "Entre 1 - 4 meses", "Entre 4 - 8 meses", "Entre 8 - 12 meses", "Más de 12 meses"];
   const timingEntries = timingLabels.map((label) => {
-    const source = Object.keys(timing?.counts ?? {}).find((candidate) => normalizeAnalyticLabel(candidate) === normalizeAnalyticLabel(label));
+    const source = Object.keys(timing?.counts ?? {}).find((candidate) => normalizeAnalyticsLabel(candidate) === normalizeAnalyticsLabel(label));
     return [source ?? label, source ? timing?.counts[source] ?? 0 : 0] as [string, number];
   });
   const branchTotal = timing?.validCount ?? 0;
@@ -1074,21 +984,6 @@ function EmploymentDonutCard({
   );
 }
 
-function laborColor(label: string) {
-  const normalized = label
-    .toLocaleLowerCase("es-BO")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  if (normalized.includes("emprend")) return "#14a39a";
-  if (
-    normalized.includes("busqueda") ||
-    normalized.includes("desemple") ||
-    normalized.includes("no trabaja")
-  )
-    return "#f2a33a";
-  return "#1f6fb5";
-}
-
 function unemploymentReasonColor() {
   return "#1f6fb5";
 }
@@ -1276,7 +1171,7 @@ function DistributionBars({
 }) {
   const counts = distribution?.counts ?? {};
   const orderedEntries = order ? order.map((label) => {
-    const source = Object.keys(counts).find((candidate) => normalizeAnalyticLabel(candidate) === normalizeAnalyticLabel(label));
+    const source = Object.keys(counts).find((candidate) => normalizeAnalyticsLabel(candidate) === normalizeAnalyticsLabel(label));
     return [source ?? label, source ? counts[source] : 0] as [string, number];
   }) : Object.entries(counts);
   const assigned = orderedEntries.reduce((sum, [, count]) => sum + count, 0);
@@ -1324,25 +1219,6 @@ function majorityLabel(distribution?: CategoryDistribution) {
     ([, a], [, b]) => b - a,
   )[0];
   return entry?.[0] ?? "—";
-}
-
-function countMatching(
-  distribution: CategoryDistribution,
-  fragments: string[],
-  excluded: string[] = [],
-) {
-  return Object.entries(distribution.counts)
-    .filter(([label]) => {
-      const normalized = label.toLowerCase();
-      return (
-        fragments.some((fragment) => normalized.includes(fragment)) &&
-        !excluded.some((fragment) => normalized.includes(fragment))
-      );
-    })
-    .reduce((total, [, count]) => total + count, 0);
-}
-function formatPercentage(value: number, total: number) {
-  return `${total ? ((value / total) * 100).toFixed(1).replace(".", ",") : "0,0"} %`;
 }
 
 function booleanCount(distribution: CategoryDistribution, value: boolean) {
@@ -1696,22 +1572,6 @@ function formatPercentValue(value: number, digits = 1) {
   return `${value.toFixed(digits).replace(".", ",")} %`;
 }
 
-function parseInteger(value: string, fallback: number) {
-  if (value.trim() === "") return fallback;
-  const parsed = Number(value);
-  return Number.isInteger(parsed) ? parsed : fallback;
-}
-function groupLabel(group: string) {
-  return group === "HARD_SKILL"
-    ? "Hard skills"
-    : group === "SOFT_SKILL"
-      ? "Soft skills"
-      : group
-          .replaceAll("_", " ")
-          .toLowerCase()
-          .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 
 
 
@@ -1755,7 +1615,7 @@ export function SimulationPage() {
         setError(cause instanceof Error ? cause.message : String(cause)),
       );
   }, [datasetId, variable]);
-  async function run() {
+  const run = useCallback(async () => {
     if (!parametersValid || !datasetId) {
       setError("Revisa los parámetros: deben ser números enteros válidos dentro de los límites indicados.");
       return;
@@ -1813,12 +1673,12 @@ export function SimulationPage() {
     } finally {
       if (requestId === simulationRequestRef.current) setLoading(false);
     }
-  }
+  }, [datasetId, datasets, parametersValid, repetitions, sampleSize, seed, summary, variable, weights]);
   useEffect(() => {
     if (!summary?.distributions[variable] || !datasetId || !parametersValid) return;
     const timeout = window.setTimeout(() => void run(), 250);
     return () => window.clearTimeout(timeout);
-  }, [summary, datasetId, variable, weights, sampleSize, repetitions, seed, parametersValid]);
+  }, [run, summary, datasetId, variable, weights, sampleSize, repetitions, seed, parametersValid]);
   return (
       <div className="simulation-screen-page mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
@@ -1938,22 +1798,6 @@ export function SimulationPage() {
     </div>
   );
 }
-
-function displayLaborLabel(label: string) {
-  const normalized = label.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return normalized.includes("no trabaja") || normalized.includes("no trabajo") || normalized.includes("busqueda") || normalized.includes("desemple") || normalized.includes("sin empleo")
-    ? "Sin empleo"
-    : label;
-}
-
-function normalizeAnalyticLabel(value: string) {
-  return value.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[‐‑‒–—-]/g, "-").replace(/\s*-\s*/g, "-").replace(/\s+/g, " ").trim();
-}
-
-function groupDisplayName(group: string) {
-  return group === "HARD_SKILL" || group === "Hard skills" ? "hard skills" : group === "SOFT_SKILL" || group === "Soft skills" ? "soft skills" : groupLabel(group).toLowerCase();
-}
-
 
 export function UnavailableAnalyticPage({
   title,

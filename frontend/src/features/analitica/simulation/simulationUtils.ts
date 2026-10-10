@@ -74,3 +74,9 @@ export function simulationDelta(value: number, observed: number) {
   const delta = value - observed;
   return `${delta > 0 ? "+" : ""}${delta.toFixed(1).replace(".", ",")} pp`;
 }
+
+export function parseSimulationInteger(value: string, fallback: number) {
+  if (value.trim() === "") return fallback;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) ? parsed : fallback;
+}
