@@ -228,6 +228,7 @@
 .employment-donut-fixed { display: none; }
 .radar-fixed-chart { display: none; }
 .radar-responsive-chart { display: block; width: 100%; min-width: 0; }
+.cohort-print-values { display: none; }
 
 @media print {
   @page {
@@ -251,8 +252,9 @@
   .print-bundle { display: block !important; }
   .print-only { display: block !important; }
   .cohort-responsive-chart { display: none !important; }
-  .cohort-fixed-chart { display: block !important; width: 100%; height: 256px; max-width: 100%; overflow: hidden; }
+  .cohort-fixed-chart { display: block !important; width: 100%; height: 286px; max-width: 100%; overflow: visible; }
   .cohort-fixed-chart svg { display: block; width: 100%; height: auto; }
+  .cohort-print-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px 12px; margin-top: 6px; border-top: 1px solid #cbd5e1; padding-top: 5px; color: #475569; font-size: 9px; line-height: 12px; }
   .employment-donut-responsive { display: none !important; }
   .employment-donut-fixed { display: block !important; width: 144px; height: 144px; }
   .radar-responsive-chart { display: none !important; }

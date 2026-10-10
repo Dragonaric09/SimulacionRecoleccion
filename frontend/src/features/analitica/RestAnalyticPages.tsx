@@ -189,6 +189,34 @@ type EmploymentProfile = {
   cohortPoints: { graduationYear: number; professionalYears: number }[];
 };
 
+type CohortChartPoint = {
+  graduationYear: number;
+  professionalYears: number;
+  isOutlier: boolean;
+};
+
+function CohortTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: { payload?: CohortChartPoint }[];
+}) {
+  const point = payload?.find((entry) => entry.payload)?.payload;
+  if (!active || !point) return null;
+  return (
+    <div className="grid min-w-[12rem] gap-1 rounded-lg border border-border-line bg-white px-3 py-2 text-xs shadow-xl">
+      <p className="font-medium text-ink-900">
+        Año de titulación: {point.graduationYear}
+      </p>
+      <p className="text-ink-600">
+        Años de vida profesional: {point.professionalYears}
+        {point.isOutlier ? " · valor atípico" : ""}
+      </p>
+    </div>
+  );
+}
+
 export function EmploymentProfilePage({ printAll = false }: { printAll?: boolean } = {}) {
   const {
     datasets,
@@ -890,12 +918,22 @@ function CohortScatterCard({
       ? sorted[(sorted.length - 1) / 2]
       : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
     : 0;
+  const standardDeviation = values.length > 1
+    ? Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1))
+    : 0;
   const yearMin = years.length ? Math.min(...years) : 0;
   const yearMax = years.length ? Math.max(...years) : 1;
-  const chartData = points.map((point) => ({
+  const yearTicks = Array.from(
+    { length: Math.max(1, yearMax - yearMin + 1) },
+    (_, index) => yearMin + index,
+  );
+  const sameReferenceValue = Math.abs(mean - median) < 0.0001;
+  const chartData: CohortChartPoint[] = points.map((point) => ({
     graduationYear: point.graduationYear,
     professionalYears: point.professionalYears,
+    isOutlier: point.professionalYears > mean + standardDeviation,
   }));
+  const outlierPoints = chartData.filter((point) => point.isOutlier);
   const chartConfig = {
     professionalYears: {
       label: "Años de vida profesional",
@@ -904,44 +942,75 @@ function CohortScatterCard({
   };
   const renderScatterChart = (fixed = false) => (
     <ScatterChart
-      {...(fixed ? { width: 760, height: 256 } : {})}
-      margin={{ top: 18, right: 18, bottom: 12, left: 8 }}
+      {...(fixed ? { width: 760, height: 286 } : {})}
+      margin={{ top: 18, right: 18, bottom: 30, left: 18 }}
     >
       <CartesianGrid stroke="#dbe4ee" strokeDasharray="2 4" />
       <XAxis
         type="number"
         dataKey="graduationYear"
         domain={[yearMin - 0.5, yearMax + 0.5]}
+        ticks={yearTicks}
+        interval={0}
         tick={{ fill: "#0f172a", fontSize: 11 }}
-        tickCount={Math.min(10, Math.max(2, yearMax - yearMin + 1))}
+        allowDecimals={false}
+        label={{ value: "Año de titulación", position: "insideBottom", offset: -18, fill: "#475569", fontSize: 11 }}
       />
       <YAxis
         type="number"
         dataKey="professionalYears"
-        domain={[0, "auto"]}
+        domain={[0, Math.max(1, Math.ceil(Math.max(...values, 0)))]}
         tick={{ fill: "#64748b", fontSize: 10 }}
         width={28}
+        allowDecimals={false}
+        label={{ value: "Años de vida profesional", angle: -90, position: "insideLeft", fill: "#475569", fontSize: 11 }}
       />
-      <ReferenceLine
-        y={mean}
-        stroke="#ef4444"
-        strokeDasharray="5 4"
-        label={{ value: `Media ${mean.toFixed(1)} años`, fill: "#ef4444", fontSize: 11, position: "insideTopLeft" }}
-      />
-      <ReferenceLine
-        y={median}
-        stroke="#14a39a"
-        strokeDasharray="3 4"
-        label={{ value: `Mediana ${median.toFixed(1)} años`, fill: "#0f766e", fontSize: 11, position: "insideBottomLeft" }}
-      />
+      {sameReferenceValue ? (
+        <ReferenceLine
+          y={mean}
+          stroke="#7c3aed"
+          strokeDasharray="5 4"
+          label={{ value: `Media = mediana: ${mean.toFixed(1)} años`, fill: "#6d28d9", fontSize: 11, position: "insideTopLeft" }}
+        />
+      ) : (
+        <>
+          <ReferenceLine
+            y={mean}
+            stroke="#ef4444"
+            strokeDasharray="5 4"
+            label={{ value: `Media ${mean.toFixed(1)} años`, fill: "#ef4444", fontSize: 11, position: "insideTopLeft" }}
+          />
+          <ReferenceLine
+            y={median}
+            stroke="#14a39a"
+            strokeDasharray="3 4"
+            label={{ value: `Mediana ${median.toFixed(1)} años`, fill: "#0f766e", fontSize: 11, position: "insideBottomRight" }}
+          />
+        </>
+      )}
       <Scatter
         name="Titulado individual"
         data={chartData}
         dataKey="professionalYears"
         fill="#1f6fb5"
+        line={false}
+        shape={(props: { cx?: number; cy?: number; payload?: { isOutlier?: boolean } }) => (
+          <circle
+            cx={props.cx}
+            cy={props.cy}
+            r={props.payload?.isOutlier ? 4.5 : 4}
+            fill={props.payload?.isOutlier ? "#dc2626" : "#1f6fb5"}
+            stroke="#ffffff"
+            strokeWidth={1.5}
+          />
+        )}
         isAnimationActive={false}
       />
-      {!fixed && <ChartTooltip content={<ChartTooltipContent />} />}
+      {!fixed && (
+        <ChartTooltip
+          content={<CohortTooltip />}
+        />
+      )}
     </ScatterChart>
   );
   return (
@@ -957,12 +1026,12 @@ function CohortScatterCard({
       <CardContent>
         {points.length ? (
           <>
-            <div className="overflow-x-auto rounded-lg border border-border-line bg-slate-50 p-2">
+            <div className="overflow-hidden rounded-lg border border-border-line bg-slate-50 p-2">
               <div className="cohort-responsive-chart">
                 <ChartContainer
                 config={chartConfig}
-                className="h-64 min-w-[620px] w-full aspect-auto"
-                initialDimension={{ width: 1000, height: 256 }}
+                className="h-72 w-full min-w-0 aspect-auto"
+                initialDimension={{ width: 760, height: 286 }}
               >
                 {renderScatterChart()}
               </ChartContainer>
@@ -976,14 +1045,18 @@ function CohortScatterCard({
                 <i className="mr-1 inline-block size-2 rounded-full bg-titulados" />
                 Titulado individual
               </span>
-              <span>
-                <i className="mr-1 inline-block w-4 border-t-2 border-dashed border-red-500" />
-                Media
-              </span>
-              <span>
-                <i className="mr-1 inline-block w-4 border-t-2 border-dashed border-teal-600" />
-                Mediana
-              </span>
+              {outlierPoints.length > 0 && <span><i className="mr-1 inline-block size-2 rounded-full bg-red-600" />Valor atípico</span>}
+              {sameReferenceValue ? <span><i className="mr-1 inline-block w-4 border-t-2 border-dashed border-violet-600" />Media = mediana: {mean.toFixed(1)} años</span> : <>
+                <span><i className="mr-1 inline-block w-4 border-t-2 border-dashed border-red-500" />Media</span>
+                <span><i className="mr-1 inline-block w-4 border-t-2 border-dashed border-teal-600" />Mediana</span>
+              </>}
+            </div>
+            <div className="cohort-print-values" aria-label="Valores del gráfico por titulado">
+              {points.map((point, index) => (
+                <span key={`${point.graduationYear}-${point.professionalYears}-${index}`}>
+                  {point.graduationYear}: {point.professionalYears} años{chartData[index]?.isOutlier ? " · atípico" : ""}
+                </span>
+              ))}
             </div>
           </>
         ) : (
