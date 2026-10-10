@@ -2076,7 +2076,7 @@ function countMatching(
     .reduce((total, [, count]) => total + count, 0);
 }
 function formatPercentage(value: number, total: number) {
-  return `${total ? ((value / total) * 100).toFixed(1) : 0}%`;
+  return `${total ? ((value / total) * 100).toFixed(1).replace(".", ",") : 0}%`;
 }
 
 function firstEmploymentTimingOrder(label: string) {
@@ -2744,11 +2744,6 @@ function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | null }) {
   const satisfaction = summary?.distributions.satisfaccion_formacion;
   const concordance =
     summary?.distributions.concordancia_formacion_requerimientos;
-  const pertinence = summary?.distributions.pertinencia_trabajo_formacion;
-  const entrepreneurshipSatisfaction =
-    summary?.distributions.satisfaccion_emprendimiento;
-  const entrepreneurshipImportance =
-    summary?.distributions.importancia_formacion_emprendimiento;
   if (!summary)
     return (
       <StatusPanel
@@ -2781,38 +2776,14 @@ function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | null }) {
           number="1."
           title="Satisfacción global con la formación recibida en la carrera"
           distribution={satisfaction}
+          showSummary={false}
         />
         <LikertStatement
           number="2."
           title="Concordancia entre la formación académica y los requerimientos del mercado laboral"
           distribution={concordance}
+          showSummary={false}
         />
-        {entrepreneurshipSatisfaction && (
-          <LikertStatement
-            number="3."
-            title="Satisfacción con el rendimiento actual del emprendimiento"
-            distribution={entrepreneurshipSatisfaction}
-          />
-        )}
-        {entrepreneurshipImportance && (
-          <LikertStatement
-            number="4."
-            title="Importancia de la formación en Ingeniería de Sistemas para el emprendimiento"
-            distribution={entrepreneurshipImportance}
-          />
-        )}
-        <div className="grid gap-4 pt-1 md:grid-cols-2">
-          <SummaryMetric
-            title="Pertinencia con el cargo"
-            value={`${favorablePercentage(pertinence)}%`}
-            detail={`${favorableCount(pertinence)} de ${pertinence?.validCount ?? 0} respuestas favorables`}
-          />
-          <SummaryMetric
-            title="Satisfacción con el plan"
-            value={averageLikert(satisfaction)}
-            detail="Media muestral continua (1-4)"
-          />
-        </div>
       </CardContent>
     </Card>
   );
@@ -2865,8 +2836,7 @@ function LikertStatement({
           </span>
           {showSummary && (
             <span className="text-xs text-ink-600">
-              Media: {averageLikert(distribution)} / 4,00 ·{" "}
-              {favorablePercentage(distribution)}% acuerdo favorable
+              {favorablePercentage(distribution)}% De acuerdo + Totalmente de acuerdo
             </span>
           )}
         </div>
@@ -2893,11 +2863,10 @@ function LikertStatement({
           </div>
           <div className="flex justify-between px-1 text-xs text-ink-600">
             <span>
-              Total desacuerdo: {total - favorable} (n={total - favorable})
+              Desacuerdo (niveles 1 + 2): {total - favorable} ({formatPercentage(total - favorable, total)})
             </span>
             <span>
-              Total acuerdo: {favorablePercentage(distribution)}% (n={favorable}
-              )
+              De acuerdo + Totalmente de acuerdo: {favorable} ({favorablePercentage(distribution)}%)
             </span>
           </div>
         </>
@@ -2911,68 +2880,42 @@ function LikertStatement({
 }
 
 function orderedLikertEntries(distribution?: CategoryDistribution) {
-  return Object.entries(distribution?.counts ?? {}).sort(
-    ([a], [b]) => likertLevel(a) - likertLevel(b),
-  );
+  const entries = Object.entries(distribution?.counts ?? {});
+  const hasRecognizedLevel = entries.some(([label]) => likertLevel(label) > 0);
+  return hasRecognizedLevel
+    ? entries.sort(([a], [b]) => likertLevel(a) - likertLevel(b))
+    : entries;
 }
 function likertLevel(label: string) {
-  const value = label.toLowerCase();
-  return value.includes("totalmente") && value.includes("desacuerdo")
-    ? 1
-    : value.includes("desacuerdo")
-      ? 2
-      : value.includes("totalmente") && value.includes("acuerdo")
-        ? 4
-        : value.includes("acuerdo")
-          ? 3
-          : 5;
+  const normalized = label
+    .toLocaleLowerCase("es-BO")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const numericLevel = Number.parseInt(normalized.match(/^\s*(\d+)/)?.[1] ?? "", 10);
+  if (Number.isInteger(numericLevel) && numericLevel >= 1 && numericLevel <= 4) return numericLevel;
+  if (normalized.includes("desacuerdo")) {
+    return normalized.includes("totalmente") || normalized.includes("muy") ? 1 : 2;
+  }
+  if (normalized.includes("acuerdo")) {
+    return normalized.includes("totalmente") || normalized.includes("muy") ? 4 : 3;
+  }
+  return 0;
 }
 function favorableCount(distribution?: CategoryDistribution) {
-  return Object.entries(distribution?.counts ?? {})
-    .filter(([label]) => {
-      const value = label.toLowerCase();
-      return value.includes("acuerdo") && !value.includes("desacuerdo");
+  const entries = orderedLikertEntries(distribution);
+  const hasRecognizedLevel = entries.some(([label]) => likertLevel(label) > 0);
+  return entries
+    .filter(([label], index) => {
+      const level = likertLevel(label);
+      return hasRecognizedLevel ? level === 3 || level === 4 : index >= 2;
     })
     .reduce((sum, [, count]) => sum + count, 0);
 }
 function favorablePercentage(distribution?: CategoryDistribution) {
   const total = distribution?.validCount ?? 0;
   return total
-    ? ((favorableCount(distribution) / total) * 100).toFixed(1)
+    ? ((favorableCount(distribution) / total) * 100).toFixed(1).replace(".", ",")
     : "—";
-}
-function averageLikert(distribution?: CategoryDistribution) {
-  const entries = Object.entries(distribution?.counts ?? {});
-  const score = entries.reduce(
-    (sum, [label, count]) => sum + likertLevel(label) * count,
-    0,
-  );
-  return distribution?.validCount
-    ? (score / distribution.validCount).toFixed(2)
-    : "—";
-}
-function SummaryMetric({
-  title,
-  value,
-  detail,
-  tone = "blue",
-}: {
-  title: string;
-  value: string;
-  detail: string;
-  tone?: "blue" | "green";
-}) {
-  return (
-    <div className="rounded-lg bg-surface-container-low px-4 py-3.5">
-      <span className="caption-bold text-ink-600">{title}</span>
-      <p
-        className={`display-kpi tabular-nums ${tone === "green" ? "text-emerald-600" : "text-titulados"}`}
-      >
-        {value}
-      </p>
-      <span className="text-xs text-ink-600">{detail}</span>
-    </div>
-  );
 }
 
 function CompetenceStatsTable({
