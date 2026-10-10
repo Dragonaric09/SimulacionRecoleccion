@@ -2575,36 +2575,24 @@ function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | null }) {
       />
     );
   return (
-    <Card className="gap-3 rounded-xl border-0 py-4 shadow-sm">
-      <CardHeader className="pb-0">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <CardTitle className="title-card">
-              Satisfacción global y pertinencia con el mercado laboral
-            </CardTitle>
-            <CardDescription>
-              Distribución de respuestas en su escala original (n = {summary.validResponses})
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {isThreeLevelSatisfaction(satisfaction) ? <SatisfactionLegend /> : <LikertLegend />}
+    <div className="space-y-4">
+      <div className="grid gap-5 lg:grid-cols-2">
         <LikertStatement
           number="1."
           title="Satisfacción global con la formación recibida en la carrera"
           distribution={satisfaction}
           showSummary={false}
-          scale={isThreeLevelSatisfaction(satisfaction) ? "satisfaction" : "agreement"}
+          scale="satisfaction"
         />
         <LikertStatement
           number="2."
           title="Concordancia entre la formación académica y los requerimientos del mercado laboral"
           distribution={concordance}
           showSummary={false}
+          scale="agreement"
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -2644,14 +2632,15 @@ function LikertStatement({
   showSummary?: boolean;
   scale?: "agreement" | "satisfaction";
 }) {
-  const entries = orderedLikertEntries(distribution);
+  const entries = orderedScaleEntries(distribution, scale);
   const colors = scale === "satisfaction"
     ? ["#ed552f", "#f3a487", "#1f6fb5"]
     : ["#ed552f", "#f3a487", "#7db1dd", "#1f6fb5"];
   const total = distribution?.validCount ?? 0;
   const favorable = favorableCount(distribution);
   return (
-    <div className="space-y-2 border-t border-surface-container-high pt-5 first:border-t-0 first:pt-0">
+    <Card className="gap-3 rounded-xl border border-border-line py-4 shadow-sm">
+      <CardHeader className="pb-0">
       {(showSummary || number || title) && (
         <div className="flex flex-col justify-between gap-1 md:flex-row md:items-center">
           <span className="font-semibold text-ink-900">
@@ -2664,6 +2653,12 @@ function LikertStatement({
           )}
         </div>
       )}
+      <CardDescription>
+        {scale === "satisfaction" ? "Escala de satisfacción (3 niveles)" : "Escala de acuerdo (4 niveles)"} · n = {total}
+      </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {scale === "satisfaction" ? <SatisfactionLegend /> : <LikertLegend />}
       {entries.length ? (
         <>
           <div className="flex h-11 overflow-hidden rounded-lg">
@@ -2679,7 +2674,7 @@ function LikertStatement({
                 title={`${label}: ${count} (${distribution?.percentages[label]}%)`}
               >
                 {(distribution?.percentages[label] ?? 0) >= 8
-                  ? `${count} (${distribution?.percentages[label]}%)`
+                  ? `${count} (${formatPercentValue(distribution?.percentages[label] ?? 0)}%)`
                   : ""}
               </div>
             ))}
@@ -2688,14 +2683,14 @@ function LikertStatement({
             <div className="flex flex-wrap gap-x-5 gap-y-1 px-1 text-xs text-ink-600">
               {entries.map(([label, count]) => (
                 <span key={label}>
-                  {label}: {count} ({formatPercentage(count, total)})
+                  {label}: {count} ({formatPercentValue(distribution?.percentages[label] ?? 0)}%)
                 </span>
               ))}
             </div>
           ) : (
             <div className="flex justify-between px-1 text-xs text-ink-600">
               <span>Desacuerdo (niveles 1 + 2): {total - favorable} ({formatPercentage(total - favorable, total)})</span>
-              <span>De acuerdo + Totalmente de acuerdo: {favorable} ({favorablePercentage(distribution)}%)</span>
+              <span>De acuerdo + Totalmente de acuerdo: {favorable} ({formatPercentValue(total ? favorable * 100 / total : 0)}%)</span>
             </div>
           )}
         </>
@@ -2704,7 +2699,8 @@ function LikertStatement({
           <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
         </Empty>
       )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -3027,11 +3023,6 @@ function RadarPrintSvg({ items }: { items: Competence[] }) {
   );
 }
 
-function isThreeLevelSatisfaction(distribution?: CategoryDistribution) {
-  const labels = Object.keys(distribution?.counts ?? {}).map((label) => label.toLocaleLowerCase("es-BO"));
-  return labels.includes("insatisfecho") && labels.includes("algo satisfecho") && labels.includes("satisfecho");
-}
-
 function SatisfactionLegend() {
   return (
     <div className="flex flex-wrap gap-x-5 gap-y-2 rounded-lg bg-surface-container-low px-3 py-2.5 text-xs font-medium text-ink-700">
@@ -3040,6 +3031,21 @@ function SatisfactionLegend() {
       <span><i className="mr-1.5 inline-block size-3 rounded bg-[#1f6fb5]" />Satisfecho</span>
     </div>
   );
+}
+
+function orderedScaleEntries(distribution: CategoryDistribution | undefined, scale: "agreement" | "satisfaction") {
+  const labels = scale === "satisfaction"
+    ? ["Insatisfecho", "Algo satisfecho", "Satisfecho"]
+    : ["Totalmente en desacuerdo", "En desacuerdo", "De acuerdo", "Totalmente de acuerdo"];
+  const existing = Object.keys(distribution?.counts ?? {});
+  return labels.map((label) => {
+    const actual = existing.find((candidate) => normalizeScaleLabel(candidate) === normalizeScaleLabel(label));
+    return [actual ?? label, actual ? distribution?.counts[actual] ?? 0 : 0] as [string, number];
+  });
+}
+
+function normalizeScaleLabel(label: string) {
+  return label.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
 function radarLabelLines(label: string) {
