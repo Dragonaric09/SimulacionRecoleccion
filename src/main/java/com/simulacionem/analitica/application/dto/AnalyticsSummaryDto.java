@@ -8,4 +8,6 @@ public record AnalyticsSummaryDto(UUID datasetId, String surveyType, long totalR
                                   Map<String, Double> numericAverages,
                                   Map<String, Double> numericMedians,
                                   Map<String, Double> numericStandardDeviations,
-                                  boolean smallSample) { }
+                                  boolean smallSample,
+                                  Integer yearMin,
+                                  Integer yearMax) { }

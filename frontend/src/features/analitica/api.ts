@@ -19,6 +19,8 @@ export type AnalyticsSummary = {
   numericMedians: Record<string, number>
   numericStandardDeviations: Record<string, number | null>
   smallSample: boolean
+  yearMin?: number
+  yearMax?: number
 }
 
 export function ejecutarChiCuadrado(frecuencias: number[][], alfa: number) {

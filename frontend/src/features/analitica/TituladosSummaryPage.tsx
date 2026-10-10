@@ -36,6 +36,7 @@ export function TituladosSummaryPage() {
     () => localStorage.getItem("simulacionem.activeDatasetId") ?? undefined,
   );
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [filterQuery, setFilterQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [datasetsReady, setDatasetsReady] = useState(false);
@@ -67,7 +68,7 @@ export function TituladosSummaryPage() {
     setLoading(true);
     setError(null);
     apiRequest<AnalyticsSummary>(
-      `/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=${encodeURIComponent(fields)}`,
+      `/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=${encodeURIComponent(fields)}${filterQuery}`,
     )
       .then(setSummary)
       .catch((cause) => {
@@ -82,7 +83,7 @@ export function TituladosSummaryPage() {
         setError(message);
       })
       .finally(() => setLoading(false));
-  }, [datasetId, datasetsReady]);
+  }, [datasetId, datasetsReady, filterQuery]);
 
   const laboral = summary?.distributions.situacion_laboral_actual;
   const posgrado = summary?.distributions.interes_posgrado;
@@ -138,7 +139,7 @@ export function TituladosSummaryPage() {
         </label>
       </div>
       {summary && (
-        <FilterToolbar count={`${summary.validResponses} respuestas válidas`} />
+        <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />
       )}
       {loading && (
         <StatusPanel

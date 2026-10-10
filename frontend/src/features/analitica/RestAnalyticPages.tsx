@@ -204,10 +204,9 @@ export function EmploymentProfilePage() {
   const [entrepreneurshipSummary, setEntrepreneurshipSummary] =
     useState<AnalyticsSummary | null>(null);
   const [profile, setProfile] = useState<EmploymentProfile | null>(null);
+  const [filterQuery, setFilterQuery] = useState("");
   const [activeTab, setActiveTab] = useState("perfil");
-  const [yearMax, setYearMax] = useState<number | undefined>();
-  const [laborFilter, setLaborFilter] = useState("todos");
-  const [sectorFilter, setSectorFilter] = useState("todos");
+  const [yearMax] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -221,7 +220,7 @@ export function EmploymentProfilePage() {
     }
     setLoading(true);
     setError(null);
-    const query = `?datasetId=${encodeURIComponent(datasetId)}`;
+    const query = `?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`;
     Promise.all([
       apiRequest<AnalyticsSummary>(`/analytics/titulados/employment${query}`),
       apiRequest<EmploymentProfile>(
@@ -248,7 +247,7 @@ export function EmploymentProfilePage() {
         setError(cause instanceof Error ? cause.message : String(cause)),
       )
       .finally(() => setLoading(false));
-  }, [datasetId]);
+  }, [datasetId, filterQuery]);
   const labor = summary?.distributions.situacion_laboral_actual;
   const sectors = summary?.distributions.sector_trabajo;
   const unemployed = labor
@@ -279,11 +278,6 @@ export function EmploymentProfilePage() {
       label: "Emprendimiento",
     },
   ];
-  const resetFilters = () => {
-    setYearMax(undefined);
-    setLaborFilter("todos");
-    setSectorFilter("todos");
-  };
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -307,17 +301,7 @@ export function EmploymentProfilePage() {
         loading={datasetsLoading}
       />
       {summary && (
-        <EmploymentFilters
-          summary={summary}
-          sectors={sectors}
-          yearMax={yearMax}
-          setYearMax={setYearMax}
-          laborFilter={laborFilter}
-          setLaborFilter={setLaborFilter}
-          sectorFilter={sectorFilter}
-          setSectorFilter={setSectorFilter}
-          onReset={resetFilters}
-        />
+        <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />
       )}
       {loading && (
         <StatusPanel
@@ -476,6 +460,8 @@ function EmploymentFilters({
     </div>
   );
 }
+
+void EmploymentFilters;
 
 function EmploymentTabContent({
   tab,
@@ -1332,6 +1318,7 @@ export function EducationProfilePage() {
     loading: datasetsLoading,
   } = useDatasets("TITULADOS");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [filterQuery, setFilterQuery] = useState("");
   const [activeTab, setActiveTab] = useState("cursado");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1343,14 +1330,14 @@ export function EducationProfilePage() {
     setLoading(true);
     setError(null);
     apiRequest<AnalyticsSummary>(
-      `/analytics/titulados/education?datasetId=${encodeURIComponent(datasetId)}`,
+      `/analytics/titulados/education?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`,
     )
       .then(setSummary)
       .catch((cause) =>
         setError(cause instanceof Error ? cause.message : String(cause)),
       )
       .finally(() => setLoading(false));
-  }, [datasetId]);
+  }, [datasetId, filterQuery]);
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <PageHeading
@@ -1365,9 +1352,7 @@ export function EducationProfilePage() {
         loading={datasetsLoading}
       />
       {summary && (
-        <FilterToolbar
-          count={`${summary.validResponses} de ${summary.totalResponses} respuestas`}
-        />
+        <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />
       )}
       {loading && (
         <StatusPanel
@@ -2198,6 +2183,7 @@ export function DatasetAnalyticsPage({
     loading: datasetsLoading,
   } = useDatasets(domain);
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [filterQuery, setFilterQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -2210,14 +2196,14 @@ export function DatasetAnalyticsPage({
     setError(null);
     const suffix = fields ? `&fields=${encodeURIComponent(fields)}` : "";
     apiRequest<AnalyticsSummary>(
-      `${endpoint}?datasetId=${encodeURIComponent(datasetId)}${suffix}`,
+      `${endpoint}?datasetId=${encodeURIComponent(datasetId)}${suffix}${domain === "TITULADOS" ? filterQuery : ""}`,
     )
       .then(setSummary)
       .catch((cause) =>
         setError(cause instanceof Error ? cause.message : String(cause)),
       )
       .finally(() => setLoading(false));
-  }, [datasetId, endpoint, fields]);
+  }, [datasetId, endpoint, fields, domain, filterQuery]);
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeading title={title} description={description} tone={tone} />
@@ -2250,9 +2236,7 @@ export function DatasetAnalyticsPage({
       )}
       {summary && (
         <>
-          <FilterToolbar
-            count={`${summary.validResponses} respuestas válidas`}
-          />
+          {domain === "TITULADOS" && <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {cards.map((card) => (
               <KpiCard
@@ -2300,6 +2284,7 @@ export function CompetencePage({ domain }: { domain: Domain }) {
     null,
   );
   const [curriculum, setCurriculum] = useState<AnalyticsSummary | null>(null);
+  const [filterQuery, setFilterQuery] = useState("");
   const [activeGroup, setActiveGroup] = useState("");
   const [activeTab, setActiveTab] = useState("hard");
   const [loading, setLoading] = useState(false);
@@ -2317,18 +2302,18 @@ export function CompetencePage({ domain }: { domain: Domain }) {
     const satisfactionRequest =
       domain === "TITULADOS"
         ? apiRequest<AnalyticsSummary>(
-            `/analytics/titulados/satisfaction?datasetId=${encodeURIComponent(datasetId)}`,
+            `/analytics/titulados/satisfaction?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`,
           )
         : Promise.resolve(null);
     const curriculumRequest =
       domain === "TITULADOS"
         ? apiRequest<AnalyticsSummary>(
-            `/analytics/titulados/curriculum?datasetId=${encodeURIComponent(datasetId)}`,
+            `/analytics/titulados/curriculum?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`,
           )
         : Promise.resolve(null);
     Promise.all([
       apiRequest<Competence[]>(
-        `/analytics/competencies/gaps?datasetId=${encodeURIComponent(datasetId)}`,
+        `/analytics/competencies/gaps?datasetId=${encodeURIComponent(datasetId)}${domain === "TITULADOS" ? filterQuery : ""}`,
       ),
       satisfactionRequest,
       curriculumRequest,
@@ -2350,7 +2335,7 @@ export function CompetencePage({ domain }: { domain: Domain }) {
         setError(cause instanceof Error ? cause.message : String(cause)),
       )
       .finally(() => setLoading(false));
-  }, [datasetId, domain]);
+  }, [datasetId, domain, filterQuery]);
   const groups = useMemo(
     () => [...new Set(items.map((item) => item.group))],
     [items],
@@ -2421,6 +2406,7 @@ export function CompetencePage({ domain }: { domain: Domain }) {
             ))}
           </TabsList>
         </Tabs>
+        {domain === "TITULADOS" && (satisfaction || curriculum) && <FilterToolbar summary={(activeTab === "satisfaccion" ? satisfaction : curriculum)!} onQueryChange={setFilterQuery} />}
         {activeTab === "satisfaccion" ? (
           <SatisfactionPanel summary={satisfaction} />
         ) : (
@@ -3262,6 +3248,7 @@ export function FinancingCompletePage() {
     loading: datasetsLoading,
   } = useDatasets("TITULADOS");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [filterQuery, setFilterQuery] = useState("");
   const [cross, setCross] = useState<Cross | null>(null);
   const [chi, setChi] = useState<ChiResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -3285,7 +3272,7 @@ export function FinancingCompletePage() {
     Promise.all([
       apiRequest<AnalyticsSummary>(
         "/analytics/titulados/financing?datasetId=" +
-          encodeURIComponent(datasetId),
+          encodeURIComponent(datasetId) + filterQuery,
       ),
       apiRequest<Cross>(
         "/analytics/crosses?datasetId=" +
@@ -3293,7 +3280,7 @@ export function FinancingCompletePage() {
           "&rowField=" +
           rowField +
           "&columnField=" +
-          columnField,
+          columnField + filterQuery,
       ),
     ])
       .then(async ([nextSummary, nextCross]) => {
@@ -3318,7 +3305,7 @@ export function FinancingCompletePage() {
       .catch((cause) =>
         setError(cause instanceof Error ? cause.message : String(cause)),
       );
-  }, [datasetId, columnField]);
+  }, [datasetId, columnField, filterQuery]);
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -3346,6 +3333,9 @@ export function FinancingCompletePage() {
           title="No se pudo cargar financiamiento"
           description={error}
         />
+      )}
+      {summary && (
+        <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />
       )}
       {summary && (
         <DistributionCard
@@ -3529,6 +3519,7 @@ export function FinancingPage() {
     loading: datasetsLoading,
   } = useDatasets("TITULADOS");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [filterQuery, setFilterQuery] = useState("");
   const [cross, setCross] = useState<Cross | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -3542,14 +3533,14 @@ export function FinancingPage() {
     setLoading(true);
     setError(null);
     apiRequest<AnalyticsSummary>(
-      `/analytics/titulados/financing?datasetId=${encodeURIComponent(datasetId)}`,
+      `/analytics/titulados/financing?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`,
     )
       .then(setSummary)
       .catch((cause) =>
         setError(cause instanceof Error ? cause.message : String(cause)),
       )
       .finally(() => setLoading(false));
-  }, [datasetId]);
+  }, [datasetId, filterQuery]);
   async function loadCross() {
     if (!datasetId || rowField === columnField) return;
     setLoading(true);
@@ -3557,7 +3548,7 @@ export function FinancingPage() {
     try {
       setCross(
         await apiRequest<Cross>(
-          `/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}`,
+          `/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
         ),
       );
     } catch (cause) {
@@ -3568,7 +3559,7 @@ export function FinancingPage() {
   }
   useEffect(() => {
     void loadCross();
-  }, [datasetId, rowField, columnField]);
+  }, [datasetId, rowField, columnField, filterQuery]);
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -3591,6 +3582,7 @@ export function FinancingPage() {
         onChange={setDatasetId}
         loading={datasetsLoading}
       />
+      {summary && <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />}
       {error && (
         <StatusPanel
           kind="warning"
@@ -3607,6 +3599,7 @@ export function FinancingPage() {
       )}
       {summary && (
         <>
+          <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />
           <DistributionCard
             title="Fuente de financiamiento estimada para posgrado"
             distribution={
@@ -3700,6 +3693,8 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     domain === "TITULADOS" ? "interes_posgrado" : "tamano_organizacion",
   );
   const [cross, setCross] = useState<Cross | null>(null);
+  const [filterSummary, setFilterSummary] = useState<AnalyticsSummary | null>(null);
+  const [filterQuery, setFilterQuery] = useState("");
   const [includeTotals, setIncludeTotals] = useState(true);
   const [metric, setMetric] = useState<CrossMetric>("count");
   const [colorHeatmap, setColorHeatmap] = useState(false);
@@ -3811,7 +3806,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     try {
       setCross(
         await apiRequest<Cross>(
-          `/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}`,
+          `/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${domain === "TITULADOS" ? filterQuery : ""}`,
         ),
       );
     } catch (cause) {
@@ -3822,7 +3817,13 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
   }
   useEffect(() => {
     void loadCross();
-  }, [datasetId, rowField, columnField]);
+  }, [datasetId, rowField, columnField, filterQuery, domain]);
+  useEffect(() => {
+    if (domain !== "TITULADOS" || !datasetId) { setFilterSummary(null); return; }
+    apiRequest<AnalyticsSummary>(`/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=anio_titulacion,situacion_laboral_actual,sector_trabajo${filterQuery}`)
+      .then(setFilterSummary)
+      .catch(() => setFilterSummary(null));
+  }, [datasetId, domain, filterQuery]);
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -3844,6 +3845,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
         onChange={setDatasetId}
         loading={datasetsLoading}
       />
+      {filterSummary && <FilterToolbar summary={filterSummary} onQueryChange={setFilterQuery} />}
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
         <div className="space-y-5">
           <Card className="rounded-xl border-0 shadow-sm">

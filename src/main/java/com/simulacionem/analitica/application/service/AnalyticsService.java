@@ -23,6 +23,8 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.Locale;
+import java.time.Year;
+import java.text.Normalizer;
 
 @Service
 public class AnalyticsService {
@@ -41,18 +43,27 @@ public class AnalyticsService {
 
     @Transactional(readOnly = true)
     public AnalyticsSummaryDto summary(UUID datasetId, String surveyType, List<String> fields) {
+        return summary(datasetId, surveyType, fields, new TituladosFilter(null, null, List.of(), List.of()));
+    }
+
+    @Transactional(readOnly = true)
+    public AnalyticsSummaryDto summary(UUID datasetId, String surveyType, List<String> fields, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, surveyType);
-        List<SurveyResponseEntity> rows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<SurveyResponseEntity> allRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<SurveyResponseEntity> rows = applyFilter(allRows, filter);
         if (fields == null || fields.isEmpty())
             fields = defaultFields(dataset.getSurveyType());
-        return summarize(dataset, rows, fields);
+        return summarize(dataset, rows, fields, allRows.size(), yearBounds(allRows));
     }
 
     @Transactional(readOnly = true)
     public AnalyticsSummaryDto unemploymentSummary(UUID datasetId) {
+        return unemploymentSummary(datasetId, new TituladosFilter(null, null, List.of(), List.of()));
+    }
+    public AnalyticsSummaryDto unemploymentSummary(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
-        List<SurveyResponseEntity> rows = responses
-                .findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA")
+        List<SurveyResponseEntity> allRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<SurveyResponseEntity> rows = applyFilter(allRows, filter)
                 .stream()
                 .filter(this::isUnemployed)
                 .toList();
@@ -62,9 +73,12 @@ public class AnalyticsService {
 
     @Transactional(readOnly = true)
     public AnalyticsSummaryDto firstEmploymentSummary(UUID datasetId) {
+        return firstEmploymentSummary(datasetId, new TituladosFilter(null, null, List.of(), List.of()));
+    }
+    public AnalyticsSummaryDto firstEmploymentSummary(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
-        List<SurveyResponseEntity> rows = responses
-                .findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA")
+        List<SurveyResponseEntity> allRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<SurveyResponseEntity> rows = applyFilter(allRows, filter)
                 .stream()
                 .filter(this::isFirstEmployment)
                 .toList();
@@ -73,9 +87,12 @@ public class AnalyticsService {
 
     @Transactional(readOnly = true)
     public AnalyticsSummaryDto entrepreneurshipSummary(UUID datasetId) {
+        return entrepreneurshipSummary(datasetId, new TituladosFilter(null, null, List.of(), List.of()));
+    }
+    public AnalyticsSummaryDto entrepreneurshipSummary(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
-        List<SurveyResponseEntity> rows = responses
-                .findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA")
+        List<SurveyResponseEntity> allRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<SurveyResponseEntity> rows = applyFilter(allRows, filter)
                 .stream()
                 .filter(this::isEntrepreneur)
                 .toList();
@@ -87,6 +104,10 @@ public class AnalyticsService {
 
     private AnalyticsSummaryDto summarize(DatasetImportEntity dataset, List<SurveyResponseEntity> rows,
             List<String> fields) {
+        return summarize(dataset, rows, fields, rows.size(), yearBounds(rows));
+    }
+    private AnalyticsSummaryDto summarize(DatasetImportEntity dataset, List<SurveyResponseEntity> rows,
+            List<String> fields, long totalResponses, Integer[] yearBounds) {
         Map<String, CategoryDistributionDto> distributions = new LinkedHashMap<>();
         Map<String, Double> averages = new LinkedHashMap<>();
         Map<String, Double> medians = new LinkedHashMap<>();
@@ -105,9 +126,68 @@ public class AnalyticsService {
                 distributions.put(field, multiCategoryField(field) ? multiDistribution(values) : distribution(values));
             }
         }
-        return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), rows.size(), rows.size(),
+        return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), totalResponses, rows.size(),
                 distributions, averages, medians, standardDeviations,
-                rows.size() < MINIMUM_SAMPLE_SIZE);
+                rows.size() < MINIMUM_SAMPLE_SIZE, yearBounds[0], yearBounds[1]);
+    }
+
+    private List<SurveyResponseEntity> applyFilter(List<SurveyResponseEntity> rows, TituladosFilter filter) {
+        if (filter == null || !filter.active()) return rows;
+        return rows.stream().filter(row -> matchesFilter(row, filter)).toList();
+    }
+
+    private boolean matchesFilter(SurveyResponseEntity row, TituladosFilter filter) {
+        Integer year = validYear(value(row, "anio_titulacion"));
+        if (filter.yearFrom() != null && (year == null || year < filter.yearFrom())) return false;
+        if (filter.yearTo() != null && (year == null || year > filter.yearTo())) return false;
+        if (!filter.laborStatuses().isEmpty()
+                && !filter.laborStatuses().stream().anyMatch(status -> laborCategory(row).equals(normalize(status)))) return false;
+        if (!filter.sectors().isEmpty()
+                && !filter.sectors().stream().anyMatch(sector -> sectorMatches(value(row, "sector_trabajo"), sector))) return false;
+        return true;
+    }
+
+    private String laborCategory(SurveyResponseEntity row) {
+        String status = normalize(value(row, "situacion_laboral_actual"));
+        if (status.isBlank()) return normalize("Sin respuesta");
+        if (status.contains("emprend")) return normalize("Emprendimiento propio");
+        if (status.contains("no trabaja") || status.contains("no trabajo") || status.contains("busqueda")
+                || status.contains("desemple")) return normalize("Actualmente no trabaja");
+        if (status.contains("trabaja en") || status.contains("organizacion"))
+            return normalize("Trabaja en una organización");
+        return status;
+    }
+
+    private boolean sectorMatches(String value, String selected) {
+        String actual = normalize(value);
+        String expected = normalize(selected);
+        if (actual.isBlank()) return false;
+        if (expected.equals("no trabaja")) return actual.contains("no trabaja") || actual.contains("no trabajo");
+        return actual.equals(expected) || actual.contains(expected);
+    }
+
+    private String normalize(String value) {
+        if (value == null) return "";
+        return Normalizer.normalize(value, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
+    }
+
+    private Integer validYear(String raw) {
+        if (raw == null) return null;
+        String text = raw.trim();
+        Integer year = null;
+        if (text.matches("\\d{4}")) {
+            year = Integer.parseInt(text);
+        } else if (text.matches("\\d{4}\\.0+")) {
+            year = Integer.parseInt(text.substring(0, 4));
+        }
+        return year != null && year >= 1990 && year <= Year.now().getValue() ? year : null;
+    }
+
+    private Integer[] yearBounds(List<SurveyResponseEntity> rows) {
+        List<Integer> years = rows.stream().map(row -> validYear(value(row, "anio_titulacion")))
+                .filter(java.util.Objects::nonNull).sorted().toList();
+        return years.isEmpty() ? new Integer[] { null, null } : new Integer[] { years.get(0), years.get(years.size() - 1) };
     }
 
     private boolean isUnemployed(SurveyResponseEntity response) {
@@ -134,8 +214,12 @@ public class AnalyticsService {
 
     @Transactional(readOnly = true)
     public EmploymentProfileDto employmentProfile(UUID datasetId) {
+        return employmentProfile(datasetId, new TituladosFilter(null, null, List.of(), List.of()));
+    }
+    public EmploymentProfileDto employmentProfile(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
-        List<SurveyResponseEntity> validRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<SurveyResponseEntity> validRows = applyFilter(
+                responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA"), filter);
         List<EmploymentProfileDto.CohortPointDto> points = validRows
                 .stream()
                 .map(response -> {
@@ -152,9 +236,13 @@ public class AnalyticsService {
 
     @Transactional(readOnly = true)
     public List<CompetenceAverageDto> competenceGaps(UUID datasetId) {
+        return competenceGaps(datasetId, new TituladosFilter(null, null, List.of(), List.of()));
+    }
+    public List<CompetenceAverageDto> competenceGaps(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, null);
         Map<String, List<CompetenceRatingEntity>> grouped = ratings.findByResponse_Dataset_Id(dataset.getId()).stream()
                 .filter(r -> !r.isNotObserved() && r.getNumericValue() != null)
+                .filter(r -> !"TITULADOS".equals(dataset.getSurveyType()) || matchesFilter(r.getResponse(), filter))
                 .collect(Collectors.groupingBy(r -> r.getCompetence().getCode(), LinkedHashMap::new,
                         Collectors.toList()));
         List<CompetenceAverageDto> result = new ArrayList<>();
@@ -176,11 +264,16 @@ public class AnalyticsService {
 
     @Transactional(readOnly = true)
     public CrossTabulationDto cross(UUID datasetId, String rowField, String columnField) {
+        return cross(datasetId, rowField, columnField, new TituladosFilter(null, null, List.of(), List.of()));
+    }
+
+    public CrossTabulationDto cross(UUID datasetId, String rowField, String columnField, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, null);
         if (rowField == null || rowField.isBlank() || columnField == null || columnField.isBlank()) {
             throw new IllegalArgumentException("rowField y columnField son obligatorios");
         }
         List<SurveyResponseEntity> valid = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        if ("TITULADOS".equals(dataset.getSurveyType())) valid = applyFilter(valid, filter);
         List<SurveyResponseEntity> usable = valid.stream()
                 .filter(r -> value(r, rowField) != null && value(r, columnField) != null).toList();
         List<String> rowCategories = usable.stream().map(r -> value(r, rowField)).distinct().sorted().toList();
