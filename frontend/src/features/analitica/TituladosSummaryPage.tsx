@@ -25,7 +25,7 @@ import { navigate } from "@/app/navigation";
 const fields =
   "situacion_laboral_actual,interes_posgrado,area_posgrado_interes,sector_trabajo,anio_titulacion,es_primer_empleo";
 
-export function TituladosSummaryPage() {
+export function TituladosSummaryPage({ printAll = false }: { printAll?: boolean } = {}) {
   const { activeIds, setActiveDataset } = useDatasetContext();
   const datasetId = activeIds.TITULADOS;
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
@@ -82,7 +82,7 @@ export function TituladosSummaryPage() {
   const interes = posgrado ? firstCount(posgrado, ["Sí", "SI", "Si"]) : null;
   const medianYear = summary?.numericMedians.anio_titulacion;
   const yearsSince = medianYear == null ? null : new Date().getFullYear() - medianYear;
-  const yearRange = graduationYearRange(summary?.distributions.anio_titulacion, summary?.yearMin, summary?.yearMax, profile?.cohortPoints);
+  const yearRange = graduationYearRange(summary?.distributions.anio_titulacion, undefined, undefined, profile?.cohortPoints);
   const firstEmployment = summary?.distributions.es_primer_empleo;
   const firstEmploymentYes = firstEmployment ? booleanCount(firstEmployment, true) : null;
   const weakest = competences.length
@@ -103,7 +103,7 @@ export function TituladosSummaryPage() {
           </p>
         </div>
       </div>
-      {summary && (
+      {summary && !printAll && (
         <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />
       )}
       {loading && (

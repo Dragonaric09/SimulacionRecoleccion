@@ -32,7 +32,7 @@ export function EducationProfilePage({ printAll = false }: { printAll?: boolean 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} />
-      {summary && <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />}
+      {summary && !printAll && <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />}
       {loading && <StatusPanel kind="loading" title="Cargando formación" description="Consultando las respuestas académicas del dataset." />}
       {error && <StatusPanel kind="warning" title="No se pudo cargar formación" description={error} />}
       {!loading && !error && !summary && <StatusPanel kind="info" title="Sin dataset de titulados" description="Importa un CSV de titulados desde Cargar datos para ver esta sección." />}

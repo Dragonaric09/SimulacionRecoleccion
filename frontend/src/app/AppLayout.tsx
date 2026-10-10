@@ -129,7 +129,7 @@ function AppLayoutContent({ route }: Props) {
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
             {route.section !== 'general' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
               <section className="print-only print-cover mb-6" aria-label="Portada del informe">
-                <p className="caption-bold uppercase tracking-wider text-ink-600">SimulacionEM · Informe analítico</p>
+                <p className="caption-bold uppercase tracking-wider text-ink-600">SIMULACIONEM · INFORME ANALÍTICO</p>
                 <h1 className="headline-page">{route.section === 'titulados' ? 'Titulados' : 'Empleadores'}</h1>
                 <p>Informe completo de análisis</p>
                 <p>Fecha de generación: {new Intl.DateTimeFormat('es-BO', { dateStyle: 'long', timeZone: 'America/La_Paz' }).format(new Date())}</p>

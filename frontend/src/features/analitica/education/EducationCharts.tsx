@@ -35,10 +35,15 @@ export function FormationActiveCard({ yes, total, title = "Formación complement
 function orderedDistributionEntries(distribution: CategoryDistribution | undefined, levels?: string[]) {
   const counts = distribution?.counts ?? {};
   if (!levels) return Object.entries(counts).sort(([, left], [, right]) => right - left);
-  return levels.map((level) => {
+  const ordered: [string, number][] = levels.map((level) => {
     const key = Object.keys(counts).find((candidate) => normalizeEducationLabel(candidate) === normalizeEducationLabel(level));
     return [key ?? level, key ? counts[key] : 0] as [string, number];
   });
+  const recognized = new Set(ordered.map(([label]) => normalizeEducationLabel(label)));
+  const unclassified = Object.entries(counts)
+    .filter(([label]) => !recognized.has(normalizeEducationLabel(label)))
+    .reduce((sum, [, count]) => sum + count, 0);
+  return unclassified ? [...ordered, ["Sin clasificar", unclassified] as [string, number]] : ordered;
 }
 
 function normalizeEducationLabel(value: string) {

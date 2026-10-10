@@ -181,7 +181,7 @@ export function EmploymentProfilePage({ printAll = false }: { printAll?: boolean
         onChange={setDatasetId}
         loading={datasetsLoading}
       />
-      {summary && (
+      {summary && !printAll && (
         <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />
       )}
       {loading && (
@@ -1507,7 +1507,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
     return (
       <div className="mx-auto w-full max-w-7xl space-y-6">
         <PageHeading title="Brechas de competencias" description="Competencias, satisfacción, pertinencia y malla curricular." tone={tone} />
-        {satisfaction && <FilterToolbar summary={satisfaction} onQueryChange={setFilterQuery} />}
+        {satisfaction && !printAll && <FilterToolbar summary={satisfaction} onQueryChange={setFilterQuery} />}
         {(["hard", "soft"] as const).map((key) => {
           const group = tabGroup(key);
           const groupItems = items.filter((item) => item.group === group).sort((a, b) => b.average - a.average);
@@ -1585,7 +1585,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
         onChange={setDatasetId}
         loading={datasetsLoading}
       />
-      {domain === "TITULADOS" && (satisfaction || curriculum) && (
+      {domain === "TITULADOS" && !printAll && (satisfaction || curriculum) && (
         <FilterToolbar
           summary={(satisfaction ?? curriculum)!}
           onQueryChange={setFilterQuery}

@@ -19,7 +19,7 @@ type ChiResult = {
   rechazaIndependencia: boolean;
 };
 
-export function FinancingCompletePage() {
+export function FinancingCompletePage({ printAll = false }: { printAll?: boolean } = {}) {
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets("TITULADOS");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
@@ -54,9 +54,9 @@ export function FinancingCompletePage() {
       <PageHeading title="Financiamiento" description="Fuente estimada para financiar estudios de posgrado y su relación con el nivel de interés." tone="titulados" />
       <DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} />
       {error && <StatusPanel kind="warning" title="No se pudo cargar financiamiento" description={error} />}
-      {summary && <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />}
+      {summary && !printAll && <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />}
       {summary && <DistributionCard title="Fuente de financiamiento estimada para posgrado" distribution={summary.distributions.financiamiento_posgrado_estimado ?? { validCount: 0, counts: {}, percentages: {} }} tone="titulados" />}
-      <Card className="rounded-xl border-0 shadow-sm"><CardContent className="flex flex-wrap items-center gap-4 py-4">
+      <Card className={`${printAll ? "print-hide " : ""}rounded-xl border-0 shadow-sm`}><CardContent className="flex flex-wrap items-center gap-4 py-4">
         <span className="label-default text-ink-600">FILAS: <strong className="text-ink-900">Fuente de financiamiento estimada</strong></span>
         <label className="label-default flex items-center gap-2">COLUMNAS:
           <Select value={columnField} onValueChange={setColumnField}><SelectTrigger className="w-56"><SelectValue /></SelectTrigger><SelectContent>{financingColumns.map((field) => <SelectItem key={field.key} value={field.key}>{field.label}</SelectItem>)}</SelectContent></Select>
@@ -64,7 +64,7 @@ export function FinancingCompletePage() {
         <label className="flex items-center gap-2 text-sm text-ink-600"><Checkbox checked={includeTotals} onCheckedChange={(checked) => setIncludeTotals(checked === true)} /> Totales</label>
         <label className="flex items-center gap-2 text-sm text-ink-600"><Checkbox checked={colorHeatmap} onCheckedChange={(checked) => setColorHeatmap(checked === true)} /> Aplicar mapa de calor</label>
       </CardContent></Card>
-      {cross && <><CrossTable cross={cross} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric="count" /><div className="w-full"><ChiSquareCard result={chi} cross={cross} /></div></>}
+      {cross && <><CrossTable cross={cross} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric="count" rowLabel="Fuente de financiamiento estimada" columnLabel={financingColumns.find((field) => field.key === columnField)?.label ?? "Nivel de posgrado de interés"} /><div className="w-full"><ChiSquareCard result={chi} cross={cross} /></div></>}
     </div>
   );
 }

@@ -27,10 +27,10 @@ export function TituladosPage({ route }: { route: NavigationItem }) {
 export function TituladosPrintBundle() {
   return (
     <>
-      <section className="print-page"><TituladosSummaryPage /></section>
+      <section className="print-page"><TituladosSummaryPage printAll /></section>
       <section className="print-page"><EmploymentProfilePage printAll /></section>
       <section className="print-page"><EducationProfilePage printAll /></section>
-      <section className="print-page"><FinancingCompletePage /></section>
+      <section className="print-page"><FinancingCompletePage printAll /></section>
       <section className="print-page"><CompetencePage domain="TITULADOS" printAll /></section>
     </>
   )

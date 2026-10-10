@@ -386,7 +386,22 @@ public class AnalyticsService {
                     : "Consolidado";
         }
         Object value = response.getNormalizedPayload().get(field);
-        return value == null ? null : String.valueOf(value);
+        if (value == null) return null;
+        String text = String.valueOf(value);
+        if ("formacion_complementaria_nivel".equals(field)) return canonicalEducationLevel(text);
+        return text;
+    }
+
+    private String canonicalEducationLevel(String value) {
+        String normalized = normalize(value).replace(" ", "");
+        return switch (normalized) {
+            case "diplomado" -> "Diplomado";
+            case "especialidad" -> "Especialidad";
+            case "maestria" -> "Maestría";
+            case "doctorado" -> "Doctorado";
+            case "posdoctorado" -> "Posdoctorado";
+            default -> value.trim();
+        };
     }
 
     private CategoryDistributionDto distribution(List<String> values) {
