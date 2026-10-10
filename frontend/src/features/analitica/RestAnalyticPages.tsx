@@ -2511,9 +2511,9 @@ function CurriculumCard({
   tone: "blue" | "orange" | "teal";
 }) {
   const distribution = summary.distributions[field];
-  const entries = Object.entries(distribution?.counts ?? {})
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5);
+  const entries = Object.entries(distribution?.counts ?? {}).sort(
+    ([, a], [, b]) => b - a,
+  );
   const colors = { blue: "#2878bd", orange: "#ed552f", teal: "#18a39a" };
   const total = distribution?.validCount ?? 0;
   return (
@@ -2583,19 +2583,19 @@ function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | null }) {
               Satisfacción global y pertinencia con el mercado laboral
             </CardTitle>
             <CardDescription>
-              Distribución de respuestas en escala Likert de 4 niveles de
-              acuerdo (n = {summary.validResponses})
+              Distribución de respuestas en su escala original (n = {summary.validResponses})
             </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <LikertLegend />
+        {isThreeLevelSatisfaction(satisfaction) ? <SatisfactionLegend /> : <LikertLegend />}
         <LikertStatement
           number="1."
           title="Satisfacción global con la formación recibida en la carrera"
           distribution={satisfaction}
           showSummary={false}
+          scale={isThreeLevelSatisfaction(satisfaction) ? "satisfaction" : "agreement"}
         />
         <LikertStatement
           number="2."
@@ -2636,14 +2636,18 @@ function LikertStatement({
   title,
   distribution,
   showSummary = true,
+  scale = "agreement",
 }: {
   number: string;
   title: string;
   distribution?: CategoryDistribution;
   showSummary?: boolean;
+  scale?: "agreement" | "satisfaction";
 }) {
   const entries = orderedLikertEntries(distribution);
-  const colors = ["#ed552f", "#f3a487", "#7db1dd", "#1f6fb5"];
+  const colors = scale === "satisfaction"
+    ? ["#ed552f", "#f3a487", "#1f6fb5"]
+    : ["#ed552f", "#f3a487", "#7db1dd", "#1f6fb5"];
   const total = distribution?.validCount ?? 0;
   const favorable = favorableCount(distribution);
   return (
@@ -2680,14 +2684,20 @@ function LikertStatement({
               </div>
             ))}
           </div>
-          <div className="flex justify-between px-1 text-xs text-ink-600">
-            <span>
-              Desacuerdo (niveles 1 + 2): {total - favorable} ({formatPercentage(total - favorable, total)})
-            </span>
-            <span>
-              De acuerdo + Totalmente de acuerdo: {favorable} ({favorablePercentage(distribution)}%)
-            </span>
-          </div>
+          {scale === "satisfaction" ? (
+            <div className="flex flex-wrap gap-x-5 gap-y-1 px-1 text-xs text-ink-600">
+              {entries.map(([label, count]) => (
+                <span key={label}>
+                  {label}: {count} ({formatPercentage(count, total)})
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="flex justify-between px-1 text-xs text-ink-600">
+              <span>Desacuerdo (niveles 1 + 2): {total - favorable} ({formatPercentage(total - favorable, total)})</span>
+              <span>De acuerdo + Totalmente de acuerdo: {favorable} ({favorablePercentage(distribution)}%)</span>
+            </div>
+          )}
         </>
       ) : (
         <Empty className="py-6">
@@ -2739,6 +2749,9 @@ function likertLevel(label: string) {
   if (normalized.includes("acuerdo")) {
     return normalized.includes("totalmente") || normalized.includes("muy") ? 4 : 3;
   }
+  if (normalized === "insatisfecho") return 1;
+  if (normalized === "algo satisfecho") return 2;
+  if (normalized === "satisfecho") return 3;
   return 0;
 }
 function favorableCount(distribution?: CategoryDistribution) {
@@ -2747,7 +2760,8 @@ function favorableCount(distribution?: CategoryDistribution) {
   return entries
     .filter(([label], index) => {
       const level = likertLevel(label);
-      return hasRecognizedLevel ? level === 3 || level === 4 : index >= 2;
+      const satisfactionScale = entries.some(([label]) => label.toLocaleLowerCase("es-BO").includes("satisfecho"));
+      return satisfactionScale ? level === 3 : hasRecognizedLevel ? level === 3 || level === 4 : index >= 2;
     })
     .reduce((sum, [, count]) => sum + count, 0);
 }
@@ -3010,6 +3024,21 @@ function RadarPrintSvg({ items }: { items: Competence[] }) {
       <polygon points={polygon} fill="#1f6fb5" fillOpacity="0.24" stroke="#1f6fb5" strokeWidth="2.25" />
       {items.map((item, index) => { const p = point(index, item.average); return <circle key={`${item.code}-point`} cx={p.x} cy={p.y} r="3.5" fill="#1f6fb5" />; })}
     </svg>
+  );
+}
+
+function isThreeLevelSatisfaction(distribution?: CategoryDistribution) {
+  const labels = Object.keys(distribution?.counts ?? {}).map((label) => label.toLocaleLowerCase("es-BO"));
+  return labels.includes("insatisfecho") && labels.includes("algo satisfecho") && labels.includes("satisfecho");
+}
+
+function SatisfactionLegend() {
+  return (
+    <div className="flex flex-wrap gap-x-5 gap-y-2 rounded-lg bg-surface-container-low px-3 py-2.5 text-xs font-medium text-ink-700">
+      <span><i className="mr-1.5 inline-block size-3 rounded bg-[#ed552f]" />Insatisfecho</span>
+      <span><i className="mr-1.5 inline-block size-3 rounded bg-[#f3a487]" />Algo satisfecho</span>
+      <span><i className="mr-1.5 inline-block size-3 rounded bg-[#1f6fb5]" />Satisfecho</span>
+    </div>
   );
 }
 

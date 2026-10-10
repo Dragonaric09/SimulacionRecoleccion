@@ -78,9 +78,8 @@ public class AnalyticsService {
     public AnalyticsSummaryDto firstEmploymentSummary(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
         List<SurveyResponseEntity> allRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
-        List<SurveyResponseEntity> rows = applyFilter(allRows, filter)
-                .stream()
-                .filter(this::isFirstEmployment)
+        List<SurveyResponseEntity> rows = applyFilter(allRows, filter).stream()
+                .filter(this::isFirstEmploymentBranch)
                 .toList();
         return summarize(dataset, rows, List.of("tiempo_primer_empleo"));
     }
@@ -123,7 +122,7 @@ public class AnalyticsService {
                     standardDeviations.put(field, sampleStandardDeviation(numbers));
                 }
             } else {
-                distributions.put(field, multiCategoryField(field) ? multiDistribution(values) : distribution(values));
+                distributions.put(field, multiCategoryField(field) ? multiDistribution(field, values) : distribution(values));
             }
         }
         return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), totalResponses, rows.size(),
@@ -132,6 +131,12 @@ public class AnalyticsService {
     }
 
     private List<SurveyResponseEntity> rowsForField(List<SurveyResponseEntity> rows, String field) {
+        if (organizationWorkField(field)) {
+            return rows.stream().filter(this::worksInOrganization).toList();
+        }
+        if (field.equals("es_primer_empleo")) {
+            return rows.stream().filter(this::isOccupied).toList();
+        }
         if (List.of("formacion_complementaria_nivel", "institucion_formacion_complementaria",
                 "financiamiento_posgrado_cursado").contains(field)) {
             return rows.stream()
@@ -145,6 +150,31 @@ public class AnalyticsService {
                     .toList();
         }
         return rows;
+    }
+
+    private boolean organizationWorkField(String field) {
+        return List.of("sector_trabajo", "rubro_trabajo_actual", "remuneracion_rango",
+                "area_trabajo", "cargo_actual", "pertinencia_trabajo_formacion",
+                "departamento_trabajo", "medio_obtencion_empleo", "antiguedad_trabajo")
+                .contains(field);
+    }
+
+    private boolean worksInOrganization(SurveyResponseEntity response) {
+        String status = normalize(value(response, "situacion_laboral_actual"));
+        return status.contains("organizacion") || status.contains("empresa");
+    }
+
+    private boolean isOccupied(SurveyResponseEntity response) {
+        return worksInOrganization(response) || isEntrepreneur(response);
+    }
+
+    private boolean crossFieldBranchAllows(SurveyResponseEntity response, String field) {
+        if (organizationWorkField(field)) return worksInOrganization(response);
+        if (List.of("nivel_posgrado_interes", "area_posgrado_interes", "modalidad_posgrado",
+                "institucion_posgrado_interes", "financiamiento_posgrado_estimado").contains(field)) {
+            return affirmative(value(response, "interes_posgrado"));
+        }
+        return true;
     }
 
     private boolean affirmative(String raw) {
@@ -237,6 +267,12 @@ public class AnalyticsService {
         return normalized.equals("true") || normalized.equals("si") || normalized.equals("sí");
     }
 
+    /** Sección 10: S9=Sí para ocupados, o S8=SI para desempleados con trabajo previo. */
+    private boolean isFirstEmploymentBranch(SurveyResponseEntity response) {
+        if (isOccupied(response)) return isFirstEmployment(response);
+        return isUnemployed(response) && affirmative(value(response, "experiencia_laboral_previa"));
+    }
+
     private boolean isEntrepreneur(SurveyResponseEntity response) {
         String status = value(response, "situacion_laboral_actual");
         return status != null && status.toLowerCase(Locale.ROOT).contains("emprend");
@@ -306,6 +342,7 @@ public class AnalyticsService {
         List<SurveyResponseEntity> valid = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
         if ("TITULADOS".equals(dataset.getSurveyType())) valid = applyFilter(valid, filter);
         List<SurveyResponseEntity> usable = valid.stream()
+                .filter(r -> crossFieldBranchAllows(r, rowField) && crossFieldBranchAllows(r, columnField))
                 .filter(r -> value(r, rowField) != null && value(r, columnField) != null).toList();
         List<String> rowCategories = usable.stream().map(r -> value(r, rowField)).distinct().sorted().toList();
         List<String> columnCategories = usable.stream().map(r -> value(r, columnField)).distinct().sorted().toList();
@@ -360,15 +397,44 @@ public class AnalyticsService {
         return new CategoryDistributionDto(values.size(), counts, percentages);
     }
 
-    private CategoryDistributionDto multiDistribution(List<String> values) {
+    private CategoryDistributionDto multiDistribution(String field, List<String> values) {
         List<String> options = values.stream()
                 .flatMap(value -> splitMultiValue(value).stream())
                 .map(String::trim).filter(value -> !value.isBlank()).toList();
         Map<String, Long> counts = options.stream()
                 .collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
+        List<String> catalog = multiOptionCatalog(field);
+        catalog.forEach(option -> counts.putIfAbsent(option, 0L));
         Map<String, Double> percentages = new LinkedHashMap<>();
         counts.forEach((key, count) -> percentages.put(key, round(count * 100.0 / values.size())));
         return new CategoryDistributionDto(values.size(), counts, percentages);
+    }
+
+    private List<String> multiOptionCatalog(String field) {
+        return switch (field) {
+            case "aspectos_utiles" -> List.of(
+                    "La aplicación práctica de conceptos teóricos en proyectos reales.",
+                    "La oportunidad de realizar pasantías o prácticas profesionales.",
+                    "La distribución de los horarios de clases.",
+                    "El desarrollo de habilidades analíticas y de resolución de problemas.",
+                    "La colaboración de equipos multidisciplinarios para resolver problemas complejos.",
+                    "La enseñanza de herramientas y software específico de la industria.");
+            case "aspectos_mejorables" -> List.of(
+                    "Mayor integración de la teoría con aplicaciones prácticas en el plan de estudios.",
+                    "Mayor relacionamiento del estudiante con las empresas por medio de práctica profesionales.",
+                    "La distribución de horarios de clases. (Horario para trabajadores, módulos virtuales, etc)",
+                    "Actualización constante del plan de estudios para atender tendencias actuales.",
+                    "Incremento de actividades extracurriculares (Investigación, servicio social, etc)",
+                    "Ofrecimiento de más opciones de especialización.");
+            case "asignaturas_ventaja" -> List.of("Introducción", "Base de Datos", "Inteligencia Artificial",
+                    "Redes de Computadora", "Electivas", "T.I.S.", "Básicas (Física, Calculo, Algebras)",
+                    "Planificación de Proyectos y Gestión", "Tecnologia Redes Avanzadas");
+            case "asignaturas_poco_utiles" -> List.of("Básicas (Física, Calculo, Algebras)",
+                    "Aplic. Interactivas para Televisión Digital", "Telefonía IP", "Web Semánticas", "Graficación por Computadora",
+                    "Robótica", "Taller de Programación en Bajo Nivel", "Teoría de Autómatas y Leng. Formales",
+                    "Programación Funcional", "Teoría de Grafos", "Contabilidad Básica");
+            default -> List.of();
+        };
     }
 
     private List<String> splitMultiValue(String value) {

@@ -82,7 +82,33 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
             values.remove("experiencia_laboral_previa");
             values.remove("anios_desempleo");
         }
+        applyBranchGuards(values);
         return values;
+    }
+
+    private void applyBranchGuards(Map<String, Object> values) {
+        String status = String.valueOf(values.getOrDefault("situacion_laboral_actual", "")).toLowerCase();
+        boolean organization = status.contains("organización") || status.contains("organizacion") || status.contains("empresa");
+        if (!organization) {
+            List.of("sector_trabajo", "rubro_trabajo_actual", "remuneracion_rango", "area_trabajo",
+                    "cargo_actual", "pertinencia_trabajo_formacion", "departamento_trabajo",
+                    "medio_obtencion_empleo", "antiguedad_trabajo").forEach(values::remove);
+        }
+
+        if (!Boolean.TRUE.equals(values.get("interes_posgrado"))) {
+            List.of("nivel_posgrado_interes", "area_posgrado_interes", "modalidad_posgrado",
+                    "institucion_posgrado_interes", "financiamiento_posgrado_estimado").forEach(values::remove);
+        }
+
+        boolean unemployed = status.contains("no trabaja") || status.contains("no trabajo")
+                || status.contains("desemple") || status.contains("busqueda");
+        boolean firstEmployment = Boolean.TRUE.equals(values.get("es_primer_empleo"));
+        boolean previousWork = Boolean.TRUE.equals(values.get("experiencia_laboral_previa"));
+        if (unemployed) values.remove("es_primer_empleo");
+        if (!(firstEmployment || (unemployed && previousWork))) {
+            values.remove("tiempo_primer_empleo");
+            values.remove("cantidad_empleos");
+        }
     }
 
     private void inferLaborStatusWhenMissing(Map<String, Object> values) {
