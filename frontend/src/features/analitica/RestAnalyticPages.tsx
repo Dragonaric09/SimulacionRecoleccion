@@ -708,8 +708,8 @@ function CohortScatterCard({
   };
   const renderScatterChart = (fixed = false) => (
     <ScatterChart
-      {...(fixed ? { width: 760, height: 286 } : {})}
-      margin={{ top: 18, right: 18, bottom: 30, left: 18 }}
+      {...(fixed ? { width: 960, height: 320 } : {})}
+      margin={{ top: 18, right: 28, bottom: 34, left: 52 }}
     >
       <CartesianGrid stroke="#dbe4ee" strokeDasharray="2 4" />
       <XAxis
@@ -1144,7 +1144,7 @@ function EmploymentDonutCard({
               <span className="tabular-nums whitespace-nowrap font-semibold">
                 {count}{" "}
                 <span className="caption-meta text-ink-600">
-                  ({distribution?.percentages[label] ?? 0}%)
+                  ({formatPercentValue(distribution?.percentages[label] ?? 0)})
                 </span>
               </span>
             </div>
@@ -1261,7 +1261,7 @@ function GenderDistributionCard({
       <CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600">
         <span>
           {entries
-            .map(([label]) => `${label}: ${distribution?.percentages[label]}%`)
+            .map(([label]) => `${label}: ${formatPercentValue(distribution?.percentages[label] ?? 0)}`)
             .join(" · ")}
         </span>
         <strong className="text-ink-900">n = {total}</strong>
