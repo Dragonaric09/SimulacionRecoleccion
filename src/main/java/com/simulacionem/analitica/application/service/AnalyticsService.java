@@ -153,7 +153,7 @@ public class AnalyticsService {
     }
 
     private boolean organizationWorkField(String field) {
-        return List.of("sector_trabajo", "rubro_trabajo_actual", "remuneracion_rango",
+        return List.of("sector_trabajo", "sector_trabajo_actual", "rubro_trabajo_actual", "remuneracion_rango",
                 "area_trabajo", "cargo_actual", "pertinencia_trabajo_formacion",
                 "departamento_trabajo", "medio_obtencion_empleo", "antiguedad_trabajo")
                 .contains(field);

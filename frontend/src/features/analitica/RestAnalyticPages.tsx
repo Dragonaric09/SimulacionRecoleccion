@@ -154,7 +154,7 @@ export function EmploymentProfilePage({ printAll = false }: { printAll?: boolean
       .finally(() => setLoading(false));
   }, [datasetId, filterQuery]);
   const labor = summary?.distributions.situacion_laboral_actual;
-  const sectors = summary?.distributions.sector_trabajo;
+  const sectors = summary?.distributions.sector_trabajo_actual ?? summary?.distributions.sector_trabajo;
   const unemployed = labor
     ? countMatching(labor, ["no trabaja", "no trabajo", "búsqueda", "desemple"])
     : null;
@@ -288,7 +288,7 @@ function EmploymentTabContent({
         />
         <ProfileDistributionCard
           title="Sector de inserción laboral"
-          description="Distribución sectorial de las personas tituladas ocupadas"
+          description="Sector del trabajo actual de las personas tituladas ocupadas"
           distribution={sectors}
         />
       </div>

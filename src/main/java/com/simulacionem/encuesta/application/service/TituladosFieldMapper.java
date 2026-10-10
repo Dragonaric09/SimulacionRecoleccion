@@ -106,7 +106,7 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
         String status = String.valueOf(values.getOrDefault("situacion_laboral_actual", "")).toLowerCase();
         boolean organization = status.contains("organización") || status.contains("organizacion") || status.contains("empresa");
         if (!organization) {
-            List.of("sector_trabajo", "rubro_trabajo_actual", "remuneracion_rango", "area_trabajo",
+            List.of("sector_trabajo", "sector_trabajo_actual", "rubro_trabajo_actual", "remuneracion_rango", "area_trabajo",
                     "cargo_actual", "pertinencia_trabajo_formacion", "departamento_trabajo",
                     "medio_obtencion_empleo", "antiguedad_trabajo").forEach(values::remove);
         }

@@ -2,6 +2,7 @@ package com.simulacionem.analitica;
 
 import com.simulacionem.analitica.application.dto.CompetenceAverageDto;
 import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
+import com.simulacionem.analitica.application.dto.CategoryDistributionDto;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.SurveyResponseEntity;
 import com.simulacionem.analitica.application.service.AnalyticsService;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.CompetenceCatalogEntity;
@@ -82,5 +83,31 @@ class AnalyticsServiceStatisticsTest {
             assertThat(item.average()).isEqualTo(4.0);
             assertThat(item.standardDeviation()).isNull();
         });
+    }
+
+    @Test
+    void normalizaRangosDeEdadYConservaLaBaseCompleta() {
+        UUID datasetId = UUID.randomUUID();
+        DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getId()).thenReturn(datasetId);
+        List<SurveyResponseEntity> rows = List.of(
+                new SurveyResponseEntity(dataset, "TITULADOS", 1, "VALIDA", Map.of("edad_rango", "19 - 22 años")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 2, "VALIDA", Map.of("edad_rango", "23 - 26 años")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 3, "VALIDA", Map.of("edad_rango", "35 años o más")));
+        DatasetImportRepository datasets = mock(DatasetImportRepository.class);
+        SurveyResponseRepository responses = mock(SurveyResponseRepository.class);
+        CompetenceRatingRepository ratings = mock(CompetenceRatingRepository.class);
+        when(datasets.findById(datasetId)).thenReturn(Optional.of(dataset));
+        when(responses.findByDataset_IdAndResponseStatus(datasetId, "VALIDA")).thenReturn(rows);
+
+        CategoryDistributionDto distribution = new AnalyticsService(datasets, responses, ratings)
+                .summary(datasetId, "TITULADOS", List.of("edad_rango"))
+                .distributions().get("edad_rango");
+
+        assertThat(distribution.counts()).containsEntry("19–22", 1L)
+                .containsEntry("23–26", 1L)
+                .containsEntry("35+", 1L);
+        assertThat(distribution.counts().values().stream().mapToLong(Long::longValue).sum())
+                .isEqualTo(distribution.validCount());
     }
 }
