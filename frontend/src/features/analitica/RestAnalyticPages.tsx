@@ -1549,7 +1549,6 @@ function EducationOpinionPanel({ summary }: { summary: AnalyticsSummary }) {
           distribution={opinion}
           showSummary={false}
         />
-        <LikertLegend />
         <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs text-ink-600">
           <span>Escala Likert de 4 niveles balanceada</span>
           <span>Base total de la muestra: n = {opinion?.validCount ?? 0}</span>
