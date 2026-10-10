@@ -276,10 +276,7 @@ function EmploymentTabContent({
           points={profile?.cohortPoints ?? []}
           className="lg:col-span-7"
         />
-        <SenioritySegmentationCard
-          points={profile?.cohortPoints ?? []}
-          className="lg:col-span-5"
-        />
+        <SenioritySegmentationCard points={profile?.cohortPoints ?? []} className="lg:col-span-5" />
       </div>
       <div className="grid items-start gap-5 lg:grid-cols-2">
         <EmploymentDonutCard
@@ -709,7 +706,7 @@ function CohortScatterCard({
   const renderScatterChart = (fixed = false) => (
     <ScatterChart
       {...(fixed ? { width: 960, height: 320 } : {})}
-      margin={{ top: 18, right: 28, bottom: 34, left: 52 }}
+      margin={{ top: 18, right: fixed ? 28 : 18, bottom: fixed ? 34 : 30, left: fixed ? 52 : 18 }}
     >
       <CartesianGrid stroke="#dbe4ee" strokeDasharray="2 4" />
       <XAxis
@@ -727,7 +724,7 @@ function CohortScatterCard({
         dataKey="professionalYears"
         domain={[0, Math.max(1, Math.ceil(Math.max(...values, 0)))]}
         tick={{ fill: "#64748b", fontSize: 10 }}
-        width={28}
+        width={fixed ? 44 : 28}
         allowDecimals={false}
         label={{ value: "Años de vida profesional", angle: -90, position: "insideLeft", fill: "#475569", fontSize: 11 }}
       />
@@ -736,7 +733,7 @@ function CohortScatterCard({
           y={mean}
           stroke="#7c3aed"
           strokeDasharray="5 4"
-          label={{ value: `Media = mediana: ${mean.toFixed(1)} años`, fill: "#6d28d9", fontSize: 11, position: "insideTopLeft" }}
+          label={{ value: `Media = mediana: ${formatDecimal(mean, 1)} años`, fill: "#6d28d9", fontSize: 11, position: "insideTopLeft" }}
         />
       ) : (
         <>
@@ -744,13 +741,13 @@ function CohortScatterCard({
             y={mean}
             stroke="#ef4444"
             strokeDasharray="5 4"
-            label={{ value: `Media ${mean.toFixed(1)} años`, fill: "#ef4444", fontSize: 11, position: "insideTopLeft" }}
+            label={{ value: `Media ${formatDecimal(mean, 1)} años`, fill: "#ef4444", fontSize: 11, position: "insideTopLeft" }}
           />
           <ReferenceLine
             y={median}
             stroke="#14a39a"
             strokeDasharray="3 4"
-            label={{ value: `Mediana ${median.toFixed(1)} años`, fill: "#0f766e", fontSize: 11, position: "insideBottomRight" }}
+            label={{ value: `Mediana ${formatDecimal(median, 1)} años`, fill: "#0f766e", fontSize: 11, position: "insideBottomRight" }}
           />
         </>
       )}
@@ -812,7 +809,7 @@ function CohortScatterCard({
                 Titulado individual
               </span>
               {outlierPoints.length > 0 && <span><i className="mr-1 inline-block size-2 rounded-full bg-red-600" />Valor atípico</span>}
-              {sameReferenceValue ? <span><i className="mr-1 inline-block w-4 border-t-2 border-dashed border-violet-600" />Media = mediana: {mean.toFixed(1)} años</span> : <>
+              {sameReferenceValue ? <span><i className="mr-1 inline-block w-4 border-t-2 border-dashed border-violet-600" />Media = mediana: {formatDecimal(mean, 1)} años</span> : <>
                 <span><i className="mr-1 inline-block w-4 border-t-2 border-dashed border-red-500" />Media</span>
                 <span><i className="mr-1 inline-block w-4 border-t-2 border-dashed border-teal-600" />Mediana</span>
               </>}
@@ -1139,7 +1136,7 @@ function EmploymentDonutCard({
                   className="size-3 shrink-0 rounded-sm"
                   style={{ backgroundColor: laborColor(label) }}
                 />
-                <span className="break-words">{label}</span>
+                <span className="break-words">{displayLaborLabel(label)}</span>
               </div>
               <span className="tabular-nums whitespace-nowrap font-semibold">
                 {count}{" "}
@@ -2018,6 +2015,13 @@ export function SimulationPage() {
       )}
     </div>
   );
+}
+
+function displayLaborLabel(label: string) {
+  const normalized = label.toLocaleLowerCase("es-BO");
+  return normalized.includes("no trabaja") || normalized.includes("no trabajo") || normalized.includes("busqueda") || normalized.includes("desemple")
+    ? "Sin empleo"
+    : label;
 }
 
 function normalizeAnalyticLabel(value: string) {

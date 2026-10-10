@@ -3,6 +3,7 @@ package com.simulacionem.analitica;
 import com.simulacionem.analitica.application.dto.CompetenceAverageDto;
 import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
 import com.simulacionem.analitica.application.dto.CategoryDistributionDto;
+import com.simulacionem.analitica.application.dto.AnalyticsSummaryDto;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.SurveyResponseEntity;
 import com.simulacionem.analitica.application.service.AnalyticsService;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.CompetenceCatalogEntity;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -131,5 +133,27 @@ class AnalyticsServiceStatisticsTest {
         assertThat(distribution.counts()).containsEntry("Posdoctorado", 1L);
         assertThat(distribution.counts().values().stream().mapToLong(Long::longValue).sum())
                 .isEqualTo(distribution.validCount());
+    }
+
+    @Test
+    void filtroTodosConservaLasDoceRespuestasValidas() {
+        UUID datasetId = UUID.randomUUID();
+        DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getId()).thenReturn(datasetId);
+        List<SurveyResponseEntity> rows = IntStream.rangeClosed(1, 12)
+                .mapToObj(index -> new SurveyResponseEntity(dataset, "TITULADOS", index, "VALIDA",
+                        Map.of("edad_rango", "23 - 26 años")))
+                .toList();
+        DatasetImportRepository datasets = mock(DatasetImportRepository.class);
+        SurveyResponseRepository responses = mock(SurveyResponseRepository.class);
+        CompetenceRatingRepository ratings = mock(CompetenceRatingRepository.class);
+        when(datasets.findById(datasetId)).thenReturn(Optional.of(dataset));
+        when(responses.findByDataset_IdAndResponseStatus(datasetId, "VALIDA")).thenReturn(rows);
+
+        AnalyticsSummaryDto summary = new AnalyticsService(datasets, responses, ratings)
+                .summary(datasetId, "TITULADOS", List.of("edad_rango"));
+
+        assertThat(summary.totalResponses()).isEqualTo(12);
+        assertThat(summary.validResponses()).isEqualTo(12);
     }
 }

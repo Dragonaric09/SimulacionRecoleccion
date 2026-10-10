@@ -92,7 +92,7 @@ function EducationOpinionPanel({ summary }: { summary: AnalyticsSummary }) {
   return <Card className="rounded-xl border border-border-line shadow-sm">
     <CardHeader>
       <CardTitle className="title-card">Opinión sobre el posgrado de la FCyT (n = {opinion?.validCount ?? 0})</CardTitle>
-    <CardDescription>“¿Considera que existen programas de formación de posgrado ofertados en la Dirección de Posgrado de la FCyT que son afines a su perfil?”</CardDescription>
+    <CardDescription>“¿Considera que existen programas de formación de posgrado ofertados en la Dirección de Posgrado de la FCyT que son afines a las áreas de especialidad de un Ingeniero en Sistemas?”</CardDescription>
     </CardHeader>
     <CardContent><DivergingAgreementCard distribution={opinion} /></CardContent>
   </Card>;

@@ -15,17 +15,13 @@ export function MiniDistribution({
   note?: string;
   order?: string[];
 }) {
+  void accent;
   const counts = distribution?.counts ?? {};
   const entries = order ? order.map((label) => {
     const source = Object.keys(counts).find((candidate) => normalizeLabel(candidate) === normalizeLabel(label));
     return [source ?? label, source ? counts[source] : 0] as [string, number];
   }) : Object.entries(counts).sort(([, a], [, b]) => b - a);
-  const accentColor = {
-    blue: "#1f6fb5",
-    teal: "#0f766e",
-    purple: "#7c5ac7",
-    amber: "#d8891e",
-  }[accent];
+  const accentColor = "#1f6fb5";
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-2">

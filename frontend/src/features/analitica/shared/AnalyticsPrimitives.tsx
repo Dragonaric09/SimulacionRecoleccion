@@ -49,7 +49,7 @@ export function DistributionCard({ title, distribution, tone }: { title: string;
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="title-card">{labelFor(title)}</CardTitle>
+        <CardTitle className="title-card">{title}</CardTitle>
         <CardDescription>Conteo y porcentaje · n = {distribution.validCount}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
