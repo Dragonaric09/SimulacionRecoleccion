@@ -281,6 +281,7 @@
   .cross-pdf-page .cross-pdf-footer { break-inside: avoid; page-break-inside: avoid; }
   .print-page > div > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
   .print-page .print-tab-section > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
+  .print-page .print-tab-section > .grid { row-gap: 20px !important; }
   .print-page .print-tab-section > .grid > * { grid-column: auto !important; min-width: 0 !important; }
   .print-page .print-tab-section > .grid[class*="grid-cols-12"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .print-page .print-tab-section > .grid[class*="grid-cols-3"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }

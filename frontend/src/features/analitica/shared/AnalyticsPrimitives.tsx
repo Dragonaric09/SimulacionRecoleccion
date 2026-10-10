@@ -57,7 +57,7 @@ export function DistributionCard({ title, distribution, tone }: { title: string;
           <div key={key} className="space-y-1">
             <div className="flex justify-between text-sm">
               <span>{key}</span>
-              <span className="tabular-nums">{count} · {distribution.percentages[key]}%</span>
+              <span className="tabular-nums">{count} · {formatPercent(distribution.percentages[key] ?? 0)}</span>
             </div>
             <div className="h-2 rounded-full bg-slate-100">
               <div className={`h-full rounded-full ${tone === "titulados" ? "bg-titulados" : "bg-empleadores"}`} style={{ width: `${distribution.percentages[key]}%` }} />
@@ -67,6 +67,10 @@ export function DistributionCard({ title, distribution, tone }: { title: string;
       </CardContent>
     </Card>
   );
+}
+
+function formatPercent(value: number) {
+  return `${value.toFixed(1).replace(".", ",")} %`;
 }
 
 export function DatasetAnalyticsPage({ title, description, domain, endpoint, fields, cards }: {

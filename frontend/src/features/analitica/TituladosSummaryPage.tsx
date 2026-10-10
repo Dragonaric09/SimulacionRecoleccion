@@ -235,7 +235,7 @@ function EmploymentCard({
                 <span className="tabular-nums whitespace-nowrap font-medium">
                   {count}{" "}
                   <span className="caption-meta text-ink-600">
-                    ({distribution?.percentages[label] ?? 0}%)
+                    ({formatPercent(distribution?.percentages[label] ?? 0, 100)})
                   </span>
                 </span>
               </div>
@@ -293,7 +293,7 @@ function EmploymentSummaryCard({ distribution, total }: { distribution?: Categor
     ["Emprendimiento", counts.entrepreneurship],
     ["Sin empleo", counts.unemployed],
   ] as const;
-  const colors = ["#1f6fb5", "#1f6fb5", "#1f6fb5"];
+  const colors = ["#1f6fb5", "#14a39a", "#f2a33a"];
   return (
     <Card className="h-full rounded-xl border border-border-line shadow-sm">
       <CardHeader className="pb-3">

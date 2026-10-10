@@ -94,7 +94,7 @@ function LikertStatement({
         {(showSummary || number || title) && (
           <div className="flex flex-col justify-between gap-1 md:flex-row md:items-center">
             <span className="font-semibold text-ink-900">{number} {title}</span>
-            {showSummary && <span className="text-xs text-ink-600">{favorablePercentage(distribution)}% De acuerdo + Totalmente de acuerdo</span>}
+            {showSummary && <span className="text-xs text-ink-600">{favorablePercentage(distribution)} % De acuerdo + Totalmente de acuerdo</span>}
           </div>
         )}
         <CardDescription>
@@ -111,7 +111,7 @@ function LikertStatement({
                   key={label}
                   className="flex min-w-0 items-center justify-center px-1 text-xs font-semibold"
                   style={{ width: `${distribution?.percentages[label] ?? 0}%`, backgroundColor: colors[index], color: contrastTextColor(colors[index]) }}
-                  title={`${label}: ${count} (${distribution?.percentages[label]}%)`}
+                  title={`${label}: ${count} (${formatPercentValue(distribution?.percentages[label] ?? 0)})`}
                 >
                   {(distribution?.percentages[label] ?? 0) >= 8 ? `${count} (${formatPercentValue(distribution?.percentages[label] ?? 0)})` : ""}
                 </div>

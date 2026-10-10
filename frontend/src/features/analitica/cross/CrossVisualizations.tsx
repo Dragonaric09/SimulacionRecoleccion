@@ -180,7 +180,7 @@ export function CrossTable({
   const formatValue = (value: number) =>
     metric === "count"
       ? String(value)
-      : `${value.toFixed(1).replace(".", ",")}%`;
+      : `${value.toFixed(1).replace(".", ",")} %`;
   const metricLabel =
     metric === "count"
       ? "Frecuencia absoluta (conteos)"
@@ -189,7 +189,7 @@ export function CrossTable({
         : "% por columna";
   const marginalPercent = (value: number) =>
     cross.validCount
-      ? `${((value * 100) / cross.validCount).toFixed(1).replace(".", ",")}%`
+      ? `${((value * 100) / cross.validCount).toFixed(1).replace(".", ",")} %`
       : "0,0%";
   const labelColumnWidth = Math.min(
     44,
@@ -316,7 +316,7 @@ export function CrossTable({
                 0 ·{" "}
                 {metric === "count"
                   ? max
-                  : `${max.toFixed(1).replace(".", ",")}%`}
+                  : `${max.toFixed(1).replace(".", ",")} %`}
               </span>
             </div>
             <div
@@ -367,7 +367,7 @@ export function CrossBars({
     cross.percentages[row]?.[column] ?? 0;
   const valueLabel = (row: string, column: string, value: number) =>
     metric === "rowPercent"
-      ? `${rowPercent(row, column).toFixed(1).replace(".", ",")}%`
+      ? `${rowPercent(row, column).toFixed(1).replace(".", ",")} %`
       : String(value);
   const subtitle =
     metric === "rowPercent" ? "% por fila" : "Frecuencia absoluta";
@@ -395,7 +395,7 @@ export function CrossBars({
                   {booleanLabel(row)} (n = {totalRow})
                 </span>
                 <span className="shrink-0 text-ink-600">
-                  {((totalRow * 100) / total).toFixed(1).replace(".", ",")}% del
+                  {((totalRow * 100) / total).toFixed(1).replace(".", ",")} % del
                   total
                 </span>
               </div>

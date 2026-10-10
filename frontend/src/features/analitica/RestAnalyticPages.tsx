@@ -335,8 +335,8 @@ function EntrepreneurshipPanel({
             </h3>
             <div className="space-y-4">
               <EntrepreneurshipDistribution label="Origen del emprendimiento" distribution={origin} color="#1f6fb5" />
-              <EntrepreneurshipDistribution label="Tipo de producto/entregable" distribution={deliverable} color="#7c5ac7" />
-              <EntrepreneurshipDistribution label="Financiamiento inicial" distribution={financing} color="#d8891e" />
+              <EntrepreneurshipDistribution label="Tipo de producto/entregable" distribution={deliverable} />
+              <EntrepreneurshipDistribution label="Financiamiento inicial" distribution={financing} />
             </div>
           </div>
           <div>
@@ -344,8 +344,8 @@ function EntrepreneurshipPanel({
               Valoración formativa y satisfacción
             </h3>
             <div className="space-y-4">
-              <EntrepreneurshipDistribution label="Nivel de satisfacción con el emprendimiento" distribution={satisfaction} color="#2fa866" />
-              <EntrepreneurshipDistribution label="Importancia de la formación universitaria" distribution={importance} color="#0f766e" />
+              <EntrepreneurshipDistribution label="Nivel de satisfacción con el emprendimiento" distribution={satisfaction} />
+              <EntrepreneurshipDistribution label="Importancia de la formación universitaria" distribution={importance} />
             </div>
           </div>
         </CardContent>
@@ -1039,8 +1039,8 @@ function ProfileDistributionCard({
                           index === 0
                             ? "#1f6fb5"
                             : index === 1
-                              ? "#14a39a"
-                              : "#94a3b8",
+                            ? "#1f6fb5"
+                            : "#1f6fb5",
                       }}
                     />
                   </div>
@@ -1170,8 +1170,8 @@ function laborColor(label: string) {
   return "#1f6fb5";
 }
 
-function unemploymentReasonColor(index: number) {
-  return ["#f2a33a", "#1f6fb5", "#94a3b8", "#14a39a", "#8c57d3"][index % 5];
+function unemploymentReasonColor(_index: number) {
+  return "#1f6fb5";
 }
 
 function AgeDistributionCard({
