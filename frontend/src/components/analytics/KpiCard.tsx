@@ -12,9 +12,8 @@ export function KpiCard({ label, value, detail, note, icon: Icon, tone = 'neutra
         </div>
         <p className="display-kpi tabular-nums text-ink-900">{value}</p>
         {detail && <p className="body-medium text-ink-600">{detail}</p>}
-        {note && <p className="caption-meta text-ink-600">{note}</p>}
+        {note && <p className="caption-meta text-ink-500">{note}</p>}
       </CardContent>
     </Card>
   )
 }
-

@@ -297,7 +297,7 @@ export function EmploymentProfilePage({ printAll = false }: { printAll?: boolean
     <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PageHeading
-          title={`Perfil y empleabilidad (n = ${summary?.validResponses ?? "—"})`}
+          title="Perfil y empleabilidad"
           description="Situación laboral y sectores de inserción de las personas tituladas."
           tone="titulados"
         />
@@ -1628,14 +1628,19 @@ function ProfileDistributionCard({
     () => Object.entries(distribution?.counts ?? {}),
     [distribution],
   );
+  const validCount = distribution?.validCount ?? 0;
+  const smallSample = validCount > 0 && validCount < 5;
   return (
-    <Card className={`h-fit rounded-xl border-0 shadow-sm ${className}`}>
+    <Card className={`h-fit rounded-xl border-0 shadow-sm ${smallSample ? "border border-amber-300" : ""} ${className}`}>
       <CardHeader>
-        <CardTitle className="title-card">{title}</CardTitle>
+        <div className="flex items-start justify-between gap-3">
+          <CardTitle className="title-card">{title}</CardTitle>
+          {smallSample && <Badge tone="warning">Muestra pequeña · n = {validCount}</Badge>}
+        </div>
         <CardDescription>
           {description}{" "}
           <span className="whitespace-nowrap">
-            · n = {distribution?.validCount ?? 0}
+            · n = {validCount}
           </span>
         </CardDescription>
       </CardHeader>
@@ -2313,12 +2318,6 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
             }
             tone={tone}
           />
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Info />
-              Definiciones
-            </Button>
-          </div>
         </div>
         <DatasetSelect
           datasets={datasets}
@@ -2367,10 +2366,6 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
         }
           tone={tone}
         />
-        <Button variant="outline" size="sm" className="print-hide">
-          <Info />
-          Definiciones
-        </Button>
       </div>
       <DatasetSelect
         datasets={datasets}
@@ -3320,16 +3315,10 @@ export function FinancingCompletePage() {
     <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PageHeading
-          title={`Financiamiento${summary ? ` (n = ${summary.validResponses})` : ""}`}
+          title="Financiamiento"
           description="Fuente estimada para financiar estudios de posgrado y su relación con el nivel de interés."
           tone="titulados"
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Info />
-            Definiciones
-          </Button>
-        </div>
       </div>
       <DatasetSelect
         datasets={datasets}
@@ -3574,16 +3563,10 @@ export function FinancingPage() {
     <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PageHeading
-          title={`Financiamiento${summary ? ` (n = ${summary.validResponses})` : ""}`}
+          title="Financiamiento"
           description="Fuente estimada para financiar estudios de posgrado y su relación con el nivel de interés."
           tone="titulados"
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Info />
-            Definiciones
-          </Button>
-        </div>
       </div>
       <DatasetSelect
         datasets={datasets}
@@ -3837,16 +3820,12 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PageHeading
-          title={`Cruces bivariados y exportación${cross ? ` (n = ${cross.validCount})` : ""}`}
+          title="Cruces bivariados y exportación"
           description="Configura una matriz de frecuencias y revisa su distribución en tabla o barras."
           tone={tone}
         />
         <div className="flex flex-wrap items-center gap-2">
           <PrintButton domain={domain} kind="cruce" disabled={!cross || loading} />
-          <Button variant="outline" size="sm">
-            <Info />
-            Definiciones
-          </Button>
         </div>
       </div>
       <DatasetSelect
@@ -4195,7 +4174,7 @@ export function SimulationPage() {
       <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <PageHeading
-          title={`Simulación de escenarios${summary ? ` (n = ${summary.validResponses})` : ""}`}
+          title="Simulación de escenarios"
           description="Escenarios hipotéticos mediante muestreo Monte Carlo con transformada inversa."
           tone="titulados"
         />

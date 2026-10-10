@@ -105,7 +105,7 @@ export function TituladosSummaryPage() {
           <div className="flex items-center gap-2">
           </div>
           <h1 className="headline-page tracking-tight">
-            Resumen general: titulados
+            Resumen general
           </h1>
           <p className="max-w-2xl text-sm text-ink-600">
             Indicadores de inserción laboral, formación e interés de posgrado.
@@ -214,7 +214,6 @@ export function TituladosSummaryPage() {
             />
           </div>
           <div className="grid items-start gap-6 lg:grid-cols-12">
-            <EmploymentCard distribution={laboral} />
             <PostgraduateCard distribution={areasPosgrado} />
           </div>
         </>
@@ -328,7 +327,7 @@ function PostgraduateCard({
     [distribution],
   );
   return (
-    <Card className="h-fit rounded-xl border-0 shadow-sm lg:col-span-7">
+    <Card className="h-fit rounded-xl border-0 shadow-sm lg:col-span-12">
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
