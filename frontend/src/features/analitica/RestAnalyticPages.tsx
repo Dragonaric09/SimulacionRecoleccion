@@ -58,8 +58,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import type { CohortChartPoint, Competence, Domain, EmploymentProfile, Tone } from "./shared/analyticsTypes";
 import { DatasetSelect, PageHeading } from "./shared/AnalyticsPrimitives";
+import { formatDecimal, formatPercentValue } from "./shared/analyticsFormatters";
 import { MiniDistribution, StackedRelevanceCard } from "./employment/EmploymentCharts";
-import { countMatching, displayLaborLabel, formatPercentage, laborColor } from "./employment/employmentHelpers";
+import { booleanCount, booleanLabel, countMatching, displayLaborLabel, formatPercentage, laborColor, majorityLabel, unemploymentReasonColor } from "./employment/employmentHelpers";
 import { useCompetencePage } from "./competence/useCompetencePage";
 import { CompetenceMatrix as CompetenceHeatmap } from "./competence/CompetenceMatrix";
 import { CompetenceStatsTable as CompetenceStatsTableView } from "./competence/CompetenceStatsTable";
@@ -983,10 +984,6 @@ function EmploymentDonutCard({
   );
 }
 
-function unemploymentReasonColor() {
-  return "#1f6fb5";
-}
-
 function AgeDistributionCard({
   distribution,
 }: {
@@ -1211,35 +1208,6 @@ function DistributionBars({
       </EmptyHeader>
     </Empty>
   );
-}
-
-function majorityLabel(distribution?: CategoryDistribution) {
-  const entry = Object.entries(distribution?.counts ?? {}).sort(
-    ([, a], [, b]) => b - a,
-  )[0];
-  return entry?.[0] ?? "—";
-}
-
-function booleanCount(distribution: CategoryDistribution, value: boolean) {
-  const key = Object.keys(distribution.counts).find(
-    (item) => item.toLowerCase() === String(value),
-  );
-  return key ? distribution.counts[key] : 0;
-}
-function booleanLabel(value: string) {
-  if (value.toLowerCase() === "true") return "Sí";
-  if (value.toLowerCase() === "false") return "No";
-  const normalized = value
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLocaleLowerCase("es-BO");
-  if (!normalized) return normalized;
-  const sentence =
-    normalized.charAt(0).toLocaleUpperCase("es-BO") + normalized.slice(1);
-  return sentence
-    .replace(/\bia\b/gi, "IA")
-    .replace(/\bdevops\b/gi, "DevOps")
-    .replace(/\b(modular|presencial|virtual)\(/gi, "$1 (");
 }
 
 export function CompetencePage({ domain, printAll = false }: { domain: Domain; printAll?: boolean }) {
@@ -1526,17 +1494,6 @@ function CompetencePrintGroup({ items, group, tone }: { items: Competence[]; gro
     <CompetenceStatsTableView items={items} group={group} />
   </>;
 }
-
-function formatDecimal(value: number, digits = 2) {
-  return value.toFixed(digits).replace(".", ",");
-}
-
-function formatPercentValue(value: number, digits = 1) {
-  return `${value.toFixed(digits).replace(".", ",")} %`;
-}
-
-
-
 
 export function SimulationPage() {
   const {

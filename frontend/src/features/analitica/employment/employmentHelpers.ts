@@ -23,3 +23,29 @@ export function laborColor(label: string) {
 
 export const displayLaborLabel = sharedDisplayLaborLabel;
 export { formatPercentage };
+
+export function unemploymentReasonColor() {
+  return "#1f6fb5";
+}
+
+export function majorityLabel(distribution?: CategoryDistribution) {
+  const entry = Object.entries(distribution?.counts ?? {}).sort(([, a], [, b]) => b - a)[0];
+  return entry?.[0] ?? "—";
+}
+
+export function booleanCount(distribution: CategoryDistribution, value: boolean) {
+  const key = Object.keys(distribution.counts).find((item) => item.toLowerCase() === String(value));
+  return key ? distribution.counts[key] : 0;
+}
+
+export function booleanLabel(value: string) {
+  if (value.toLowerCase() === "true") return "Sí";
+  if (value.toLowerCase() === "false") return "No";
+  const normalized = value.trim().replace(/\s+/g, " ").toLocaleLowerCase("es-BO");
+  if (!normalized) return normalized;
+  const sentence = normalized.charAt(0).toLocaleUpperCase("es-BO") + normalized.slice(1);
+  return sentence
+    .replace(/\bia\b/gi, "IA")
+    .replace(/\bdevops\b/gi, "DevOps")
+    .replace(/\b(modular|presencial|virtual)\(/gi, "$1 (");
+}
