@@ -80,53 +80,18 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DatasetSummary } from "@/features/encuesta/api";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
+import type { CohortChartPoint, Competence, Cross, CrossMetric, Domain, EmploymentProfile, Simulation, Tone } from "./shared/analyticsTypes";
 import { contrastTextColor } from "@/lib/utils";
 import { PrintButton } from "@/components/analytics/PrintButton";
 import * as XLSX from "xlsx-js-style";
 import { useDatasetContext } from "@/app/DatasetContext";
 
-type Domain = "TITULADOS" | "EMPLEADORES";
-type Tone = "titulados" | "empleadores";
-type Competence = {
-  code: string;
-  name: string;
-  group: string;
-  validCount: number;
-  average: number;
-  standardDeviation: number | null;
-  median: number;
-  modalLevel: number;
-  levelCounts: Record<string, number>;
-};
-type Cross = {
-  validCount: number;
-  rowCategories: string[];
-  columnCategories: string[];
-  counts: Record<string, Record<string, number>>;
-  percentages: Record<string, Record<string, number>>;
-  smallSample: boolean;
-};
-type CrossMetric = "count" | "rowPercent" | "columnPercent";
 type ChiResult = {
   estadistico: number;
   gradosLibertad: number;
   pValor: number;
   alfa: number;
   rechazaIndependencia: boolean;
-};
-type Simulation = {
-  sampleSize: number;
-  repetitions: number;
-  seed: number;
-  categories: {
-    category: string;
-    observedCount: number;
-    observedPercentage: number;
-    simulatedMean: number;
-    lower95: number;
-    upper95: number;
-    standardDeviation: number;
-  }[];
 };
 
 const NATURAL_POSTGRADUATE_LEVELS = ["Diplomado", "Especialidad", "Maestría", "Doctorado"];
@@ -190,17 +155,6 @@ function simulationCategories(variable: string, counts: Record<string, number>) 
       - (bIndex < 0 ? NATURAL_POSTGRADUATE_LEVELS.length : bIndex);
   });
 }
-type EmploymentProfile = {
-  datasetId: string;
-  validResponses: number;
-  cohortPoints: { graduationYear: number; professionalYears: number }[];
-};
-
-type CohortChartPoint = {
-  graduationYear: number;
-  professionalYears: number;
-  isOutlier: boolean;
-};
 
 function CohortTooltip({
   active,

@@ -1,5 +1,5 @@
 import type { NavigationItem } from '@/app/navigation'
-import { CompetencePage, CrossExportPage, DatasetAnalyticsPage } from '@/features/analitica/RestAnalyticPages'
+import { CompetencePage, CrossExportPage, DatasetAnalyticsPage } from '@/features/analitica/shared'
 
 const employerSummaryProps = {
   title: 'Resumen de contratación',
