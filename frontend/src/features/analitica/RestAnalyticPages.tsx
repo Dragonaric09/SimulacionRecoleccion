@@ -167,7 +167,7 @@ export function EmploymentProfilePage({ printAll = false }: { printAll?: boolean
     { key: "emprendimiento", label: "Emprendimiento" },
   ];
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-5">
+    <div className="employment-profile-root mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PageHeading
           title="Perfil y empleabilidad"

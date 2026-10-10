@@ -294,6 +294,12 @@
     text-align: right !important;
     white-space: nowrap !important;
   }
+  .print-page .employment-profile-root > [data-slot="tabs"] {
+    display: none !important;
+  }
+  .print-page .employment-profile-root > .print-tab-section {
+    margin-top: 0 !important;
+  }
   .print-page .print-tab-section > .grid > * { grid-column: auto !important; min-width: 0 !important; }
   .print-page .print-tab-section > .grid[class*="grid-cols-12"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .print-page .print-tab-section > .grid[class*="grid-cols-3"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
