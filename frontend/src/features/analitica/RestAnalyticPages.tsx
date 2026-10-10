@@ -4,11 +4,11 @@ import {
   BookOpen,
   CalendarDays,
   Download,
+  ArrowLeftRight,
   FlaskConical,
   GraduationCap,
   Info,
   Inbox,
-  SlidersHorizontal,
   ListChecks,
   TrendingDown,
   TrendingUp,
@@ -36,6 +36,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -3323,7 +3324,9 @@ function ChiSquareCard({
   cross: Cross;
 }) {
   const warning = expectedFrequencyWarning(cross);
-  const reason = !cross.validCount
+  const reason = warning?.lowCells
+    ? "frecuencias esperadas < 5"
+    : !cross.validCount
     ? "No hay celdas con observaciones válidas para evaluar."
     : cross.rowCategories.length < 2
       ? `La matriz solo tiene ${cross.rowCategories.length} categoría de fila; se requieren al menos 2.`
@@ -3338,27 +3341,18 @@ function ChiSquareCard({
         </CardTitle>
         <div className="flex flex-col items-end gap-1">
           <Badge tone="neutral">
-            {result
+            {result && !warning?.lowCells
               ? result.rechazaIndependencia
                 ? "p < α"
                 : "p ≥ α"
-              : "α = 0,05"}
+              : "No aplicable"}
           </Badge>
-          {result && <span className="text-xs text-ink-600">α = 0,05</span>}
+          {result && !warning?.lowCells && <span className="text-xs text-ink-600">α = 0,05</span>}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {result ? (
+        {result && !warning?.lowCells ? (
           <>
-            <div>
-              {warning?.lowCells ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                  <strong>Aviso de validez:</strong> {warning.lowCells} de{" "}
-                  {warning.totalCells} celdas tienen frecuencia esperada menor a
-                  5; el resultado es orientativo.
-                </div>
-              ) : null}
-            </div>
             <div className="grid items-center gap-4 md:grid-cols-3">
               <div>
                 <p className="display-kpi tabular-nums text-ink-900">
@@ -3701,11 +3695,13 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
       .then(setFilterSummary)
       .catch(() => setFilterSummary(null));
   }, [datasetId, domain, filterQuery]);
+  const rowLabel = labelFor(rowField);
+  const columnLabel = labelFor(columnField);
   return (
     <div className="cross-screen-page mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PageHeading
-          title="Cruces bivariados y exportación"
+          title="Cruces de variables"
           description="Configura una matriz de frecuencias y revisa su distribución en tabla o barras."
           tone={tone}
         />
@@ -3722,13 +3718,34 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
           <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="title-card flex items-center justify-between">
-                Configurar cruce{" "}
-                <SlidersHorizontal className="size-4 text-ink-600" />
+                Configurar cruce
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="size-7"
+                        aria-label="Intercambiar filas y columnas"
+                        onClick={() => {
+                          setRowField(columnField);
+                          setColumnField(rowField);
+                        }}
+                      >
+                        <ArrowLeftRight className="size-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" sideOffset={6}>
+                      Intercambiar filas y columnas
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <label className="label-default grid gap-1">
-                Variable de filas
+                Filas
                 <Select value={rowField} onValueChange={setRowField}>
                   <SelectTrigger className="w-full min-w-0">
                     <SelectValue />
@@ -3758,7 +3775,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                 </Select>
               </label>
               <label className="label-default grid gap-1">
-                Variable de columnas
+                Columnas
                 <Select value={columnField} onValueChange={setColumnField}>
                   <SelectTrigger className="w-full min-w-0">
                     <SelectValue />
@@ -3797,9 +3814,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                   <label className="flex items-start gap-2">
                     <RadioGroupItem value="count" />
                     <span>
-                      Frecuencia absoluta
-                      <br />
-                      (conteos)
+                      Cantidad
                     </span>
                   </label>
                   {activeView === "table" && (
@@ -3887,7 +3902,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
             activeView === "bars" ? (
               <CrossBars
                 cross={cross}
-                action={cross && <CrossDownloadMenu cross={cross} metric={metric} includeTotals={includeTotals} colorHeatmap={colorHeatmap} activeView={activeView} domain={domain} datasetName={datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado"} filters={filterQuery ? "Filtros aplicados" : "Sin filtros"} />}
+                action={cross && <CrossDownloadMenu cross={cross} metric={metric} includeTotals={includeTotals} colorHeatmap={colorHeatmap} activeView={activeView} rowLabel={rowLabel} columnLabel={columnLabel} domain={domain} datasetName={datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado"} filters={filterQuery ? "Filtros aplicados" : "Sin filtros"} />}
                 metric={metric}
                 totalResponses={
                   datasets.find((dataset) => dataset.id === datasetId)
@@ -3904,7 +3919,9 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                 includeTotals={includeTotals}
                 colorHeatmap={colorHeatmap}
                 metric={metric}
-                action={cross && <CrossDownloadMenu cross={cross} metric={metric} includeTotals={includeTotals} colorHeatmap={colorHeatmap} activeView={activeView} domain={domain} datasetName={datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado"} filters={filterQuery ? "Filtros aplicados" : "Sin filtros"} />}
+                rowLabel={rowLabel}
+                columnLabel={columnLabel}
+                action={cross && <CrossDownloadMenu cross={cross} metric={metric} includeTotals={includeTotals} colorHeatmap={colorHeatmap} activeView={activeView} rowLabel={rowLabel} columnLabel={columnLabel} domain={domain} datasetName={datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado"} filters={filterQuery ? "Filtros aplicados" : "Sin filtros"} />}
               />
             )
           ) : (
@@ -3920,12 +3937,11 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
               <p className="text-sm text-ink-600">{crossMetricLabel(metric)} · n = {cross.validCount} de {datasets.find((dataset) => dataset.id === datasetId)?.rowsValid ?? cross.validCount}</p>
               <p className="text-xs text-ink-600">Dataset: {datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId} · Generado: {new Intl.DateTimeFormat("es-BO", { timeZone: "America/La_Paz", dateStyle: "short" }).format(new Date())}</p>
               <p className="text-xs text-ink-600">Filtros: {filterQuery ? "Filtros aplicados" : "Sin filtros"}</p>
-              <CrossTable cross={cross} totalResponses={datasets.find((dataset) => dataset.id === datasetId)?.rowsValid} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric={metric} />
+              <CrossTable cross={cross} totalResponses={datasets.find((dataset) => dataset.id === datasetId)?.rowsValid} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric={metric} rowLabel={rowLabel} columnLabel={columnLabel} />
               <div className="print-card"><CrossBars cross={cross} metric={metric} totalResponses={datasets.find((dataset) => dataset.id === datasetId)?.rowsValid} /></div>
               <ChiSquareCard result={chi} cross={cross} />
               <div className="cross-pdf-footer border-t border-surface-container-high pt-2 text-xs text-ink-600">
                 <p>Base del cruce: n = {cross.validCount} respuestas válidas de {datasets.find((dataset) => dataset.id === datasetId)?.rowsValid ?? cross.validCount} registros.</p>
-                {observedSmallSampleSummary(cross) && <p className="font-semibold text-amber-800">Aviso: muestra pequeña; {observedSmallSampleSummary(cross)}.</p>}
               </div>
             </div>
           )}
@@ -3941,6 +3957,8 @@ function CrossDownloadMenu({
   includeTotals,
   colorHeatmap,
   activeView,
+  rowLabel,
+  columnLabel,
   domain,
   datasetName,
   filters,
@@ -3950,6 +3968,8 @@ function CrossDownloadMenu({
   includeTotals: boolean;
   colorHeatmap: boolean;
   activeView: "table" | "bars";
+  rowLabel: string;
+  columnLabel: string;
   domain: Domain;
   datasetName: string;
   filters: string;
@@ -3965,9 +3985,9 @@ function CrossDownloadMenu({
     return () => document.removeEventListener("mousedown", closeWhenClickingOutside);
   }, []);
   const download = (format: "csv" | "xlsx" | "png" | "pdf") => {
-    if (format === "csv") exportCrossCsv(cross, metric, includeTotals);
-    if (format === "xlsx") exportCrossExcel(cross, metric, includeTotals, colorHeatmap, { dataset: datasetName, filters });
-    if (format === "png") exportCrossPng(cross, metric, includeTotals, colorHeatmap, activeView);
+    if (format === "csv") exportCrossCsv(cross, metric, includeTotals, rowLabel);
+    if (format === "xlsx") exportCrossExcel(cross, metric, includeTotals, colorHeatmap, { dataset: datasetName, filters }, rowLabel, columnLabel);
+    if (format === "png") exportCrossPng(cross, metric, includeTotals, colorHeatmap, activeView, rowLabel, columnLabel);
     if (format === "pdf") void printAnalyticsPdf(domain, "cruce");
     if (menuRef.current) menuRef.current.open = false;
   };
@@ -3984,7 +4004,6 @@ function CrossDownloadMenu({
           <CrossDownloadOption label="PDF de esta vista" help="Tabla y barras · A4 horizontal" onClick={() => download("pdf")} />
         </div>
       </details>
-      <span className="text-[10px] text-ink-600">Matriz con filtros actuales ({cross.validCount} respuestas)</span>
     </div>
   );
 }
@@ -4315,6 +4334,8 @@ function CrossTable({
   includeTotals,
   colorHeatmap,
   metric,
+  rowLabel = "Fila",
+  columnLabel = "Columnas",
   action,
 }: {
   cross: Cross;
@@ -4322,6 +4343,8 @@ function CrossTable({
   includeTotals: boolean;
   colorHeatmap: boolean;
   metric: CrossMetric;
+  rowLabel?: string;
+  columnLabel?: string;
   action?: ReactNode;
 }) {
   const columnTotal = (column: string) =>
@@ -4373,13 +4396,15 @@ function CrossTable({
   return (
     <Card className="min-w-0 overflow-visible">
       <CardHeader>
-        <div className="flex items-center justify-between gap-3">
-          <CardTitle className="title-card">Estado laboral × Interés en posgrado</CardTitle>
-          <CardDescription className="shrink-0 text-right">
-            {metricLabel.replace(" (conteos)", "")} · n = {cross.validCount}
-            {totalResponses != null ? ` de ${totalResponses}` : ""}
-            {cross.smallSample ? " · muestra reducida" : ""}
-          </CardDescription>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <CardTitle className="title-card">{rowLabel} × {columnLabel}</CardTitle>
+            <CardDescription>
+              {metricLabel.replace(" (conteos)", "")} · n = {cross.validCount}
+              {totalResponses != null ? ` de ${totalResponses}` : ""}
+              {cross.smallSample ? " · muestra reducida" : ""}
+            </CardDescription>
+          </div>
           {action}
         </div>
       </CardHeader>
@@ -4397,9 +4422,15 @@ function CrossTable({
           </colgroup>
           <TableHeader>
             <TableRow className="bg-surface-container-low hover:bg-surface-container-low">
-              <TableHead className="min-w-[210px] whitespace-nowrap p-2 text-left">
-                Fila
+              <TableHead rowSpan={2} className="min-w-[210px] whitespace-nowrap p-2 text-left align-middle">
+                {rowLabel}
               </TableHead>
+              <TableHead colSpan={cross.columnCategories.length} className="p-2 text-center">
+                {columnLabel}
+              </TableHead>
+              {includeTotals && <TableHead rowSpan={2} className="w-20 break-words p-2 text-right align-middle">Total fila</TableHead>}
+            </TableRow>
+            <TableRow className="bg-surface-container-low hover:bg-surface-container-low">
               {cross.columnCategories.map((column) => (
                 <TableHead
                   key={column}
@@ -4408,11 +4439,6 @@ function CrossTable({
                   {booleanLabel(column)}
                 </TableHead>
               ))}
-              {includeTotals && (
-                <TableHead className="w-20 break-words p-2 text-right">
-                  Total fila
-                </TableHead>
-              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -4497,6 +4523,11 @@ function CrossTable({
               }}
             />
           </div>
+        )}
+        {observedSmallSampleSummary(cross) && (
+          <p className="mt-3 text-xs text-amber-800">
+            Muestra pequeña: interpretar con cautela
+          </p>
         )}
       </CardContent>
     </Card>

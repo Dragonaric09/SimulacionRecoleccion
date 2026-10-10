@@ -30,13 +30,13 @@ function downloadFile(content: BlobPart, name: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-export function exportCrossCsv(cross: Cross, metric: CrossMetric, includeTotals: boolean) {
-  const rows = crossExportRows(cross, metric, includeTotals);
+export function exportCrossCsv(cross: Cross, metric: CrossMetric, includeTotals: boolean, rowLabel = "Fila") {
+  const rows = crossExportRows(cross, metric, includeTotals, rowLabel);
   downloadFile(rows.map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")).join("\n"), "cruce.csv", "text/csv;charset=utf-8");
 }
 
-export function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean, parameters: CrossExportParameters = {}) {
-  const rows = crossExportRows(cross, metric, includeTotals);
+export function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean, parameters: CrossExportParameters = {}, rowLabel = "Fila", columnLabel = "Columnas") {
+  const rows = crossExportRows(cross, metric, includeTotals, rowLabel);
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
   worksheet["!cols"] = rows[0].map((_, index) => ({ wch: index === 0 ? 32 : 16 }));
@@ -59,8 +59,8 @@ export function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotal
     ["Parámetro", "Valor"],
     ["Dataset", parameters.dataset ?? "No especificado"],
     ["Fecha de generación", new Intl.DateTimeFormat("en-CA", { timeZone: "America/La_Paz" }).format(new Date())],
-    ["Filas", "Estado laboral"],
-    ["Columnas", "Interés en posgrado"],
+    ["Filas", rowLabel],
+    ["Columnas", columnLabel],
     ["Métrica", crossMetricLabel(metric)],
     ["Filtros", parameters.filters ?? "Sin filtros"],
     ["n", String(cross.validCount)],
@@ -69,9 +69,9 @@ export function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotal
   downloadFile(XLSX.write(workbook, { bookType: "xlsx", type: "array" }), "cruce.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 }
 
-export function exportCrossPng(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean, view: "table" | "bars") {
+export function exportCrossPng(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean, view: "table" | "bars", rowLabel = "Fila", columnLabel = "Columnas") {
   if (view === "table") {
-    exportCrossTablePng(cross, metric, includeTotals, colorHeatmap);
+    exportCrossTablePng(cross, metric, includeTotals, colorHeatmap, rowLabel, columnLabel);
     return;
   }
   const width = 1200;
@@ -95,12 +95,12 @@ export function exportCrossPng(cross: Cross, metric: CrossMetric, includeTotals:
     return `<text x="${left - 12}" y="${y + 19}" text-anchor="end" font-family="Arial" font-size="13" fill="#0f172a">${escapeSvg(booleanLabel(row))}</text>${segments}`;
   }).join("");
   const legend = cross.columnCategories.map((column, index) => `<rect x="${30 + index * 180}" y="50" width="12" height="12" fill="${colors[index % colors.length]}"/><text x="${48 + index * 180}" y="61" font-family="Arial" font-size="12" fill="#334155">${escapeSvg(booleanLabel(column))}</text>`).join("");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/><text x="30" y="28" font-family="Arial" font-size="18" font-weight="bold" fill="#0f172a">Estado laboral × Interés en posgrado</text><text x="30" y="43" font-family="Arial" font-size="12" fill="#64748b">${escapeSvg(crossMetricLabel(metric))} · n = ${cross.validCount}</text>${legend}${bars}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/><text x="30" y="28" font-family="Arial" font-size="18" font-weight="bold" fill="#0f172a">${escapeSvg(rowLabel)} × ${escapeSvg(columnLabel)}</text><text x="30" y="43" font-family="Arial" font-size="12" fill="#64748b">${escapeSvg(crossMetricLabel(metric))} · n = ${cross.validCount}</text>${legend}${bars}</svg>`;
   downloadSvgAsPng(svg, width, height);
 }
 
-function exportCrossTablePng(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean) {
-  const rows = crossExportRows(cross, metric, includeTotals);
+function exportCrossTablePng(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean, rowLabel: string, columnLabel: string) {
+  const rows = crossExportRows(cross, metric, includeTotals, rowLabel);
   const cellWidth = 190;
   const rowHeight = 42;
   const width = Math.max(900, rows[0].length * cellWidth + 60);
@@ -117,7 +117,9 @@ function exportCrossTablePng(cross: Cross, metric: CrossMetric, includeTotals: b
     const textColor = isHeatCell && exportNumber(cell) / max > 0.45 ? "#FFFFFF" : "#0F172A";
     return `<rect x="${x}" y="${y}" width="${cellWidth}" height="${rowHeight}" fill="${fill}" stroke="#CBD5E1"/><text x="${columnIndex === 0 ? x + 10 : x + cellWidth - 10}" y="${y + 26}" text-anchor="${columnIndex === 0 ? "start" : "end"}" font-family="Arial" font-size="13" font-weight="${fontWeight}" fill="${textColor}">${escapeSvg(cell)}</text>`;
   }).join("")).join("");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/><text x="30" y="28" font-family="Arial" font-size="18" font-weight="bold" fill="#0f172a">Estado laboral × Interés en posgrado</text><text x="30" y="50" font-family="Arial" font-size="12" fill="#64748b">${escapeSvg(crossMetricLabel(metric))} · n = ${cross.validCount}</text>${cells}</svg>`;
+  const columnStart = 30 + cellWidth;
+  const columnEnd = columnStart + cross.columnCategories.length * cellWidth;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/><text x="30" y="28" font-family="Arial" font-size="18" font-weight="bold" fill="#0f172a">${escapeSvg(rowLabel)} × ${escapeSvg(columnLabel)}</text><text x="30" y="50" font-family="Arial" font-size="12" fill="#64748b">${escapeSvg(crossMetricLabel(metric))} · n = ${cross.validCount}</text><text x="45" y="82" font-family="Arial" font-size="12" font-weight="bold" fill="#334155">${escapeSvg(rowLabel)}</text><text x="${(columnStart + columnEnd) / 2}" y="82" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#334155">${escapeSvg(columnLabel)}</text>${cells}</svg>`;
   downloadSvgAsPng(svg, width, height);
 }
 
@@ -133,8 +135,8 @@ function downloadSvgAsPng(svg: string, width: number, height: number) {
   image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-function crossExportRows(cross: Cross, metric: CrossMetric, includeTotals: boolean) {
-  const headers = ["Fila", ...cross.columnCategories.map(booleanLabel), ...(includeTotals ? ["Total fila"] : [])];
+function crossExportRows(cross: Cross, metric: CrossMetric, includeTotals: boolean, rowLabel = "Fila") {
+  const headers = [rowLabel, ...cross.columnCategories.map(booleanLabel), ...(includeTotals ? ["Total fila"] : [])];
   const rows = cross.rowCategories.map((row) => [booleanLabel(row), ...cross.columnCategories.map((column) => formatExportValue(crossExportValue(cross, row, column, metric), metric)), ...(includeTotals ? [formatExportMarginal(cross, cross.columnCategories.reduce((sum, column) => sum + (cross.counts[row]?.[column] ?? 0), 0), metric, "row")] : [])]);
   if (includeTotals) rows.push(["Total columna", ...cross.columnCategories.map((column) => formatExportMarginal(cross, cross.rowCategories.reduce((sum, row) => sum + (cross.counts[row]?.[column] ?? 0), 0), metric, "column")), formatExportValue(cross.validCount, metric)]);
   return [headers, ...rows];
