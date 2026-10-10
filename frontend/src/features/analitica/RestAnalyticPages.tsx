@@ -2156,12 +2156,17 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
   const highest = visibleItems.length
     ? visibleItems.reduce((current, item) => item.average > current.average ? item : current)
     : undefined;
-  const tabs = [
-    { key: "hard", label: "Hard skills" },
-    { key: "soft", label: "Soft skills" },
-    { key: "satisfaccion", label: "Satisfacción y pertinencia" },
-    { key: "malla", label: "Malla y asignaturas" },
-  ];
+  const tabs = domain === "TITULADOS"
+    ? [
+        { key: "hard", label: "Hard skills" },
+        { key: "soft", label: "Soft skills" },
+        { key: "satisfaccion", label: "Satisfacción y pertinencia" },
+        { key: "malla", label: "Malla y asignaturas" },
+      ]
+    : [
+        { key: "hard", label: "Hard skills" },
+        { key: "soft", label: "Soft skills" },
+      ];
   if (printAll && domain === "TITULADOS")
     return (
       <div className="mx-auto w-full max-w-7xl space-y-6">
