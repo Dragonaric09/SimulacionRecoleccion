@@ -251,9 +251,13 @@
   main > * { max-width: 1000px !important; margin: 0 auto !important; }
   .screen-content { display: none !important; }
   .cross-screen-root { display: block !important; }
+  .simulation-screen-root { display: block !important; }
   .cross-screen-page > *:not(.cross-screen-grid) { display: none !important; }
   .cross-screen-controls { display: none !important; }
   .cross-screen-results > *:not(.print-only) { display: none !important; }
+  .simulation-screen-page > *:not(.print-only) { display: none !important; }
+  .simulation-pdf-page > [data-slot="card"] { break-inside: avoid; page-break-inside: avoid; }
+  .simulation-pdf-page .simulation-pdf-notes { break-inside: avoid; page-break-inside: avoid; }
   .print-bundle { display: block !important; }
   .print-only { display: block !important; }
   .cohort-responsive-chart { display: none !important; }

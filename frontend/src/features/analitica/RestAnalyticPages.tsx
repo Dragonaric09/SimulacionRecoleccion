@@ -3,6 +3,7 @@ import {
   BarChart3,
   BookOpen,
   CalendarDays,
+  Dices,
   Download,
   ArrowLeftRight,
   FlaskConical,
@@ -37,6 +38,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -83,8 +85,9 @@ import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import type { CohortChartPoint, Competence, Cross, CrossMetric, Domain, EmploymentProfile, Simulation, Tone } from "./shared/analyticsTypes";
 import { DatasetSelect, DistributionCard, PageHeading, labelFor, useDatasets } from "./shared/AnalyticsPrimitives";
 import { contrastTextColor } from "@/lib/utils";
-import { PrintButton, printAnalyticsPdf } from "@/components/analytics/PrintButton";
+import { printAnalyticsPdf } from "@/components/analytics/PrintButton";
 import { crossMetricLabel, exportCrossCsv, exportCrossExcel, exportCrossPng } from "./shared/crossExportUtils";
+import { exportSimulationCsv, exportSimulationExcel, exportSimulationPng, type SimulationExportData } from "./shared/simulationExportUtils";
 
 type ChiResult = {
   estadistico: number;
@@ -804,6 +807,27 @@ function MiniDistribution({
       )}
     </div>
   );
+}
+
+function simulationVariableLabel(variable: string) {
+  const labels: Record<string, string> = {
+    area_posgrado_interes: "Área de posgrado de interés",
+    nivel_posgrado_interes: "Nivel de posgrado de interés",
+    modalidad_posgrado: "Modalidad preferida",
+    financiamiento_posgrado_estimado: "Fuente de financiamiento estimada",
+    interes_posgrado: "Interés en posgrado",
+    situacion_laboral_actual: "Estado laboral",
+  };
+  return labels[variable] ?? variable;
+}
+
+function simulationPercent(value: number) {
+  return `${value.toFixed(1).replace(".", ",")} %`;
+}
+
+function simulationDelta(value: number, observed: number) {
+  const delta = value - observed;
+  return `${delta > 0 ? "+" : ""}${delta.toFixed(1).replace(".", ",")} pp`;
 }
 
 function StackedRelevanceCard({
@@ -4017,6 +4041,71 @@ function CrossDownloadOption({ label, help, disabled = false, onClick }: { label
   );
 }
 
+function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
+  const menuRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const closeWhenClickingOutside = (event: MouseEvent) => {
+      if (menuRef.current?.open && event.target instanceof Node && !menuRef.current.contains(event.target)) menuRef.current.open = false;
+    };
+    document.addEventListener("mousedown", closeWhenClickingOutside);
+    return () => document.removeEventListener("mousedown", closeWhenClickingOutside);
+  }, []);
+  if (!run) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button type="button" variant="outline" disabled>
+                <Download className="size-4" /> Descargar <span aria-hidden="true">▾</span>
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>Esperando los datos para calcular la simulación</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  const download = (format: "pdf" | "xlsx" | "csv" | "png") => {
+    if (format === "pdf") void printAnalyticsPdf("TITULADOS", "simulacion");
+    if (format === "xlsx") exportSimulationExcel(run);
+    if (format === "csv") exportSimulationCsv(run);
+    if (format === "png") exportSimulationPng(run);
+    if (menuRef.current) menuRef.current.open = false;
+  };
+  return (
+    <div className="flex shrink-0 flex-col items-end gap-1">
+      <details ref={menuRef} className="relative">
+        <summary className="flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted">
+          <Download className="size-4" /> Descargar <span aria-hidden="true">▾</span>
+        </summary>
+        <div className="absolute right-0 z-30 mt-2 w-72 rounded-lg border border-border-line bg-white p-1.5 shadow-lg">
+          <SimulationDownloadOption label="PDF de simulación" help="Parámetros, gráfico y tabla · A4 horizontal" onClick={() => download("pdf")} />
+          <SimulationDownloadOption label="Excel (.xlsx)" help="Tabla comparativa + hoja de parámetros" onClick={() => download("xlsx")} />
+          <SimulationDownloadOption label="Tabla CSV" help="Solo la tabla comparativa" onClick={() => download("csv")} />
+          <SimulationDownloadOption label="Imagen PNG" help="Gráfico de rangos" onClick={() => download("png")} />
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function SimulationDownloadOption({ label, help, onClick }: { label: string; help: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="flex w-full flex-col items-start rounded-md px-2.5 py-2 text-left hover:bg-surface-container-low">
+      <span className="text-sm font-medium text-ink-900">{label}</span>
+      <span className="text-xs text-ink-600">{help}</span>
+    </button>
+  );
+}
+
+type SimulationRun = SimulationExportData & {
+  datasetId: string;
+  variable: string;
+  weights: Record<string, number>;
+  scenarioPercentages: Record<string, number> | null;
+};
+
 export function SimulationPage() {
   const {
     datasets,
@@ -4028,14 +4117,20 @@ export function SimulationPage() {
   const [variable, setVariable] = useState("area_posgrado_interes");
   const [weights, setWeights] = useState<Record<string, number>>({});
   const [sampleSize, setSampleSize] = useState(100);
+  const [sampleSizeInput, setSampleSizeInput] = useState("100");
   const [repetitions, setRepetitions] = useState(1000);
+  const [repetitionsInput, setRepetitionsInput] = useState("1000");
   const [seed, setSeed] = useState(42);
+  const [seedInput, setSeedInput] = useState("42");
   const [result, setResult] = useState<Simulation | null>(null);
   const [scenarioPercentages, setScenarioPercentages] = useState<Record<string, number> | null>(null);
+  const [executedRun, setExecutedRun] = useState<SimulationRun | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sampleSizeValid = Number.isInteger(sampleSize) && sampleSize >= 1 && sampleSize <= 100000;
-  const repetitionsValid = Number.isInteger(repetitions) && repetitions >= 1 && repetitions <= 100000;
+  const simulationAbortRef = useRef<AbortController | null>(null);
+  const simulationRequestRef = useRef(0);
+  const sampleSizeValid = Number.isInteger(sampleSize) && sampleSize >= 1 && sampleSize <= 10000;
+  const repetitionsValid = Number.isInteger(repetitions) && repetitions >= 1 && repetitions <= 5000;
   const seedValid = Number.isInteger(seed);
   const parametersValid = sampleSizeValid && repetitionsValid && seedValid;
   useEffect(() => {
@@ -4046,14 +4141,13 @@ export function SimulationPage() {
       .then((next) => {
         setSummary(next);
         setWeights({});
-        setScenarioPercentages(null);
       })
       .catch((cause) =>
         setError(cause instanceof Error ? cause.message : String(cause)),
       );
   }, [datasetId, variable]);
   async function run() {
-    if (!parametersValid) {
+    if (!parametersValid || !datasetId) {
       setError("Revisa los parámetros: deben ser números enteros válidos dentro de los límites indicados.");
       return;
     }
@@ -4068,11 +4162,14 @@ export function SimulationPage() {
     const nextScenarioPercentages = adjusted
       ? Object.fromEntries(categories.map((category, index) => [category, (observedWeights[index] * 100) / total]))
       : null;
+    simulationAbortRef.current?.abort();
+    const controller = new AbortController();
+    simulationAbortRef.current = controller;
+    const requestId = ++simulationRequestRef.current;
     setLoading(true);
     setError(null);
     try {
-      setResult(
-        await apiRequest<Simulation>("/analytics/simulation/multinomial", {
+      const nextResult = await apiRequest<Simulation>("/analytics/simulation/multinomial", {
           method: "POST",
           body: JSON.stringify({
             categories,
@@ -4082,17 +4179,39 @@ export function SimulationPage() {
             repetitions,
             seed,
           }),
-        }),
-      );
+          signal: controller.signal,
+        });
+      if (requestId !== simulationRequestRef.current) return;
+      setResult(nextResult);
       setScenarioPercentages(nextScenarioPercentages);
+      setExecutedRun({
+        result: nextResult,
+        datasetId,
+        variable,
+        variableLabel: simulationVariableLabel(variable),
+        observedTotal: distribution.validCount,
+        datasetName: datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado",
+        observedProbabilities: Object.fromEntries(categories.map((category) => [category, (distribution.counts[category] ?? 0) / Math.max(distribution.validCount, 1)])),
+        usedProbabilities: Object.fromEntries(categories.map((category, index) => [category, observedWeights[index] / Math.max(total, 1)])),
+        adjusted,
+        categoryLabel: simulationCategoryLabel,
+        weights: { ...weights },
+        scenarioPercentages: nextScenarioPercentages,
+      });
     } catch (cause) {
+      if (cause instanceof DOMException && cause.name === "AbortError") return;
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
-      setLoading(false);
+      if (requestId === simulationRequestRef.current) setLoading(false);
     }
   }
+  useEffect(() => {
+    if (!summary?.distributions[variable] || !datasetId || !parametersValid) return;
+    const timeout = window.setTimeout(() => void run(), 250);
+    return () => window.clearTimeout(timeout);
+  }, [summary, datasetId, variable, weights, sampleSize, repetitions, seed, parametersValid]);
   return (
-      <div className="mx-auto w-full max-w-7xl space-y-5">
+      <div className="simulation-screen-page mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <PageHeading
           title="Simulación de escenarios"
@@ -4100,8 +4219,7 @@ export function SimulationPage() {
           tone="titulados"
         />
         <div className="flex flex-wrap items-center gap-2">
-          <PrintButton domain="TITULADOS" kind="simulacion" disabled={!result || loading} />
-          <Badge tone="titulados">Algoritmo: Monte Carlo</Badge>
+          <SimulationDownloadMenu run={executedRun} />
         </div>
       </div>
       <DatasetSelect
@@ -4114,7 +4232,7 @@ export function SimulationPage() {
         <Card className="h-fit rounded-xl border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="title-card">Parámetros de la simulación</CardTitle>
-            <CardDescription>No es una predicción. Las probabilidades se normalizan automáticamente al 100 %.</CardDescription>
+            <CardDescription>Se recalcula automáticamente. No es una predicción.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <label className="label-default grid gap-1">
@@ -4133,29 +4251,38 @@ export function SimulationPage() {
             </label>
             <label className="label-default grid gap-1">
               Personas a simular (N)
-              <Input className="w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" type="number" min="1" max="100000" step="1" value={sampleSize} aria-invalid={!sampleSizeValid} onChange={(event) => setSampleSize(parseInteger(event.target.value, sampleSize))} />
-              {!sampleSizeValid && <span className="text-xs text-destructive">Usa un entero entre 1 y 100.000.</span>}
+              <Input className="w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" type="number" min="1" max="10000" step="1" value={sampleSizeInput} aria-invalid={!sampleSizeValid} onChange={(event) => setSampleSizeInput(event.target.value)} onBlur={() => setSampleSize(parseInteger(sampleSizeInput, sampleSize))} />
+              {!sampleSizeValid && <span className="text-xs text-destructive">Usa un entero entre 1 y 10.000.</span>}
             </label>
             <div className="grid grid-cols-2 gap-3">
               <label className="label-default grid gap-1">
                 Réplicas (R)
-                <Input className="control" type="number" min="1" max="100000" step="1" value={repetitions} aria-invalid={!repetitionsValid} onChange={(event) => setRepetitions(parseInteger(event.target.value, repetitions))} />
-                {!repetitionsValid && <span className="text-xs text-destructive">Entre 1 y 100.000.</span>}
+                <Input className="control" type="number" min="1" max="5000" step="1" value={repetitionsInput} aria-invalid={!repetitionsValid} onChange={(event) => setRepetitionsInput(event.target.value)} onBlur={() => setRepetitions(parseInteger(repetitionsInput, repetitions))} />
+                {!repetitionsValid && <span className="text-xs text-destructive">Entre 1 y 5.000.</span>}
               </label>
               <label className="label-default grid gap-1">
                 Semilla
-                <Input className="control" type="number" step="1" value={seed} aria-invalid={!seedValid} onChange={(event) => setSeed(parseInteger(event.target.value, seed))} />
+                <div className="flex gap-1">
+                  <Input className="control min-w-0 flex-1" type="number" step="1" value={seedInput} aria-invalid={!seedValid} onChange={(event) => setSeedInput(event.target.value)} onBlur={() => setSeed(parseInteger(seedInput, seed))} />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button type="button" variant="outline" size="icon" className="size-8" aria-label="Volver a sortear" onClick={() => { const nextSeed = Math.floor(Math.random() * 2147483647) + 1; setSeed(nextSeed); setSeedInput(String(nextSeed)); }}>
+                          <Dices className="size-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Volver a sortear</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </label>
             </div>
             {summary && <SimulationWeights variable={variable} distribution={summary.distributions[variable]} weights={weights} setWeights={setWeights} />}
-            <Button className="w-full" onClick={run} disabled={!summary || loading || !parametersValid}>
-              {loading ? "Ejecutando…" : "Ejecutar simulación"}
-            </Button>
-            <p className="rounded-md bg-surface-container-low p-2 text-xs text-ink-600">Las probabilidades iniciales se toman de las frecuencias observadas y pueden ajustarse antes de ejecutar.</p>
+            <p className="rounded-md bg-surface-container-low p-2 text-xs text-ink-600">Las probabilidades parten de las frecuencias observadas y se pueden ajustar con los controles.</p>
           </CardContent>
         </Card>
         <div className="space-y-5">
-          {result ? <SimulationDistribution result={result} observedTotal={summary?.distributions[variable]?.validCount ?? 0} /> : <StatusPanel kind="info" title="Ejecuta una simulación" description="Configura los parámetros y genera la distribución simulada con su rango del 95 % de las repeticiones." />}
+          {result ? <SimulationDistribution result={result} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} loading={loading} /> : <StatusPanel kind="info" title="Calculando simulación" description="La distribución se generará automáticamente con su rango del 95 % de las repeticiones." />}
         </div>
       </div>
       {error && (
@@ -4165,7 +4292,40 @@ export function SimulationPage() {
           description={error}
         />
       )}
-      {result && <SimulationComparisonTable result={result} observedTotal={summary?.distributions[variable]?.validCount ?? 0} scenarioPercentages={scenarioPercentages} />}
+      {result && <SimulationComparisonTable result={result} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} scenarioPercentages={executedRun?.scenarioPercentages ?? scenarioPercentages} />}
+      {executedRun && (
+        <div className="print-only print-page simulation-pdf-page space-y-3" aria-label="Versión de impresión de la simulación">
+          <h2 className="headline-page">Simulación de escenarios: {executedRun.variableLabel}</h2>
+          <p className="text-sm text-ink-600">Dataset: {executedRun.datasetName} · Generado: {new Intl.DateTimeFormat("es-BO", { timeZone: "America/La_Paz", dateStyle: "short" }).format(new Date())}</p>
+          <p className="text-sm font-semibold text-amber-800">Escenario hipotético, no es una predicción</p>
+          <div className="simulation-pdf-parameters grid grid-cols-6 gap-2 rounded-lg bg-surface-container-low p-3 text-xs">
+            <span><strong>Variable</strong><br />{executedRun.variableLabel}</span>
+            <span><strong>Personas (N)</strong><br />{executedRun.result.sampleSize}</span>
+            <span><strong>Réplicas (R)</strong><br />{executedRun.result.repetitions}</span>
+            <span><strong>Semilla</strong><br />{executedRun.result.seed}</span>
+            <span><strong>Probabilidades</strong><br />{executedRun.adjusted ? "Ajustadas manualmente" : "Observadas"}</span>
+            <span><strong>Método</strong><br />Monte Carlo por transformada inversa</span>
+          </div>
+          <div className="rounded-lg border border-border-line p-3 text-xs">
+            <strong>Probabilidades {executedRun.adjusted ? "observadas y usadas" : "observadas"}</strong>
+            <div className="mt-1 grid grid-cols-2 gap-x-5 gap-y-1">
+              {executedRun.result.categories.map((category) => (
+                <span key={category.category}>
+                  {executedRun.categoryLabel(category.category)}: {simulationPercent((executedRun.observedProbabilities[category.category] ?? 0) * 100)}
+                  {executedRun.adjusted && ` → ${simulationPercent((executedRun.usedProbabilities[category.category] ?? 0) * 100)}`}
+                </span>
+              ))}
+            </div>
+          </div>
+          <SimulationDistribution result={executedRun.result} observedTotal={executedRun.observedTotal} loading={false} />
+          <SimulationComparisonTable result={executedRun.result} observedTotal={executedRun.observedTotal} scenarioPercentages={executedRun.scenarioPercentages} />
+          <div className="simulation-pdf-notes border-t border-surface-container-high pt-2 text-xs text-ink-700">
+            <p>El rango del 95 % es el intervalo en que cayeron el 95 % de las réplicas. No es un intervalo de confianza.</p>
+            <p className="font-semibold text-amber-800">Base observada n = {executedRun.observedTotal}: muestra muy pequeña.</p>
+            <p>Semilla: {executedRun.result.seed}. Permite repetir exactamente el resultado.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4194,7 +4354,7 @@ function SimulationWeights({
         const value = weights[label] ?? count;
         return (
           <label key={label} className="grid gap-1 text-xs">
-            <span className="flex justify-between gap-2"><span className="truncate">{simulationCategoryLabel(label)}</span><strong>{value} · {currentTotal ? formatPercentage(value, currentTotal) : "—"}</strong></span>
+            <span className="flex justify-between gap-2"><span className="truncate">{simulationCategoryLabel(label)}</span><strong>{value} de {currentTotal} · {currentTotal ? simulationPercent((value * 100) / currentTotal) : "—"}</strong></span>
             <Slider min={0} max={Math.max(10, Math.max(...entries.map(([, item]) => item)) * 2)} step={1} value={[value]} onValueChange={(next) => setWeights((current) => ({ ...current, [label]: next[0] ?? value }))} />
           </label>
         );
@@ -4203,7 +4363,7 @@ function SimulationWeights({
   );
 }
 
-function SimulationDistribution({ result, observedTotal }: { result: Simulation; observedTotal: number }) {
+function SimulationDistribution({ result, observedTotal, loading = false }: { result: Simulation; observedTotal: number; loading?: boolean }) {
   return (
     <Card className="rounded-xl border-0 shadow-sm">
       <CardHeader>
@@ -4212,7 +4372,22 @@ function SimulationDistribution({ result, observedTotal }: { result: Simulation;
             <CardTitle className="title-card">Distribución simulada y rango del 95 % de las repeticiones</CardTitle>
             <CardDescription>Media estimada y rango donde cae el 95 % de las repeticiones por categoría.</CardDescription>
           </div>
-          <Badge tone="neutral">n = {observedTotal} · N = {result.sampleSize}</Badge>
+          <HoverCard openDelay={150} closeDelay={100}>
+            <HoverCardTrigger asChild>
+              <span className="cursor-help">
+                <Badge tone="neutral">Base observada: {observedTotal} · Simulado: {result.sampleSize} personas × {result.repetitions.toLocaleString("es-BO")} réplicas</Badge>
+              </span>
+            </HoverCardTrigger>
+            <HoverCardContent side="bottom" align="end">
+              <p className="font-semibold text-ink-900">Cómo leer esta simulación</p>
+              <p className="mt-1 text-xs leading-relaxed text-ink-600">
+                La base observada es de {observedTotal} respuestas. Se simulan {result.sampleSize} personas en {result.repetitions.toLocaleString("es-BO")} réplicas con la semilla {result.seed}.
+              </p>
+              <p className="mt-2 text-xs leading-relaxed text-ink-600">
+                El rango del 95 % describe la variación de los sorteos simulados; no es un intervalo de confianza sobre la población.
+              </p>
+            </HoverCardContent>
+          </HoverCard>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -4220,18 +4395,20 @@ function SimulationDistribution({ result, observedTotal }: { result: Simulation;
           <div key={category.category} className="space-y-1">
             <div className="flex items-center justify-between gap-3 text-sm">
               <span className="min-w-0 truncate font-medium">{simulationCategoryLabel(category.category)}</span>
-              <span className="whitespace-nowrap tabular-nums text-primary">{formatDecimal(category.simulatedMean)}% <span className="text-xs text-ink-600">[Rango 95 %: {formatDecimal(category.lower95)}% – {formatDecimal(category.upper95)}%]</span></span>
+              <span className="whitespace-nowrap tabular-nums text-primary">{simulationPercent(category.simulatedMean)} <span className="text-xs text-ink-600">[Rango 95 %: {simulationPercent(category.lower95)} – {simulationPercent(category.upper95)}]</span></span>
             </div>
-            <div className="relative h-5 rounded bg-surface-container-low">
-              <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-primary/75" style={{ width: `${category.simulatedMean}%` }} />
-              <div className="absolute top-1/2 h-0.5 -translate-y-1/2 bg-ink-900" style={{ left: `${category.lower95}%`, width: `${Math.max(0, category.upper95 - category.lower95)}%` }} />
-              <span className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" style={{ left: `${category.simulatedMean}%` }} />
+              <div className="relative h-5 rounded bg-surface-container-low transition-opacity duration-200" style={{ opacity: loading ? 0.55 : 1 }}>
+                <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-primary/75" style={{ width: `${category.simulatedMean}%` }} />
+                <div className="absolute top-1/2 h-0.5 -translate-y-1/2 bg-ink-900" style={{ left: `${category.lower95}%`, width: `${Math.max(0, category.upper95 - category.lower95)}%` }} />
+                <span className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" style={{ left: `${category.simulatedMean}%` }} />
+                <span className="absolute top-0 h-full w-px bg-amber-600" style={{ left: `${category.observedPercentage}%` }} title={`Observado: ${simulationPercent(category.observedPercentage)}`} />
             </div>
           </div>
         ))}
         <div className="flex flex-wrap gap-5 border-t border-border-line pt-3 text-xs text-ink-600">
           <span><i className="mr-1 inline-block size-2 rounded-sm bg-primary" />Media estimada</span>
           <span><i className="mr-1 inline-block h-0.5 w-4 bg-ink-900 align-middle" />Rango del 95 % de las repeticiones</span>
+          <span><i className="mr-1 inline-block h-3 w-px bg-amber-600 align-middle" />Observado</span>
           <span className="ml-auto">{result.repetitions.toLocaleString("es-BO")} réplicas · semilla {result.seed}</span>
         </div>
       </CardContent>
@@ -4261,20 +4438,21 @@ function SimulationComparisonTable({
       </CardHeader>
       <CardContent>
         <Table className="min-w-[760px] text-sm">
-          <TableHeader><TableRow className="bg-surface-container-low"><TableHead>Categoría</TableHead><TableHead className="text-right">Frecuencia obs. (n)</TableHead><TableHead className="text-right">% observado</TableHead>{scenarioPercentages && <TableHead className="text-right">Escenario</TableHead>}<TableHead className="text-right">% simulado (media)</TableHead><TableHead className="text-right">Rango 95 % de repeticiones</TableHead><TableHead className="text-right">Desv. est. de las repeticiones</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow className="bg-surface-container-low"><TableHead>Categoría</TableHead><TableHead className="text-right">Frecuencia observada (n)</TableHead><TableHead className="text-right">% observado</TableHead>{scenarioPercentages && <TableHead className="text-right">Probabilidad usada</TableHead>}<TableHead className="text-right">% simulado (media)</TableHead><TableHead className="text-right">Δ vs observado</TableHead><TableHead className="text-right">Rango 95 % de repeticiones</TableHead><TableHead className="text-right">Desv. est. de las repeticiones</TableHead></TableRow></TableHeader>
           <TableBody>
             {result.categories.map((category) => (
               <TableRow key={category.category}>
                 <TableCell className="font-medium">{simulationCategoryLabel(category.category)}</TableCell>
                 <TableCell className="text-right tabular-nums">{category.observedCount}</TableCell>
-                <TableCell className="text-right tabular-nums">{formatDecimal(category.observedPercentage)}%</TableCell>
-                {scenarioPercentages && <TableCell className="text-right tabular-nums text-ink-700">{formatDecimal(scenarioPercentages[category.category] ?? 0)}%</TableCell>}
-                <TableCell className="text-right tabular-nums text-primary">{formatDecimal(category.simulatedMean)}%</TableCell>
-                <TableCell className="text-right tabular-nums">[{formatDecimal(category.lower95)}% – {formatDecimal(category.upper95)}%]</TableCell>
-                <TableCell className="text-right tabular-nums">{category.standardDeviation == null ? "—" : `${formatDecimal(category.standardDeviation)}%`}</TableCell>
+                <TableCell className="text-right tabular-nums">{simulationPercent(category.observedPercentage)}</TableCell>
+                {scenarioPercentages && <TableCell className="text-right tabular-nums text-ink-700">{simulationPercent(scenarioPercentages[category.category] ?? 0)}</TableCell>}
+                <TableCell className="text-right tabular-nums text-primary">{simulationPercent(category.simulatedMean)}</TableCell>
+                <TableCell className="text-right tabular-nums">{simulationDelta(category.simulatedMean, category.observedPercentage)}</TableCell>
+                <TableCell className="text-right tabular-nums">[{simulationPercent(category.lower95)} – {simulationPercent(category.upper95)}]</TableCell>
+                <TableCell className="text-right tabular-nums">{category.standardDeviation == null ? "—" : simulationPercent(category.standardDeviation)}</TableCell>
               </TableRow>
             ))}
-            <TableRow className="bg-surface-container-low font-semibold"><TableCell>Total</TableCell><TableCell className="text-right tabular-nums">{result.categories.reduce((sum, category) => sum + category.observedCount, 0)}</TableCell><TableCell className="text-right tabular-nums">100,0%</TableCell>{scenarioPercentages && <TableCell className="text-right tabular-nums">100,0%</TableCell>}<TableCell className="text-right tabular-nums">100,0%</TableCell><TableCell className="text-right">—</TableCell><TableCell className="text-right">—</TableCell></TableRow>
+            <TableRow className="bg-surface-container-low font-semibold"><TableCell>Total</TableCell><TableCell className="text-right tabular-nums">{result.categories.reduce((sum, category) => sum + category.observedCount, 0)}</TableCell><TableCell className="text-right tabular-nums">100,0 %</TableCell>{scenarioPercentages && <TableCell className="text-right tabular-nums">100,0 %</TableCell>}<TableCell className="text-right tabular-nums">100,0 %</TableCell><TableCell className="text-right">0,0 pp</TableCell><TableCell className="text-right">—</TableCell><TableCell className="text-right">—</TableCell></TableRow>
           </TableBody>
         </Table>
       </CardContent>

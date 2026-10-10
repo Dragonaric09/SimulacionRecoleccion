@@ -1,7 +1,26 @@
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import { cn } from 'cn'
 
-export function Badge({ children, tone = 'neutral', className }: { children: ReactNode; tone?: 'neutral' | 'titulados' | 'empleadores' | 'warning' | 'success'; className?: string }) {
-  return <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold', `badge-${tone}`, className)}>{children}</span>
-}
+type BadgeTone = 'neutral' | 'titulados' | 'empleadores' | 'warning' | 'success';
 
+type BadgeProps = Omit<ComponentProps<'span'>, 'children'> & {
+  children: ReactNode;
+  tone?: BadgeTone;
+};
+
+export function Badge({ children, tone = 'neutral', className, ...props }: BadgeProps) {
+  return (
+    <span
+      data-slot="badge"
+      data-tone={tone}
+      className={cn(
+        'inline-flex h-6 w-fit shrink-0 items-center justify-center gap-1 rounded-full border border-transparent px-2.5 text-xs font-semibold leading-4 whitespace-nowrap transition-colors [&>svg]:size-3 [&>svg]:shrink-0',
+        `badge-${tone}`,
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </span>
+  );
+}
