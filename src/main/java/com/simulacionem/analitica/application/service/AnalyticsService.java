@@ -238,6 +238,7 @@ public class AnalyticsService {
     public List<CompetenceAverageDto> competenceGaps(UUID datasetId) {
         return competenceGaps(datasetId, new TituladosFilter(null, null, List.of(), List.of()));
     }
+    @Transactional(readOnly = true)
     public List<CompetenceAverageDto> competenceGaps(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, null);
         Map<String, List<CompetenceRatingEntity>> grouped = ratings.findByResponse_Dataset_Id(dataset.getId()).stream()

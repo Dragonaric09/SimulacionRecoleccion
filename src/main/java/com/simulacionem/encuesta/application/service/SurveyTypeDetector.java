@@ -31,6 +31,8 @@ final class SurveyTypeDetector {
     private String matchable(String value) {
         return Normalizer.normalize(Objects.toString(value, ""), Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")
-                .toLowerCase(Locale.ROOT);
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 }

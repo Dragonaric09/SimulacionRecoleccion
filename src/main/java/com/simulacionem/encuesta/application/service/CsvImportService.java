@@ -344,7 +344,7 @@ public class CsvImportService {
 
     private String internalKey(String header) {
         if (header == null || clean(header) == null) return null;
-        String lower = header.toLowerCase(Locale.ROOT);
+        String lower = clean(header).toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
         String gridKey = gridInternalKey(header, lower);
         if (gridKey != null) return gridKey;
         if (personal(lower)) return null;
