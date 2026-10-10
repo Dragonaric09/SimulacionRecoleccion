@@ -86,6 +86,7 @@ import { printAnalyticsPdf } from "@/components/analytics/PrintButton";
 import { crossMetricLabel, exportCrossCsv, exportCrossExcel, exportCrossPng } from "./shared/crossExportUtils";
 import { exportSimulationCsv, exportSimulationExcel, exportSimulationPng, type SimulationExportData } from "./shared/simulationExportUtils";
 import { MiniDistribution, StackedRelevanceCard } from "./employment/EmploymentCharts";
+import { useCompetenceData } from "./competence/useCompetenceData";
 
 type ChiResult = {
   estadistico: number;
@@ -1714,63 +1715,20 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
     setDatasetId,
     loading: datasetsLoading,
   } = useDatasets(domain);
-  const [items, setItems] = useState<Competence[]>([]);
-  const [satisfaction, setSatisfaction] = useState<AnalyticsSummary | null>(
-    null,
-  );
-  const [curriculum, setCurriculum] = useState<AnalyticsSummary | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
   const [activeGroup, setActiveGroup] = useState("");
   const [activeTab, setActiveTab] = useState("hard");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { items, satisfaction, curriculum, loading, error } = useCompetenceData(domain, datasetId, filterQuery);
   useEffect(() => {
-    if (!datasetId) {
-      setItems([]);
-      setSatisfaction(null);
-      setCurriculum(null);
+    if (!items.length) {
       setActiveGroup("");
       return;
     }
-    setLoading(true);
-    setError(null);
-    const satisfactionRequest =
-      domain === "TITULADOS"
-        ? apiRequest<AnalyticsSummary>(
-            `/analytics/titulados/satisfaction?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`,
-          )
-        : Promise.resolve(null);
-    const curriculumRequest =
-      domain === "TITULADOS"
-        ? apiRequest<AnalyticsSummary>(
-            `/analytics/titulados/curriculum?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`,
-          )
-        : Promise.resolve(null);
-    Promise.all([
-      apiRequest<Competence[]>(
-        `/analytics/competencies/gaps?datasetId=${encodeURIComponent(datasetId)}${domain === "TITULADOS" ? filterQuery : ""}`,
-      ),
-      satisfactionRequest,
-      curriculumRequest,
-    ])
-      .then(([next, nextSatisfaction, nextCurriculum]) => {
-        setItems(next);
-        setSatisfaction(nextSatisfaction);
-        setCurriculum(nextCurriculum);
-        const firstHard = next.find((item) =>
-          item.group.toLowerCase().includes("hard"),
-        );
-        const firstSoft = next.find((item) =>
-          item.group.toLowerCase().includes("soft"),
-        );
-        setActiveTab(firstHard ? "hard" : firstSoft ? "soft" : "hard");
-        setActiveGroup((firstHard ?? firstSoft ?? next[0])?.group ?? "");
-      })
-      .catch((cause) =>
-        setError(cause instanceof Error ? cause.message : String(cause)),
-      )
-      .finally(() => setLoading(false));
-  }, [datasetId, domain, filterQuery]);
+    const firstHard = items.find((item) => item.group.toLowerCase().includes("hard"));
+    const firstSoft = items.find((item) => item.group.toLowerCase().includes("soft"));
+    setActiveTab(firstHard ? "hard" : firstSoft ? "soft" : "hard");
+    setActiveGroup((firstHard ?? firstSoft ?? items[0])?.group ?? "");
+  }, [items]);
   const groups = useMemo(
     () => [...new Set(items.map((item) => item.group))],
     [items],
