@@ -136,14 +136,15 @@ export function TituladosSummaryPage({ printAll = false }: { printAll?: boolean 
               description={`Los resultados corresponden a ${summary.validResponses} respuestas válidas y deben leerse junto con sus conteos.`}
             />
           )}
-          <div className="summary-kpi-grid grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-6">
-            <KpiCard label="Titulados encuestados" value={String(summary.validResponses)} detail={`Titulación ${yearRange.min ?? "—"}–${yearRange.max ?? "—"}`} note={`n = ${summary.validResponses}`} icon={Users} tone="titulados" />
-            <KpiCard label="Con empleo" value={`${occupied} de ${summary.validResponses}`} detail={formatPercent(occupied, summary.validResponses)} note={`n = ${summary.validResponses}`} icon={BriefcaseBusiness} tone="titulados" />
-            <KpiCard label="Mediana desde titulación" value={yearsSince === null ? "—" : `${formatDecimal(yearsSince, 1)} años`} detail={medianYear == null ? "No disponible" : `La mitad se tituló antes de ${Math.ceil(medianYear)}`} note={`n = ${summary.validResponses}`} icon={Clock3} tone="titulados" />
-            <KpiCard label="Primer empleo" value={firstEmploymentYes == null ? "—" : `Siguen en él: ${firstEmploymentYes} de ${occupied}`} detail={firstEmploymentYes == null ? "Sin respuestas" : formatPercent(firstEmploymentYes, occupied)} note={`n = ${occupied}`} icon={BriefcaseBusiness} tone="titulados" />
-            <KpiCard label="Interesados en posgrado" value={formatCount(workValue(interes), summary.validResponses)} detail={formatPercent(workValue(interes), summary.validResponses)} note={`n = ${summary.validResponses}`} icon={GraduationCap} tone="titulados" />
-            <KpiCard label="Mayor brecha de competencia" value={weakest ? formatDecimal(weakest.average) : "—"} detail={weakest?.name ?? "Sin datos"} note={weakest ? `n = ${weakest.validCount}` : undefined} icon={Target} tone="titulados" />
+          <div className="summary-kpi-grid grid items-stretch gap-4 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-6">
+            <KpiCard label="Titulados" value={String(summary.validResponses)} detail={`Titulación ${yearRange.min ?? "—"}–${yearRange.max ?? "—"}`} icon={Users} tone="titulados" />
+            <KpiCard label="Con empleo" value={`${occupied} de ${summary.validResponses}`} detail={formatPercent(occupied, summary.validResponses)} icon={BriefcaseBusiness} tone="titulados" />
+            <KpiCard label="Mediana desde titulación" value={yearsSince === null ? "—" : `${formatDecimal(yearsSince, 1)} años`} detail={medianYear == null ? "No disponible" : `La mitad se tituló antes de ${Math.ceil(medianYear)}`} icon={Clock3} tone="titulados" />
+            <KpiCard label="Siguen en su primer empleo" value={firstEmploymentYes == null ? "—" : `${firstEmploymentYes} de ${occupied}`} detail={firstEmploymentYes == null ? "Sin respuestas" : `${formatPercent(firstEmploymentYes, occupied)} · base: ${occupied} con empleo`} icon={BriefcaseBusiness} tone="titulados" />
+            <KpiCard label="Interesados en posgrado" value={formatCount(workValue(interes), summary.validResponses)} detail={formatPercent(workValue(interes), summary.validResponses)} icon={GraduationCap} tone="titulados" />
+            <KpiCard label="Mayor brecha" value={weakest ? formatDecimal(weakest.average) : "—"} detail={weakest?.name ?? "Sin datos"} icon={Target} tone="titulados" />
           </div>
+          
           <div className="summary-context-grid grid items-stretch gap-4 lg:grid-cols-2">
             <EmploymentSummaryCard distribution={laboral} total={summary.validResponses} />
             <SenioritySummaryCard points={profile?.cohortPoints ?? []} total={summary.validResponses} />
