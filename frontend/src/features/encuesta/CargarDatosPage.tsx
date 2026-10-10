@@ -86,7 +86,11 @@ export function CargarDatosPage() {
     if (!next) return;
     setLoading("validate");
     try {
-      setReport(await validateDataset(next));
+      const nextReport = await validateDataset(next);
+      setReport(nextReport);
+      if (nextReport.surveyType === "TITULADOS" || nextReport.surveyType === "EMPLEADORES") {
+        setSurveyType(nextReport.surveyType);
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
