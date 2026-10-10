@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import type { CategoryDistribution } from "../api";
+import { sentenceCaseLabel } from "../shared/AnalyticsPrimitives";
 
 export function SummaryCardShell({ title, description, children }: { title: string; description: string; children: ReactNode }) {
   return (
@@ -69,7 +70,7 @@ export function NominalListCard({ title, description, distribution, forceBars = 
   const showBars = forceBars || !equal;
   return (
     <SummaryCardShell title={title} description={`${description} · n = ${distribution?.validCount ?? 0}`}>
-      {entries.length ? <div className="space-y-2">{entries.map(([label, count]) => showBars ? <div key={label} className="space-y-1"><div className="flex justify-between gap-3 text-xs"><span className="min-w-0 break-words">{label}</span><span className="shrink-0 tabular-nums font-semibold">{count} ({formatPercentValue(distribution?.percentages[label] ?? 0)} %)</span></div><div className="h-2 overflow-hidden rounded-full bg-surface-container-high"><div className="h-full rounded-full bg-titulados" style={{ width: `${distribution?.validCount ? count * 100 / distribution.validCount : 0}%` }} /></div></div> : <div key={label} className="flex items-center justify-between gap-3 border-b border-border-line py-1.5 text-xs last:border-0"><span className="min-w-0 break-words">{label}</span><span className="rounded-full bg-surface-container-low px-2 py-0.5 font-semibold tabular-nums">{count}</span></div>)}</div> : <Empty className="py-4"><EmptyTitle>Sin respuestas disponibles</EmptyTitle></Empty>}
+      {entries.length ? <div className="space-y-2">{entries.map(([label, count]) => showBars ? <div key={label} className="space-y-1"><div className="flex justify-between gap-3 text-xs"><span className="min-w-0 break-words">{sentenceCaseLabel(label)}</span><span className="shrink-0 tabular-nums font-semibold">{count} de {distribution?.validCount ?? 0} ({formatPercentValue(distribution?.percentages[label] ?? 0)} %)</span></div><div className="h-2 overflow-hidden rounded-full bg-surface-container-high"><div className="h-full rounded-full bg-titulados" style={{ width: `${distribution?.validCount ? count * 100 / distribution.validCount : 0}%` }} /></div></div> : <div key={label} className="flex items-center justify-between gap-3 border-b border-border-line py-1.5 text-xs last:border-0"><span className="min-w-0 break-words">{sentenceCaseLabel(label)}</span><span className="rounded-full bg-surface-container-low px-2 py-0.5 font-semibold tabular-nums">{count} de {distribution?.validCount ?? 0}</span></div>)}</div> : <Empty className="py-4"><EmptyTitle>Sin respuestas disponibles</EmptyTitle></Empty>}
     </SummaryCardShell>
   );
 }

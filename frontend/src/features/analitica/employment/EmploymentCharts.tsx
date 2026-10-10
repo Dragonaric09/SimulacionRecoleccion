@@ -1,6 +1,7 @@
 import { Info } from "lucide-react";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import type { CategoryDistribution } from "../api";
+import { sentenceCaseLabel } from "../shared/AnalyticsPrimitives";
 
 export function MiniDistribution({
   title,
@@ -35,7 +36,7 @@ export function MiniDistribution({
             return (
               <div key={label} className="space-y-1">
                 <div className="flex justify-between gap-3 text-sm">
-                  <span className="min-w-0 break-words">{label}</span>
+                  <span className="min-w-0 break-words">{sentenceCaseLabel(label)}</span>
                   <span className="whitespace-nowrap tabular-nums font-semibold">{count} de {distribution?.validCount} ({formatPercent(percentage)})</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
@@ -80,7 +81,7 @@ export function StackedRelevanceCard({ distribution }: { distribution?: Category
             })}
           </div>
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-600">
-            {entries.map(([label], index) => <span key={label} className="flex items-center gap-1"><i className="size-2 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />{label} ({formatPercent(distribution?.percentages[label] ?? 0)})</span>)}
+            {entries.map(([label], index) => <span key={label} className="flex items-center gap-1"><i className="size-2 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />{sentenceCaseLabel(label)} ({formatPercent(distribution?.percentages[label] ?? 0)})</span>)}
           </div>
         </>
       ) : (

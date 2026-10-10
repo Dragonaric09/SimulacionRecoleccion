@@ -588,7 +588,8 @@ function UnemploymentPanel({
               No hay razones mapeadas en este dataset. Vuelve a importar el CSV para aplicar el nuevo mapeo.
             </p>
           )}
-          <div className="mt-5 grid grid-cols-3 gap-2 border-t border-surface-container-high pt-3">
+          <p className="mt-5 border-t border-surface-container-high pt-3 text-xs font-semibold text-ink-700">Tiempo en búsqueda activa</p>
+          <div className="grid grid-cols-3 gap-2">
             {[
               ["Media", average],
               ["Mediana", median],
@@ -1978,8 +1979,8 @@ export function SimulationPage() {
 }
 
 function displayLaborLabel(label: string) {
-  const normalized = label.toLocaleLowerCase("es-BO");
-  return normalized.includes("no trabaja") || normalized.includes("no trabajo") || normalized.includes("busqueda") || normalized.includes("desemple")
+  const normalized = label.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return normalized.includes("no trabaja") || normalized.includes("no trabajo") || normalized.includes("busqueda") || normalized.includes("desemple") || normalized.includes("sin empleo")
     ? "Sin empleo"
     : label;
 }

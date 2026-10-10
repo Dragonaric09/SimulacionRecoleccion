@@ -21,6 +21,7 @@ import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import type { Competence, EmploymentProfile } from "./shared/analyticsTypes";
 import { useDatasetContext } from "@/app/DatasetContext";
 import { navigate } from "@/app/navigation";
+import { sentenceCaseLabel } from "./shared/AnalyticsPrimitives";
 
 const fields =
   "situacion_laboral_actual,interes_posgrado,area_posgrado_interes,sector_trabajo,anio_titulacion,es_primer_empleo";
@@ -231,10 +232,10 @@ function EmploymentCard({
                     className="mt-1 size-3 shrink-0 rounded-sm"
                     style={{ backgroundColor: colorForEmployment(index) }}
                   />
-                  <span className="break-words leading-5">{label}</span>
+                  <span className="break-words leading-5">{summaryLaborLabel(label)}</span>
                 </div>
                 <span className="tabular-nums whitespace-nowrap font-medium">
-                  {count}{" "}
+                  {count} de {total}{" "}
                   <span className="caption-meta text-ink-600">
                     ({formatPercent(distribution?.percentages[label] ?? 0, 100)})
                   </span>
@@ -438,6 +439,13 @@ function PostgraduateCard({
 
 function colorForEmployment(index: number) {
   return ["#1f6fb5", "#14a39a", "#94a3b8", "#f2a33a"][index % 4];
+}
+
+function summaryLaborLabel(label: string) {
+  const normalized = label.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return normalized.includes("no trabaja") || normalized.includes("no trabajo") || normalized.includes("busqueda") || normalized.includes("desemple") || normalized.includes("sin empleo")
+    ? "Sin empleo"
+    : sentenceCaseLabel(label);
 }
 function booleanCount(distribution: CategoryDistribution, expected: boolean) {
   const target = expected ? ["true", "sí", "si"] : ["false", "no"];

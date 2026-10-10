@@ -56,8 +56,8 @@ export function DistributionCard({ title, distribution, tone }: { title: string;
         {Object.entries(distribution.counts).map(([key, count]) => (
           <div key={key} className="space-y-1">
             <div className="flex justify-between text-sm">
-              <span>{key}</span>
-              <span className="tabular-nums">{count} · {formatPercent(distribution.percentages[key] ?? 0)}</span>
+              <span>{sentenceCaseLabel(key)}</span>
+              <span className="tabular-nums">{count} de {distribution.validCount} ({formatPercent(distribution.percentages[key] ?? 0)})</span>
             </div>
             <div className="h-2 rounded-full bg-slate-100">
               <div className={`h-full rounded-full ${tone === "titulados" ? "bg-titulados" : "bg-empleadores"}`} style={{ width: `${distribution.percentages[key]}%` }} />
@@ -71,6 +71,11 @@ export function DistributionCard({ title, distribution, tone }: { title: string;
 
 function formatPercent(value: number) {
   return `${value.toFixed(1).replace(".", ",")} %`;
+}
+
+export function sentenceCaseLabel(value: string) {
+  const normalized = value.trim().replace(/\s+/g, " ").toLocaleLowerCase("es-BO");
+  return normalized ? normalized.charAt(0).toLocaleUpperCase("es-BO") + normalized.slice(1) : normalized;
 }
 
 export function DatasetAnalyticsPage({ title, description, domain, endpoint, fields, cards }: {

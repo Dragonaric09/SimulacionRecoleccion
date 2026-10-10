@@ -456,7 +456,7 @@ public class AnalyticsService {
                     "Ofrecimiento de más opciones de especialización.");
             case "asignaturas_ventaja" -> List.of("Introducción", "Base de Datos", "Inteligencia Artificial",
                     "Redes de Computadora", "Electivas", "T.I.S.", "Básicas (Física, Calculo, Algebras)",
-                    "Planificación de Proyectos y Gestión", "Tecnologia Redes Avanzadas");
+                    "Planificación de Proyectos y Gestión", "Tecnología Redes Avanzadas");
             case "asignaturas_poco_utiles" -> List.of("Básicas (Física, Calculo, Algebras)",
                     "Aplic. Interactivas para Televisión Digital", "Telefonía IP", "Web Semánticas", "Graficación por Computadora",
                     "Robótica", "Taller de Programación en Bajo Nivel", "Teoría de Autómatas y Leng. Formales",

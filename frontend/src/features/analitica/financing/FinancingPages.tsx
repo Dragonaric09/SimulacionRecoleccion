@@ -64,7 +64,7 @@ export function FinancingCompletePage({ printAll = false }: { printAll?: boolean
         <label className="flex items-center gap-2 text-sm text-ink-600"><Checkbox checked={includeTotals} onCheckedChange={(checked) => setIncludeTotals(checked === true)} /> Totales</label>
         <label className="flex items-center gap-2 text-sm text-ink-600"><Checkbox checked={colorHeatmap} onCheckedChange={(checked) => setColorHeatmap(checked === true)} /> Aplicar mapa de calor</label>
       </CardContent></Card>
-      {cross && <><CrossTable cross={cross} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric="count" rowLabel="Fuente de financiamiento estimada" columnLabel={financingColumns.find((field) => field.key === columnField)?.label ?? "Nivel de posgrado de interés"} /><div className="w-full"><ChiSquareCard result={chi} cross={cross} /></div></>}
+      {cross && <><CrossTable cross={cross} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric="count" rowLabel="Fuente de financiamiento estimada" columnLabel={financingColumns.find((field) => field.key === columnField)?.label ?? "Nivel de posgrado de interés"} /><div className="financing-chi-card w-full"><ChiSquareCard result={chi} cross={cross} /></div></>}
     </div>
   );
 }

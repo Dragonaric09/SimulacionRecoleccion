@@ -297,6 +297,11 @@
   .print-page .employment-profile-root > [data-slot="tabs"] {
     display: none !important;
   }
+  .print-page .financing-chi-card {
+    margin-bottom: 8mm !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
   .print-page .employment-profile-root > .print-tab-section {
     margin-top: 0 !important;
   }
