@@ -4,10 +4,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart } from "recharts";
-
-function formatDecimal(value: number, digits = 2) {
-  return value.toFixed(digits).replace(".", ",");
-}
+import { formatDecimal } from "../shared/analyticsFormatters";
 
 export function CompetenceRadar({
   items,

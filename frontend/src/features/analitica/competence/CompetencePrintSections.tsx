@@ -1,5 +1,6 @@
 import type { AnalyticsSummary } from "../api";
 import type { Competence, Tone } from "../shared/analyticsTypes";
+import { formatDecimal } from "../shared/analyticsFormatters";
 import { KpiCard } from "@/components/analytics/KpiCard";
 import { StatusPanel } from "@/components/analytics/StatusPanel";
 import { BarChart3, ListChecks, TrendingDown, TrendingUp } from "lucide-react";
@@ -36,9 +37,9 @@ export function CompetencePrintGroup({ items, group, tone }: { items: Competence
   return <>
     <div className="competence-kpi-grid grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div className="h-full"><KpiCard label="Competencias evaluadas" value={String(items.length)} detail={`${groupDisplayName(group)} evaluadas`} icon={ListChecks} tone={tone} /></div>
-      <div className="h-full"><KpiCard label={`Promedio de ${groupDisplayName(group)}`} value={average ? `${average.toFixed(2).replace(".", ",")} de 5` : "—"} detail={`Promedio de las ${items.length} competencias`} icon={BarChart3} tone={tone} /></div>
-      <div className="h-full"><KpiCard label="Competencia más baja" value={lowest ? lowest.average.toFixed(2).replace(".", ",") : "—"} detail={lowest?.name ?? "Sin datos"} icon={TrendingDown} tone={tone} /></div>
-      <div className="h-full"><KpiCard label="Competencia más alta" value={highest ? highest.average.toFixed(2).replace(".", ",") : "—"} detail={highest?.name ?? "Sin datos"} icon={TrendingUp} tone={tone} /></div>
+      <div className="h-full"><KpiCard label={`Promedio de ${groupDisplayName(group)}`} value={average ? `${formatDecimal(average)} de 5` : "—"} detail={`Promedio de las ${items.length} competencias`} icon={BarChart3} tone={tone} /></div>
+      <div className="h-full"><KpiCard label="Competencia más baja" value={lowest ? formatDecimal(lowest.average) : "—"} detail={lowest?.name ?? "Sin datos"} icon={TrendingDown} tone={tone} /></div>
+      <div className="h-full"><KpiCard label="Competencia más alta" value={highest ? formatDecimal(highest.average) : "—"} detail={highest?.name ?? "Sin datos"} icon={TrendingUp} tone={tone} /></div>
     </div>
     <div className="print-competence-matrix"><CompetenceHeatmap items={items} /></div>
     <div className="print-competence-radar"><CompetenceRadarView items={items} /></div>

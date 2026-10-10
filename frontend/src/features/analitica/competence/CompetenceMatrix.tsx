@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Competence } from "../shared/analyticsTypes";
 import { contrastTextColor } from "@/lib/utils";
+import { formatDecimal } from "../shared/analyticsFormatters";
 
 export function CompetenceMatrix({ items, className = "" }: { items: Competence[]; className?: string }) {
   const columnMaxima = [1, 2, 3, 4, 5].reduce<Record<number, number>>((maxima, level) => {
@@ -41,8 +42,4 @@ function matrixBackground(level: number, count: number, columnMaximum: number) {
   if (level <= 2) return `rgba(214, 69, 69, ${0.08 + intensity * 0.62})`;
   if (level === 3) return `rgba(148, 163, 184, ${0.08 + intensity * 0.62})`;
   return `rgba(31, 111, 181, ${0.08 + intensity * 0.62})`;
-}
-
-function formatDecimal(value: number) {
-  return value.toFixed(2).replace(".", ",");
 }
