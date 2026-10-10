@@ -154,6 +154,17 @@ export function CargarDatosPage() {
   }
 
   const surveyLabel = surveyType === "TITULADOS" ? "Titulados" : "Empleadores";
+  const surveyAccent = surveyType === "TITULADOS"
+    ? {
+        text: "text-titulados",
+        borderHover: "hover:border-titulados",
+        backgroundHover: "hover:bg-titulados/5",
+      }
+    : {
+        text: "text-empleadores",
+        borderHover: "hover:border-empleadores",
+        backgroundHover: "hover:bg-empleadores/5",
+      };
   const visibleDatasets = datasets.filter((dataset) => dataset.surveyType === surveyType);
   const canProcess = Boolean(
     file &&
@@ -194,7 +205,7 @@ export function CargarDatosPage() {
       <Card className="overflow-hidden rounded-xl border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 title-card">
-            <UploadCloud className="size-5 text-titulados" />
+            <UploadCloud className={`size-5 ${surveyAccent.text}`} />
             Archivo de respuestas
           </CardTitle>
           <CardDescription>Archivo CSV (UTF-8) exportado desde Google Forms</CardDescription>
@@ -210,9 +221,9 @@ export function CargarDatosPage() {
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="group flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border-line bg-surface-container-low p-10 text-center transition-colors hover:border-titulados hover:bg-titulados/5"
+            className={`group flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border-line bg-surface-container-low p-10 text-center transition-colors ${surveyAccent.borderHover} ${surveyAccent.backgroundHover}`}
           >
-            <span className="flex size-12 items-center justify-center rounded-lg bg-surface-white text-titulados shadow-sm">
+            <span className={`flex size-12 items-center justify-center rounded-lg bg-surface-white shadow-sm ${surveyAccent.text}`}>
               <FileUp className="size-7 transition-transform group-hover:-translate-y-0.5" />
             </span>
             <span className="font-medium text-ink-900">
@@ -227,7 +238,7 @@ export function CargarDatosPage() {
           {file && (
             <Attachment className="w-full border-border-line bg-white">
               <AttachmentMedia>
-                <FileSpreadsheet className="text-titulados" />
+                <FileSpreadsheet className={surveyAccent.text} />
               </AttachmentMedia>
               <AttachmentContent>
                 <AttachmentTitle>{file.name}</AttachmentTitle>

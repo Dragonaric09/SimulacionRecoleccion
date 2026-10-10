@@ -5,27 +5,18 @@ import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { CargarDatosPage } from '@/features/encuesta/CargarDatosPage'
-import { TituladosSummaryPage } from '@/features/analitica/TituladosSummaryPage'
-import { CompetencePage, CrossExportPage, DatasetAnalyticsPage, EducationProfilePage, EmploymentProfilePage, FinancingCompletePage, SimulationPage } from '@/features/analitica/RestAnalyticPages'
+import { EmpleadoresPage } from '@/features/empleadores/EmpleadoresPages'
+import { isEmpleadoresPath } from '@/features/empleadores/routePaths'
+import { TituladosPage } from '@/features/titulados/TituladosPages'
+import { isTituladosPath } from '@/features/titulados/routePaths'
 import type { NavigationItem } from './navigation'
 
 export function PlaceholderPage({ route }: { route: NavigationItem }) {
   if (route.path === '/cargar-datos') {
     return <CargarDatosPage />
   }
-  if (route.path === '/titulados/resumen') {
-    return <TituladosSummaryPage />
-  }
-  if (route.path === '/titulados/perfil-empleabilidad') return <EmploymentProfilePage />
-  if (route.path === '/titulados/formacion-continua') return <EducationProfilePage />
-  if (route.path === '/titulados/brechas-competencias') return <CompetencePage domain="TITULADOS" />
-  if (route.path === '/titulados/cruces-exportacion') return <CrossExportPage domain="TITULADOS" />
-  if (route.path === '/titulados/financiamiento') return <FinancingCompletePage />
-  if (route.path === '/titulados/simulacion-escenarios') return <SimulationPage />
-  if (route.path === '/empleadores/resumen-contratacion') return <DatasetAnalyticsPage title="Resumen de contratación" description="Indicadores descriptivos de tipo, tamaño y contratación." domain="EMPLEADORES" endpoint="/analytics/employers/summary" fields="tipo_organizacion,tamano_organizacion,contrato_titulados_ultimos_5_anios" cards={[{ key: 'tipo_organizacion', label: 'Tipo de organización' }, { key: 'contrato_titulados_ultimos_5_anios', label: 'Contratación reciente' }]} />
-  if (route.path === '/empleadores/valoracion-carrera') return <DatasetAnalyticsPage title="Valoración de la carrera" description="Distribuciones categóricas por afirmación de la encuesta." domain="EMPLEADORES" endpoint="/analytics/employers/valuation" cards={[{ key: 'valoracion_formacion_1', label: 'Valoración de formación' }, { key: 'valoracion_relacion_1', label: 'Relación con la carrera' }]} />
-  if (route.path === '/empleadores/brechas-competencias') return <CompetencePage domain="EMPLEADORES" />
-  if (route.path === '/empleadores/cruces-exportacion') return <CrossExportPage domain="EMPLEADORES" />
+  if (isTituladosPath(route.path)) return <TituladosPage route={route} />
+  if (isEmpleadoresPath(route.path)) return <EmpleadoresPage route={route} />
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">

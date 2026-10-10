@@ -6,8 +6,8 @@ import { DatasetProvider, useDatasetContext, type DatasetDomain } from './Datase
 import { navigation, navigate, sectionLabels, type NavigationItem } from './navigation'
 import { PlaceholderPage } from './PlaceholderPage'
 import { PrintButton } from '@/components/analytics/PrintButton'
-import { CompetencePage, DatasetAnalyticsPage, EducationProfilePage, EmploymentProfilePage, FinancingCompletePage } from '@/features/analitica/RestAnalyticPages'
-import { TituladosSummaryPage } from '@/features/analitica/TituladosSummaryPage'
+import { EmpleadoresPrintBundle } from '@/features/empleadores/EmpleadoresPages'
+import { TituladosPrintBundle } from '@/features/titulados/TituladosPages'
 
 type Props = { route: NavigationItem }
 
@@ -142,17 +142,7 @@ function AppLayoutContent({ route }: Props) {
             <div className="screen-content"><PlaceholderPage route={route} /></div>
             {route.section !== 'general' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
               <div className="print-bundle" aria-label="Informe completo para impresión">
-                {route.section === 'titulados' ? <>
-                  <section className="print-page"><TituladosSummaryPage /></section>
-                  <section className="print-page"><EmploymentProfilePage printAll /></section>
-                  <section className="print-page"><EducationProfilePage printAll /></section>
-                  <section className="print-page"><FinancingCompletePage /></section>
-                  <section className="print-page"><CompetencePage domain="TITULADOS" printAll /></section>
-                </> : <>
-                  <section className="print-page"><DatasetAnalyticsPage title="Resumen de contratación" description="Indicadores descriptivos de tipo, tamaño y contratación." domain="EMPLEADORES" endpoint="/analytics/employers/summary" fields="tipo_organizacion,tamano_organizacion,contrato_titulados_ultimos_5_anios" cards={[{ key: 'tipo_organizacion', label: 'Tipo de organización' }, { key: 'contrato_titulados_ultimos_5_anios', label: 'Contratación reciente' }]} /></section>
-                  <section className="print-page"><DatasetAnalyticsPage title="Valoración de la carrera" description="Distribuciones categóricas por afirmación de la encuesta." domain="EMPLEADORES" endpoint="/analytics/employers/valuation" cards={[{ key: 'valoracion_formacion_1', label: 'Valoración de formación' }, { key: 'valoracion_relacion_1', label: 'Relación con la carrera' }]} /></section>
-                  <section className="print-page"><CompetencePage domain="EMPLEADORES" /></section>
-                </>}
+                {route.section === 'titulados' ? <TituladosPrintBundle /> : <EmpleadoresPrintBundle />}
               </div>
             )}
           </main>
