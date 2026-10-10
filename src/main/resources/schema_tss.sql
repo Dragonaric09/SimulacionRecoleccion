@@ -1,34 +1,31 @@
--- ============================================================================
--- ESQUEMA DE BASE DE DATOS PARA ANÁLISIS DE MERCADO - INGENIERÍA EN SISTEMAS
--- Universidad Mayor de San Simón
--- ============================================================================
+-- ESQUEMA DE BASE DE DATOS PARA ANÁLISIS DE MERCADO (PostgreSQL)
 
 CREATE TABLE IF NOT EXISTS titulados (
-    id_titulado INTEGER PRIMARY KEY AUTOINCREMENT,
-    edad TEXT NOT NULL,
-    genero TEXT NOT NULL,
+    id_titulado SERIAL PRIMARY KEY,
+    edad VARCHAR(50) NOT NULL,
+    genero VARCHAR(50) NOT NULL,
     año_egreso INTEGER NOT NULL,
-    realizo_postgrado TEXT NOT NULL,
-    tipo_postgrado TEXT,
-    nivel_postgrado TEXT,
-    institucion_postgrado TEXT,
-    financiamiento_postgrado TEXT,
-    nombre_programa TEXT,
-    interes_postgrado_futuro TEXT NOT NULL,
-    area_interes TEXT,
-    institucion_preferida TEXT,
+    realizo_postgrado VARCHAR(20) NOT NULL,
+    tipo_postgrado VARCHAR(100),
+    nivel_postgrado VARCHAR(100),
+    institucion_postgrado VARCHAR(255),
+    financiamiento_postgrado VARCHAR(100),
+    nombre_programa VARCHAR(255),
+    interes_postgrado_futuro VARCHAR(100) NOT NULL,
+    area_interes VARCHAR(255),
+    institucion_preferida VARCHAR(255),
     opinion_postgrado_fcyt INTEGER,
     existe_programas_afines INTEGER,
     años_vida_profesional INTEGER,
     años_desempleado INTEGER,
-    situacion_laboral TEXT NOT NULL,
-    origen_emprendimiento TEXT,
-    tipo_entregable TEXT,
-    financiamiento_externo TEXT,
+    situacion_laboral VARCHAR(100) NOT NULL,
+    origen_emprendimiento VARCHAR(255),
+    tipo_entregable VARCHAR(255),
+    financiamiento_externo VARCHAR(255),
     satisfaccion_negocio INTEGER,
     importancia_formacion_negocio INTEGER,
-    primer_empleo TEXT NOT NULL,
-    tiempo_primer_empleo TEXT,
+    primer_empleo VARCHAR(255) NOT NULL,
+    tiempo_primer_empleo VARCHAR(100),
     cantidad_empleos INTEGER,
     satisfaccion_formacion INTEGER,
     concordancia_formacion_mercado INTEGER,
@@ -46,25 +43,25 @@ CREATE TABLE IF NOT EXISTS titulados (
     mejora_especializaciones TEXT,
     asignaturas_utiles TEXT,
     asignaturas_no_utiles TEXT,
-    interes_red_contactos TEXT NOT NULL,
-    email_contacto TEXT,
-    telefono_contacto TEXT,
-    whatsapp_contacto TEXT,
-    linkedin_url TEXT,
+    interes_red_contactos VARCHAR(100) NOT NULL,
+    email_contacto VARCHAR(255),
+    telefono_contacto VARCHAR(50),
+    whatsapp_contacto VARCHAR(50),
+    linkedin_url VARCHAR(255),
     fecha_respuesta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completado INTEGER DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS empleadores (
-    id_empleador INTEGER PRIMARY KEY AUTOINCREMENT,
-    email_contacto TEXT NOT NULL,
-    nombre_empresa TEXT NOT NULL,
-    tipo_organizacion TEXT NOT NULL,
-    tamaño_organizacion TEXT NOT NULL,
-    rubro_sector TEXT NOT NULL,
-    contratacion_ultimos_5años TEXT NOT NULL,
-    posibilidad_contratacion_futura TEXT,
-    nivel_formacion_demandado TEXT,
+    id_empleador SERIAL PRIMARY KEY,
+    email_contacto VARCHAR(255) NOT NULL,
+    nombre_empresa VARCHAR(255) NOT NULL,
+    tipo_organizacion VARCHAR(100) NOT NULL,
+    tamaño_organizacion VARCHAR(100) NOT NULL,
+    rubro_sector VARCHAR(255) NOT NULL,
+    contratacion_ultimos_5años VARCHAR(100) NOT NULL,
+    posibilidad_contratacion_futura VARCHAR(100),
+    nivel_formacion_demandado VARCHAR(100),
     convoca_medios_escritos TEXT,
     convoca_internet TEXT,
     convoca_competitiva TEXT,
@@ -97,21 +94,21 @@ CREATE TABLE IF NOT EXISTS empleadores (
 );
 
 CREATE TABLE IF NOT EXISTS analisis_resultados (
-    id_analisis INTEGER PRIMARY KEY AUTOINCREMENT,
-    tipo_analisis TEXT NOT NULL,
-    variable1 TEXT,
-    variable2 TEXT,
+    id_analisis SERIAL PRIMARY KEY,
+    tipo_analisis VARCHAR(100) NOT NULL,
+    variable1 VARCHAR(100),
+    variable2 VARCHAR(100),
     resultado_json TEXT,
     fecha_generacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS reportes (
-    id_reporte INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre_reporte TEXT NOT NULL,
-    tipo_reporte TEXT NOT NULL,
-    ruta_archivo TEXT,
+    id_reporte SERIAL PRIMARY KEY,
+    nombre_reporte VARCHAR(255) NOT NULL,
+    tipo_reporte VARCHAR(100) NOT NULL,
+    ruta_archivo VARCHAR(500),
     fecha_generacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    usuario_generador TEXT
+    usuario_generador VARCHAR(100)
 );
 
 CREATE INDEX IF NOT EXISTS idx_titulados_año_egreso ON titulados(año_egreso);

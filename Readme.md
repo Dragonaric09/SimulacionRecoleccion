@@ -52,6 +52,14 @@ docker compose up -d postgres
 
 Esto levanta PostgreSQL en el puerto `5433` con la base `simulacionem`.
 
+Si quieres abrir `psql` sin instalar el cliente localmente, usa el contenedor:
+
+```powershell
+docker compose exec postgres psql -U simulacionem_dev -d simulacionem
+```
+
+Si prefieres usar `psql` en tu máquina, instala el cliente de PostgreSQL y agrega su carpeta `bin` al `PATH`.
+
 ## Iniciar el backend
 
 En PowerShell:

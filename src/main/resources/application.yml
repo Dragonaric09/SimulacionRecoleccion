@@ -2,10 +2,12 @@ spring:
   application:
     name: simulacionem
   datasource:
-    url: jdbc:sqlite:./tss_mercado.db
-    driver-class-name: org.sqlite.JDBC
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/simulacionem}
+    username: ${DB_USERNAME:simulacionem_dev}
+    password: ${DB_PASSWORD:dev_password_2026}
+    driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 1
+      maximum-pool-size: 10
   config:
     import: optional:file:.env[.properties]
   profiles:

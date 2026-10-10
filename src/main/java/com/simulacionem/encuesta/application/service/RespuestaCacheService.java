@@ -38,7 +38,7 @@ public class RespuestaCacheService {
     private String obtenerRespuesta(String claveCache, String url) {
         if (url == null || url.isBlank()) {
             return analisisResultadosRepository.findLatestResult(TIPO_CACHE, claveCache)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Configura las URLs de Apps Script o carga una respuesta cacheada en SQLite"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Configura las URLs de Apps Script o carga una respuesta cacheada en PostgreSQL"));
         }
 
         try {
