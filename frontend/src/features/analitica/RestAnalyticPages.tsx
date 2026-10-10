@@ -60,6 +60,7 @@ import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import type { CohortChartPoint, Competence, Domain, EmploymentProfile, Simulation, Tone } from "./shared/analyticsTypes";
 import { DatasetSelect, PageHeading, useDatasets } from "./shared/AnalyticsPrimitives";
 import { MiniDistribution, StackedRelevanceCard } from "./employment/EmploymentCharts";
+import { useTituladosEmploymentAnalytics } from "./employment/useTituladosEmploymentAnalytics";
 import { useCompetenceData } from "./competence/useCompetenceData";
 import { CompetenceMatrix as CompetenceHeatmap } from "./competence/CompetenceMatrix";
 import { CompetenceStatsTable as CompetenceStatsTableView } from "./competence/CompetenceStatsTable";
@@ -102,57 +103,17 @@ export function EmploymentProfilePage({ printAll = false }: { printAll?: boolean
     setDatasetId,
     loading: datasetsLoading,
   } = useDatasets("TITULADOS");
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
-  const [unemploymentSummary, setUnemploymentSummary] =
-    useState<AnalyticsSummary | null>(null);
-  const [firstEmploymentSummary, setFirstEmploymentSummary] =
-    useState<AnalyticsSummary | null>(null);
-  const [entrepreneurshipSummary, setEntrepreneurshipSummary] =
-    useState<AnalyticsSummary | null>(null);
-  const [profile, setProfile] = useState<EmploymentProfile | null>(null);
   const [activeTab, setActiveTab] = useState("perfil");
   const [filterQuery, setFilterQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    if (!datasetId) {
-      setSummary(null);
-      setUnemploymentSummary(null);
-      setFirstEmploymentSummary(null);
-      setEntrepreneurshipSummary(null);
-      setProfile(null);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    const query = `?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`;
-    Promise.all([
-      apiRequest<AnalyticsSummary>(`/analytics/titulados/employment${query}`),
-      apiRequest<EmploymentProfile>(
-        `/analytics/titulados/employment/profile${query}`,
-      ),
-      apiRequest<AnalyticsSummary>(
-        `/analytics/titulados/employment/unemployment${query}`,
-      ),
-      apiRequest<AnalyticsSummary>(
-        `/analytics/titulados/employment/first-employment${query}`,
-      ),
-      apiRequest<AnalyticsSummary>(
-        `/analytics/titulados/employment/entrepreneurship${query}`,
-      ),
-    ])
-      .then(([nextSummary, nextProfile, nextUnemploymentSummary, nextFirstEmploymentSummary, nextEntrepreneurshipSummary]) => {
-        setSummary(nextSummary);
-        setProfile(nextProfile);
-        setUnemploymentSummary(nextUnemploymentSummary);
-        setFirstEmploymentSummary(nextFirstEmploymentSummary);
-        setEntrepreneurshipSummary(nextEntrepreneurshipSummary);
-      })
-      .catch((cause) =>
-        setError(cause instanceof Error ? cause.message : String(cause)),
-      )
-      .finally(() => setLoading(false));
-  }, [datasetId, filterQuery]);
+  const {
+    summary,
+    profile,
+    unemploymentSummary,
+    firstEmploymentSummary,
+    entrepreneurshipSummary,
+    loading,
+    error,
+  } = useTituladosEmploymentAnalytics(datasetId, filterQuery);
   const labor = summary?.distributions.situacion_laboral_actual;
   const sectors = summary?.distributions.sector_trabajo_actual ?? summary?.distributions.sector_trabajo;
   const unemployed = labor
@@ -563,7 +524,7 @@ function UnemploymentPanel({
           </div>
           {reasonEntries.length ? (
             <div className="mt-4 space-y-3">
-              {reasonEntries.map(([label, count], index) => {
+              {reasonEntries.map(([label, count]) => {
                 const percent = reasons?.percentages[label] ?? 0;
                 return (
                   <div key={label} className="space-y-1">
@@ -576,7 +537,7 @@ function UnemploymentPanel({
                     <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
                       <div
                         className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${percent}%`, backgroundColor: unemploymentReasonColor(index) }}
+                        style={{ width: `${percent}%`, backgroundColor: unemploymentReasonColor() }}
                       />
                     </div>
                   </div>
@@ -1128,7 +1089,7 @@ function laborColor(label: string) {
   return "#1f6fb5";
 }
 
-function unemploymentReasonColor(_index: number) {
+function unemploymentReasonColor() {
   return "#1f6fb5";
 }
 

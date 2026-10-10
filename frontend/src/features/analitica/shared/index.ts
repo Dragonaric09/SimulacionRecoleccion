@@ -7,6 +7,8 @@ export {
 } from "../RestAnalyticPages";
 export { DatasetAnalyticsPage, DatasetSelect, DistributionCard, PageHeading, formatMetric, labelFor, useDatasets } from "./AnalyticsPrimitives";
 export { booleanLabel, crossMetricLabel, exportCrossCsv, exportCrossExcel, exportCrossPng } from "./crossExportUtils";
+export { displayLaborLabel, normalizeAnalyticsLabel } from "./analyticsLabels";
+export { formatCountPercent, formatDecimal, formatPercentage, formatPercentValue, sentenceCaseLabel } from "./analyticsFormatters";
 export type {
   CohortChartPoint,
   Competence,

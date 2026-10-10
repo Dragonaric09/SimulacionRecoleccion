@@ -8,6 +8,7 @@ import type { AnalyticsSummary, CategoryDistribution } from "../api";
 import { apiRequest } from "@/api/client";
 import type { Domain, Tone } from "./analyticsTypes";
 import { useEffect, useState } from "react";
+import { sentenceCaseLabel } from "./analyticsFormatters";
 
 /* Este módulo agrupa primitives y su hook para mantener una única implementación compartida. */
 /* eslint-disable react-refresh/only-export-components */
@@ -71,11 +72,6 @@ export function DistributionCard({ title, distribution, tone }: { title: string;
 
 function formatPercent(value: number) {
   return `${value.toFixed(1).replace(".", ",")} %`;
-}
-
-export function sentenceCaseLabel(value: string) {
-  const normalized = value.trim().replace(/\s+/g, " ").toLocaleLowerCase("es-BO");
-  return normalized ? normalized.charAt(0).toLocaleUpperCase("es-BO") + normalized.slice(1) : normalized;
 }
 
 export function DatasetAnalyticsPage({ title, description, domain, endpoint, fields, cards }: {

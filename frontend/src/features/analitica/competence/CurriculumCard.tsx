@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import type { AnalyticsSummary } from "../api";
-import { sentenceCaseLabel } from "../shared/AnalyticsPrimitives";
+import { sentenceCaseLabel } from "../shared/analyticsFormatters";
 
 export function CurriculumCard({ title, field, summary, tone }: { title: string; field: string; summary: AnalyticsSummary; tone: "blue" | "orange" | "teal" }) {
   const distribution = summary.distributions[field];

@@ -1,7 +1,7 @@
 import { Info } from "lucide-react";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import type { CategoryDistribution } from "../api";
-import { sentenceCaseLabel } from "../shared/AnalyticsPrimitives";
+import { sentenceCaseLabel } from "../shared/analyticsFormatters";
 
 export function MiniDistribution({
   title,

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import type { CategoryDistribution } from "../api";
-import { sentenceCaseLabel } from "../shared/AnalyticsPrimitives";
+import { sentenceCaseLabel } from "../shared/analyticsFormatters";
 
 export function SummaryCardShell({ title, description, children }: { title: string; description: string; children: ReactNode }) {
   return (

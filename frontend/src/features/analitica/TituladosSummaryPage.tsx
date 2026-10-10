@@ -21,7 +21,7 @@ import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import type { Competence, EmploymentProfile } from "./shared/analyticsTypes";
 import { useDatasetContext } from "@/app/DatasetContext";
 import { navigate } from "@/app/navigation";
-import { sentenceCaseLabel } from "./shared/AnalyticsPrimitives";
+import { sentenceCaseLabel } from "./shared/analyticsFormatters";
 
 const fields =
   "situacion_laboral_actual,interes_posgrado,area_posgrado_interes,sector_trabajo,anio_titulacion,es_primer_empleo";
@@ -363,7 +363,7 @@ function SatisfactionSummaryCard({ distribution }: { distribution?: CategoryDist
   return (
     <Card className="h-full rounded-xl border border-border-line shadow-sm">
       <CardHeader className="pb-3"><div className="flex items-start justify-between gap-3"><div><CardTitle className="title-card">Satisfacción con la formación</CardTitle><CardDescription>Escala de satisfacción (3 niveles) · n = {total}</CardDescription></div><SummaryDetailLink href="/titulados/brechas-competencias" /></div></CardHeader>
-      <CardContent className="space-y-3">{entries.length ? <><div className="flex h-7 overflow-hidden rounded-md">{entries.map(([label, _count], index) => <div key={label} className="flex min-w-0 items-center justify-center text-[11px] font-semibold" style={{ width: `${distribution?.percentages[label] ?? 0}%`, backgroundColor: colors[index], color: index === 1 ? "#1f2937" : "white" }}>{(distribution?.percentages[label] ?? 0) >= 10 ? `${formatPercentValue(distribution?.percentages[label] ?? 0)} %` : ""}</div>)}</div><div className="space-y-1 text-xs text-ink-700">{entries.map(([label, count]) => <div key={label} className="flex justify-between gap-2"><span>{label}</span><span className="tabular-nums">{count} ({formatPercentValue(distribution?.percentages[label] ?? 0)} %)</span></div>)}</div></> : <Empty className="py-4"><EmptyTitle>Sin datos de satisfacción</EmptyTitle></Empty>}</CardContent>
+      <CardContent className="space-y-3">{entries.length ? <><div className="flex h-7 overflow-hidden rounded-md">{entries.map(([label], index) => <div key={label} className="flex min-w-0 items-center justify-center text-[11px] font-semibold" style={{ width: `${distribution?.percentages[label] ?? 0}%`, backgroundColor: colors[index], color: index === 1 ? "#1f2937" : "white" }}>{(distribution?.percentages[label] ?? 0) >= 10 ? `${formatPercentValue(distribution?.percentages[label] ?? 0)} %` : ""}</div>)}</div><div className="space-y-1 text-xs text-ink-700">{entries.map(([label, count]) => <div key={label} className="flex justify-between gap-2"><span>{label}</span><span className="tabular-nums">{count} ({formatPercentValue(distribution?.percentages[label] ?? 0)} %)</span></div>)}</div></> : <Empty className="py-4"><EmptyTitle>Sin datos de satisfacción</EmptyTitle></Empty>}</CardContent>
     </Card>
   );
 }
