@@ -67,7 +67,6 @@ import type { CohortChartPoint, Competence, Cross, CrossMetric, Domain, Employme
 import { DatasetSelect, DistributionCard, PageHeading, labelFor, useDatasets } from "./shared/AnalyticsPrimitives";
 import { printAnalyticsPdf } from "@/components/analytics/PrintButton";
 import { crossMetricLabel, exportCrossCsv, exportCrossExcel, exportCrossPng } from "./shared/crossExportUtils";
-import { exportSimulationCsv, exportSimulationExcel, exportSimulationPng, type SimulationExportData } from "./shared/simulationExportUtils";
 import { MiniDistribution, StackedRelevanceCard } from "./employment/EmploymentCharts";
 import { useCompetenceData } from "./competence/useCompetenceData";
 import { CompetenceMatrix as CompetenceHeatmap } from "./competence/CompetenceMatrix";
@@ -77,6 +76,8 @@ import { SatisfactionPanel as SatisfactionPanelView } from "./competence/Satisfa
 import { CompetenceRadar as CompetenceRadarView } from "./competence/CompetenceRadar";
 import { ChiSquareCard, CrossBars, CrossTable } from "./cross/CrossVisualizations";
 import { SimulationComparisonTable, SimulationDistribution, SimulationWeights } from "./simulation/SimulationComponents";
+import { simulationCategories, simulationCategoryLabel, simulationPercent, simulationVariableLabel } from "./simulation/simulationUtils";
+import { SimulationDownloadMenu, type SimulationRun } from "./simulation/SimulationDownloads";
 
 type ChiResult = {
   estadistico: number;
@@ -86,67 +87,6 @@ type ChiResult = {
   rechazaIndependencia: boolean;
 };
 
-const NATURAL_POSTGRADUATE_LEVELS = ["Diplomado", "Especialidad", "Maestría", "Doctorado"];
-const POSTGRADUATE_AREA_OPTIONS = [
-  "Inteligencia Artificial",
-  "Ciberseguridad",
-  "Ciencia de Datos",
-  "Cloud Computing y DevOps",
-  "Ingeniería de Software",
-  "Robótica",
-  "Base de Datos",
-];
-
-function simulationCategoryIdentity(label: string) {
-  const normalized = label
-    .toLocaleLowerCase("es-BO")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-  if (normalized === "ia") return "inteligencia artificial";
-  if (normalized.includes("base de dato")) return "base de datos";
-  if (normalized.includes("cloud") || normalized.includes("devops")) return "cloud computing y devops";
-  return normalized;
-}
-
-function simulationCategoryLabel(label: string) {
-  switch (simulationCategoryIdentity(label)) {
-    case "inteligencia artificial": return "Inteligencia artificial";
-    case "base de datos": return "Base de datos";
-    case "cloud computing y devops": return "Cloud computing y DevOps";
-    case "ciencia de datos": return "Ciencia de datos";
-    case "ingenieria de software": return "Ingeniería de software";
-    case "ciberseguridad": return "Ciberseguridad";
-    case "robotica": return "Robótica";
-    case "redes de datos y seguridad": return "Redes de datos y seguridad";
-    default: return booleanLabel(label);
-  }
-}
-
-function simulationCategories(variable: string, counts: Record<string, number>) {
-  const categories = Object.keys(counts);
-  if (variable === "area_posgrado_interes") {
-    for (const option of POSTGRADUATE_AREA_OPTIONS) {
-      if (!categories.some((category) => simulationCategoryIdentity(category) === simulationCategoryIdentity(option))) {
-        categories.push(option);
-      }
-    }
-    const optionOrder = POSTGRADUATE_AREA_OPTIONS.map(simulationCategoryIdentity);
-    return categories.sort((a, b) => {
-      const countDifference = (counts[b] ?? 0) - (counts[a] ?? 0);
-      if (countDifference !== 0) return countDifference;
-      return optionOrder.indexOf(simulationCategoryIdentity(a)) - optionOrder.indexOf(simulationCategoryIdentity(b));
-    });
-  }
-  if (variable !== "nivel_posgrado_interes") return categories;
-  return categories.sort((a, b) => {
-    const aIndex = NATURAL_POSTGRADUATE_LEVELS.indexOf(a);
-    const bIndex = NATURAL_POSTGRADUATE_LEVELS.indexOf(b);
-    return (aIndex < 0 ? NATURAL_POSTGRADUATE_LEVELS.length : aIndex)
-      - (bIndex < 0 ? NATURAL_POSTGRADUATE_LEVELS.length : bIndex);
-  });
-}
 
 function CohortTooltip({
   active,
@@ -733,21 +673,6 @@ function CurrentWorkPanel({
   );
 }
 
-function simulationVariableLabel(variable: string) {
-  const labels: Record<string, string> = {
-    area_posgrado_interes: "Área de posgrado de interés",
-    nivel_posgrado_interes: "Nivel de posgrado de interés",
-    modalidad_posgrado: "Modalidad preferida",
-    financiamiento_posgrado_estimado: "Fuente de financiamiento estimada",
-    interes_posgrado: "Interés en posgrado",
-    situacion_laboral_actual: "Estado laboral",
-  };
-  return labels[variable] ?? variable;
-}
-
-function simulationPercent(value: number) {
-  return `${value.toFixed(1).replace(".", ",")} %`;
-}
 
 function CohortScatterCard({
   points,
@@ -2670,70 +2595,6 @@ function CrossDownloadOption({ label, help, disabled = false, onClick }: { label
   );
 }
 
-function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
-  const menuRef = useRef<HTMLDetailsElement>(null);
-  useEffect(() => {
-    const closeWhenClickingOutside = (event: MouseEvent) => {
-      if (menuRef.current?.open && event.target instanceof Node && !menuRef.current.contains(event.target)) menuRef.current.open = false;
-    };
-    document.addEventListener("mousedown", closeWhenClickingOutside);
-    return () => document.removeEventListener("mousedown", closeWhenClickingOutside);
-  }, []);
-  if (!run) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <Button type="button" variant="outline" disabled>
-                <Download className="size-4" /> Descargar <span aria-hidden="true">▾</span>
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Esperando los datos para calcular la simulación</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-  const download = (format: "pdf" | "xlsx" | "csv" | "png") => {
-    if (format === "pdf") void printAnalyticsPdf("TITULADOS", "simulacion");
-    if (format === "xlsx") exportSimulationExcel(run);
-    if (format === "csv") exportSimulationCsv(run);
-    if (format === "png") exportSimulationPng(run);
-    if (menuRef.current) menuRef.current.open = false;
-  };
-  return (
-    <div className="flex shrink-0 flex-col items-end gap-1">
-      <details ref={menuRef} className="relative">
-        <summary className="flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted">
-          <Download className="size-4" /> Descargar <span aria-hidden="true">▾</span>
-        </summary>
-        <div className="absolute right-0 z-30 mt-2 w-72 rounded-lg border border-border-line bg-white p-1.5 shadow-lg">
-          <SimulationDownloadOption label="PDF de simulación" help="Parámetros, gráfico y tabla · A4 horizontal" onClick={() => download("pdf")} />
-          <SimulationDownloadOption label="Excel (.xlsx)" help="Tabla comparativa + hoja de parámetros" onClick={() => download("xlsx")} />
-          <SimulationDownloadOption label="Tabla CSV" help="Solo la tabla comparativa" onClick={() => download("csv")} />
-          <SimulationDownloadOption label="Imagen PNG" help="Gráfico de rangos" onClick={() => download("png")} />
-        </div>
-      </details>
-    </div>
-  );
-}
-
-function SimulationDownloadOption({ label, help, onClick }: { label: string; help: string; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="flex w-full flex-col items-start rounded-md px-2.5 py-2 text-left hover:bg-surface-container-low">
-      <span className="text-sm font-medium text-ink-900">{label}</span>
-      <span className="text-xs text-ink-600">{help}</span>
-    </button>
-  );
-}
-
-type SimulationRun = SimulationExportData & {
-  datasetId: string;
-  variable: string;
-  weights: Record<string, number>;
-  scenarioPercentages: Record<string, number> | null;
-};
 
 export function SimulationPage() {
   const {

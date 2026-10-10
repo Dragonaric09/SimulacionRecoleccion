@@ -7,50 +7,8 @@ import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { CategoryDistribution } from "../api";
 import type { Simulation } from "../shared/analyticsTypes";
+import { simulationCategories, simulationCategoryLabel, simulationDelta, simulationPercent } from "./simulationUtils";
 
-const NATURAL_POSTGRADUATE_LEVELS = ["Diplomado", "Especialidad", "Maestría", "Doctorado"];
-const POSTGRADUATE_AREA_OPTIONS = ["Inteligencia Artificial", "Ciberseguridad", "Ciencia de Datos", "Cloud Computing y DevOps", "Ingeniería de Software", "Robótica", "Base de Datos"];
-
-function simulationCategoryIdentity(label: string) {
-  const normalized = label.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
-  if (normalized === "ia") return "inteligencia artificial";
-  if (normalized.includes("base de dato")) return "base de datos";
-  if (normalized.includes("cloud") || normalized.includes("devops")) return "cloud computing y devops";
-  return normalized;
-}
-function simulationCategoryLabel(label: string) {
-  switch (simulationCategoryIdentity(label)) {
-    case "inteligencia artificial": return "Inteligencia artificial";
-    case "base de datos": return "Base de datos";
-    case "cloud computing y devops": return "Cloud computing y DevOps";
-    case "ciencia de datos": return "Ciencia de datos";
-    case "ingenieria de software": return "Ingeniería de software";
-    case "ciberseguridad": return "Ciberseguridad";
-    case "robotica": return "Robótica";
-    case "redes de datos y seguridad": return "Redes de datos y seguridad";
-    default: return label;
-  }
-}
-function simulationCategories(variable: string, counts: Record<string, number>) {
-  const categories = Object.keys(counts);
-  if (variable === "area_posgrado_interes") {
-    for (const option of POSTGRADUATE_AREA_OPTIONS) {
-      if (!categories.some((category) => simulationCategoryIdentity(category) === simulationCategoryIdentity(option))) categories.push(option);
-    }
-    const optionOrder = POSTGRADUATE_AREA_OPTIONS.map(simulationCategoryIdentity);
-    return categories.sort((a, b) => {
-      const countDifference = (counts[b] ?? 0) - (counts[a] ?? 0);
-      return countDifference !== 0 ? countDifference : optionOrder.indexOf(simulationCategoryIdentity(a)) - optionOrder.indexOf(simulationCategoryIdentity(b));
-    });
-  }
-  if (variable !== "nivel_posgrado_interes") return categories;
-  return categories.sort((a, b) => (NATURAL_POSTGRADUATE_LEVELS.indexOf(a) < 0 ? NATURAL_POSTGRADUATE_LEVELS.length : NATURAL_POSTGRADUATE_LEVELS.indexOf(a)) - (NATURAL_POSTGRADUATE_LEVELS.indexOf(b) < 0 ? NATURAL_POSTGRADUATE_LEVELS.length : NATURAL_POSTGRADUATE_LEVELS.indexOf(b)));
-}
-function simulationPercent(value: number) { return `${value.toFixed(1).replace(".", ",")} %`; }
-function simulationDelta(value: number, observed: number) {
-  const delta = value - observed;
-  return `${delta > 0 ? "+" : ""}${delta.toFixed(1).replace(".", ",")} pp`;
-}
 
 export function SimulationWeights({
   variable,
