@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/api/client";
 import { Badge } from "@/components/analytics/Badge";
-import { ExportActions } from "@/components/analytics/ExportActions";
 import { FilterToolbar } from "@/components/analytics/FilterToolbar";
 import { KpiCard } from "@/components/analytics/KpiCard";
 import { StatusPanel } from "@/components/analytics/StatusPanel";
@@ -273,7 +272,6 @@ export function EmploymentProfilePage() {
             <Info />
             Definiciones
           </Button>
-          <ExportActions />
         </div>
       </div>
       <DatasetSelect
@@ -2259,7 +2257,6 @@ export function CompetencePage({ domain }: { domain: Domain }) {
               <Info />
               Definiciones
             </Button>
-            <ExportActions />
           </div>
         </div>
         <DatasetSelect
@@ -2309,7 +2306,6 @@ export function CompetencePage({ domain }: { domain: Domain }) {
             <Info />
             Definiciones
           </Button>
-          <ExportActions />
         </div>
       </div>
       <DatasetSelect
@@ -2628,9 +2624,6 @@ function CurriculumCard({
               {total})
             </CardDescription>
           </div>
-          <Button variant="ghost" size="icon" aria-label={`Exportar ${title}`}>
-            <Download className="size-4" />
-          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -2691,9 +2684,6 @@ function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | null }) {
               acuerdo (n = {summary.validResponses})
             </CardDescription>
           </div>
-          <Button variant="ghost" size="icon" aria-label="Exportar vista">
-            <Download className="size-4" />
-          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -3451,7 +3441,6 @@ export function FinancingPage() {
             <Info />
             Definiciones
           </Button>
-          <ExportActions />
         </div>
       </div>
       <DatasetSelect

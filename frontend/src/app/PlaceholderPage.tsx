@@ -1,7 +1,6 @@
 import { Construction, FileChartColumn, Users } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/analytics/Badge'
-import { ExportActions } from '@/components/analytics/ExportActions'
 import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
@@ -43,7 +42,7 @@ export function PlaceholderPage({ route }: { route: NavigationItem }) {
         </CardHeader>
         <CardContent>
           <StatusPanel kind="info" title="Estado provisional" description="Esta pantalla conserva su lugar en la navegación para permitir una migración progresiva sin enlaces rotos." />
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><Badge tone={route.section === 'general' ? 'neutral' : route.section}>{route.section === 'titulados' ? 'Titulados' : 'Empleadores'}</Badge><ExportActions /></div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><Badge tone={route.section === 'general' ? 'neutral' : route.section}>{route.section === 'titulados' ? 'Titulados' : 'Empleadores'}</Badge></div>
         </CardContent>
       </Card>
     </div>
@@ -59,4 +58,3 @@ function PageIntro({ title, description, section }: { title: string; description
     </div>
   )
 }
-
