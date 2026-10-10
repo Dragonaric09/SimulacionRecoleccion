@@ -87,6 +87,8 @@ import { crossMetricLabel, exportCrossCsv, exportCrossExcel, exportCrossPng } fr
 import { exportSimulationCsv, exportSimulationExcel, exportSimulationPng, type SimulationExportData } from "./shared/simulationExportUtils";
 import { MiniDistribution, StackedRelevanceCard } from "./employment/EmploymentCharts";
 import { useCompetenceData } from "./competence/useCompetenceData";
+import { CompetenceMatrix as CompetenceHeatmap } from "./competence/CompetenceMatrix";
+import { CompetenceStatsTable as CompetenceStatsTableView } from "./competence/CompetenceStatsTable";
 
 type ChiResult = {
   estadistico: number;
@@ -1074,169 +1076,10 @@ function SenioritySegmentationCard({
   );
 }
 
-function EducationAreaPanel({ distribution }: { distribution?: CategoryDistribution }) {
-  const rows = distributionRows(distribution);
-  const totalMentions = rows.reduce((total, row) => total + row.count, 0);
-  const totalBase = distribution?.validCount ?? 0;
-  let accumulated = 0;
-  const enriched = rows.map((row) => {
-    accumulated += row.count;
-    return { ...row, accumulated, accumulatedPercent: totalMentions ? (accumulated * 100) / totalMentions : 0 };
-  });
-  return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.9fr)]">
-      <Card className="print-pareto-card rounded-xl border-0 shadow-sm">
-        <CardHeader>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <CardTitle className="title-card">Distribución de demanda por área temática y porcentaje acumulado (Pareto)</CardTitle>
-              <CardDescription>Frecuencia absoluta y % acumulado de menciones · base real n = {totalBase}</CardDescription>
-            </div>
-            <span className="text-xs text-ink-600">{totalMentions} menciones</span>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {enriched.length ? (
-            <ParetoAreaChart rows={enriched} totalBase={totalBase} />
-          ) : (
-            <Empty className="py-8"><EmptyTitle>Sin áreas disponibles</EmptyTitle></Empty>
-          )}
-        </CardContent>
-      </Card>
-      <Card className="rounded-xl border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle className="title-card">Tabla de frecuencias</CardTitle>
-          <CardDescription>Áreas temáticas seleccionadas con opción múltiple · n = {totalBase}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table className="text-xs">
-            <TableHeader><TableRow><TableHead>Área temática</TableHead><TableHead className="text-right">fi</TableHead><TableHead className="text-right">fr (%)</TableHead><TableHead className="text-right">Fi</TableHead><TableHead className="text-right">Fr (%)</TableHead></TableRow></TableHeader>
-            <TableBody>
-              {enriched.map((row) => <TableRow key={row.label}><TableCell className="whitespace-normal">{row.label}</TableCell><TableCell className="text-right tabular-nums">{row.count}</TableCell><TableCell className="text-right tabular-nums">{row.percent.toFixed(1)}</TableCell><TableCell className="text-right tabular-nums">{row.accumulated}</TableCell><TableCell className="text-right tabular-nums">{row.accumulatedPercent.toFixed(1)}</TableCell></TableRow>)}
-              <TableRow><TableCell className="font-semibold">Total menciones</TableCell><TableCell className="text-right font-semibold tabular-nums">{totalMentions}</TableCell><TableCell className="text-right font-semibold tabular-nums">100,0</TableCell><TableCell className="text-right font-semibold tabular-nums">{totalMentions}</TableCell><TableCell className="text-right font-semibold tabular-nums">100,0</TableCell></TableRow>
-            </TableBody>
-          </Table>
-          <p className="mt-3 text-xs text-ink-600">Las frecuencias pueden superar n porque la pregunta permite varias respuestas.</p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function ParetoAreaChart({
-  rows,
-  totalBase,
-}: {
-  rows: { label: string; count: number; percent: number; accumulated: number; accumulatedPercent: number }[];
-  totalBase: number;
-}) {
-  const width = 1000;
-  const height = 300;
-  const left = 52;
-  const right = 48;
-  const top = 28;
-  const bottom = 78;
-  const chartWidth = width - left - right;
-  const chartHeight = height - top - bottom;
-  const maxCount = Math.max(...rows.map((row) => row.count), 1);
-  const slot = chartWidth / rows.length;
-  const barWidth = Math.min(58, slot * 0.58);
-  const point = (index: number, value: number) => ({
-    x: left + slot * index + slot / 2,
-    y: top + chartHeight - (value / 100) * chartHeight,
-  });
-  const linePoints = rows
-    .map((row, index) => {
-      const current = point(index, row.accumulatedPercent);
-      return `${current.x},${current.y}`;
-    })
-    .join(" ");
-  const yGrid = [0, 20, 40, 60, 80, 100];
-
-  return (
-    <div className="overflow-x-auto">
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-auto min-w-0 w-full" role="img" aria-label="Pareto de áreas de posgrado">
-        {yGrid.map((value) => {
-          const y = top + chartHeight - (value / 100) * chartHeight;
-          return (
-            <g key={value}>
-              <line x1={left} x2={width - right} y1={y} y2={y} stroke="#d7e0e8" strokeDasharray="2 4" />
-              <text x={width - right + 8} y={y + 4} fontSize="10" fill="#64748b">{value}%</text>
-            </g>
-          );
-        })}
-        <line
-          x1={left}
-          x2={width - right}
-          y1={top + chartHeight * 0.2}
-          y2={top + chartHeight * 0.2}
-          stroke="#f59e0b"
-          strokeDasharray="5 4"
-          opacity="0.75"
-        />
-        <text x={width - right - 4} y={top + chartHeight * 0.2 - 6} textAnchor="end" fontSize="10" fill="#d97706">80%</text>
-        {rows.map((row, index) => {
-          const x = left + slot * index + (slot - barWidth) / 2;
-          const barHeight = (row.count / maxCount) * chartHeight;
-          const y = top + chartHeight - barHeight;
-          return (
-            <g key={row.label}>
-              <rect x={x} y={y} width={barWidth} height={barHeight} rx="2" fill="#1f6fb5" />
-              <text x={x + barWidth / 2} y={y - 8} textAnchor="middle" fontSize="13" fontWeight="700" fill="#0f3f6d">{row.count}</text>
-              <text x={x + barWidth / 2} y={height - 45} textAnchor="middle" fontSize="10.5" fontWeight="500" fill="#334155">
-                {shortAreaLabel(row.label).map((line, lineIndex) => (
-                  <tspan key={line} x={x + barWidth / 2} dy={lineIndex === 0 ? 0 : 12}>{line}</tspan>
-                ))}
-              </text>
-            </g>
-          );
-        })}
-        <polyline points={linePoints} fill="none" stroke="#f59e0b" strokeWidth="2.5" />
-        {rows.map((row, index) => {
-          const current = point(index, row.accumulatedPercent);
-          return (
-            <g key={`${row.label}-point`}>
-              <circle cx={current.x} cy={current.y} r="5" fill="#fff" stroke="#c2410c" strokeWidth="2.5" />
-              <rect x={current.x - 22} y={current.y - 29} width="44" height="17" rx="4" fill="#fff" stroke="#fed7aa" strokeWidth="1" opacity="0.96" />
-              <text x={current.x} y={current.y - 17} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#9a3412">{row.accumulatedPercent.toFixed(1)}%</text>
-            </g>
-          );
-        })}
-        <text x={left} y={height - 10} fontSize="10" fill="#64748b">Menciones individuales (fi)</text>
-        <line x1={width - 260} x2={width - 238} y1={height - 14} y2={height - 14} stroke="#f59e0b" strokeWidth="2.5" />
-        <text x={width - 232} y={height - 10} fontSize="10" fill="#64748b">% acumulado (Pareto)</text>
-        <text x={width - right} y={height - 10} textAnchor="end" fontSize="10" fill="#64748b">n = {totalBase} interesados</text>
-      </svg>
-    </div>
-  );
-}
-
-function shortAreaLabel(label: string): string[] {
-  const value = label.toLocaleLowerCase("es-BO");
-  if (value.includes("inteligencia artificial") || value.includes("machine learning")) return ["IA", "y ML"];
-  if (value.includes("ciberseguridad")) return ["Ciberseg."];
-  if (value.includes("ciencia de datos")) return ["Ciencia", "de Datos"];
-  if (value.includes("big data")) return ["Big Data"];
-  if (value.includes("base de datos") || value.includes("bases de datos")) return ["Bases", "de Datos"];
-  if (value.includes("cloud")) return ["Cloud/", "DevOps"];
-  if (value.includes("software")) return ["Ing.", "Software"];
-  if (value.includes("robótica") || value.includes("robotica")) return ["Robótica"];
-  const words = label.trim().split(/\s+/);
-  return words.length > 2 ? [words.slice(0, Math.ceil(words.length / 2)).join(" "), words.slice(Math.ceil(words.length / 2)).join(" ")] : [label];
-}
-
-function distributionRows(distribution?: CategoryDistribution) {
-  return Object.entries(distribution?.counts ?? {})
-    .map(([label, count]) => ({ label: booleanLabel(label), count, percent: distribution?.percentages[label] ?? 0, total: distribution?.validCount ?? 0 }))
-    .sort((left, right) => right.count - left.count);
-}
-
 const UsersIcon = Users;
 const GraduationIcon = GraduationCap;
 void UsersIcon;
 void GraduationIcon;
-void EducationAreaPanel;
-void ParetoAreaChart;
 
 function ProfileDistributionCard({
   title,
@@ -1945,7 +1788,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
                 /></div>
               </div>
               <div className="grid items-start gap-6 lg:grid-cols-12">
-                <CompetenceMatrix
+                <CompetenceHeatmap
                   items={visibleItems}
                   className="lg:col-span-7"
                 />
@@ -1954,7 +1797,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
                   className="lg:col-span-5"
                 />
               </div>
-              <CompetenceStatsTable
+              <CompetenceStatsTableView
                 items={visibleItems}
                 group={groupLabel(activeGroup)}
               />
@@ -1963,138 +1806,6 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
         </>
       )}
     </div>
-  );
-}
-
-function CompetenceMatrix({
-  items,
-  className = "",
-}: {
-  items: Competence[];
-  className?: string;
-}) {
-  const columnMaxima = [1, 2, 3, 4, 5].reduce<Record<number, number>>(
-    (maxima, level) => {
-      maxima[level] = Math.max(
-        1,
-        ...items.map((item) => item.levelCounts[String(level)] ?? 0),
-      );
-      return maxima;
-    },
-    {},
-  );
-
-  return (
-    <Card className={`rounded-xl border-0 shadow-sm ${className}`}>
-      <CardHeader>
-        <CardTitle className="title-card">
-          Mapa de calor: Nivel de preparación {groupLabel(items[0]?.group ?? "").toLowerCase()} percibida
-        </CardTitle>
-        <CardDescription>
-          Distribución de frecuencias por nivel de la escala Likert · n ={" "}
-          {items[0]?.validCount ?? 0}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table className="min-w-[820px] text-sm">
-            <thead>
-              <tr className="text-xs uppercase tracking-wider text-ink-600">
-                <th className="w-56 p-2 text-left">Competencia {groupLabel(items[0]?.group ?? "").toLowerCase()}</th>
-                {[1, 2, 3, 4, 5].map((level) => (
-                  <th
-                    key={level}
-                    className={`rounded p-2 text-center ${level <= 2 ? "bg-red-50 text-red-700" : level === 3 ? "bg-slate-100 text-ink-600" : "bg-blue-50 text-titulados"}`}
-                  >
-                    {level}
-                    <br />
-                    <span className="font-normal normal-case">
-                      {level === 1
-                        ? "Muy insuf."
-                        : level === 2
-                          ? "Insuf."
-                          : level === 3
-                            ? "Aceptable"
-                            : level === 4
-                              ? "Suficiente"
-                              : "Muy suf."}
-                    </span>
-                  </th>
-                ))}
-                <th className="p-2 text-right">Total</th>
-                <th className="p-2 text-right">Media</th>
-                <th className="p-2 text-right">DE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.code} className="border-t border-slate-100">
-                  <td
-                    className="max-w-56 whitespace-normal break-words p-2 font-medium leading-tight text-ink-900"
-                    title={item.name}
-                  >
-                    {matrixCompetenceName(item.name)}
-                  </td>
-                  {[1, 2, 3, 4, 5].map((current) => (
-                    (() => {
-                      const count = item.levelCounts[String(current)] ?? 0;
-                      return (
-                        <td
-                          key={current}
-                          className="p-2 text-center font-semibold transition-[background-color,color] duration-300 ease-out"
-                          style={{
-                            backgroundColor: matrixBackground(
-                              current,
-                              count,
-                              columnMaxima[current],
-                            ),
-                            color: contrastTextColor(
-                              matrixBackground(
-                                current,
-                                count,
-                                columnMaxima[current],
-                              ),
-                            ),
-                          }}
-                        >
-                          {count}
-                        </td>
-                      );
-                    })()
-                  ))}
-                  <td className="tabular-nums p-2 text-right font-semibold">
-                    {item.validCount}
-                  </td>
-                  <td className="tabular-nums p-2 text-right font-semibold">
-                    {formatDecimal(item.average)}
-                  </td>
-                  <td className="tabular-nums p-2 text-right">
-                    {item.standardDeviation == null || item.validCount < 2
-                      ? "n/d"
-                      : formatDecimal(item.standardDeviation)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </div>
-        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-surface-container-high pt-3 text-xs text-ink-600">
-          <span className="font-semibold">Escala:</span>
-          <span>
-            <i className="mr-1 inline-block size-3 rounded bg-red-200" />1 Muy
-            insuficiente
-          </span>
-          <span>
-            <i className="mr-1 inline-block size-3 rounded bg-slate-200" />3
-            Aceptable
-          </span>
-          <span>
-            <i className="mr-1 inline-block size-3 rounded bg-blue-200" />5 Muy
-            suficiente
-          </span>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -2362,12 +2073,12 @@ function CompetencePrintGroup({ items, group, tone }: { items: Competence[]; gro
       <div className="h-full"><KpiCard label="Competencia más alta" value={highest ? formatDecimal(highest.average) : "—"} detail={highest?.name ?? "Sin datos"} icon={TrendingUp} tone={tone} /></div>
     </div>
     <div className="print-competence-matrix">
-      <CompetenceMatrix items={items} />
+      <CompetenceHeatmap items={items} />
     </div>
     <div className="print-competence-radar">
       <CompetenceRadar items={items} />
     </div>
-    <CompetenceStatsTable items={items} group={group} />
+    <CompetenceStatsTableView items={items} group={group} />
   </>;
 }
 function likertLevel(label: string) {
@@ -2406,96 +2117,6 @@ function favorablePercentage(distribution?: CategoryDistribution) {
     : "—";
 }
 
-function CompetenceStatsTable({
-  items,
-  group,
-}: {
-  items: Competence[];
-  group: string;
-}) {
-  const globalAverage = items.length
-    ? items.reduce((sum, item) => sum + item.average, 0) / items.length
-    : 0;
-  return (
-    <Card className="rounded-xl border-0 shadow-sm">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle className="title-card">
-              Estadísticos por competencia {groupLabel(group).toLowerCase()}
-            </CardTitle>
-            <CardDescription>
-              Ordenados descendentemente por media · {group} · n = {items[0]?.validCount ?? 0}
-            </CardDescription>
-          </div>
-          <Button variant="ghost" size="sm">
-            Σ Ver fórmulas estadísticas
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table className="min-w-[760px] text-sm">
-            <thead>
-              <tr className="bg-surface-container-low text-xs text-ink-600">
-                <th className="rounded-l-lg p-3 text-left">
-                  Competencia / Disciplina
-                </th>
-                <th className="p-3 text-right">
-                  n<br />
-                  válido
-                </th>
-                <th className="p-3 text-right">
-                  Media
-                </th>
-                <th className="p-3 text-right">
-                  Desv. estándar
-                </th>
-                <th className="p-3 text-right">
-                  Mediana
-                  <br />
-                  (Me)
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr
-                  key={item.code}
-                  className="border-b border-surface-container-high"
-                >
-                  <td className="p-3 font-medium text-ink-900">{item.name}</td>
-                  <td className="tabular-nums p-3 text-right">
-                    {item.validCount}
-                  </td>
-                  <td
-                    className={`tabular-nums p-3 text-right font-semibold ${item.average < 2.5 ? "text-red-600" : "text-titulados"}`}
-                  >
-                    {formatDecimal(item.average)}
-                  </td>
-                  <td className="tabular-nums p-3 text-right">
-                    {item.standardDeviation == null || item.validCount < 2
-                      ? "n/d"
-                      : formatDecimal(item.standardDeviation)}
-                  </td>
-                  <td className="tabular-nums p-3 text-right">
-                    {formatDecimal(item.median)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </div>
-        <div className="mt-4 flex flex-col justify-between gap-3 rounded-lg bg-surface-container-low p-3 text-xs text-ink-600 sm:flex-row">
-          <strong className="whitespace-nowrap text-ink-900">
-            Media global {group}: {formatDecimal(globalAverage)}
-          </strong>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 function formatDecimal(value: number, digits = 2) {
   return value.toFixed(digits).replace(".", ",");
 }
@@ -2519,24 +2140,6 @@ function groupLabel(group: string) {
           .toLowerCase()
           .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
-function matrixCompetenceName(name: string) {
-  return name;
-}
-
-function matrixBackground(level: number, count: number, columnMaximum: number) {
-  const intensity = count / Math.max(1, columnMaximum);
-  const alpha = 0.08 + intensity * 0.52;
-  const color =
-    level <= 2
-      ? "248, 113, 113"
-      : level === 3
-        ? "148, 163, 184"
-        : level === 4
-          ? "96, 165, 250"
-          : "59, 130, 246";
-  return `rgba(${color}, ${alpha.toFixed(3)})`;
-}
-
 function CompetenceRadar({
   items,
   className = "",
