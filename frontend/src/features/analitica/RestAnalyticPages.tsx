@@ -4000,9 +4000,9 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                   aria-label="Descargar"
                   onClick={() => {
                     if (!cross) return;
-                    if (exportFormat === "csv") exportCrossCsv(cross);
-                    else if (exportFormat === "xlsx") exportCrossExcel(cross);
-                    else exportCrossPng(cross);
+                    if (exportFormat === "csv") exportCrossCsv(cross, metric, includeTotals);
+                    else if (exportFormat === "xlsx") exportCrossExcel(cross, metric, includeTotals, colorHeatmap);
+                    else exportCrossPng(cross, metric, includeTotals, colorHeatmap);
                   }}
                   disabled={!cross}
                 >
@@ -4694,16 +4694,8 @@ function downloadFile(content: BlobPart, name: string, type: string) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function exportCrossCsv(cross: Cross) {
-  const rows = [
-    ["Fila", ...cross.columnCategories.map(booleanLabel)],
-    ...cross.rowCategories.map((row) => [
-      booleanLabel(row),
-      ...cross.columnCategories.map((column) =>
-        String(cross.counts[row]?.[column] ?? 0),
-      ),
-    ]),
-  ];
+function exportCrossCsv(cross: Cross, metric: CrossMetric, includeTotals: boolean) {
+  const rows = crossExportRows(cross, metric, includeTotals);
   downloadFile(
     rows
       .map((row) =>
@@ -4714,37 +4706,44 @@ function exportCrossCsv(cross: Cross) {
     "text/csv;charset=utf-8",
   );
 }
-function exportCrossExcel(cross: Cross) {
-  const rows = [
-    ["Fila", ...cross.columnCategories.map(booleanLabel)],
-    ...cross.rowCategories.map((row) => [
-      booleanLabel(row),
-      ...cross.columnCategories.map((column) =>
-        String(cross.counts[row]?.[column] ?? 0),
-      ),
-    ]),
-  ];
-  const html = `<table>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</table>`;
+function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean) {
+  const rows = crossExportRows(cross, metric, includeTotals);
+  const max = crossExportMax(cross, metric);
+  const html = `<table>${rows.map((row, rowIndex) => `<tr>${row.map((cell, columnIndex) => {
+    const isHeader = rowIndex === 0;
+    const isTotalRow = includeTotals && rowIndex === cross.rowCategories.length + 1;
+    const isTotalColumn = includeTotals && columnIndex === cross.columnCategories.length + 1;
+    const heat = colorHeatmap && !isHeader && !isTotalRow && !isTotalColumn && rowIndex > 0 && rowIndex <= cross.rowCategories.length && columnIndex > 0 && columnIndex <= cross.columnCategories.length
+      ? ` style="background-color:rgba(31,111,181,${0.08 + (exportNumber(cell) / max) * 0.75})"`
+      : (isHeader || isTotalRow || isTotalColumn ? ` style="background-color:#f1f5f9"` : "");
+    return `<td${heat}>${cell}</td>`;
+  }).join("")}</tr>`).join("")}</table>`;
   downloadFile(
     `<!doctype html><html><body>${html}</body></html>`,
     "cruce.xls",
     "application/vnd.ms-excel",
   );
 }
-function exportCrossPng(cross: Cross) {
+function exportCrossPng(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean) {
   const width = 900;
-  const height = Math.max(180, (cross.rowCategories.length + 1) * 42 + 40);
-  const headers = ["Fila", ...cross.columnCategories.map(booleanLabel)];
-  const rows = [
-    headers,
-    ...cross.rowCategories.map((row) => [
-      booleanLabel(row),
-      ...cross.columnCategories.map((column) =>
-        String(cross.counts[row]?.[column] ?? 0),
-      ),
-    ]),
-  ];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/>${rows.map((row, rowIndex) => row.map((cell, columnIndex) => `<text x="${20 + columnIndex * (width / headers.length)}" y="${35 + rowIndex * 42}" font-family="Arial" font-size="14" fill="#0f172a">${cell}</text>`).join("")).join("")}</svg>`;
+  const rows = crossExportRows(cross, metric, includeTotals);
+  const height = Math.max(180, (rows.length + 1) * 42 + 40);
+  const columnWidth = width / rows[0].length;
+  const max = crossExportMax(cross, metric);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/>${rows.map((row, rowIndex) => row.map((cell, columnIndex) => {
+    const isHeader = rowIndex === 0;
+    const isTotalRow = includeTotals && rowIndex === cross.rowCategories.length + 1;
+    const isTotalColumn = includeTotals && columnIndex === cross.columnCategories.length + 1;
+    const heat = colorHeatmap && !isHeader && !isTotalRow && !isTotalColumn && rowIndex > 0 && rowIndex <= cross.rowCategories.length && columnIndex > 0 && columnIndex <= cross.columnCategories.length;
+    const opacity = heat ? 0.08 + (exportNumber(cell) / max) * 0.75 : 0;
+    const gray = isHeader || isTotalRow || isTotalColumn;
+    const rect = heat
+      ? `<rect x="${columnIndex * columnWidth}" y="${rowIndex * 42 + 8}" width="${columnWidth}" height="42" fill="rgba(31,111,181,${opacity})"/>`
+      : gray
+        ? `<rect x="${columnIndex * columnWidth}" y="${rowIndex * 42 + 8}" width="${columnWidth}" height="42" fill="#f1f5f9"/>`
+        : "";
+    return `${rect}<text x="${20 + columnIndex * columnWidth}" y="${35 + rowIndex * 42}" font-family="Arial" font-size="14" fill="#0f172a">${escapeSvg(cell)}</text>`;
+  }).join("")).join("")}</svg>`;
   const image = new Image();
   image.onload = () => {
     const canvas = document.createElement("canvas");
@@ -4756,6 +4755,48 @@ function exportCrossPng(cross: Cross) {
     );
   };
   image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+function crossExportRows(cross: Cross, metric: CrossMetric, includeTotals: boolean) {
+  const headers = ["Fila", ...cross.columnCategories.map(booleanLabel), ...(includeTotals ? ["Total fila"] : [])];
+  const rows = cross.rowCategories.map((row) => [
+    booleanLabel(row),
+    ...cross.columnCategories.map((column) => formatExportValue(crossExportValue(cross, row, column, metric), metric)),
+    ...(includeTotals ? [formatExportMarginal(cross, cross.columnCategories.reduce((sum, column) => sum + (cross.counts[row]?.[column] ?? 0), 0), metric, "row")] : []),
+  ]);
+  if (includeTotals) {
+    rows.push(["Total columna", ...cross.columnCategories.map((column) => formatExportMarginal(cross, cross.rowCategories.reduce((sum, row) => sum + (cross.counts[row]?.[column] ?? 0), 0), metric, "column")), formatExportValue(cross.validCount, metric)]);
+  }
+  return [headers, ...rows];
+}
+
+function crossExportValue(cross: Cross, row: string, column: string, metric: CrossMetric) {
+  if (metric === "count") return cross.counts[row]?.[column] ?? 0;
+  if (metric === "rowPercent") return cross.percentages[row]?.[column] ?? 0;
+  const total = cross.columnCategories.reduce((sum, current) => sum + (cross.counts[row]?.[current] ?? 0), 0);
+  return total ? ((cross.counts[row]?.[column] ?? 0) * 100) / total : 0;
+}
+
+function formatExportValue(value: number, metric: CrossMetric) {
+  return metric === "count" ? String(value) : `${value.toFixed(1).replace(".", ",")}%`;
+}
+
+function formatExportMarginal(cross: Cross, value: number, metric: CrossMetric, side: "row" | "column") {
+  if (metric === "count") return String(value);
+  if (metric === "rowPercent") return side === "row" ? "100,0%" : `${cross.validCount ? ((value * 100) / cross.validCount).toFixed(1).replace(".", ",") : "0,0"}%`;
+  return side === "column" ? "100,0%" : `${cross.validCount ? ((value * 100) / cross.validCount).toFixed(1).replace(".", ",") : "0,0"}%`;
+}
+
+function crossExportMax(cross: Cross, metric: CrossMetric) {
+  return Math.max(1, ...cross.rowCategories.flatMap((row) => cross.columnCategories.map((column) => crossExportValue(cross, row, column, metric))));
+}
+
+function exportNumber(value: string) {
+  return Number(value.replace(",", ".").replace("%", "")) || 0;
+}
+
+function escapeSvg(value: string) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
 function CrossBars({
   cross,
