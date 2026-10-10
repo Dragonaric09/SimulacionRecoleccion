@@ -59,7 +59,7 @@ La comparación registra **129 archivos modificados o agregados**, aproximadamen
 
 - `form/` contiene exportaciones JSON de los formularios de titulados y empleadores, además de diagramas Mermaid de sus flujos.
 - La carpeta privada `/data` no forma parte del material compartido ni debe incluir respuestas reales en Git.
-- `UI/plan-migracion-prototipo.md` documenta el plan de migración del prototipo hacia la aplicación actual.
+- `UI/` contiene una maqueta navegable en archivos HTML independientes, que se puede recorrer al abrir cualquiera de ellos en un navegador. Es solo una referencia visual: el frontend actual difiere en algunos aspectos y la documentación incluida en `UI/` está desactualizada.
 - Se actualizaron las dependencias del frontend y se agregó `frontend/package-lock.json` con el árbol de dependencias de la rama.
 
 ## Cambio de arquitectura
