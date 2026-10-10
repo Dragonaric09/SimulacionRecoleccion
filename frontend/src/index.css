@@ -282,6 +282,18 @@
   .print-page > div > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
   .print-page .print-tab-section > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
   .print-page .print-tab-section > .grid { row-gap: 20px !important; }
+  .print-page .cohort-card-header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+  .print-page .cohort-card-header [data-slot="card-description"] {
+    margin-top: 0 !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
   .print-page .print-tab-section > .grid > * { grid-column: auto !important; min-width: 0 !important; }
   .print-page .print-tab-section > .grid[class*="grid-cols-12"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .print-page .print-tab-section > .grid[class*="grid-cols-3"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }

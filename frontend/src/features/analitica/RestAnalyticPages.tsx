@@ -780,7 +780,7 @@ function CohortScatterCard({
   );
   return (
     <Card className={`rounded-xl border-0 shadow-sm ${className}`}>
-      <CardHeader>
+      <CardHeader className="cohort-card-header">
         <CardTitle className="title-card">
           Años de vida profesional por cohorte
         </CardTitle>
