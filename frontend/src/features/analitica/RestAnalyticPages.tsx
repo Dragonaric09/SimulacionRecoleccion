@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   Dices,
@@ -10,7 +10,6 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { apiRequest } from "@/api/client";
 import { Badge } from "@/components/analytics/Badge";
 import { FilterToolbar } from "@/components/analytics/FilterToolbar";
 import { KpiCard } from "@/components/analytics/KpiCard";
@@ -57,7 +56,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
-import type { CohortChartPoint, Competence, Domain, EmploymentProfile, Simulation, Tone } from "./shared/analyticsTypes";
+import type { CohortChartPoint, Competence, Domain, EmploymentProfile, Tone } from "./shared/analyticsTypes";
 import { DatasetSelect, PageHeading, useDatasets } from "./shared/AnalyticsPrimitives";
 import { MiniDistribution, StackedRelevanceCard } from "./employment/EmploymentCharts";
 import { countMatching, displayLaborLabel, formatPercentage, laborColor } from "./employment/employmentHelpers";
@@ -68,11 +67,11 @@ import { CurriculumCard as CurriculumCardView } from "./competence/CurriculumCar
 import { SatisfactionPanel as SatisfactionPanelView } from "./competence/SatisfactionPanels";
 import { CompetenceRadar as CompetenceRadarView } from "./competence/CompetenceRadar";
 import { groupDisplayName, groupLabel } from "./competence/competenceHelpers";
-import { parseSimulationInteger as parseInteger } from "./simulation/simulationUtils";
 import { normalizeAnalyticsLabel } from "./shared/analyticsLabels";
 import { SimulationComparisonTable, SimulationDistribution, SimulationWeights } from "./simulation/SimulationComponents";
-import { simulationCategories, simulationCategoryLabel, simulationPercent, simulationVariableLabel } from "./simulation/simulationUtils";
-import { SimulationDownloadMenu, type SimulationRun } from "./simulation/SimulationDownloads";
+import { simulationPercent } from "./simulation/simulationUtils";
+import { SimulationDownloadMenu } from "./simulation/SimulationDownloads";
+import { useSimulationScenario } from "./simulation/useSimulationScenario";
 export { FinancingCompletePage, FinancingPage } from "./financing/FinancingPages";
 export { CrossExportPage } from "./cross/CrossExportPage";
 
@@ -1580,105 +1579,34 @@ export function SimulationPage() {
     datasets,
     datasetId,
     setDatasetId,
-    loading: datasetsLoading,
-  } = useDatasets("TITULADOS");
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
-  const [variable, setVariable] = useState("area_posgrado_interes");
-  const [weights, setWeights] = useState<Record<string, number>>({});
-  const [sampleSize, setSampleSize] = useState(100);
-  const [sampleSizeInput, setSampleSizeInput] = useState("100");
-  const [repetitions, setRepetitions] = useState(1000);
-  const [repetitionsInput, setRepetitionsInput] = useState("1000");
-  const [seed, setSeed] = useState(42);
-  const [seedInput, setSeedInput] = useState("42");
-  const [result, setResult] = useState<Simulation | null>(null);
-  const [scenarioPercentages, setScenarioPercentages] = useState<Record<string, number> | null>(null);
-  const [executedRun, setExecutedRun] = useState<SimulationRun | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const simulationAbortRef = useRef<AbortController | null>(null);
-  const simulationRequestRef = useRef(0);
-  const sampleSizeValid = Number.isInteger(sampleSize) && sampleSize >= 1 && sampleSize <= 10000;
-  const repetitionsValid = Number.isInteger(repetitions) && repetitions >= 1 && repetitions <= 5000;
-  const seedValid = Number.isInteger(seed);
-  const parametersValid = sampleSizeValid && repetitionsValid && seedValid;
-  useEffect(() => {
-    if (!datasetId) return;
-    apiRequest<AnalyticsSummary>(
-      `/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=${encodeURIComponent(variable)}`,
-    )
-      .then((next) => {
-        setSummary(next);
-        setWeights({});
-      })
-      .catch((cause) =>
-        setError(cause instanceof Error ? cause.message : String(cause)),
-      );
-  }, [datasetId, variable]);
-  const run = useCallback(async () => {
-    if (!parametersValid || !datasetId) {
-      setError("Revisa los parámetros: deben ser números enteros válidos dentro de los límites indicados.");
-      return;
-    }
-    const distribution = summary?.distributions[variable];
-    if (!distribution) return;
-    const categories = simulationCategories(variable, distribution.counts);
-    const observedWeights = categories.map((category) => weights[category] ?? distribution.counts[category] ?? 0);
-    const total = observedWeights.reduce((sum, value) => sum + value, 0);
-    const adjusted = categories.some(
-      (category) => weights[category] !== undefined && weights[category] !== distribution.counts[category],
-    );
-    const nextScenarioPercentages = adjusted
-      ? Object.fromEntries(categories.map((category, index) => [category, (observedWeights[index] * 100) / total]))
-      : null;
-    simulationAbortRef.current?.abort();
-    const controller = new AbortController();
-    simulationAbortRef.current = controller;
-    const requestId = ++simulationRequestRef.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const nextResult = await apiRequest<Simulation>("/analytics/simulation/multinomial", {
-          method: "POST",
-          body: JSON.stringify({
-            categories,
-            probabilities: observedWeights.map((value) => value / total),
-            observedCounts: categories.map((category) => distribution.counts[category] ?? 0),
-            sampleSize,
-            repetitions,
-            seed,
-          }),
-          signal: controller.signal,
-        });
-      if (requestId !== simulationRequestRef.current) return;
-      setResult(nextResult);
-      setScenarioPercentages(nextScenarioPercentages);
-      setExecutedRun({
-        result: nextResult,
-        datasetId,
-        variable,
-        variableLabel: simulationVariableLabel(variable),
-        observedTotal: distribution.validCount,
-        datasetName: datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado",
-        observedProbabilities: Object.fromEntries(categories.map((category) => [category, (distribution.counts[category] ?? 0) / Math.max(distribution.validCount, 1)])),
-        usedProbabilities: Object.fromEntries(categories.map((category, index) => [category, observedWeights[index] / Math.max(total, 1)])),
-        adjusted,
-        categoryLabel: simulationCategoryLabel,
-        weights: { ...weights },
-        scenarioPercentages: nextScenarioPercentages,
-      });
-    } catch (cause) {
-      if (cause instanceof DOMException && cause.name === "AbortError") return;
-      setError(cause instanceof Error ? cause.message : String(cause));
-    } finally {
-      if (requestId === simulationRequestRef.current) setLoading(false);
-    }
-  }, [datasetId, datasets, parametersValid, repetitions, sampleSize, seed, summary, variable, weights]);
-  useEffect(() => {
-    if (!summary?.distributions[variable] || !datasetId || !parametersValid) return;
-    const timeout = window.setTimeout(() => void run(), 250);
-    return () => window.clearTimeout(timeout);
-  }, [run, summary, datasetId, variable, weights, sampleSize, repetitions, seed, parametersValid]);
+    datasetsLoading,
+    summary,
+    variable,
+    setVariable,
+    weights,
+    setWeights,
+    sampleSize,
+    sampleSizeInput,
+    setSampleSizeInput,
+    setSampleSize,
+    repetitions,
+    repetitionsInput,
+    setRepetitionsInput,
+    setRepetitions,
+    seed,
+    seedInput,
+    setSeedInput,
+    setSeed,
+    result,
+    scenarioPercentages,
+    executedRun,
+    loading,
+    error,
+    sampleSizeValid,
+    repetitionsValid,
+    seedValid,
+    parseInteger,
+  } = useSimulationScenario();
   return (
       <div className="simulation-screen-page mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
