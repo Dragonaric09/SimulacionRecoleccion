@@ -50,15 +50,9 @@ import {
 import {
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart";
 import {
   CartesianGrid,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
   Cell,
   Pie,
   PieChart,
@@ -89,6 +83,9 @@ import { MiniDistribution, StackedRelevanceCard } from "./employment/EmploymentC
 import { useCompetenceData } from "./competence/useCompetenceData";
 import { CompetenceMatrix as CompetenceHeatmap } from "./competence/CompetenceMatrix";
 import { CompetenceStatsTable as CompetenceStatsTableView } from "./competence/CompetenceStatsTable";
+import { CurriculumCard as CurriculumCardView } from "./competence/CurriculumCard";
+import { SatisfactionPanel as SatisfactionPanelView } from "./competence/SatisfactionPanels";
+import { CompetenceRadar as CompetenceRadarView } from "./competence/CompetenceRadar";
 
 type ChiResult = {
   estadistico: number;
@@ -1620,7 +1617,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
           const groupItems = items.filter((item) => item.group === group).sort((a, b) => b.average - a.average);
           return <section key={key} className="print-tab-section"><h2 className="title-card mb-3">{key === "hard" ? "Hard skills" : "Soft skills"}</h2><CompetencePrintGroup items={groupItems} group={group ?? ""} tone={tone} /></section>;
         })}
-        <section className="print-tab-section"><h2 className="title-card mb-3">Satisfacción y pertinencia</h2><SatisfactionPanel summary={satisfaction} /></section>
+        <section className="print-tab-section"><h2 className="title-card mb-3">Satisfacción y pertinencia</h2><SatisfactionPanelView summary={satisfaction} /></section>
         <section className="print-tab-section"><h2 className="title-card mb-3">Malla y asignaturas</h2><CurriculumPanel summary={curriculum} /></section>
       </div>
     );
@@ -1667,7 +1664,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
           </TabsList>
         </Tabs>
         {activeTab === "satisfaccion" ? (
-          <SatisfactionPanel summary={satisfaction} />
+          <SatisfactionPanelView summary={satisfaction} />
         ) : (
           <CurriculumPanel summary={curriculum} />
         )}
@@ -1792,7 +1789,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
                   items={visibleItems}
                   className="lg:col-span-7"
                 />
-                <CompetenceRadar
+                <CompetenceRadarView
                   items={visibleItems}
                   className="lg:col-span-5"
                 />
@@ -1820,25 +1817,25 @@ function CurriculumPanel({ summary }: { summary: AnalyticsSummary | null }) {
     );
   return (
     <div className="grid gap-5 lg:grid-cols-2">
-      <CurriculumCard
+      <CurriculumCardView
         title="Aspectos de la Carrera que resultaron útiles"
         field="aspectos_utiles"
         summary={summary}
         tone="blue"
       />
-      <CurriculumCard
+      <CurriculumCardView
         title="Aspectos de la Carrera que pueden mejorarse"
         field="aspectos_mejorables"
         summary={summary}
         tone="orange"
       />
-      <CurriculumCard
+      <CurriculumCardView
         title="Asignaturas que dieron ventaja competitiva"
         field="asignaturas_ventaja"
         summary={summary}
         tone="teal"
       />
-      <CurriculumCard
+      <CurriculumCardView
         title="Asignaturas percibidas poco útiles o desactualizadas"
         field="asignaturas_poco_utiles"
         summary={summary}
@@ -1848,218 +1845,7 @@ function CurriculumPanel({ summary }: { summary: AnalyticsSummary | null }) {
   );
 }
 
-function CurriculumCard({
-  title,
-  field,
-  summary,
-  tone,
-}: {
-  title: string;
-  field: string;
-  summary: AnalyticsSummary;
-  tone: "blue" | "orange" | "teal";
-}) {
-  const distribution = summary.distributions[field];
-  const entries = Object.entries(distribution?.counts ?? {}).sort(
-    ([, a], [, b]) => b - a,
-  );
-  const colors = { blue: "#2878bd", orange: "#ed552f", teal: "#18a39a" };
-  const total = distribution?.validCount ?? 0;
-  return (
-    <Card className="gap-3 rounded-xl border-0 py-4 shadow-sm">
-      <CardHeader className="pb-0">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle className="title-card">{title}</CardTitle>
-            <CardDescription>
-              Nota: Pregunta de opción múltiple (Varias respuestas posibles, n ={" "}
-              {total})
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {entries.length ? (
-          entries.map(([label, count]) => (
-            <div key={label} className="space-y-1">
-              <div className="flex items-end justify-between gap-3 text-xs">
-                <span className="min-w-0 font-semibold text-ink-900">
-                  {label}
-                </span>
-                <span className="shrink-0 tabular-nums text-ink-600">
-                  {distribution?.percentages[label]}% ({count})
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${distribution?.percentages[label] ?? 0}%`,
-                    backgroundColor: colors[tone],
-                  }}
-                />
-              </div>
-            </div>
-          ))
-        ) : (
-          <Empty className="py-6">
-            <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
-          </Empty>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
-function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | null }) {
-  const satisfaction = summary?.distributions.satisfaccion_formacion;
-  const concordance =
-    summary?.distributions.concordancia_formacion_requerimientos;
-  if (!summary)
-    return (
-      <StatusPanel
-        kind="loading"
-        title="Cargando satisfacción y pertinencia"
-        description="Consultando las respuestas del dataset seleccionado."
-      />
-    );
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-5 lg:grid-cols-2">
-        <LikertStatement
-          number="1."
-          title="Satisfacción global con la formación recibida en la carrera"
-          distribution={satisfaction}
-          showSummary={false}
-          scale="satisfaction"
-        />
-        <LikertStatement
-          number="2."
-          title="Concordancia entre la formación académica y los requerimientos del mercado laboral"
-          distribution={concordance}
-          showSummary={false}
-          scale="agreement"
-        />
-      </div>
-    </div>
-  );
-}
-
-function LikertLegend() {
-  return (
-    <div className="flex flex-wrap gap-x-5 gap-y-2 rounded-lg bg-surface-container-low px-3 py-2.5 text-xs font-medium text-ink-700">
-      <span>
-        <i className="mr-1.5 inline-block size-3 rounded bg-[#ed552f]" />
-        Totalmente en desacuerdo
-      </span>
-      <span>
-        <i className="mr-1.5 inline-block size-3 rounded bg-[#f3a487]" />
-        En desacuerdo
-      </span>
-      <span>
-        <i className="mr-1.5 inline-block size-3 rounded bg-[#7db1dd]" />
-        De acuerdo
-      </span>
-      <span>
-        <i className="mr-1.5 inline-block size-3 rounded bg-[#1f6fb5]" />
-        Totalmente de acuerdo
-      </span>
-    </div>
-  );
-}
-
-function LikertStatement({
-  number,
-  title,
-  distribution,
-  showSummary = true,
-  scale = "agreement",
-}: {
-  number: string;
-  title: string;
-  distribution?: CategoryDistribution;
-  showSummary?: boolean;
-  scale?: "agreement" | "satisfaction";
-}) {
-  const entries = orderedScaleEntries(distribution, scale);
-  const colors = scale === "satisfaction"
-    ? ["#ed552f", "#f3a487", "#1f6fb5"]
-    : ["#ed552f", "#f3a487", "#7db1dd", "#1f6fb5"];
-  const total = distribution?.validCount ?? 0;
-  const favorable = favorableCount(distribution);
-  return (
-    <Card className="gap-3 rounded-xl border border-border-line py-4 shadow-sm">
-      <CardHeader className="pb-0">
-      {(showSummary || number || title) && (
-        <div className="flex flex-col justify-between gap-1 md:flex-row md:items-center">
-          <span className="font-semibold text-ink-900">
-            {number} {title}
-          </span>
-          {showSummary && (
-            <span className="text-xs text-ink-600">
-              {favorablePercentage(distribution)}% De acuerdo + Totalmente de acuerdo
-            </span>
-          )}
-        </div>
-      )}
-      <CardDescription>
-        {scale === "satisfaction" ? "Escala de satisfacción (3 niveles)" : "Escala de acuerdo (4 niveles)"} · n = {total}
-      </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {scale === "satisfaction" ? <SatisfactionLegend /> : <LikertLegend />}
-      {entries.length ? (
-        <>
-          <div className="flex h-11 overflow-hidden rounded-lg">
-            {entries.map(([label, count], index) => (
-              <div
-                key={label}
-                className="flex min-w-0 items-center justify-center px-1 text-xs font-semibold"
-                style={{
-                  width: `${distribution?.percentages[label] ?? 0}%`,
-                  backgroundColor: colors[index],
-                  color: contrastTextColor(colors[index]),
-                }}
-                title={`${label}: ${count} (${distribution?.percentages[label]}%)`}
-              >
-                {(distribution?.percentages[label] ?? 0) >= 8
-                  ? `${count} (${formatPercentValue(distribution?.percentages[label] ?? 0)}%)`
-                  : ""}
-              </div>
-            ))}
-          </div>
-          {scale === "satisfaction" ? (
-            <div className="flex flex-wrap gap-x-5 gap-y-1 px-1 text-xs text-ink-600">
-              {entries.map(([label, count]) => (
-                <span key={label}>
-                  {label}: {count} ({formatPercentValue(distribution?.percentages[label] ?? 0)}%)
-                </span>
-              ))}
-            </div>
-          ) : (
-            <div className="flex justify-between px-1 text-xs text-ink-600">
-              <span>Desacuerdo (niveles 1 + 2): {total - favorable} ({formatPercentage(total - favorable, total)})</span>
-              <span>De acuerdo + Totalmente de acuerdo: {favorable} ({formatPercentValue(total ? favorable * 100 / total : 0)}%)</span>
-            </div>
-          )}
-        </>
-      ) : (
-        <Empty className="py-6">
-          <EmptyTitle>Sin respuestas disponibles</EmptyTitle>
-        </Empty>
-      )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function orderedLikertEntries(distribution?: CategoryDistribution) {
-  const entries = Object.entries(distribution?.counts ?? {});
-  const hasRecognizedLevel = entries.some(([label]) => likertLevel(label) > 0);
-  return hasRecognizedLevel
-    ? entries.sort(([a], [b]) => likertLevel(a) - likertLevel(b))
-    : entries;
-}
 
 function CompetencePrintGroup({ items, group, tone }: { items: Competence[]; group: string; tone: Tone }) {
   const average = items.length ? items.reduce((sum, item) => sum + item.average, 0) / items.length : 0;
@@ -2076,45 +1862,10 @@ function CompetencePrintGroup({ items, group, tone }: { items: Competence[]; gro
       <CompetenceHeatmap items={items} />
     </div>
     <div className="print-competence-radar">
-      <CompetenceRadar items={items} />
+      <CompetenceRadarView items={items} />
     </div>
     <CompetenceStatsTableView items={items} group={group} />
   </>;
-}
-function likertLevel(label: string) {
-  const normalized = label
-    .toLocaleLowerCase("es-BO")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  const numericLevel = Number.parseInt(normalized.match(/^\s*(\d+)/)?.[1] ?? "", 10);
-  if (Number.isInteger(numericLevel) && numericLevel >= 1 && numericLevel <= 4) return numericLevel;
-  if (normalized.includes("desacuerdo")) {
-    return normalized.includes("totalmente") || normalized.includes("muy") ? 1 : 2;
-  }
-  if (normalized.includes("acuerdo")) {
-    return normalized.includes("totalmente") || normalized.includes("muy") ? 4 : 3;
-  }
-  if (normalized === "insatisfecho") return 1;
-  if (normalized === "algo satisfecho") return 2;
-  if (normalized === "satisfecho") return 3;
-  return 0;
-}
-function favorableCount(distribution?: CategoryDistribution) {
-  const entries = orderedLikertEntries(distribution);
-  const hasRecognizedLevel = entries.some(([label]) => likertLevel(label) > 0);
-  return entries
-    .filter(([label], index) => {
-      const level = likertLevel(label);
-      const satisfactionScale = entries.some(([label]) => label.toLocaleLowerCase("es-BO").includes("satisfecho"));
-      return satisfactionScale ? level === 3 : hasRecognizedLevel ? level === 3 || level === 4 : index >= 2;
-    })
-    .reduce((sum, [, count]) => sum + count, 0);
-}
-function favorablePercentage(distribution?: CategoryDistribution) {
-  const total = distribution?.validCount ?? 0;
-  return total
-    ? ((favorableCount(distribution) / total) * 100).toFixed(1).replace(".", ",")
-    : "—";
 }
 
 function formatDecimal(value: number, digits = 2) {
@@ -2139,224 +1890,6 @@ function groupLabel(group: string) {
           .replaceAll("_", " ")
           .toLowerCase()
           .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-function CompetenceRadar({
-  items,
-  className = "",
-}: {
-  items: Competence[];
-  className?: string;
-}) {
-  const plotted = items.slice(0, 8);
-  const chartData = plotted.map((item) => ({
-    subject: `${radarLabel(item.name)} (${formatDecimal(item.average)})`,
-    average: item.average,
-    name: item.name,
-  }));
-  const chartConfig = {
-    average: { label: "Media observada", color: "#1f6fb5" },
-  };
-  const renderRadarChart = (fixed = false) => (
-    <RadarChart
-      {...(fixed ? { width: 460, height: 320 } : {})}
-      data={chartData}
-      outerRadius="60%"
-    >
-      <PolarGrid stroke="#cbd5e1" strokeDasharray="2 2" />
-      <PolarAngleAxis dataKey="subject" tick={<RadarTick />} />
-      <PolarRadiusAxis domain={[0, 5]} tick={false} axisLine={false} />
-      <Radar
-        name="Media observada"
-        dataKey="average"
-        stroke="#1f6fb5"
-        fill="#1f6fb5"
-        fillOpacity={0.24}
-        strokeWidth={2.25}
-        isAnimationActive={false}
-      />
-      {!fixed && <ChartTooltip content={<ChartTooltipContent />} />}
-    </RadarChart>
-  );
-  return (
-    <Card
-      className={`print-radar-card min-w-0 overflow-hidden rounded-xl border-0 shadow-sm ${className}`}
-    >
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle className="title-card">Media por competencia</CardTitle>
-            <CardDescription>
-              Escala continua de 1,0 a 5,0
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {plotted.length ? (
-          <div className="flex min-w-0 flex-col items-center">
-            <div className="radar-responsive-chart">
-              <ChartContainer config={chartConfig} className="h-[380px] w-full max-w-[520px] aspect-auto" initialDimension={{ width: 1000, height: 380 }}>
-                {renderRadarChart()}
-              </ChartContainer>
-            </div>
-            <div className="radar-fixed-chart" aria-label="Radar de medias por competencia para impresión">
-              <RadarPrintSvg items={plotted} />
-            </div>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-5 border-t border-surface-container-high pt-3 text-xs">
-              <span className="flex items-center gap-1.5 font-medium text-ink-900">
-                <i className="h-1.5 w-4 rounded-sm bg-titulados" />
-                Media observada
-              </span>
-            </div>
-          </div>
-        ) : (
-          <Empty className="py-8">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Inbox />
-              </EmptyMedia>
-              <EmptyTitle>Sin competencias disponibles</EmptyTitle>
-              <EmptyDescription>
-                No hay datos suficientes para mostrar este radar.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function RadarPrintSvg({ items }: { items: Competence[] }) {
-  const width = 760;
-  const height = 400;
-  const centerX = width / 2;
-  const centerY = 200;
-  const radius = 120;
-  const count = Math.max(items.length, 1);
-  const point = (index: number, value: number, scale = radius) => {
-    const angle = -Math.PI / 2 + (index * Math.PI * 2) / count;
-    return { x: centerX + Math.cos(angle) * scale * (value / 5), y: centerY + Math.sin(angle) * scale * (value / 5) };
-  };
-  const axisPoint = (index: number, scale = radius) => {
-    const angle = -Math.PI / 2 + (index * Math.PI * 2) / count;
-    return { x: centerX + Math.cos(angle) * scale, y: centerY + Math.sin(angle) * scale };
-  };
-  const polygon = items.map((item, index) => {
-    const p = point(index, item.average);
-    return `${p.x},${p.y}`;
-  }).join(" ");
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Media por competencia" preserveAspectRatio="xMidYMid meet">
-      {[1, 2, 3, 4, 5].map((level) => (
-        <polygon key={level} points={items.map((_, index) => { const p = point(index, 5, radius * level / 5); return `${p.x},${p.y}`; }).join(" ")} fill="none" stroke="#cbd5e1" strokeDasharray="2 2" />
-      ))}
-      {items.map((item, index) => { const p = axisPoint(index); const label = radarLabel(item.name); const labelLines = radarLabelLines(label); const labelPoint = axisPoint(index, radius + 38); const angle = -Math.PI / 2 + (index * Math.PI * 2) / count; const anchor = Math.cos(angle) > 0.25 ? "start" : Math.cos(angle) < -0.25 ? "end" : "middle"; return <g key={item.code}>
-        <line x1={centerX} y1={centerY} x2={p.x} y2={p.y} stroke="#cbd5e1" />
-        <text x={labelPoint.x} y={labelPoint.y} textAnchor={anchor} fontSize="11" fill="#334155">
-          {labelLines.map((line, lineIndex) => <tspan key={line} x={labelPoint.x} dy={lineIndex === 0 ? 0 : 13}>{line}</tspan>)}
-          <tspan x={labelPoint.x} dy="13" fontWeight="700" fill="#0f3f6d">{formatDecimal(item.average)}</tspan>
-        </text>
-      </g>; })}
-      <polygon points={polygon} fill="#1f6fb5" fillOpacity="0.24" stroke="#1f6fb5" strokeWidth="2.25" />
-      {items.map((item, index) => { const p = point(index, item.average); return <circle key={`${item.code}-point`} cx={p.x} cy={p.y} r="3.5" fill="#1f6fb5" />; })}
-    </svg>
-  );
-}
-
-function SatisfactionLegend() {
-  return (
-    <div className="flex flex-wrap gap-x-5 gap-y-2 rounded-lg bg-surface-container-low px-3 py-2.5 text-xs font-medium text-ink-700">
-      <span><i className="mr-1.5 inline-block size-3 rounded bg-[#ed552f]" />Insatisfecho</span>
-      <span><i className="mr-1.5 inline-block size-3 rounded bg-[#f3a487]" />Algo satisfecho</span>
-      <span><i className="mr-1.5 inline-block size-3 rounded bg-[#1f6fb5]" />Satisfecho</span>
-    </div>
-  );
-}
-
-function orderedScaleEntries(distribution: CategoryDistribution | undefined, scale: "agreement" | "satisfaction") {
-  const labels = scale === "satisfaction"
-    ? ["Insatisfecho", "Algo satisfecho", "Satisfecho"]
-    : ["Totalmente en desacuerdo", "En desacuerdo", "De acuerdo", "Totalmente de acuerdo"];
-  const existing = Object.keys(distribution?.counts ?? {});
-  return labels.map((label) => {
-    const actual = existing.find((candidate) => normalizeScaleLabel(candidate) === normalizeScaleLabel(label));
-    return [actual ?? label, actual ? distribution?.counts[actual] ?? 0 : 0] as [string, number];
-  });
-}
-
-function normalizeScaleLabel(label: string) {
-  return label.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-}
-
-function radarLabelLines(label: string) {
-  const words = label.split(/\s+/);
-  if (label.length <= 17 || words.length < 2) return [label];
-  const midpoint = Math.ceil(words.length / 2);
-  return [words.slice(0, midpoint).join(" "), words.slice(midpoint).join(" ")];
-}
-
-type RadarTickProps = {
-  x?: number;
-  y?: number;
-  textAnchor?: "start" | "middle" | "end";
-  payload?: { value?: string };
-};
-
-function RadarTick({
-  x = 0,
-  y = 0,
-  textAnchor = "middle",
-  payload,
-}: RadarTickProps) {
-  const value = String(payload?.value ?? "");
-  if (value.length <= 22) {
-    return (
-      <text x={x} y={y} textAnchor={textAnchor} fill="#0f172a" fontSize={10} fontWeight={600}>
-        {value}
-      </text>
-    );
-  }
-
-  const words = value.split(" ");
-  const score = words.pop() ?? "";
-  const midpoint = Math.ceil(words.join(" ").length / 2);
-  let splitAt = 0;
-  let distance = Number.POSITIVE_INFINITY;
-  words.forEach((_, index) => {
-    const candidate = words.slice(0, index + 1).join(" ");
-    const candidateDistance = Math.abs(candidate.length - midpoint);
-    if (candidateDistance < distance) {
-      distance = candidateDistance;
-      splitAt = index + 1;
-    }
-  });
-  const firstLine = words.slice(0, splitAt).join(" ");
-  const secondLine = `${words.slice(splitAt).join(" ")} ${score}`.trim();
-
-  return (
-    <text x={x} y={y} textAnchor={textAnchor} fill="#0f172a" fontSize={10} fontWeight={600}>
-      <tspan x={x} dy="-0.55em">
-        {firstLine}
-      </tspan>
-      <tspan x={x} dy="1.1em">
-        {secondLine}
-      </tspan>
-    </text>
-  );
-}
-
-function radarLabel(name: string) {
-  const normalized = name.toLowerCase();
-  if (normalized.includes("programación")) return "Programación";
-  if (normalized.includes("bases")) return "Bases de datos";
-  if (normalized.includes("requisitos")) return "Requisitos y modelado";
-  if (normalized.includes("análisis")) return "Análisis de datos";
-  if (normalized.includes("gestión")) return "Gestión de proyectos";
-  if (normalized.includes("redes")) return "Redes";
-  if (normalized.includes("seguridad")) return "Seguridad";
-  if (normalized.includes("cloud")) return "Cloud / DevOps";
-  return name;
 }
 
 export function FinancingCompletePage() {
