@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BarChart3,
   Dices,
@@ -57,10 +57,10 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import type { CohortChartPoint, Competence, Domain, EmploymentProfile, Tone } from "./shared/analyticsTypes";
-import { DatasetSelect, PageHeading, useDatasets } from "./shared/AnalyticsPrimitives";
+import { DatasetSelect, PageHeading } from "./shared/AnalyticsPrimitives";
 import { MiniDistribution, StackedRelevanceCard } from "./employment/EmploymentCharts";
 import { countMatching, displayLaborLabel, formatPercentage, laborColor } from "./employment/employmentHelpers";
-import { useCompetenceData } from "./competence/useCompetenceData";
+import { useCompetencePage } from "./competence/useCompetencePage";
 import { CompetenceMatrix as CompetenceHeatmap } from "./competence/CompetenceMatrix";
 import { CompetenceStatsTable as CompetenceStatsTableView } from "./competence/CompetenceStatsTable";
 import { CurriculumCard as CurriculumCardView } from "./competence/CurriculumCard";
@@ -1243,65 +1243,29 @@ function booleanLabel(value: string) {
 }
 
 export function CompetencePage({ domain, printAll = false }: { domain: Domain; printAll?: boolean }) {
-  const tone: Tone = domain === "TITULADOS" ? "titulados" : "empleadores";
   const {
+    tone,
     datasets,
     datasetId,
     setDatasetId,
     loading: datasetsLoading,
-  } = useDatasets(domain);
-  const [filterQuery, setFilterQuery] = useState("");
-  const [activeGroup, setActiveGroup] = useState("");
-  const [activeTab, setActiveTab] = useState("hard");
-  const { items, satisfaction, curriculum, loading, error } = useCompetenceData(domain, datasetId, filterQuery);
-  useEffect(() => {
-    if (!items.length) {
-      setActiveGroup("");
-      return;
-    }
-    const firstHard = items.find((item) => item.group.toLowerCase().includes("hard"));
-    const firstSoft = items.find((item) => item.group.toLowerCase().includes("soft"));
-    setActiveTab(firstHard ? "hard" : firstSoft ? "soft" : "hard");
-    setActiveGroup((firstHard ?? firstSoft ?? items[0])?.group ?? "");
-  }, [items]);
-  const groups = useMemo(
-    () => [...new Set(items.map((item) => item.group))],
-    [items],
-  );
-  const tabGroup = (tab: string) =>
-    tab === "hard"
-      ? groups.find((group) => group.toLowerCase().includes("hard"))
-      : tab === "soft"
-        ? groups.find((group) => group.toLowerCase().includes("soft"))
-        : undefined;
-  const visibleItems = useMemo(
-    () =>
-      items
-        .filter((item) => item.group === activeGroup)
-        .sort((a, b) => b.average - a.average),
-    [items, activeGroup],
-  );
-  const average = visibleItems.length
-    ? visibleItems.reduce((sum, item) => sum + item.average, 0) /
-      visibleItems.length
-    : 0;
-  const lowest = visibleItems.length
-    ? visibleItems.reduce((current, item) => item.average < current.average ? item : current)
-    : undefined;
-  const highest = visibleItems.length
-    ? visibleItems.reduce((current, item) => item.average > current.average ? item : current)
-    : undefined;
-  const tabs = domain === "TITULADOS"
-    ? [
-        { key: "hard", label: "Hard skills" },
-        { key: "soft", label: "Soft skills" },
-        { key: "satisfaccion", label: "Satisfacción y pertinencia" },
-        { key: "malla", label: "Malla y asignaturas" },
-      ]
-    : [
-        { key: "hard", label: "Hard skills" },
-        { key: "soft", label: "Soft skills" },
-      ];
+    setFilterQuery,
+    activeGroup,
+    setActiveGroup,
+    activeTab,
+    setActiveTab,
+    items,
+    satisfaction,
+    curriculum,
+    loading,
+    error,
+    tabGroup,
+    visibleItems,
+    average,
+    lowest,
+    highest,
+    tabs,
+  } = useCompetencePage(domain);
   if (printAll && domain === "TITULADOS")
     return (
       <div className="mx-auto w-full max-w-7xl space-y-6">
