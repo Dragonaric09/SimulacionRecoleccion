@@ -82,6 +82,7 @@ import type { DatasetSummary } from "@/features/encuesta/api";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import { contrastTextColor } from "@/lib/utils";
 import { PrintButton } from "@/components/analytics/PrintButton";
+import * as XLSX from "xlsx-js-style";
 import { useDatasetContext } from "@/app/DatasetContext";
 
 type Domain = "TITULADOS" | "EMPLEADORES";
@@ -4708,21 +4709,26 @@ function exportCrossCsv(cross: Cross, metric: CrossMetric, includeTotals: boolea
 }
 function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean) {
   const rows = crossExportRows(cross, metric, includeTotals);
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.aoa_to_sheet(rows);
+  worksheet["!cols"] = rows[0].map((_, index) => ({ wch: index === 0 ? 32 : 16 }));
   const max = crossExportMax(cross, metric);
-  const html = `<table>${rows.map((row, rowIndex) => `<tr>${row.map((cell, columnIndex) => {
+  rows.forEach((row, rowIndex) => row.forEach((cell, columnIndex) => {
+    const address = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
     const isHeader = rowIndex === 0;
     const isTotalRow = includeTotals && rowIndex === cross.rowCategories.length + 1;
     const isTotalColumn = includeTotals && columnIndex === cross.columnCategories.length + 1;
-    const heat = colorHeatmap && !isHeader && !isTotalRow && !isTotalColumn && rowIndex > 0 && rowIndex <= cross.rowCategories.length && columnIndex > 0 && columnIndex <= cross.columnCategories.length
-      ? ` style="background-color:rgba(31,111,181,${0.08 + (exportNumber(cell) / max) * 0.75})"`
-      : (isHeader || isTotalRow || isTotalColumn ? ` style="background-color:#f1f5f9"` : "");
-    return `<td${heat}>${cell}</td>`;
-  }).join("")}</tr>`).join("")}</table>`;
-  downloadFile(
-    `<!doctype html><html><body>${html}</body></html>`,
-    "cruce.xls",
-    "application/vnd.ms-excel",
-  );
+    const isHeatCell = colorHeatmap && !isHeader && !isTotalRow && !isTotalColumn && rowIndex > 0 && rowIndex <= cross.rowCategories.length && columnIndex > 0 && columnIndex <= cross.columnCategories.length;
+    if (isHeader || isTotalRow || isTotalColumn || isHeatCell) {
+      worksheet[address].s = {
+        fill: { fgColor: { rgb: isHeatCell ? heatmapRgb(exportNumber(cell) / max) : "F1F5F9" } },
+        font: { bold: isHeader || isTotalRow || isTotalColumn, color: isHeatCell ? "FFFFFF" : "0F172A" },
+      };
+    }
+  }));
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Cruce");
+  const content = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  downloadFile(content, "cruce.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 }
 function exportCrossPng(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean) {
   const width = 900;
@@ -4793,6 +4799,12 @@ function crossExportMax(cross: Cross, metric: CrossMetric) {
 
 function exportNumber(value: string) {
   return Number(value.replace(",", ".").replace("%", "")) || 0;
+}
+
+function heatmapRgb(intensity: number) {
+  const alpha = 0.08 + Math.min(1, Math.max(0, intensity)) * 0.75;
+  const channel = (base: number) => Math.round(255 * (1 - alpha) + base * alpha).toString(16).padStart(2, "0");
+  return `${channel(31)}${channel(111)}${channel(181)}`.toUpperCase();
 }
 
 function escapeSvg(value: string) {
