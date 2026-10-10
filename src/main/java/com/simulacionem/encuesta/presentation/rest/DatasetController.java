@@ -65,6 +65,17 @@ public class DatasetController {
                 dataset.getWarningsCount(), dataset.getErrorsCount(), issues.countByDataset_Id(id));
     }
 
+    @GetMapping("/{id}/issues")
+    public List<ImportIssueDto> issueDetails(@PathVariable UUID id) {
+        if (!datasets.existsById(id)) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND, "Dataset no encontrado");
+        }
+        return issues.findByDataset_IdOrderByIdAsc(id).stream()
+                .map(issue -> new ImportIssueDto(issue.getSourceRowNumber(), issue.getSourceColumnIndex(),
+                        issue.getSourceColumnName(), issue.getSeverity(), issue.getIssueCode(), issue.getMessage()))
+                .toList();
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {

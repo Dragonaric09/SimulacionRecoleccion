@@ -29,7 +29,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Card,
   CardContent,
@@ -43,17 +42,27 @@ import { useDatasetContext } from "@/app/DatasetContext";
 import {
   deleteDataset,
   importDataset,
+  listDatasetIssues,
   listDatasets,
   renameDataset,
   validateDataset,
   type DatasetSummary,
+  type Issue,
   type ImportReport,
 } from "./api";
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type SurveyType = "TITULADOS" | "EMPLEADORES";
 
 export function CargarDatosPage() {
-  const { refreshDatasets, setActiveDataset } = useDatasetContext();
+  const { activeIds, refreshDatasets, setActiveDataset } = useDatasetContext();
   const [surveyType, setSurveyType] = useState<SurveyType>("TITULADOS");
   const [file, setFile] = useState<File | null>(null);
   const [report, setReport] = useState<ImportReport | null>(null);
@@ -70,19 +79,14 @@ export function CargarDatosPage() {
       .catch(() => undefined);
   }, []);
 
-  function chooseFile(next: File | null) {
+  async function chooseFile(next: File | null) {
     setFile(next);
     setReport(null);
     setError(null);
-  }
-
-  async function validate() {
-    if (!file) return;
+    if (!next) return;
     setLoading("validate");
-    setError(null);
     try {
-      const next = await validateDataset(file);
-      setReport(next);
+      setReport(await validateDataset(next));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -117,8 +121,8 @@ export function CargarDatosPage() {
       setDatasets((current) =>
         current.filter((item) => item.id !== dataset.id),
       );
-      if (localStorage.getItem("simulacionem.activeDatasetId") === dataset.id)
-        localStorage.removeItem("simulacionem.activeDatasetId");
+      if (activeIds[dataset.surveyType as SurveyType] === dataset.id)
+        setActiveDataset(dataset.surveyType as SurveyType, undefined);
       refreshDatasets();
       if (report?.datasetId === dataset.id) setReport(null);
       setDatasetToDelete(null);
@@ -146,6 +150,7 @@ export function CargarDatosPage() {
   }
 
   const surveyLabel = surveyType === "TITULADOS" ? "Titulados" : "Empleadores";
+  const visibleDatasets = datasets.filter((dataset) => dataset.surveyType === surveyType);
   const canProcess = Boolean(
     file &&
     report &&
@@ -158,94 +163,37 @@ export function CargarDatosPage() {
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <div className="flex flex-col justify-between gap-4 pt-1 md:flex-row md:items-end">
         <div>
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <Badge tone="neutral">
-              <UploadCloud className="mr-1 size-3.5" />
-              Importación de datos
-            </Badge>
-            <Badge tone={datasets.length > 0 ? "success" : "neutral"}>
-              <span className="mr-1.5 size-1.5 rounded-full bg-current" />
-              {datasets.length > 0
-                ? "Datasets disponibles"
-                : "Esperando archivo"}
-            </Badge>
-          </div>
           <h1 className="headline-page tracking-tight">Cargar datos</h1>
           <p className="mt-1 max-w-3xl text-sm text-ink-600">
-            Importa el CSV exportado desde Google Forms para validar su
+            Importa el CSV para validar su
             estructura y preparar el dataset para el análisis cuantitativo.
           </p>
         </div>
-        <div className="hidden items-center gap-2 text-xs text-ink-600 sm:flex">
-          <FileSpreadsheet className="size-4 text-titulados" />
-          CSV UTF-8 · respuestas agregadas
-        </div>
       </div>
 
-      <div className="flex flex-col justify-between gap-3 rounded-xl bg-amber-50/80 p-4 shadow-sm md:flex-row md:items-center">
-        <div className="flex items-start gap-3">
-          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-status-success" />
-          <p className="text-sm text-ink-600">
-            <strong className="text-ink-900">Flujo de importación:</strong>{" "}
-            selecciona la encuesta, carga el CSV, valida sus incidencias y
-            procesa únicamente cuando no existan errores.
-          </p>
-        </div>
-        <span className="whitespace-nowrap rounded bg-white/70 px-2 py-1 text-xs font-medium text-ink-600">
-          Google Forms → CSV → Analizador
-        </span>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-2">
+        <div className="inline-flex rounded-lg border border-border-line bg-surface-container-low p-1">
         {(["TITULADOS", "EMPLEADORES"] as SurveyType[]).map((type) => (
           <button
             key={type}
             type="button"
             onClick={() => setSurveyType(type)}
-            className={`overflow-hidden rounded-xl border bg-surface-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${surveyType === type ? (type === "TITULADOS" ? "border-titulados ring-1 ring-titulados/20" : "border-empleadores ring-1 ring-empleadores/20") : "border-transparent"}`}
+            className={`rounded-md px-5 py-2 text-sm font-medium transition-colors ${surveyType === type ? "bg-surface-white text-ink-900 shadow-sm" : "text-ink-600 hover:text-ink-900"}`}
           >
-            <div
-              className={`h-1.5 ${type === "TITULADOS" ? "bg-titulados" : "bg-empleadores"}`}
-            />
-            <div className="p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="title-card">
-                    {type === "TITULADOS"
-                      ? "1. Encuesta a titulados"
-                      : "2. Encuesta a empleadores"}
-                  </p>
-                  <p className="mt-1 text-sm text-ink-600">
-                    {type === "TITULADOS"
-                      ? "Perfil, empleabilidad y formación continua."
-                      : "Contratación, valoración y competencias."}
-                  </p>
-                </div>
-                <Badge
-                  tone={type === "TITULADOS" ? "titulados" : "empleadores"}
-                >
-                  {surveyType === type ? "Seleccionada" : "Seleccionar"}
-                </Badge>
-              </div>
-              <span className="mt-4 inline-block text-xs font-medium text-ink-600">
-                Tipo esperado: {type}
-              </span>
-            </div>
+            {type === "TITULADOS" ? "Titulados" : "Empleadores"}
           </button>
         ))}
+        </div>
+        <p className="text-sm text-ink-600">Selecciona el tipo de encuesta para cargar un archivo y ver sus archivos importados.</p>
       </div>
 
       <Card className="overflow-hidden rounded-xl border-0 shadow-sm">
-        <div className="h-1.5 bg-titulados" />
         <CardHeader>
           <CardTitle className="flex items-center gap-2 title-card">
             <UploadCloud className="size-5 text-titulados" />
             Archivo de respuestas
           </CardTitle>
-          <CardDescription>
-            Formato disponible: CSV UTF-8 exportado desde Google Forms. El
-            backend detecta la encuesta y valida sus encabezados.
-          </CardDescription>
+          <CardDescription>Archivo CSV (UTF-8) exportado desde Google Forms</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <input
@@ -264,12 +212,12 @@ export function CargarDatosPage() {
               <FileUp className="size-7 transition-transform group-hover:-translate-y-0.5" />
             </span>
             <span className="font-medium text-ink-900">
-              Seleccionar CSV de {surveyLabel.toLowerCase()}
+              Haz clic para buscar un archivo… o arrástralo aquí
             </span>
             <span className="text-xs text-ink-600">
               {file
                 ? file.name
-                : "Haz clic para buscar un archivo desde tu equipo"}
+                : `Archivo de ${surveyLabel.toLowerCase()}`}
             </span>
           </button>
           {file && (
@@ -291,16 +239,6 @@ export function CargarDatosPage() {
             </Attachment>
           )}
           <div className="flex flex-wrap gap-2">
-            <Button onClick={validate} disabled={!file || loading !== null}>
-              {loading === "validate" ? (
-                <>
-                  <RefreshCw className="animate-spin" />
-                  Validando…
-                </>
-              ) : (
-                "Validar archivo"
-              )}
-            </Button>
             <Button
               variant="secondary"
               onClick={process}
@@ -312,7 +250,7 @@ export function CargarDatosPage() {
                   Procesando…
                 </>
               ) : (
-                "Procesar dataset"
+                "Importar"
               )}
             </Button>
           </div>
@@ -328,7 +266,9 @@ export function CargarDatosPage() {
       )}
       {report && <ImportReportView report={report} expectedType={surveyType} />}
       <DatasetList
-        datasets={datasets}
+        datasets={visibleDatasets}
+        activeId={activeIds[surveyType]}
+        onUse={(dataset) => setActiveDataset(surveyType, dataset.id)}
         deletingId={deletingId}
         onDelete={requestRemoveDataset}
         onRename={rename}
@@ -385,8 +325,8 @@ function ImportReportView({
         </CardTitle>
         <CardDescription>
           {typeMismatch
-            ? `El archivo fue detectado como ${formatSurveyType(report.surveyType)}, pero se esperaba ${formatSurveyType(expectedType)}.`
-            : `Tipo detectado: ${formatSurveyType(report.surveyType)}`}
+              ? `Este archivo parece de ${formatSurveyType(report.surveyType).toLowerCase()}. Seleccionaste ${formatSurveyType(expectedType).toLowerCase()}.`
+              : `Tipo detectado: ${formatSurveyType(report.surveyType)}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -461,11 +401,15 @@ function groupIssues(issues: ImportReport["issues"]) {
 
 function DatasetList({
   datasets,
+  activeId,
+  onUse,
   deletingId,
   onDelete,
   onRename,
 }: {
   datasets: DatasetSummary[];
+  activeId?: string;
+  onUse: (dataset: DatasetSummary) => void;
   deletingId: string | null;
   onDelete: (dataset: DatasetSummary) => void;
   onRename: (dataset: DatasetSummary) => void;
@@ -473,24 +417,16 @@ function DatasetList({
   return (
     <Card className="rounded-xl border-0 shadow-sm">
       <CardHeader>
-        <CardTitle className="title-card">Datasets disponibles</CardTitle>
+        <CardTitle className="title-card">Archivos cargados</CardTitle>
         <CardDescription>
           {datasets.length
-            ? "Selecciona el dataset activo o elimina un dataset que ya no necesites."
-            : "Todavía no hay datasets importados en el backend."}
+            ? "El archivo marcado como En uso alimenta las pantallas de análisis."
+            : "Todavía no hay archivos cargados de este tipo de encuesta."}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {datasets.length > 0 && (
-          <RadioGroup
-            defaultValue={
-              localStorage.getItem("simulacionem.activeDatasetId") ?? undefined
-            }
-            onValueChange={(value) =>
-              localStorage.setItem("simulacionem.activeDatasetId", value)
-            }
-            className="space-y-2"
-          >
+          <div className="space-y-2">
             {datasets
               .slice()
               .reverse()
@@ -499,21 +435,24 @@ function DatasetList({
                   key={dataset.id}
                   className="flex items-center gap-3 rounded-lg border border-border-line bg-surface-white p-3 transition-colors hover:bg-surface-container-low"
                 >
-                  <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
-                    <RadioGroupItem value={dataset.id} />
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    onClick={() => onUse(dataset)}
+                  >
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">
                         {dataset.displayName ?? dataset.sourceFileName}
                       </span>
                       <span className="block text-xs text-ink-600">
-                        {formatSurveyType(dataset.surveyType)} · {dataset.rowsValid} válidas · {formatDatasetStatus(dataset.status)}
-                        {dataset.importedAt ? ` · ${new Intl.DateTimeFormat("es-BO").format(new Date(dataset.importedAt))}` : ""}
+                        {formatSurveyType(dataset.surveyType)} · {dataset.rowsValid} respuestas válidas · {formatDatasetDate(dataset.importedAt)}
                       </span>
                     </span>
-                    <span className="hidden text-xs text-ink-600 md:block">
-                      {dataset.id}
-                    </span>
-                  </label>
+                    {activeId === dataset.id && <Badge tone="success">En uso</Badge>}
+                  </button>
+                  {dataset.warnings > 0 && (
+                    <DatasetWarningsPopover dataset={dataset} />
+                  )}
                   <Button variant="outline" size="sm" onClick={() => onRename(dataset)} aria-label={`Renombrar ${dataset.displayName ?? dataset.sourceFileName}`}>
                     <Pencil />
                     Renombrar
@@ -530,34 +469,74 @@ function DatasetList({
                   </Button>
                 </div>
               ))}
-          </RadioGroup>
+          </div>
         )}
       </CardContent>
     </Card>
   );
 }
 
+function DatasetWarningsPopover({ dataset }: { dataset: DatasetSummary }) {
+  const [open, setOpen] = useState(false);
+  const [issues, setIssues] = useState<Issue[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const groupedIssues = issues === null ? null : groupIssues(issues);
+
+  useEffect(() => {
+    if (!open || issues !== null) return;
+    setLoading(true);
+    listDatasetIssues(dataset.id)
+      .then(setIssues)
+      .catch(() => setIssues([]))
+      .finally(() => setLoading(false));
+  }, [dataset.id, issues, open]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button type="button" className="text-xs font-medium text-amber-700 underline underline-offset-2">
+          Con advertencias ({dataset.warnings})
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="max-h-80 overflow-y-auto">
+        <PopoverHeader>
+          <PopoverTitle>Advertencias del archivo</PopoverTitle>
+          <PopoverDescription>
+            {dataset.warnings} caso{dataset.warnings === 1 ? "" : "s"} en {groupedIssues?.length ?? "…"} tipo{groupedIssues?.length === 1 ? "" : "s"} de advertencia.
+          </PopoverDescription>
+        </PopoverHeader>
+        {loading && <p className="text-xs text-ink-600">Cargando detalle…</p>}
+        {!loading && issues?.length === 0 && (
+          <p className="text-xs text-ink-600">No se pudo recuperar el detalle de las incidencias.</p>
+        )}
+        {!loading && groupedIssues && groupedIssues.length > 0 && (
+          <div className="space-y-2">
+            {groupedIssues.map((issue) => (
+              <div key={`${issue.severity}-${issue.code}-${issue.message}`} className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-950">
+                <p className="font-medium">
+                  {formatIssueSeverity(issue.severity)} · {formatIssueCode(issue.code)}
+                  {issue.count > 1 ? ` · ${issue.count} casos` : ""}
+                </p>
+                <p>{issue.message}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function formatDatasetDate(value?: string) {
+  return value
+    ? new Intl.DateTimeFormat("es-BO", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value))
+    : "Fecha no disponible";
+}
+
 function formatSurveyType(value: string) {
   const labels: Record<string, string> = {
     TITULADOS: "Titulados",
     EMPLEADORES: "Empleadores",
-  };
-  return labels[value] ?? formatTechnicalLabel(value);
-}
-
-function formatDatasetStatus(value: string) {
-  const labels: Record<string, string> = {
-    CARGADO: "Cargado",
-    VALIDANDO: "Validando",
-    CON_ADVERTENCIAS: "Con advertencias",
-    CON_ERRORES: "Con errores",
-    LISTO: "Listo",
-    VALIDADO: "Validado",
-    VALIDADA: "Validada",
-    PROCESADO: "Procesado",
-    PROCESADA: "Procesada",
-    IMPORTADO: "Importado",
-    IMPORTADA: "Importada",
   };
   return labels[value] ?? formatTechnicalLabel(value);
 }

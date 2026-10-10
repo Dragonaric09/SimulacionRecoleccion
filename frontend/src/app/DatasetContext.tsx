@@ -52,6 +52,10 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
     if (id) {
       localStorage.setItem(`simulacionem.activeDatasetId.${domain}`, id);
       localStorage.setItem("simulacionem.activeDatasetId", id);
+    } else {
+      localStorage.removeItem(`simulacionem.activeDatasetId.${domain}`);
+      if (localStorage.getItem("simulacionem.activeDatasetId") === activeIds[domain])
+        localStorage.removeItem("simulacionem.activeDatasetId");
     }
     Object.keys(localStorage)
       .filter((key) => key.startsWith("simulacionem.tituladosFilters.") || key.startsWith("simulacionem.empleadoresFilters."))

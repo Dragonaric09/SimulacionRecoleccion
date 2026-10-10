@@ -47,4 +47,11 @@ public class ImportIssueEntity {
         this.issueCode = issueCode;
         this.message = message;
     }
+
+    public Integer getSourceRowNumber() { return sourceRowNumber; }
+    public Integer getSourceColumnIndex() { return sourceColumnIndex; }
+    public String getSourceColumnName() { return sourceColumnName; }
+    public String getSeverity() { return severity; }
+    public String getIssueCode() { return issueCode; }
+    public String getMessage() { return message; }
 }
