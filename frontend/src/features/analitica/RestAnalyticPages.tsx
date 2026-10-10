@@ -56,7 +56,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
-import type { CohortChartPoint, Competence, Domain, EmploymentProfile, Tone } from "./shared/analyticsTypes";
+import type { CohortChartPoint, Domain, EmploymentProfile, Tone } from "./shared/analyticsTypes";
 import { DatasetSelect, PageHeading } from "./shared/AnalyticsPrimitives";
 import { formatDecimal, formatPercentValue } from "./shared/analyticsFormatters";
 import { MiniDistribution, StackedRelevanceCard } from "./employment/EmploymentCharts";
@@ -64,10 +64,10 @@ import { booleanCount, booleanLabel, countMatching, displayLaborLabel, formatPer
 import { useCompetencePage } from "./competence/useCompetencePage";
 import { CompetenceMatrix as CompetenceHeatmap } from "./competence/CompetenceMatrix";
 import { CompetenceStatsTable as CompetenceStatsTableView } from "./competence/CompetenceStatsTable";
-import { CurriculumCard as CurriculumCardView } from "./competence/CurriculumCard";
 import { SatisfactionPanel as SatisfactionPanelView } from "./competence/SatisfactionPanels";
 import { CompetenceRadar as CompetenceRadarView } from "./competence/CompetenceRadar";
 import { groupDisplayName, groupLabel } from "./competence/competenceHelpers";
+import { CompetencePrintGroup, CurriculumPanel } from "./competence/CompetencePrintSections";
 import { normalizeAnalyticsLabel } from "./shared/analyticsLabels";
 import { SimulationComparisonTable, SimulationDistribution, SimulationWeights } from "./simulation/SimulationComponents";
 import { simulationPercent } from "./simulation/simulationUtils";
@@ -1431,68 +1431,6 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
       )}
     </div>
   );
-}
-
-function CurriculumPanel({ summary }: { summary: AnalyticsSummary | null }) {
-  if (!summary)
-    return (
-      <StatusPanel
-        kind="loading"
-        title="Cargando malla y asignaturas"
-        description="Consultando las respuestas de selección múltiple."
-      />
-    );
-  return (
-    <div className="grid gap-5 lg:grid-cols-2">
-      <CurriculumCardView
-        title="Aspectos de la Carrera que resultaron útiles"
-        field="aspectos_utiles"
-        summary={summary}
-        tone="blue"
-      />
-      <CurriculumCardView
-        title="Aspectos de la Carrera que pueden mejorarse"
-        field="aspectos_mejorables"
-        summary={summary}
-        tone="orange"
-      />
-      <CurriculumCardView
-        title="Asignaturas que dieron ventaja competitiva"
-        field="asignaturas_ventaja"
-        summary={summary}
-        tone="teal"
-      />
-      <CurriculumCardView
-        title="Asignaturas percibidas poco útiles o desactualizadas"
-        field="asignaturas_poco_utiles"
-        summary={summary}
-        tone="orange"
-      />
-    </div>
-  );
-}
-
-
-
-function CompetencePrintGroup({ items, group, tone }: { items: Competence[]; group: string; tone: Tone }) {
-  const average = items.length ? items.reduce((sum, item) => sum + item.average, 0) / items.length : 0;
-  const lowest = items.length ? items.reduce((current, item) => item.average < current.average ? item : current) : undefined;
-  const highest = items.length ? items.reduce((current, item) => item.average > current.average ? item : current) : undefined;
-  return <>
-    <div className="competence-kpi-grid grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div className="h-full"><KpiCard label="Competencias evaluadas" value={String(items.length)} detail={`${groupDisplayName(group)} evaluadas`} icon={ListChecks} tone={tone} /></div>
-      <div className="h-full"><KpiCard label={`Promedio de ${groupDisplayName(group)}`} value={average ? `${formatDecimal(average)} de 5` : "—"} detail={`Promedio de las ${items.length} competencias`} icon={BarChart3} tone={tone} /></div>
-      <div className="h-full"><KpiCard label="Competencia más baja" value={lowest ? formatDecimal(lowest.average) : "—"} detail={lowest?.name ?? "Sin datos"} icon={TrendingDown} tone={tone} /></div>
-      <div className="h-full"><KpiCard label="Competencia más alta" value={highest ? formatDecimal(highest.average) : "—"} detail={highest?.name ?? "Sin datos"} icon={TrendingUp} tone={tone} /></div>
-    </div>
-    <div className="print-competence-matrix">
-      <CompetenceHeatmap items={items} />
-    </div>
-    <div className="print-competence-radar">
-      <CompetenceRadarView items={items} />
-    </div>
-    <CompetenceStatsTableView items={items} group={group} />
-  </>;
 }
 
 export function SimulationPage() {
