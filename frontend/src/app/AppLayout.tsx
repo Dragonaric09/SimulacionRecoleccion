@@ -105,10 +105,6 @@ export function AppLayout({ route }: Props) {
                 <p className="text-xs text-ink-600">{route.description}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 rounded-lg bg-surface-container-high px-3 py-1.5 text-xs text-ink-600">
-              <span className="size-2 rounded-full bg-status-success" />
-              Modo analizador
-            </div>
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
             <PlaceholderPage route={route} />
@@ -118,4 +114,3 @@ export function AppLayout({ route }: Props) {
     </div>
   )
 }
-
