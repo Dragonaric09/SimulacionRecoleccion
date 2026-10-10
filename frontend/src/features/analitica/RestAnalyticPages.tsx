@@ -78,13 +78,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { DatasetSummary } from "@/features/encuesta/api";
 import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import type { CohortChartPoint, Competence, Cross, CrossMetric, Domain, EmploymentProfile, Simulation, Tone } from "./shared/analyticsTypes";
+import { DatasetSelect, DistributionCard, PageHeading, labelFor, useDatasets } from "./shared/AnalyticsPrimitives";
 import { contrastTextColor } from "@/lib/utils";
 import { PrintButton } from "@/components/analytics/PrintButton";
 import * as XLSX from "xlsx-js-style";
-import { useDatasetContext } from "@/app/DatasetContext";
 
 type ChiResult = {
   estadistico: number;
@@ -2030,117 +2029,6 @@ function booleanLabel(value: string) {
     .replace(/\bia\b/gi, "IA")
     .replace(/\bdevops\b/gi, "DevOps")
     .replace(/\b(modular|presencial|virtual)\(/gi, "$1 (");
-}
-
-export function DatasetAnalyticsPage({
-  title,
-  description,
-  domain,
-  endpoint,
-  fields,
-  cards,
-}: {
-  title: string;
-  description: string;
-  domain: Domain;
-  endpoint: string;
-  fields?: string;
-  cards: { key: string; label: string }[];
-}) {
-  const tone: Tone = domain === "TITULADOS" ? "titulados" : "empleadores";
-  const {
-    datasets,
-    datasetId,
-    setDatasetId,
-    loading: datasetsLoading,
-  } = useDatasets(domain);
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
-  const [filterQuery, setFilterQuery] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    if (!datasetId) {
-      setSummary(null);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    const suffix = fields ? `&fields=${encodeURIComponent(fields)}` : "";
-    apiRequest<AnalyticsSummary>(
-      `${endpoint}?datasetId=${encodeURIComponent(datasetId)}${suffix}${domain === "TITULADOS" ? filterQuery : ""}`,
-    )
-      .then(setSummary)
-      .catch((cause) =>
-        setError(cause instanceof Error ? cause.message : String(cause)),
-      )
-      .finally(() => setLoading(false));
-  }, [datasetId, endpoint, fields, domain, filterQuery]);
-  return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <PageHeading title={title} description={description} tone={tone} />
-      <DatasetSelect
-        datasets={datasets}
-        value={datasetId}
-        onChange={setDatasetId}
-        loading={datasetsLoading}
-      />
-      {loading && (
-        <StatusPanel
-          kind="loading"
-          title="Cargando datos"
-          description="Consultando el dataset seleccionado."
-        />
-      )}
-      {error && (
-        <StatusPanel
-          kind="warning"
-          title="No se pudo cargar la pantalla"
-          description={error}
-        />
-      )}
-      {!loading && !error && !summary && (
-        <StatusPanel
-          kind="info"
-          title={`Sin dataset de ${domain.toLowerCase()}`}
-          description="Importa un dataset compatible para habilitar esta vista."
-        />
-      )}
-      {summary && (
-        <>
-          {domain === "TITULADOS" && <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {cards.map((card) => (
-              <KpiCard
-                key={card.key}
-                label={card.label}
-                value={formatMetric(summary, card.key)}
-                detail={
-                  summary.distributions[card.key]
-                    ? `${summary.distributions[card.key].validCount} respuestas`
-                    : "Dato numérico"
-                }
-                note={`n = ${summary.distributions[card.key]?.validCount ?? summary.validResponses}`}
-                tone={tone}
-              />
-            ))}
-          </div>
-          <div className="grid gap-6 lg:grid-cols-2">
-            {Object.entries(summary.distributions).map(
-              ([key, distribution]) => (
-                <DistributionCard
-                  key={key}
-                  title={labelFor(key)}
-                  distribution={distribution}
-                  tone={tone}
-                />
-              ),
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
 }
 
 export function CompetencePage({ domain, printAll = false }: { domain: Domain; printAll?: boolean }) {
@@ -4357,82 +4245,6 @@ export function UnavailableAnalyticPage({
   );
 }
 
-function useDatasets(domain: Domain) {
-  const { datasets: datasetGroups, activeIds, setActiveDataset } = useDatasetContext();
-  return {
-    datasets: datasetGroups[domain],
-    datasetId: activeIds[domain],
-    setDatasetId: (id?: string) => setActiveDataset(domain, id),
-    loading: false,
-  };
-}
-function PageHeading({
-  title,
-  description,
-  tone: _tone,
-}: {
-  title: string;
-  description: string;
-  tone: Tone;
-}) {
-  return (
-    <div className="space-y-2">
-      <h1 className="headline-page">{title}</h1>
-      <p className="max-w-2xl text-sm text-ink-600">{description}</p>
-    </div>
-  );
-}
-function DatasetSelect({
-  datasets: _datasets,
-  value: _value,
-  onChange: _onChange,
-  loading: _loading,
-}: {
-  datasets: DatasetSummary[];
-  value?: string;
-  onChange: (id?: string) => void;
-  loading: boolean;
-}) {
-  return null;
-}
-function DistributionCard({
-  title,
-  distribution,
-  tone,
-}: {
-  title: string;
-  distribution: CategoryDistribution;
-  tone: Tone;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="title-card">{labelFor(title)}</CardTitle>
-        <CardDescription>
-          Conteo y porcentaje · n = {distribution.validCount}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {Object.entries(distribution.counts).map(([key, count]) => (
-          <div key={key} className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <span>{key}</span>
-              <span className="tabular-nums">
-                {count} · {distribution.percentages[key]}%
-              </span>
-            </div>
-            <div className="h-2 rounded-full bg-slate-100">
-              <div
-                className={`h-full rounded-full ${tone === "titulados" ? "bg-titulados" : "bg-empleadores"}`}
-                style={{ width: `${distribution.percentages[key]}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
 function CrossTable({
   cross,
   totalResponses,
@@ -4623,19 +4435,6 @@ function CrossTable({
     </Card>
   );
 }
-function formatMetric(summary: AnalyticsSummary, key: string) {
-  const distribution = summary.distributions[key];
-  if (distribution) return `${distribution.validCount}`;
-  return summary.numericAverages[key] === undefined
-    ? "—"
-    : String(summary.numericAverages[key]);
-}
-function labelFor(key: string) {
-  return key
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 function crossMetricLabel(metric: CrossMetric) {
   if (metric === "rowPercent") return "valores en % por fila";
   if (metric === "columnPercent") return "valores en % por columna";

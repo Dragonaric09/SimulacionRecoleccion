@@ -3,9 +3,9 @@
 export {
   CompetencePage,
   CrossExportPage,
-  DatasetAnalyticsPage,
   UnavailableAnalyticPage,
 } from "../RestAnalyticPages";
+export { DatasetAnalyticsPage, DatasetSelect, DistributionCard, PageHeading, formatMetric, labelFor, useDatasets } from "./AnalyticsPrimitives";
 export type {
   CohortChartPoint,
   Competence,
