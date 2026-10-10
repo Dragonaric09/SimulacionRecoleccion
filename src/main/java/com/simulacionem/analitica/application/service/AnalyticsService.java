@@ -238,13 +238,44 @@ public class AnalyticsService {
 
     private CategoryDistributionDto multiDistribution(List<String> values) {
         List<String> options = values.stream()
-                .flatMap(value -> java.util.Arrays.stream(value.split("\\s*[,;\\n]\\s*")))
+                .flatMap(value -> splitMultiValue(value).stream())
                 .map(String::trim).filter(value -> !value.isBlank()).toList();
         Map<String, Long> counts = options.stream()
                 .collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
         Map<String, Double> percentages = new LinkedHashMap<>();
         counts.forEach((key, count) -> percentages.put(key, round(count * 100.0 / values.size())));
         return new CategoryDistributionDto(values.size(), counts, percentages);
+    }
+
+    private List<String> splitMultiValue(String value) {
+        List<String> options = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int parenthesesDepth = 0;
+        for (int index = 0; index < value.length(); index++) {
+            char character = value.charAt(index);
+            if (character == '(') parenthesesDepth++;
+            if (character == ')' && parenthesesDepth > 0) parenthesesDepth--;
+
+            boolean explicitSeparator = character == ';' || character == '\n' || character == '\r';
+            int next = index + 1;
+            while (next < value.length() && Character.isWhitespace(value.charAt(next))) next++;
+            boolean commaSeparator = character == ',' && parenthesesDepth == 0 && next < value.length()
+                    && (Character.isUpperCase(value.charAt(next)) || Character.isDigit(value.charAt(next))
+                            || value.charAt(next) == '¿');
+            if (explicitSeparator || commaSeparator) {
+                addMultiOption(options, current);
+                current.setLength(0);
+            } else {
+                current.append(character);
+            }
+        }
+        addMultiOption(options, current);
+        return options;
+    }
+
+    private void addMultiOption(List<String> options, StringBuilder value) {
+        String option = value.toString().trim();
+        if (!option.isBlank()) options.add(option);
     }
 
     private boolean multiCategoryField(String field) {
