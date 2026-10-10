@@ -1,6 +1,11 @@
 import * as XLSX from "xlsx-js-style";
 import type { Cross, CrossMetric } from "./analyticsTypes";
 
+type CrossExportParameters = {
+  dataset?: string;
+  filters?: string;
+};
+
 export function booleanLabel(value: string) {
   if (value.toLowerCase() === "true") return "Sí";
   if (value.toLowerCase() === "false") return "No";
@@ -30,7 +35,7 @@ export function exportCrossCsv(cross: Cross, metric: CrossMetric, includeTotals:
   downloadFile(rows.map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")).join("\n"), "cruce.csv", "text/csv;charset=utf-8");
 }
 
-export function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean) {
+export function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean, parameters: CrossExportParameters = {}) {
   const rows = crossExportRows(cross, metric, includeTotals);
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
@@ -50,25 +55,73 @@ export function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotal
     }
   }));
   XLSX.utils.book_append_sheet(workbook, worksheet, "Cruce");
+  const parameterRows = [
+    ["Parámetro", "Valor"],
+    ["Dataset", parameters.dataset ?? "No especificado"],
+    ["Fecha de generación", new Intl.DateTimeFormat("en-CA", { timeZone: "America/La_Paz" }).format(new Date())],
+    ["Filas", "Estado laboral"],
+    ["Columnas", "Interés en posgrado"],
+    ["Métrica", crossMetricLabel(metric)],
+    ["Filtros", parameters.filters ?? "Sin filtros"],
+    ["n", String(cross.validCount)],
+  ];
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(parameterRows), "Parámetros");
   downloadFile(XLSX.write(workbook, { bookType: "xlsx", type: "array" }), "cruce.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 }
 
-export function exportCrossPng(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean) {
-  const width = 900;
+export function exportCrossPng(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean, view: "table" | "bars") {
+  if (view === "table") {
+    exportCrossTablePng(cross, metric, includeTotals, colorHeatmap);
+    return;
+  }
+  const width = 1200;
+  const left = 250;
+  const plotWidth = 850;
+  const rowHeight = 58;
+  const top = 92;
+  const height = top + Math.max(1, cross.rowCategories.length) * rowHeight + 56;
+  const max = Math.max(1, ...cross.rowCategories.flatMap((row) => cross.columnCategories.map((column) => crossExportValue(cross, row, column, metric))));
+  const colors = ["#1f6fb5", "#7db1dd", "#173f67", "#8b5bd1", "#ed552f", "#18a39a"];
+  const bars = cross.rowCategories.map((row, rowIndex) => {
+    const y = top + rowIndex * rowHeight;
+    let offset = 0;
+    const segments = cross.columnCategories.map((column, columnIndex) => {
+      const value = crossExportValue(cross, row, column, metric);
+      const widthValue = (value / max) * plotWidth;
+      const segment = `<rect x="${left + offset}" y="${y}" width="${Math.max(0, widthValue)}" height="28" fill="${colors[columnIndex % colors.length]}"/><text x="${left + offset + widthValue / 2}" y="${y + 19}" text-anchor="middle" font-family="Arial" font-size="12" fill="white">${widthValue > 42 ? escapeSvg(formatExportValue(value, metric)) : ""}</text>`;
+      offset += widthValue;
+      return segment;
+    }).join("");
+    return `<text x="${left - 12}" y="${y + 19}" text-anchor="end" font-family="Arial" font-size="13" fill="#0f172a">${escapeSvg(booleanLabel(row))}</text>${segments}`;
+  }).join("");
+  const legend = cross.columnCategories.map((column, index) => `<rect x="${30 + index * 180}" y="50" width="12" height="12" fill="${colors[index % colors.length]}"/><text x="${48 + index * 180}" y="61" font-family="Arial" font-size="12" fill="#334155">${escapeSvg(booleanLabel(column))}</text>`).join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/><text x="30" y="28" font-family="Arial" font-size="18" font-weight="bold" fill="#0f172a">Estado laboral × Interés en posgrado</text><text x="30" y="43" font-family="Arial" font-size="12" fill="#64748b">${escapeSvg(crossMetricLabel(metric))} · n = ${cross.validCount}</text>${legend}${bars}</svg>`;
+  downloadSvgAsPng(svg, width, height);
+}
+
+function exportCrossTablePng(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean) {
   const rows = crossExportRows(cross, metric, includeTotals);
-  const height = Math.max(180, (rows.length + 1) * 42 + 40);
-  const columnWidth = width / rows[0].length;
+  const cellWidth = 190;
+  const rowHeight = 42;
+  const width = Math.max(900, rows[0].length * cellWidth + 60);
+  const height = 112 + rows.length * rowHeight;
   const max = crossExportMax(cross, metric);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/>${rows.map((row, rowIndex) => row.map((cell, columnIndex) => {
+  const cells = rows.map((row, rowIndex) => row.map((cell, columnIndex) => {
+    const x = 30 + columnIndex * cellWidth;
+    const y = 92 + rowIndex * rowHeight;
     const isHeader = rowIndex === 0;
-    const isTotalRow = includeTotals && rowIndex === cross.rowCategories.length + 1;
-    const isTotalColumn = includeTotals && columnIndex === cross.columnCategories.length + 1;
-    const heat = colorHeatmap && !isHeader && !isTotalRow && !isTotalColumn && rowIndex > 0 && rowIndex <= cross.rowCategories.length && columnIndex > 0 && columnIndex <= cross.columnCategories.length;
-    const opacity = heat ? 0.08 + (exportNumber(cell) / max) * 0.75 : 0;
-    const gray = isHeader || isTotalRow || isTotalColumn;
-    const rect = heat ? `<rect x="${columnIndex * columnWidth}" y="${rowIndex * 42 + 8}" width="${columnWidth}" height="42" fill="rgba(31,111,181,${opacity})"/>` : gray ? `<rect x="${columnIndex * columnWidth}" y="${rowIndex * 42 + 8}" width="${columnWidth}" height="42" fill="#f1f5f9"/>` : "";
-    return `${rect}<text x="${20 + columnIndex * columnWidth}" y="${35 + rowIndex * 42}" font-family="Arial" font-size="14" fill="#0f172a">${escapeSvg(cell)}</text>`;
-  }).join("")).join("")}</svg>`;
+    const isTotal = includeTotals && (rowIndex === rows.length - 1 || columnIndex === rows[0].length - 1);
+    const isHeatCell = colorHeatmap && !isHeader && !isTotal && rowIndex <= cross.rowCategories.length && columnIndex > 0 && columnIndex <= cross.columnCategories.length;
+    const fill = isHeatCell ? `#${heatmapRgb(exportNumber(cell) / max)}` : isHeader || isTotal ? "#F1F5F9" : "#FFFFFF";
+    const fontWeight = isHeader || isTotal ? "bold" : "normal";
+    const textColor = isHeatCell && exportNumber(cell) / max > 0.45 ? "#FFFFFF" : "#0F172A";
+    return `<rect x="${x}" y="${y}" width="${cellWidth}" height="${rowHeight}" fill="${fill}" stroke="#CBD5E1"/><text x="${columnIndex === 0 ? x + 10 : x + cellWidth - 10}" y="${y + 26}" text-anchor="${columnIndex === 0 ? "start" : "end"}" font-family="Arial" font-size="13" font-weight="${fontWeight}" fill="${textColor}">${escapeSvg(cell)}</text>`;
+  }).join("")).join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/><text x="30" y="28" font-family="Arial" font-size="18" font-weight="bold" fill="#0f172a">Estado laboral × Interés en posgrado</text><text x="30" y="50" font-family="Arial" font-size="12" fill="#64748b">${escapeSvg(crossMetricLabel(metric))} · n = ${cross.validCount}</text>${cells}</svg>`;
+  downloadSvgAsPng(svg, width, height);
+}
+
+function downloadSvgAsPng(svg: string, width: number, height: number) {
   const image = new Image();
   image.onload = () => {
     const canvas = document.createElement("canvas");

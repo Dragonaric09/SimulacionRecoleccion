@@ -139,7 +139,7 @@ function AppLayoutContent({ route }: Props) {
                 <p className="mt-4 text-xs text-ink-600">Los porcentajes excluyen “No sabe” y “No observado”. Con menos de 5 respuestas, las gráficas son solo referenciales.</p>
               </section>
             )}
-            <div className="screen-content"><PlaceholderPage route={route} /></div>
+            <div className={route.path.includes('cruces-exportacion') ? 'cross-screen-root' : 'screen-content'}><PlaceholderPage route={route} /></div>
             {route.section !== 'general' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
               <div className="print-bundle" aria-label="Informe completo para impresión">
                 {route.section === 'titulados' ? <TituladosPrintBundle /> : <EmpleadoresPrintBundle />}

@@ -250,6 +250,10 @@
   main { padding: 0 !important; overflow: visible !important; }
   main > * { max-width: 1000px !important; margin: 0 auto !important; }
   .screen-content { display: none !important; }
+  .cross-screen-root { display: block !important; }
+  .cross-screen-page > *:not(.cross-screen-grid) { display: none !important; }
+  .cross-screen-controls { display: none !important; }
+  .cross-screen-results > *:not(.print-only) { display: none !important; }
   .print-bundle { display: block !important; }
   .print-only { display: block !important; }
   .cohort-responsive-chart { display: none !important; }
@@ -268,6 +272,9 @@
   .print-cover { break-after: page; page-break-after: always; min-height: 150mm; padding-top: 35mm; }
   .print-page { break-before: page; page-break-before: always; overflow: visible !important; }
   .print-page:first-child { break-before: auto; page-break-before: auto; }
+  .cross-pdf-page { break-inside: avoid; page-break-inside: avoid; }
+  .cross-pdf-page > [data-slot="card"] { break-inside: avoid; page-break-inside: avoid; }
+  .cross-pdf-page .cross-pdf-footer { break-inside: avoid; page-break-inside: avoid; }
   .print-page > div > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
   .print-page .print-tab-section > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; gap: 12px !important; }
   .print-page .print-tab-section > .grid > * { grid-column: auto !important; min-width: 0 !important; }

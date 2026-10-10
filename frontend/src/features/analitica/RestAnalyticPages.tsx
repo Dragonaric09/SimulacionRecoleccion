@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import {
   BarChart3,
   BookOpen,
@@ -82,7 +82,7 @@ import type { AnalyticsSummary, CategoryDistribution } from "./api";
 import type { CohortChartPoint, Competence, Cross, CrossMetric, Domain, EmploymentProfile, Simulation, Tone } from "./shared/analyticsTypes";
 import { DatasetSelect, DistributionCard, PageHeading, labelFor, useDatasets } from "./shared/AnalyticsPrimitives";
 import { contrastTextColor } from "@/lib/utils";
-import { PrintButton } from "@/components/analytics/PrintButton";
+import { PrintButton, printAnalyticsPdf } from "@/components/analytics/PrintButton";
 import { crossMetricLabel, exportCrossCsv, exportCrossExcel, exportCrossPng } from "./shared/crossExportUtils";
 
 type ChiResult = {
@@ -3305,6 +3305,16 @@ function expectedFrequencyWarning(cross: Cross) {
   );
   return { lowCells, totalCells };
 }
+
+function observedSmallSampleSummary(cross: Cross) {
+  const cells = cross.rowCategories.flatMap((row) =>
+    cross.columnCategories.map((column) => cross.counts[row]?.[column] ?? 0),
+  );
+  const lowCells = cells.filter((value) => value < 5).length;
+  if (!lowCells) return "";
+  return `${lowCells} de ${cells.length} celdas tienen n < 5`;
+}
+
 function ChiSquareCard({
   result,
   cross,
@@ -3557,6 +3567,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     domain === "TITULADOS" ? "interes_posgrado" : "tamano_organizacion",
   );
   const [cross, setCross] = useState<Cross | null>(null);
+  const [chi, setChi] = useState<ChiResult | null>(null);
   const [filterSummary, setFilterSummary] = useState<AnalyticsSummary | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
   const [includeTotals, setIncludeTotals] = useState(true);
@@ -3564,9 +3575,6 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
   const [colorHeatmap, setColorHeatmap] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [exportFormat, setExportFormat] = useState<"csv" | "xlsx" | "png">(
-    "csv",
-  );
   const [activeView, setActiveView] = useState<"table" | "bars">("table");
   const fields =
     domain === "TITULADOS"
@@ -3668,11 +3676,16 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     setLoading(true);
     setError(null);
     try {
-      setCross(
-        await apiRequest<Cross>(
+      const nextCross = await apiRequest<Cross>(
           `/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${domain === "TITULADOS" ? filterQuery : ""}`,
-        ),
       );
+      setCross(nextCross);
+      try {
+        const frequencies = nextCross.rowCategories.map((row) => nextCross.columnCategories.map((column) => nextCross.counts[row]?.[column] ?? 0));
+        setChi(await apiRequest<ChiResult>("/analitica/chi-cuadrado", { method: "POST", body: JSON.stringify({ frecuencias: frequencies, alfa: 0.05 }) }));
+      } catch {
+        setChi(null);
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -3689,16 +3702,13 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
       .catch(() => setFilterSummary(null));
   }, [datasetId, domain, filterQuery]);
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-5">
+    <div className="cross-screen-page mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PageHeading
           title="Cruces bivariados y exportación"
           description="Configura una matriz de frecuencias y revisa su distribución en tabla o barras."
           tone={tone}
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <PrintButton domain={domain} kind="cruce" disabled={!cross || loading} />
-        </div>
       </div>
       <DatasetSelect
         datasets={datasets}
@@ -3707,8 +3717,8 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
         loading={datasetsLoading}
       />
       {filterSummary && <FilterToolbar summary={filterSummary} onQueryChange={setFilterQuery} />}
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
-        <div className="space-y-5">
+      <div className="cross-screen-grid grid items-start gap-5 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+        <div className="cross-screen-controls space-y-5">
           <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="title-card flex items-center justify-between">
@@ -3843,60 +3853,8 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
               </div>
             </CardContent>
           </Card>
-          <Card className="rounded-xl border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle className="title-card">Exportar resultados</CardTitle>
-              <CardDescription>
-                Selecciona un formato para descargar la matriz.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="min-w-0 flex-1">
-                  <Select
-                    value={exportFormat}
-                    onValueChange={(value) =>
-                      setExportFormat(value as "csv" | "xlsx" | "png")
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="csv">Tabla CSV</SelectItem>
-                      <SelectItem value="xlsx">Libro Excel (XLSX)</SelectItem>
-                      <SelectItem value="png">Gráfico PNG</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  size="icon"
-                  className="size-9"
-                  variant="secondary"
-                  title="Descargar"
-                  aria-label="Descargar"
-                  onClick={() => {
-                    if (!cross) return;
-                    if (exportFormat === "csv") exportCrossCsv(cross, metric, includeTotals);
-                    else if (exportFormat === "xlsx") exportCrossExcel(cross, metric, includeTotals, colorHeatmap);
-                    else exportCrossPng(cross, metric, includeTotals, colorHeatmap);
-                  }}
-                  disabled={!cross}
-                >
-                  <Download />
-                </Button>
-              </div>
-              {cross && (
-                <p className="border-t border-border-line pt-3 text-xs text-ink-600">
-                  Registros incluidos: <strong>{cross.validCount}</strong>
-                  <br />
-                  Cruce: {labelFor(rowField)} vs. {labelFor(columnField)}
-                </p>
-              )}
-            </CardContent>
-          </Card>
         </div>
-        <div className="min-w-0 space-y-4">
+        <div className="cross-screen-results min-w-0 space-y-4">
           <Tabs
             value={activeView}
             onValueChange={(view) => {
@@ -3929,6 +3887,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
             activeView === "bars" ? (
               <CrossBars
                 cross={cross}
+                action={cross && <CrossDownloadMenu cross={cross} metric={metric} includeTotals={includeTotals} colorHeatmap={colorHeatmap} activeView={activeView} domain={domain} datasetName={datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado"} filters={filterQuery ? "Filtros aplicados" : "Sin filtros"} />}
                 metric={metric}
                 totalResponses={
                   datasets.find((dataset) => dataset.id === datasetId)
@@ -3945,6 +3904,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                 includeTotals={includeTotals}
                 colorHeatmap={colorHeatmap}
                 metric={metric}
+                action={cross && <CrossDownloadMenu cross={cross} metric={metric} includeTotals={includeTotals} colorHeatmap={colorHeatmap} activeView={activeView} domain={domain} datasetName={datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado"} filters={filterQuery ? "Filtros aplicados" : "Sin filtros"} />}
               />
             )
           ) : (
@@ -3955,16 +3915,86 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
             />
           )}
           {cross && (
-            <div className="print-only print-page space-y-4" aria-label="Versión de impresión del cruce">
+            <div className="print-only print-page cross-pdf-page space-y-4" aria-label="Versión de impresión del cruce">
               <h2 className="title-card">{labelFor(rowField)} × {labelFor(columnField)}</h2>
-              <p className="text-sm text-ink-600">{crossMetricLabel(metric)} · n = {cross.validCount}{includeTotals ? " · totales incluidos" : ""}{colorHeatmap ? " · mapa de calor" : ""}</p>
+              <p className="text-sm text-ink-600">{crossMetricLabel(metric)} · n = {cross.validCount} de {datasets.find((dataset) => dataset.id === datasetId)?.rowsValid ?? cross.validCount}</p>
+              <p className="text-xs text-ink-600">Dataset: {datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId} · Generado: {new Intl.DateTimeFormat("es-BO", { timeZone: "America/La_Paz", dateStyle: "short" }).format(new Date())}</p>
+              <p className="text-xs text-ink-600">Filtros: {filterQuery ? "Filtros aplicados" : "Sin filtros"}</p>
               <CrossTable cross={cross} totalResponses={datasets.find((dataset) => dataset.id === datasetId)?.rowsValid} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric={metric} />
               <div className="print-card"><CrossBars cross={cross} metric={metric} totalResponses={datasets.find((dataset) => dataset.id === datasetId)?.rowsValid} /></div>
+              <ChiSquareCard result={chi} cross={cross} />
+              <div className="cross-pdf-footer border-t border-surface-container-high pt-2 text-xs text-ink-600">
+                <p>Base del cruce: n = {cross.validCount} respuestas válidas de {datasets.find((dataset) => dataset.id === datasetId)?.rowsValid ?? cross.validCount} registros.</p>
+                {observedSmallSampleSummary(cross) && <p className="font-semibold text-amber-800">Aviso: muestra pequeña; {observedSmallSampleSummary(cross)}.</p>}
+              </div>
             </div>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+function CrossDownloadMenu({
+  cross,
+  metric,
+  includeTotals,
+  colorHeatmap,
+  activeView,
+  domain,
+  datasetName,
+  filters,
+}: {
+  cross: Cross;
+  metric: CrossMetric;
+  includeTotals: boolean;
+  colorHeatmap: boolean;
+  activeView: "table" | "bars";
+  domain: Domain;
+  datasetName: string;
+  filters: string;
+}) {
+  const menuRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const closeWhenClickingOutside = (event: MouseEvent) => {
+      if (menuRef.current?.open && event.target instanceof Node && !menuRef.current.contains(event.target)) {
+        menuRef.current.open = false;
+      }
+    };
+    document.addEventListener("mousedown", closeWhenClickingOutside);
+    return () => document.removeEventListener("mousedown", closeWhenClickingOutside);
+  }, []);
+  const download = (format: "csv" | "xlsx" | "png" | "pdf") => {
+    if (format === "csv") exportCrossCsv(cross, metric, includeTotals);
+    if (format === "xlsx") exportCrossExcel(cross, metric, includeTotals, colorHeatmap, { dataset: datasetName, filters });
+    if (format === "png") exportCrossPng(cross, metric, includeTotals, colorHeatmap, activeView);
+    if (format === "pdf") void printAnalyticsPdf(domain, "cruce");
+    if (menuRef.current) menuRef.current.open = false;
+  };
+  return (
+    <div className="flex shrink-0 flex-col items-end gap-1">
+      <details ref={menuRef} className="relative">
+        <summary className="flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted">
+          <Download className="size-4" /> Descargar <span aria-hidden="true">▾</span>
+        </summary>
+        <div className="absolute right-0 z-30 mt-2 w-64 rounded-lg border border-border-line bg-white p-1.5 shadow-lg">
+          <CrossDownloadOption label="Tabla CSV" help="Matriz tal como se ve" onClick={() => download("csv")} />
+          <CrossDownloadOption label="Excel (.xlsx)" help="Matriz + hoja de parámetros" onClick={() => download("xlsx")} />
+          <CrossDownloadOption label="Imagen PNG" help={activeView === "table" ? "Tabla tal como se ve" : "Solo el gráfico de barras"} onClick={() => download("png")} />
+          <CrossDownloadOption label="PDF de esta vista" help="Tabla y barras · A4 horizontal" onClick={() => download("pdf")} />
+        </div>
+      </details>
+      <span className="text-[10px] text-ink-600">Matriz con filtros actuales ({cross.validCount} respuestas)</span>
+    </div>
+  );
+}
+
+function CrossDownloadOption({ label, help, disabled = false, onClick }: { label: string; help: string; disabled?: boolean; onClick: () => void }) {
+  return (
+    <button type="button" disabled={disabled} onClick={onClick} className="flex w-full flex-col items-start rounded-md px-2.5 py-2 text-left hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-45">
+      <span className="text-sm font-medium text-ink-900">{label}</span>
+      <span className="text-xs text-ink-600">{help}</span>
+    </button>
   );
 }
 
@@ -4285,12 +4315,14 @@ function CrossTable({
   includeTotals,
   colorHeatmap,
   metric,
+  action,
 }: {
   cross: Cross;
   totalResponses?: number;
   includeTotals: boolean;
   colorHeatmap: boolean;
   metric: CrossMetric;
+  action?: ReactNode;
 }) {
   const columnTotal = (column: string) =>
     cross.rowCategories.reduce(
@@ -4339,15 +4371,16 @@ function CrossTable({
   const valueColumnCount = cross.columnCategories.length + (includeTotals ? 1 : 0);
   const valueColumnWidth = (100 - labelColumnWidth) / valueColumnCount;
   return (
-    <Card className="min-w-0">
+    <Card className="min-w-0 overflow-visible">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
-          <CardTitle className="title-card">Vista previa de matriz</CardTitle>
+          <CardTitle className="title-card">Estado laboral × Interés en posgrado</CardTitle>
           <CardDescription className="shrink-0 text-right">
             {metricLabel.replace(" (conteos)", "")} · n = {cross.validCount}
             {totalResponses != null ? ` de ${totalResponses}` : ""}
             {cross.smallSample ? " · muestra reducida" : ""}
           </CardDescription>
+          {action}
         </div>
       </CardHeader>
       <CardContent className="min-w-0 overflow-x-auto">
@@ -4473,10 +4506,12 @@ function CrossBars({
   cross,
   metric,
   totalResponses,
+  action,
 }: {
   cross: Cross;
   metric: CrossMetric;
   totalResponses?: number;
+  action?: ReactNode;
 }) {
   const colors = [
     "#1f6fb5",
@@ -4502,7 +4537,7 @@ function CrossBars({
   const subtitle =
     metric === "rowPercent" ? "% por fila" : "Frecuencia absoluta";
   return (
-    <Card className="min-w-0">
+    <Card className="min-w-0 overflow-visible">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="title-card">
@@ -4512,6 +4547,7 @@ function CrossBars({
             {subtitle} · n = {cross.validCount}
             {totalResponses != null ? ` de ${totalResponses}` : ""}
           </CardDescription>
+          {action}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
