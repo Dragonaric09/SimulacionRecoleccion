@@ -122,7 +122,10 @@ final class FieldMappingSupport {
 
     static String matchable(String value) {
         return Normalizer.normalize(value == null ? "" : value, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT);
+                .replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 
     record MappingIssue(Integer row, Integer column, String columnName, String originalValue,

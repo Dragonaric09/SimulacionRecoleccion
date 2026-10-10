@@ -576,7 +576,9 @@ public class CsvImportService {
     private String matchable(String value) {
         return Normalizer.normalize(value == null ? "" : value, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")
-                .toLowerCase(Locale.ROOT);
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 
     private String safeName(String name) { return name == null || name.isBlank() ? "archivo.csv" : name; }

@@ -102,7 +102,7 @@ public class AnalyticsController {
                 "tiene_formacion_complementaria", "formacion_complementaria_nivel",
                 "institucion_formacion_complementaria", "financiamiento_posgrado_cursado",
                 "interes_posgrado", "nivel_posgrado_interes", "area_posgrado_interes",
-                "modalidad_posgrado", "financiamiento_posgrado_estimado",
+                "modalidad_posgrado", "institucion_posgrado_interes", "financiamiento_posgrado_estimado",
                 "valoracion_formacion_1"), filter(yearFrom, yearTo, laborStatus, sector));
     }
 
