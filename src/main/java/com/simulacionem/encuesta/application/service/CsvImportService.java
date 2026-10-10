@@ -419,7 +419,8 @@ public class CsvImportService {
 
     private String gridInternalKey(String header, String lower) {
         lower = matchable(header);
-        if (lower.contains("competencias") && header.contains("[") && header.contains("]")) {
+        boolean competenceGrid = lower.contains("competencias tecnicas") || lower.contains("competencias transversales");
+        if (competenceGrid && header.contains("[") && header.contains("]")) {
             int start = header.indexOf('[');
             int end = header.indexOf(']', start + 1);
             if (end > start) return "competence:" + competenceCode(header.substring(start + 1, end));

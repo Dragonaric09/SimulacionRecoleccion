@@ -73,7 +73,7 @@ export function TituladosSummaryPage({ printAll = false }: { printAll?: boolean 
         setError(message);
       })
       .finally(() => setLoading(false));
-  }, [datasetId, filterQuery]);
+  }, [datasetId, filterQuery, setActiveDataset]);
 
   const laboral = summary?.distributions.situacion_laboral_actual;
   const posgrado = summary?.distributions.interes_posgrado;
