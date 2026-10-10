@@ -121,6 +121,68 @@ type Simulation = {
     standardDeviation: number;
   }[];
 };
+
+const NATURAL_POSTGRADUATE_LEVELS = ["Diplomado", "Especialidad", "Maestría", "Doctorado"];
+const POSTGRADUATE_AREA_OPTIONS = [
+  "Inteligencia Artificial",
+  "Ciberseguridad",
+  "Ciencia de Datos",
+  "Cloud Computing y DevOps",
+  "Ingeniería de Software",
+  "Robótica",
+  "Base de Datos",
+];
+
+function simulationCategoryIdentity(label: string) {
+  const normalized = label
+    .toLocaleLowerCase("es-BO")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+  if (normalized === "ia") return "inteligencia artificial";
+  if (normalized.includes("base de dato")) return "base de datos";
+  if (normalized.includes("cloud") || normalized.includes("devops")) return "cloud computing y devops";
+  return normalized;
+}
+
+function simulationCategoryLabel(label: string) {
+  switch (simulationCategoryIdentity(label)) {
+    case "inteligencia artificial": return "Inteligencia artificial";
+    case "base de datos": return "Base de datos";
+    case "cloud computing y devops": return "Cloud computing y DevOps";
+    case "ciencia de datos": return "Ciencia de datos";
+    case "ingenieria de software": return "Ingeniería de software";
+    case "ciberseguridad": return "Ciberseguridad";
+    case "robotica": return "Robótica";
+    case "redes de datos y seguridad": return "Redes de datos y seguridad";
+    default: return booleanLabel(label);
+  }
+}
+
+function simulationCategories(variable: string, counts: Record<string, number>) {
+  const categories = Object.keys(counts);
+  if (variable === "area_posgrado_interes") {
+    for (const option of POSTGRADUATE_AREA_OPTIONS) {
+      if (!categories.some((category) => simulationCategoryIdentity(category) === simulationCategoryIdentity(option))) {
+        categories.push(option);
+      }
+    }
+    const optionOrder = POSTGRADUATE_AREA_OPTIONS.map(simulationCategoryIdentity);
+    return categories.sort((a, b) => {
+      const countDifference = (counts[b] ?? 0) - (counts[a] ?? 0);
+      if (countDifference !== 0) return countDifference;
+      return optionOrder.indexOf(simulationCategoryIdentity(a)) - optionOrder.indexOf(simulationCategoryIdentity(b));
+    });
+  }
+  if (variable !== "nivel_posgrado_interes") return categories;
+  return categories.sort((a, b) => {
+    const aIndex = NATURAL_POSTGRADUATE_LEVELS.indexOf(a);
+    const bIndex = NATURAL_POSTGRADUATE_LEVELS.indexOf(b);
+    return (aIndex < 0 ? NATURAL_POSTGRADUATE_LEVELS.length : aIndex)
+      - (bIndex < 0 ? NATURAL_POSTGRADUATE_LEVELS.length : bIndex);
+  });
+}
 type EmploymentProfile = {
   datasetId: string;
   validResponses: number;
@@ -4049,6 +4111,7 @@ export function SimulationPage() {
   const [repetitions, setRepetitions] = useState(1000);
   const [seed, setSeed] = useState(42);
   const [result, setResult] = useState<Simulation | null>(null);
+  const [scenarioPercentages, setScenarioPercentages] = useState<Record<string, number> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sampleSizeValid = Number.isInteger(sampleSize) && sampleSize >= 1 && sampleSize <= 100000;
@@ -4063,6 +4126,7 @@ export function SimulationPage() {
       .then((next) => {
         setSummary(next);
         setWeights({});
+        setScenarioPercentages(null);
       })
       .catch((cause) =>
         setError(cause instanceof Error ? cause.message : String(cause)),
@@ -4075,9 +4139,15 @@ export function SimulationPage() {
     }
     const distribution = summary?.distributions[variable];
     if (!distribution) return;
-    const categories = Object.keys(distribution.counts);
-    const observedWeights = categories.map((category) => weights[category] ?? distribution.counts[category]);
+    const categories = simulationCategories(variable, distribution.counts);
+    const observedWeights = categories.map((category) => weights[category] ?? distribution.counts[category] ?? 0);
     const total = observedWeights.reduce((sum, value) => sum + value, 0);
+    const adjusted = categories.some(
+      (category) => weights[category] !== undefined && weights[category] !== distribution.counts[category],
+    );
+    const nextScenarioPercentages = adjusted
+      ? Object.fromEntries(categories.map((category, index) => [category, (observedWeights[index] * 100) / total]))
+      : null;
     setLoading(true);
     setError(null);
     try {
@@ -4087,13 +4157,14 @@ export function SimulationPage() {
           body: JSON.stringify({
             categories,
             probabilities: observedWeights.map((value) => value / total),
-            observedCounts: categories.map((category) => distribution.counts[category]),
+            observedCounts: categories.map((category) => distribution.counts[category] ?? 0),
             sampleSize,
             repetitions,
             seed,
           }),
         }),
       );
+      setScenarioPercentages(nextScenarioPercentages);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -4120,24 +4191,25 @@ export function SimulationPage() {
         <Card className="h-fit rounded-xl border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="title-card">Parámetros de la simulación</CardTitle>
-            <CardDescription>La suma se normaliza automáticamente al 100 %. No es una predicción.</CardDescription>
+            <CardDescription>No es una predicción. Las probabilidades se normalizan automáticamente al 100 %.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <label className="label-default grid gap-1">
-              Variable discreta
+              Variable a simular
               <Select value={variable} onValueChange={setVariable}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="area_posgrado_interes">Área de posgrado de interés</SelectItem>
                   <SelectItem value="nivel_posgrado_interes">Nivel de posgrado de interés</SelectItem>
                   <SelectItem value="modalidad_posgrado">Modalidad preferida</SelectItem>
+                  <SelectItem value="financiamiento_posgrado_estimado">Fuente de financiamiento estimada</SelectItem>
                   <SelectItem value="interes_posgrado">Interés en posgrado</SelectItem>
                   <SelectItem value="situacion_laboral_actual">Estado laboral</SelectItem>
                 </SelectContent>
               </Select>
             </label>
             <label className="label-default grid gap-1">
-              Muestra sintética (N)
+              Personas a simular (N)
               <Input className="w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" type="number" min="1" max="100000" step="1" value={sampleSize} aria-invalid={!sampleSizeValid} onChange={(event) => setSampleSize(parseInteger(event.target.value, sampleSize))} />
               {!sampleSizeValid && <span className="text-xs text-destructive">Usa un entero entre 1 y 100.000.</span>}
             </label>
@@ -4148,11 +4220,11 @@ export function SimulationPage() {
                 {!repetitionsValid && <span className="text-xs text-destructive">Entre 1 y 100.000.</span>}
               </label>
               <label className="label-default grid gap-1">
-                Semilla (seed)
+                Semilla
                 <Input className="control" type="number" step="1" value={seed} aria-invalid={!seedValid} onChange={(event) => setSeed(parseInteger(event.target.value, seed))} />
               </label>
             </div>
-            {summary && <SimulationWeights distribution={summary.distributions[variable]} weights={weights} setWeights={setWeights} />}
+            {summary && <SimulationWeights variable={variable} distribution={summary.distributions[variable]} weights={weights} setWeights={setWeights} />}
             <Button className="w-full" onClick={run} disabled={!summary || loading || !parametersValid}>
               {loading ? "Ejecutando…" : "Ejecutar simulación"}
             </Button>
@@ -4160,7 +4232,7 @@ export function SimulationPage() {
           </CardContent>
         </Card>
         <div className="space-y-5">
-          {result ? <SimulationDistribution result={result} observedTotal={summary?.distributions[variable]?.validCount ?? 0} /> : <StatusPanel kind="info" title="Ejecuta una simulación" description="Configura los parámetros y genera la distribución simulada con su intervalo de confianza del 95 %." />}
+          {result ? <SimulationDistribution result={result} observedTotal={summary?.distributions[variable]?.validCount ?? 0} /> : <StatusPanel kind="info" title="Ejecuta una simulación" description="Configura los parámetros y genera la distribución simulada con su rango del 95 % de las repeticiones." />}
         </div>
       </div>
       {error && (
@@ -4170,34 +4242,36 @@ export function SimulationPage() {
           description={error}
         />
       )}
-      {result && <SimulationComparisonTable result={result} observedTotal={summary?.distributions[variable]?.validCount ?? 0} />}
+      {result && <SimulationComparisonTable result={result} observedTotal={summary?.distributions[variable]?.validCount ?? 0} scenarioPercentages={scenarioPercentages} />}
     </div>
   );
 }
 
 function SimulationWeights({
+  variable,
   distribution,
   weights,
   setWeights,
 }: {
+  variable: string;
   distribution?: CategoryDistribution;
   weights: Record<string, number>;
   setWeights: Dispatch<SetStateAction<Record<string, number>>>;
 }) {
   if (!distribution) return null;
-  const entries = Object.entries(distribution.counts);
+  const entries = simulationCategories(variable, distribution.counts).map((label) => [label, distribution.counts[label] ?? 0] as const);
+  const currentTotal = entries.reduce((sum, [label, count]) => sum + (weights[label] ?? count), 0);
   return (
     <div className="space-y-3 rounded-lg bg-surface-container-low p-3">
       <div className="flex items-center justify-between gap-2">
         <p className="caption-bold text-ink-700">Ajustar probabilidades (opcional)</p>
         <Button variant="link" size="xs" onClick={() => setWeights({})}>Restablecer</Button>
       </div>
-      <p className="text-xs text-ink-600">La suma se normaliza automáticamente al 100 %.</p>
       {entries.map(([label, count]) => {
         const value = weights[label] ?? count;
         return (
           <label key={label} className="grid gap-1 text-xs">
-            <span className="flex justify-between gap-2"><span className="truncate">{label}</span><strong>{value}</strong></span>
+            <span className="flex justify-between gap-2"><span className="truncate">{simulationCategoryLabel(label)}</span><strong>{value} · {currentTotal ? formatPercentage(value, currentTotal) : "—"}</strong></span>
             <Slider min={0} max={Math.max(10, Math.max(...entries.map(([, item]) => item)) * 2)} step={1} value={[value]} onValueChange={(next) => setWeights((current) => ({ ...current, [label]: next[0] ?? value }))} />
           </label>
         );
@@ -4212,8 +4286,8 @@ function SimulationDistribution({ result, observedTotal }: { result: Simulation;
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <CardTitle className="title-card">Distribución simulada e Intervalo de Confianza (95%)</CardTitle>
-            <CardDescription>Media estimada y límites del intervalo por categoría.</CardDescription>
+            <CardTitle className="title-card">Distribución simulada y rango del 95 % de las repeticiones</CardTitle>
+            <CardDescription>Media estimada y rango donde cae el 95 % de las repeticiones por categoría.</CardDescription>
           </div>
           <Badge tone="neutral">n = {observedTotal} · N = {result.sampleSize}</Badge>
         </div>
@@ -4222,8 +4296,8 @@ function SimulationDistribution({ result, observedTotal }: { result: Simulation;
         {result.categories.map((category) => (
           <div key={category.category} className="space-y-1">
             <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="min-w-0 truncate font-medium">{category.category}</span>
-              <span className="whitespace-nowrap tabular-nums text-primary">{formatDecimal(category.simulatedMean)}% <span className="text-xs text-ink-600">[IC 95%: {formatDecimal(category.lower95)}% – {formatDecimal(category.upper95)}%]</span></span>
+              <span className="min-w-0 truncate font-medium">{simulationCategoryLabel(category.category)}</span>
+              <span className="whitespace-nowrap tabular-nums text-primary">{formatDecimal(category.simulatedMean)}% <span className="text-xs text-ink-600">[Rango 95 %: {formatDecimal(category.lower95)}% – {formatDecimal(category.upper95)}%]</span></span>
             </div>
             <div className="relative h-5 rounded bg-surface-container-low">
               <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-primary/75" style={{ width: `${category.simulatedMean}%` }} />
@@ -4234,7 +4308,7 @@ function SimulationDistribution({ result, observedTotal }: { result: Simulation;
         ))}
         <div className="flex flex-wrap gap-5 border-t border-border-line pt-3 text-xs text-ink-600">
           <span><i className="mr-1 inline-block size-2 rounded-sm bg-primary" />Media estimada</span>
-          <span><i className="mr-1 inline-block h-0.5 w-4 bg-ink-900 align-middle" />Límites IC 95%</span>
+          <span><i className="mr-1 inline-block h-0.5 w-4 bg-ink-900 align-middle" />Rango del 95 % de las repeticiones</span>
           <span className="ml-auto">{result.repetitions.toLocaleString("es-BO")} réplicas · semilla {result.seed}</span>
         </div>
       </CardContent>
@@ -4242,33 +4316,42 @@ function SimulationDistribution({ result, observedTotal }: { result: Simulation;
   );
 }
 
-function SimulationComparisonTable({ result, observedTotal }: { result: Simulation; observedTotal: number }) {
+function SimulationComparisonTable({
+  result,
+  observedTotal,
+  scenarioPercentages,
+}: {
+  result: Simulation;
+  observedTotal: number;
+  scenarioPercentages: Record<string, number> | null;
+}) {
   return (
     <Card className="rounded-xl border-0 shadow-sm">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div>
             <CardTitle className="title-card">Tabla comparativa de frecuencias y variabilidad</CardTitle>
-            <CardDescription>Frecuencias observadas, medias simuladas e intervalos de confianza.</CardDescription>
+            <CardDescription>Porcentajes observados, simulados y rango del 95 % de las repeticiones.</CardDescription>
           </div>
           <Badge tone="neutral">n = {observedTotal}</Badge>
         </div>
       </CardHeader>
       <CardContent>
         <Table className="min-w-[760px] text-sm">
-          <TableHeader><TableRow className="bg-surface-container-low"><TableHead>Categoría</TableHead><TableHead className="text-right">Frecuencia obs. (n)</TableHead><TableHead className="text-right">% observado</TableHead><TableHead className="text-right">% simulado (media)</TableHead><TableHead className="text-right">Rango 95 % (IC)</TableHead><TableHead className="text-right">Desv. est. (s)</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow className="bg-surface-container-low"><TableHead>Categoría</TableHead><TableHead className="text-right">Frecuencia obs. (n)</TableHead><TableHead className="text-right">% observado</TableHead>{scenarioPercentages && <TableHead className="text-right">Escenario</TableHead>}<TableHead className="text-right">% simulado (media)</TableHead><TableHead className="text-right">Rango 95 % de repeticiones</TableHead><TableHead className="text-right">Desv. est. de las repeticiones</TableHead></TableRow></TableHeader>
           <TableBody>
             {result.categories.map((category) => (
               <TableRow key={category.category}>
-                <TableCell className="font-medium">{category.category}</TableCell>
+                <TableCell className="font-medium">{simulationCategoryLabel(category.category)}</TableCell>
                 <TableCell className="text-right tabular-nums">{category.observedCount}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatDecimal(category.observedPercentage)}%</TableCell>
+                {scenarioPercentages && <TableCell className="text-right tabular-nums text-ink-700">{formatDecimal(scenarioPercentages[category.category] ?? 0)}%</TableCell>}
                 <TableCell className="text-right tabular-nums text-primary">{formatDecimal(category.simulatedMean)}%</TableCell>
                 <TableCell className="text-right tabular-nums">[{formatDecimal(category.lower95)}% – {formatDecimal(category.upper95)}%]</TableCell>
                 <TableCell className="text-right tabular-nums">{category.standardDeviation == null ? "—" : `${formatDecimal(category.standardDeviation)}%`}</TableCell>
               </TableRow>
             ))}
-            <TableRow className="bg-surface-container-low font-semibold"><TableCell>Total muestral</TableCell><TableCell className="text-right tabular-nums">{result.categories.reduce((sum, category) => sum + category.observedCount, 0)}</TableCell><TableCell className="text-right tabular-nums">100,0%</TableCell><TableCell className="text-right tabular-nums">100,0%</TableCell><TableCell className="text-right">—</TableCell><TableCell className="text-right">—</TableCell></TableRow>
+            <TableRow className="bg-surface-container-low font-semibold"><TableCell>Total</TableCell><TableCell className="text-right tabular-nums">{result.categories.reduce((sum, category) => sum + category.observedCount, 0)}</TableCell><TableCell className="text-right tabular-nums">100,0%</TableCell>{scenarioPercentages && <TableCell className="text-right tabular-nums">100,0%</TableCell>}<TableCell className="text-right tabular-nums">100,0%</TableCell><TableCell className="text-right">—</TableCell><TableCell className="text-right">—</TableCell></TableRow>
           </TableBody>
         </Table>
       </CardContent>
