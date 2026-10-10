@@ -4504,6 +4504,12 @@ function CrossTable({
     cross.validCount
       ? `${((value * 100) / cross.validCount).toFixed(1).replace(".", ",")}%`
       : "0,0%";
+  const labelColumnWidth = Math.min(
+    44,
+    Math.max(28, 58 - cross.columnCategories.length * 5),
+  );
+  const valueColumnCount = cross.columnCategories.length + (includeTotals ? 1 : 0);
+  const valueColumnWidth = (100 - labelColumnWidth) / valueColumnCount;
   return (
     <Card className="min-w-0">
       <CardHeader>
@@ -4517,16 +4523,26 @@ function CrossTable({
         </div>
       </CardHeader>
       <CardContent className="min-w-0 overflow-x-auto">
-        <Table className="min-w-[560px] text-sm">
+        <Table className="min-w-[620px] table-fixed text-sm">
+          <colgroup>
+            <col style={{ width: `${labelColumnWidth}%` }} />
+            {cross.columnCategories.map((column) => (
+              <col
+                key={column}
+                style={{ width: `${valueColumnWidth}%` }}
+              />
+            ))}
+            {includeTotals && <col style={{ width: `${valueColumnWidth}%` }} />}
+          </colgroup>
           <TableHeader>
             <TableRow className="bg-surface-container-low hover:bg-surface-container-low">
-              <TableHead className="w-36 whitespace-nowrap p-2 text-left">
+              <TableHead className="min-w-[210px] whitespace-nowrap p-2 text-left">
                 Fila
               </TableHead>
               {cross.columnCategories.map((column) => (
                 <TableHead
                   key={column}
-                  className="max-w-32 whitespace-normal break-words p-2 text-right leading-tight"
+                  className="whitespace-normal break-words p-2 text-right leading-tight"
                 >
                   {booleanLabel(column)}
                 </TableHead>
@@ -4541,7 +4557,7 @@ function CrossTable({
           <TableBody>
             {cross.rowCategories.map((row) => (
               <TableRow key={row} className="border-t hover:bg-transparent">
-                <TableCell className="max-w-40 whitespace-normal p-2 font-medium">
+                <TableCell className="min-w-[210px] whitespace-nowrap p-2 font-medium">
                   {booleanLabel(row)}
                 </TableCell>
                 {cross.columnCategories.map((column) => {
