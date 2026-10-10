@@ -405,15 +405,12 @@ function EntrepreneurshipPanel({
         <div className="flex items-start justify-between gap-4">
           <div>
             <CardTitle className="title-card">
-              Emprendimiento propio e iniciativas independientes (n = {total})
+              Emprendimiento propio e iniciativas independientes
             </CardTitle>
             <CardDescription>
-              Características, financiamiento, satisfacción e impacto formativo
+              Características, financiamiento, satisfacción e impacto formativo · n = {total}
             </CardDescription>
           </div>
-          <span className="rounded-md bg-teal-50 px-3 py-1 text-xs font-semibold tabular-nums text-teal-700">
-            n = {total}
-          </span>
         </div>
       </CardHeader>
       {total ? (
@@ -422,10 +419,10 @@ function EntrepreneurshipPanel({
             <h3 className="mb-4 text-sm font-semibold text-ink-900">
               Origen y fuentes de financiamiento
             </h3>
-            <div className="rounded-lg border border-border-line bg-slate-50 p-4">
-              <EntrepreneurshipDistribution label="Origen del emprendimiento" distribution={origin} />
-              <EntrepreneurshipDistribution label="Tipo de producto/entregable" distribution={deliverable} />
-              <EntrepreneurshipDistribution label="Financiamiento inicial" distribution={financing} />
+            <div className="space-y-4">
+              <EntrepreneurshipDistribution label="Origen del emprendimiento" distribution={origin} color="#1f6fb5" />
+              <EntrepreneurshipDistribution label="Tipo de producto/entregable" distribution={deliverable} color="#7c5ac7" />
+              <EntrepreneurshipDistribution label="Financiamiento inicial" distribution={financing} color="#d8891e" />
             </div>
           </div>
           <div>
@@ -434,7 +431,7 @@ function EntrepreneurshipPanel({
             </h3>
             <div className="space-y-4">
               <EntrepreneurshipDistribution label="Nivel de satisfacción con el emprendimiento" distribution={satisfaction} color="#2fa866" />
-              <EntrepreneurshipDistribution label="Importancia de la formación universitaria" distribution={importance} color="#1f6fb5" />
+              <EntrepreneurshipDistribution label="Importancia de la formación universitaria" distribution={importance} color="#0f766e" />
             </div>
           </div>
         </CardContent>
@@ -745,11 +742,12 @@ function CurrentWorkPanel({
         <MiniDistribution
           title="Remuneración mensual líquida"
           distribution={remuneration}
-          accent="teal"
+          accent="amber"
         />
         <MiniDistribution
           title="Áreas dentro de la organización"
           distribution={areas}
+          accent="purple"
           note="Varias respuestas posibles"
         />
         <StackedRelevanceCard distribution={relevance} />
@@ -766,9 +764,15 @@ function MiniDistribution({
 }: {
   title: string;
   distribution?: CategoryDistribution;
-  accent?: "blue" | "teal";
+  accent?: "blue" | "teal" | "purple" | "amber";
   note?: string;
 }) {
+  const accentColor = {
+    blue: "#1f6fb5",
+    teal: "#0f766e",
+    purple: "#7c5ac7",
+    amber: "#d8891e",
+  }[accent];
   const entries = Object.entries(distribution?.counts ?? {}).sort(
     ([, a], [, b]) => b - a,
   );
@@ -792,8 +796,8 @@ function MiniDistribution({
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
                   <div
-                    className={`h-full rounded-full ${accent === "teal" ? "bg-empleadores" : "bg-titulados"}`}
-                    style={{ width: `${percentage}%` }}
+                    className="h-full rounded-full"
+                    style={{ width: `${percentage}%`, backgroundColor: accentColor }}
                   />
                 </div>
               </div>
