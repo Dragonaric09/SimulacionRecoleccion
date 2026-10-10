@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
-  BriefcaseBusiness,
+  BarChart3,
+  BookOpen,
+  CalendarDays,
   Download,
   FlaskConical,
   GraduationCap,
   Info,
   Inbox,
   SlidersHorizontal,
+  ListChecks,
+  TrendingDown,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { apiRequest } from "@/api/client";
@@ -1073,69 +1078,48 @@ function ProfileStatistics({ summary }: { summary: AnalyticsSummary }) {
   const average = summary.numericAverages.anios_vida_profesional;
   const median = summary.numericMedians.anios_vida_profesional;
   const deviation = summary.numericStandardDeviations.anios_vida_profesional;
-  return (
-    <div className="grid items-stretch gap-4 md:grid-cols-3">
-      <ProfileStatCard
-        title="Media de vida profesional"
-        value={average}
-        footer={
-          deviation == null
-            ? "Desviación no disponible"
-            : `Dispersión respecto a la media: ± ${formatDecimal(deviation, 1)} años`
-        }
-        n={summary.validResponses}
-      />
-      <ProfileStatCard
-        title="Mediana de vida profesional"
-        value={median}
-        footer={`P50 de ${summary.validResponses} respuestas`}
-        n={summary.validResponses}
-      />
-      <ProfileStatCard
-        title="Desviación estándar"
-        value={deviation}
-        footer={
-          deviation == null
-            ? "Se requieren al menos 2 valores"
-            : `Rango observado en la muestra`
-        }
-        n={summary.validResponses}
-      />
-    </div>
-  );
-}
-
-function ProfileStatCard({
-  title,
-  value,
-  footer,
-  n,
-}: {
-  title: string;
-  value?: number | null;
-  footer: string;
-  n: number;
-}) {
+  const sameCentralValue =
+    average != null && median != null && Math.abs(average - median) < 0.0001;
   return (
     <Card className="rounded-xl border border-border-line shadow-sm">
-      <CardContent className="flex h-full flex-col justify-between p-4">
-        <div className="mb-2 flex items-start justify-between gap-2">
-          <span className="caption-bold uppercase tracking-wider text-ink-600">
-            {title}
-          </span>
-          <span className="flex size-7 items-center justify-center rounded bg-titulados-active text-titulados">
-            {title.includes("Desviación") ? "σ" : "◷"}
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="caption-bold uppercase tracking-wider text-ink-600">
+              Vida profesional (años)
+            </p>
+            <p className="mt-1 text-xs text-ink-600">
+              {sameCentralValue
+                ? `Media y mediana: ${formatDecimal(average!, 1)} años`
+                : "Medidas descriptivas de la experiencia profesional"}
+            </p>
+          </div>
+          <span className="font-bold tabular-nums text-titulados">
+            n = {summary.validResponses}
           </span>
         </div>
-        <div className="mb-2 flex items-baseline gap-1.5">
-          <span className="text-3xl font-bold leading-none tabular-nums text-ink-900">
-            {value == null ? "—" : value.toFixed(1)}
-          </span>
-          <span className="text-sm font-medium text-ink-600">años</span>
-        </div>
-        <div className="flex items-center justify-between border-t border-surface-container-high pt-2 text-[11px] text-ink-600">
-          <span>{footer}</span>
-          <span className="font-bold tabular-nums text-titulados">n = {n}</span>
+        <div className="mt-4 grid grid-cols-3 divide-x divide-border-line border-t border-border-line pt-4">
+          <div className="px-3 first:pl-0">
+            <p className="text-xs text-ink-600">Media</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums text-ink-900">
+              {average == null ? "—" : formatDecimal(average, 1)}
+              <span className="ml-1 text-sm font-medium text-ink-600">años</span>
+            </p>
+          </div>
+          <div className="px-3">
+            <p className="text-xs text-ink-600">Mediana</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums text-ink-900">
+              {median == null ? "—" : formatDecimal(median, 1)}
+              <span className="ml-1 text-sm font-medium text-ink-600">años</span>
+            </p>
+          </div>
+          <div className="px-3 last:pr-0">
+            <p className="text-xs text-ink-600">Desviación estándar</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums text-ink-900">
+              {deviation == null ? "—" : formatDecimal(deviation, 1)}
+              <span className="ml-1 text-sm font-medium text-ink-600">años</span>
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -1369,8 +1353,10 @@ function EducationInterestPanel({ summary }: { summary: AnalyticsSummary }) {
   const topLevel = topDistributionEntry(level);
   const topModality = topDistributionEntry(modality);
   const areaRows = distributionRows(area);
-  const areaMentions = areaRows.reduce((total, row) => total + row.count, 0);
-  const topTwoArea = areaRows.slice(0, 2).reduce((total, row) => total + row.count, 0);
+  const topArea = areaRows[0];
+  const tiedFollowingAreas = topArea
+    ? areaRows.slice(1).filter((row) => row.count === topArea.count)
+    : [];
   return (
     <>
       <div className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -1379,31 +1365,35 @@ function EducationInterestPanel({ summary }: { summary: AnalyticsSummary }) {
           value={`${interested} de ${summary.validResponses}`}
           detail={`${formatPercentage(interested, summary.validResponses)} de la muestra total`}
           note={`n = ${interestTotal}`}
-          icon={GraduationIcon}
+          icon={UsersIcon}
           tone="titulados"
         />
         <KpiCard
-          label="Nivel predilecto"
+          label="Nivel más buscado"
           value={topLevel?.label ?? "—"}
           detail={topLevel ? `${topLevel.count} de ${topLevel.total} interesados` : "Sin respuestas"}
-          note={`n = ${level?.validCount ?? 0}`}
+          note={level?.validCount ? `Base: ${level.validCount} interesados` : undefined}
           icon={GraduationIcon}
           tone="titulados"
         />
         <KpiCard
-          label="Concentración temática"
-          value="Top 2 acumulado"
-          detail={`${topTwoArea} de ${areaMentions} menciones`}
-          note={areaMentions ? `${formatPercentage(topTwoArea, areaMentions)} acumulado` : "Sin respuestas"}
-          icon={GraduationIcon}
+          label="Área más mencionada"
+          value={topArea?.label ?? "—"}
+          detail={topArea ? `${topArea.count} menciones` : "Sin respuestas"}
+          note={tiedFollowingAreas.length
+            ? `Las ${tiedFollowingAreas.length} áreas siguientes tienen ${tiedFollowingAreas[0].count} menciones cada una`
+            : area?.validCount
+              ? `Base: ${area.validCount} interesados`
+              : undefined}
+          icon={BookOpen}
           tone="titulados"
         />
         <KpiCard
           label="Modalidad preferida"
           value={topModality?.label ?? "—"}
           detail={topModality ? `${topModality.count} de ${topModality.total} interesados` : "Sin respuestas"}
-          note={`n = ${modality?.validCount ?? 0}`}
-          icon={GraduationIcon}
+          note={modality?.validCount ? `Base: ${modality.validCount} interesados` : undefined}
+          icon={CalendarDays}
           tone="titulados"
         />
       </div>
@@ -1621,7 +1611,6 @@ function EducationOpinionPanel({ summary }: { summary: AnalyticsSummary }) {
 }
 
 const UsersIcon = Users;
-const WorkIcon = BriefcaseBusiness;
 const GraduationIcon = GraduationCap;
 
 function ProfileDistributionCard({
@@ -2051,7 +2040,7 @@ function countMatching(
     .reduce((total, [, count]) => total + count, 0);
 }
 function formatPercentage(value: number, total: number) {
-  return `${total ? ((value / total) * 100).toFixed(1).replace(".", ",") : 0}%`;
+  return `${total ? ((value / total) * 100).toFixed(1).replace(".", ",") : "0,0"} %`;
 }
 
 function firstEmploymentTimingOrder(label: string) {
@@ -2285,6 +2274,12 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
     ? visibleItems.reduce((sum, item) => sum + item.average, 0) /
       visibleItems.length
     : 0;
+  const lowest = visibleItems.length
+    ? visibleItems.reduce((current, item) => item.average < current.average ? item : current)
+    : undefined;
+  const highest = visibleItems.length
+    ? visibleItems.reduce((current, item) => item.average > current.average ? item : current)
+    : undefined;
   const tabs = [
     { key: "hard", label: "Hard skills" },
     { key: "soft", label: "Soft skills" },
@@ -2448,30 +2443,35 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
             />
           ) : (
             <>
-              <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <KpiCard
+              <div className="competence-kpi-grid grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="h-full"><KpiCard
                   label="Competencias evaluadas"
                   value={String(visibleItems.length)}
-                  detail={groupLabel(activeGroup)}
-                  note={`n = ${visibleItems[0]?.validCount ?? 0}`}
-                  icon={GraduationIcon}
+                  detail="competencias técnicas evaluadas"
+                  icon={ListChecks}
                   tone={tone}
-                />
-                <KpiCard
-                  label="Media de la dimensión"
-                  value={average ? formatDecimal(average) : "—"}
-                  detail="Escala de 1 a 5"
-                  note="Promedio de competencias"
-                  icon={WorkIcon}
+                /></div>
+                <div className="h-full"><KpiCard
+                  label="Promedio de hard skills"
+                  value={average ? `${formatDecimal(average)} de 5` : "—"}
+                  detail={`Promedio de las ${visibleItems.length} competencias`}
+                  icon={BarChart3}
                   tone={tone}
-                />
-                <KpiCard
-                  label="Muestra"
-                  value={String(visibleItems[0]?.validCount ?? 0)}
-                  detail="Respuestas válidas"
-                  icon={UsersIcon}
+                /></div>
+                <div className="h-full"><KpiCard
+                  label="Competencia más baja"
+                  value={lowest ? formatDecimal(lowest.average) : "—"}
+                  detail={lowest?.name ?? "Sin datos"}
+                  icon={TrendingDown}
                   tone={tone}
-                />
+                /></div>
+                <div className="h-full"><KpiCard
+                  label="Competencia más alta"
+                  value={highest ? formatDecimal(highest.average) : "—"}
+                  detail={highest?.name ?? "Sin datos"}
+                  icon={TrendingUp}
+                  tone={tone}
+                /></div>
               </div>
               <div className="grid items-start gap-6 lg:grid-cols-12">
                 <CompetenceMatrix
@@ -2875,11 +2875,14 @@ function orderedLikertEntries(distribution?: CategoryDistribution) {
 
 function CompetencePrintGroup({ items, group, tone }: { items: Competence[]; group: string; tone: Tone }) {
   const average = items.length ? items.reduce((sum, item) => sum + item.average, 0) / items.length : 0;
+  const lowest = items.length ? items.reduce((current, item) => item.average < current.average ? item : current) : undefined;
+  const highest = items.length ? items.reduce((current, item) => item.average > current.average ? item : current) : undefined;
   return <>
-    <div className="grid items-start gap-4 sm:grid-cols-3">
-      <KpiCard label="Competencias evaluadas" value={String(items.length)} detail={group || "Sin grupo"} note={`n = ${items[0]?.validCount ?? 0}`} icon={GraduationCap} tone={tone} />
-      <KpiCard label="Media de la dimensión" value={average ? formatDecimal(average) : "—"} detail="Escala de 1 a 5" note="Promedio de competencias" icon={BriefcaseBusiness} tone={tone} />
-      <KpiCard label="Muestra" value={String(items[0]?.validCount ?? 0)} detail="Respuestas válidas" icon={Users} tone={tone} />
+    <div className="competence-kpi-grid grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="h-full"><KpiCard label="Competencias evaluadas" value={String(items.length)} detail="competencias técnicas evaluadas" icon={ListChecks} tone={tone} /></div>
+      <div className="h-full"><KpiCard label="Promedio de hard skills" value={average ? `${formatDecimal(average)} de 5` : "—"} detail={`Promedio de las ${items.length} competencias`} icon={BarChart3} tone={tone} /></div>
+      <div className="h-full"><KpiCard label="Competencia más baja" value={lowest ? formatDecimal(lowest.average) : "—"} detail={lowest?.name ?? "Sin datos"} icon={TrendingDown} tone={tone} /></div>
+      <div className="h-full"><KpiCard label="Competencia más alta" value={highest ? formatDecimal(highest.average) : "—"} detail={highest?.name ?? "Sin datos"} icon={TrendingUp} tone={tone} /></div>
     </div>
     <div className="print-competence-matrix">
       <CompetenceMatrix items={items} />

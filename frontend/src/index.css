@@ -229,6 +229,7 @@
 .radar-fixed-chart { display: none; }
 .radar-responsive-chart { display: block; width: 100%; min-width: 0; }
 .cohort-print-values { display: none; }
+.competence-kpi-grid > div > [data-slot="card"] { height: 100%; }
 
 @media print {
   @page {
@@ -282,8 +283,12 @@
   .print-page .entrepreneurship-grid > * { min-width: 0 !important; break-inside: avoid; page-break-inside: avoid; }
   .print-page [data-slot="card"]:has(.entrepreneurship-grid) { break-inside: auto !important; page-break-inside: auto !important; }
   .print-pareto-card { grid-column: 1 / -1 !important; }
+  .print-page .print-tab-section > .grid > .print-pareto-card { grid-column: 1 / -1 !important; width: 100% !important; min-width: 0 !important; overflow: visible !important; }
+  .print-pareto-card .overflow-x-auto { overflow: visible !important; }
+  .print-pareto-card svg { display: block; width: 100% !important; min-width: 0 !important; max-width: 100% !important; }
   .print-page [data-slot="card"]:has(.cohort-fixed-chart) { grid-column: 1 / -1 !important; min-width: 0 !important; }
   .print-page > div > .grid[class*="grid-cols-4"] { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .competence-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch !important; }
   .print-page > div > .grid[class*="grid-cols-3"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
   .print-page > div > .grid[class*="grid-cols-12"] { grid-template-columns: 1fr 1fr !important; }
   .print-tab-section { break-inside: auto; page-break-inside: auto; margin-top: 12px; }

@@ -113,7 +113,7 @@ public class AnalyticsService {
         Map<String, Double> medians = new LinkedHashMap<>();
         Map<String, Double> standardDeviations = new LinkedHashMap<>();
         for (String field : fields) {
-            List<String> values = rows.stream().map(r -> value(r, field)).filter(this::isAnalyticValue)
+            List<String> values = rowsForField(rows, field).stream().map(r -> value(r, field)).filter(this::isAnalyticValue)
                     .toList();
             if (numericField(field)) {
                 List<Double> numbers = values.stream().map(this::number).filter(java.util.Objects::nonNull).toList();
@@ -129,6 +129,28 @@ public class AnalyticsService {
         return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), totalResponses, rows.size(),
                 distributions, averages, medians, standardDeviations,
                 rows.size() < MINIMUM_SAMPLE_SIZE, yearBounds[0], yearBounds[1]);
+    }
+
+    private List<SurveyResponseEntity> rowsForField(List<SurveyResponseEntity> rows, String field) {
+        if (List.of("formacion_complementaria_nivel", "institucion_formacion_complementaria",
+                "financiamiento_posgrado_cursado").contains(field)) {
+            return rows.stream()
+                    .filter(row -> affirmative(value(row, "tiene_formacion_complementaria")))
+                    .toList();
+        }
+        if (List.of("nivel_posgrado_interes", "area_posgrado_interes", "modalidad_posgrado",
+                "institucion_posgrado_interes", "financiamiento_posgrado_estimado").contains(field)) {
+            return rows.stream()
+                    .filter(row -> affirmative(value(row, "interes_posgrado")))
+                    .toList();
+        }
+        return rows;
+    }
+
+    private boolean affirmative(String raw) {
+        if (raw == null) return false;
+        String normalized = normalize(raw);
+        return normalized.equals("si") || normalized.equals("true") || normalized.equals("1");
     }
 
     private List<SurveyResponseEntity> applyFilter(List<SurveyResponseEntity> rows, TituladosFilter filter) {

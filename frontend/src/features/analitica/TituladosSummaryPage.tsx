@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { BriefcaseBusiness, GraduationCap, Users } from "lucide-react";
+import { BriefcaseBusiness, Clock3, GraduationCap, Users } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -93,7 +93,10 @@ export function TituladosSummaryPage() {
     : null;
   const interes = posgrado ? firstCount(posgrado, ["Sí", "SI", "Si"]) : null;
   const medianYear = summary?.numericMedians.anio_titulacion;
-  const yearsSince = medianYear ? Math.round(new Date().getFullYear() - medianYear) : null;
+  const yearsSince = medianYear == null ? null : new Date().getFullYear() - medianYear;
+  const filtered = filterQuery.length > 0;
+  const showTotalBase = (validCount?: number) =>
+    validCount != null && validCount !== summary?.validResponses;
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -171,32 +174,31 @@ export function TituladosSummaryPage() {
             <KpiCard
               label="Titulados encuestados"
               value={String(summary.validResponses)}
-              detail={`${summary.validResponses} de ${summary.totalResponses}`}
-              note={`n = ${summary.validResponses}`}
+              detail={filtered ? `${summary.validResponses} de ${summary.totalResponses}` : undefined}
               icon={Users}
               tone="titulados"
             />
             <KpiCard
-              label="Con trabajo"
+              label="Trabajan en una organización"
               value={formatCount(workValue(trabajo), laboral?.validCount ?? 0)}
               detail={formatPercent(
                 workValue(trabajo),
                 laboral?.validCount ?? 0,
               )}
-              note={`n = ${laboral?.validCount ?? 0}`}
+              note={showTotalBase(laboral?.validCount) ? `n = ${laboral?.validCount ?? 0}` : undefined}
               icon={BriefcaseBusiness}
               tone="titulados"
             />
             <KpiCard
               label="Mediana desde titulación"
-              value={yearsSince === null ? "—" : `${yearsSince} años`}
+              value={yearsSince === null ? "—" : `${formatDecimal(yearsSince, 1)} años`}
               detail={
                 medianYear === undefined
                   ? "No disponible"
-                  : `Año mediano: ${medianYear}`
+                  : `La mitad se tituló antes de ${Math.ceil(medianYear)}`
               }
-              note={`n = ${medianYear === undefined ? 0 : summary.validResponses}`}
-              icon={GraduationCap}
+              note={showTotalBase(summary.validResponses) ? `n = ${summary.validResponses}` : undefined}
+              icon={Clock3}
               tone="titulados"
             />
             <KpiCard
@@ -206,7 +208,7 @@ export function TituladosSummaryPage() {
                 workValue(interes),
                 posgrado?.validCount ?? 0,
               )}
-              note={`n = ${posgrado?.validCount ?? 0}`}
+              note={showTotalBase(posgrado?.validCount) ? `n = ${posgrado?.validCount ?? 0}` : undefined}
               icon={GraduationCap}
               tone="titulados"
             />
@@ -417,6 +419,9 @@ function workValue(value: { count: number; percentage: number } | null) {
 }
 function formatCount(value: number | null, total: number) {
   return value === null ? "—" : `${value} de ${total}`;
+}
+function formatDecimal(value: number, digits = 2) {
+  return value.toFixed(digits).replace(".", ",");
 }
 function formatPercent(value: number | null, total: number) {
   return value === null
