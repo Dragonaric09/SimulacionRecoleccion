@@ -204,9 +204,8 @@ export function EmploymentProfilePage() {
   const [entrepreneurshipSummary, setEntrepreneurshipSummary] =
     useState<AnalyticsSummary | null>(null);
   const [profile, setProfile] = useState<EmploymentProfile | null>(null);
-  const [filterQuery, setFilterQuery] = useState("");
   const [activeTab, setActiveTab] = useState("perfil");
-  const [yearMax] = useState<number | undefined>();
+  const [filterQuery, setFilterQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -253,30 +252,13 @@ export function EmploymentProfilePage() {
   const unemployed = labor
     ? countMatching(labor, ["no trabaja", "no trabajo", "búsqueda", "desemple"])
     : null;
-  const points = (profile?.cohortPoints ?? []).filter(
-    (point) => yearMax === undefined || point.graduationYear <= yearMax,
-  );
+  const points = profile?.cohortPoints ?? [];
   const tabs = [
-    {
-      key: "perfil",
-      label: "Perfil",
-    },
-    {
-      key: "trabajo",
-      label: "Trabajo actual",
-    },
-    {
-      key: "desempleo",
-      label: "Sin empleo",
-    },
-    {
-      key: "primer-empleo",
-      label: "Primer empleo",
-    },
-    {
-      key: "emprendimiento",
-      label: "Emprendimiento",
-    },
+    { key: "perfil", label: "Perfil" },
+    { key: "trabajo", label: "Trabajo actual" },
+    { key: "desempleo", label: "Sin empleo" },
+    { key: "primer-empleo", label: "Primer empleo" },
+    { key: "emprendimiento", label: "Emprendimiento" },
   ];
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5">
@@ -327,21 +309,12 @@ export function EmploymentProfilePage() {
       {summary && (
         <>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList
-              variant="line"
-              className="grid w-full grid-cols-3 border-b border-border-line bg-transparent"
-            >
-              {tabs.map((tab) => {
-                return (
-                  <TabsTrigger
-                    key={tab.key}
-                    value={tab.key}
-                    className="w-full min-w-0 flex-none px-2 text-center text-sm data-[state=active]:font-semibold after:!left-1/6 after:!right-1/6 after:!w-auto after:!translate-x-0"
-                  >
-                    {tab.label}
-                  </TabsTrigger>
-                );
-              })}
+            <TabsList variant="line" className="grid w-full grid-cols-5 border-b border-border-line bg-transparent">
+              {tabs.map((tab) => (
+                <TabsTrigger key={tab.key} value={tab.key} className="min-w-0 px-2 text-center text-sm">
+                  {tab.label}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </Tabs>
           <EmploymentTabContent
@@ -367,101 +340,6 @@ export function EmploymentProfilePage() {
     </div>
   );
 }
-
-function EmploymentFilters({
-  summary,
-  sectors,
-  yearMax,
-  setYearMax,
-  laborFilter,
-  setLaborFilter,
-  sectorFilter,
-  setSectorFilter,
-  onReset,
-}: {
-  summary: AnalyticsSummary;
-  sectors?: CategoryDistribution;
-  yearMax?: number;
-  setYearMax: (value?: number) => void;
-  laborFilter: string;
-  setLaborFilter: (value: string) => void;
-  sectorFilter: string;
-  setSectorFilter: (value: string) => void;
-  onReset: () => void;
-}) {
-  const years = Object.keys(summary.numericAverages).includes("anio_titulacion")
-    ? [2018, 2023]
-    : [2018, 2023];
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-line bg-surface-white p-3 shadow-sm">
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs">
-          <span className="font-semibold text-ink-900">Año titulación:</span>
-          <span className="font-medium tabular-nums text-titulados">
-            {years[0]} - {yearMax ?? years[1]}
-          </span>
-          <Slider
-            className="w-20"
-            min={years[0]}
-            max={years[1]}
-            value={[yearMax ?? years[1]]}
-            onValueChange={([value]) =>
-              setYearMax(value === years[1] ? undefined : value)
-            }
-          />
-        </label>
-        <label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs">
-          <span className="font-semibold text-ink-900">Estado laboral:</span>
-          <Select value={laborFilter} onValueChange={setLaborFilter}>
-            <SelectTrigger className="h-8 w-auto border-0 bg-transparent px-1 font-medium shadow-none">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos los estados</SelectItem>
-              {Object.keys(
-                summary.distributions.situacion_laboral_actual?.counts ?? {},
-              ).map((key) => (
-                <SelectItem key={key} value={key}>
-                  {key}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </label>
-        <label className="flex items-center gap-2 rounded-lg border border-border-line bg-surface-container-low px-3 py-1.5 text-xs">
-          <span className="font-semibold text-ink-900">Sector:</span>
-          <Select value={sectorFilter} onValueChange={setSectorFilter}>
-            <SelectTrigger className="h-8 w-auto max-w-48 border-0 bg-transparent px-1 font-medium shadow-none">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos los sectores</SelectItem>
-              {Object.keys(sectors?.counts ?? {}).map((key) => (
-                <SelectItem key={key} value={key}>
-                  {key}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </label>
-        <Button variant="ghost" size="sm" onClick={onReset}>
-          <SlidersHorizontal />
-          Limpiar filtros
-        </Button>
-      </div>
-      <div className="flex items-center gap-2 text-xs text-ink-600">
-        <span className="size-2 rounded-full bg-status-success" />
-        Mostrando{" "}
-        <strong className="tabular-nums text-ink-900">
-          {summary.validResponses} de {summary.totalResponses}
-        </strong>{" "}
-        respuestas
-      </div>
-    </div>
-  );
-}
-
-void EmploymentFilters;
 
 function EmploymentTabContent({
   tab,
