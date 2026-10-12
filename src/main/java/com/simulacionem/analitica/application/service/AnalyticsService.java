@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -370,17 +371,29 @@ public class AnalyticsService {
         List<SurveyResponseEntity> usable = valid.stream()
                 .filter(r -> crossFieldBranchAllows(r, rowField) && crossFieldBranchAllows(r, columnField))
                 .filter(r -> value(r, rowField) != null && value(r, columnField) != null).toList();
-        List<String> rowCategories = usable.stream().map(r -> value(r, rowField)).distinct().sorted().toList();
-        List<String> columnCategories = usable.stream().map(r -> value(r, columnField)).distinct().sorted().toList();
+        List<String> rowCategories = usable.stream()
+                .map(r -> canonicalizeCategoryValue(rowField, value(r, rowField)))
+                .filter(Objects::nonNull)
+                .distinct().sorted().toList();
+        List<String> columnCategories = usable.stream()
+                .map(r -> canonicalizeCategoryValue(columnField, value(r, columnField)))
+                .filter(Objects::nonNull)
+                .distinct().sorted().toList();
         Map<String, Map<String, Long>> counts = new LinkedHashMap<>();
         Map<String, Map<String, Double>> percentages = new LinkedHashMap<>();
         for (String row : rowCategories) {
             Map<String, Long> rowCounts = new LinkedHashMap<>();
             Map<String, Double> rowPercentages = new LinkedHashMap<>();
-            long rowTotal = usable.stream().filter(r -> row.equals(value(r, rowField))).count();
+            long rowTotal = usable.stream()
+                    .map(r -> canonicalizeCategoryValue(rowField, value(r, rowField)))
+                    .filter(Objects::nonNull)
+                    .filter(candidate -> row.equals(candidate))
+                    .count();
             for (String column : columnCategories) {
                 long count = usable.stream()
-                        .filter(r -> row.equals(value(r, rowField)) && column.equals(value(r, columnField))).count();
+                        .filter(r -> row.equals(canonicalizeCategoryValue(rowField, value(r, rowField))))
+                        .filter(r -> column.equals(canonicalizeCategoryValue(columnField, value(r, columnField))))
+                        .count();
                 rowCounts.put(column, count);
                 rowPercentages.put(column, round(count * 100.0 / rowTotal));
             }
@@ -419,6 +432,49 @@ public class AnalyticsService {
         if ("sector_trabajo".equals(field) && normalize(text).matches("no trabaja|no trabajo")) return "Sin clasificar";
         if ("contrato_titulados_ultimos_5_anios".equals(field)) {
             return "true".equals(text) ? "Sí" : "false".equals(text) ? "No" : text;
+        }
+        return canonicalizeCategoryValue(field, text);
+    }
+
+    private String canonicalizeCategoryValue(String field, String value) {
+        if (value == null) return null;
+        String text = value.trim();
+        if (text.isBlank()) return text;
+        String normalized = normalize(text);
+        if (List.of("area_posgrado_interes", "area_trabajo").contains(field)) {
+            return switch (normalized) {
+                case "ia", "inteligencia artificial" -> "Inteligencia artificial";
+                case "ingenieria de software", "ingenieria de sofware" -> "Ingeniería de software";
+                case "ciencia de datos" -> "Ciencia de datos";
+                case "cloud computing", "cloud computing y devops", "cloud computing devops" -> "Cloud computing y DevOps";
+                case "base de datos" -> "Base de datos";
+                case "ciberseguridad" -> "Ciberseguridad";
+                case "robotica" -> "Robótica";
+                case "redes de datos y seguridad" -> "Redes de datos y seguridad";
+                case "redes y telecomunicaciones" -> "Redes y telecomunicaciones";
+                case "gestion empresarial" -> "Gestión empresarial";
+                case "gestion de proyectos" -> "Gestión de proyectos";
+                default -> text;
+            };
+        }
+        if ("financiamiento_posgrado_estimado".equals(field)) {
+            return switch (normalized) {
+                case "apoyo de la empresa o institucion", "apoyo de la empresa o institución" -> "Apoyo de la empresa o institución";
+                case "beca" -> "Beca";
+                case "credito educativo", "crédito educativo" -> "Crédito educativo";
+                case "financiamiento mixto" -> "Financiamiento mixto";
+                case "recursos propios" -> "Recursos propios";
+                default -> text;
+            };
+        }
+        if ("nivel_posgrado_interes".equals(field)) {
+            return switch (normalized) {
+                case "diplomado" -> "Diplomado";
+                case "especialidad" -> "Especialidad";
+                case "maestria", "maestría" -> "Maestría";
+                case "doctorado" -> "Doctorado";
+                default -> text;
+            };
         }
         return text;
     }
