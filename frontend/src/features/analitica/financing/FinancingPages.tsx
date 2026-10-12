@@ -25,6 +25,7 @@ export function FinancingCompletePage({ printAll = false }: { printAll?: boolean
   const [filterQuery, setFilterQuery] = useState("");
   const [cross, setCross] = useState<Cross | null>(null);
   const [chi, setChi] = useState<ChiResult | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [includeTotals, setIncludeTotals] = useState(true);
   const [colorHeatmap, setColorHeatmap] = useState(false);
@@ -37,6 +38,7 @@ export function FinancingCompletePage({ printAll = false }: { printAll?: boolean
   ];
   useEffect(() => {
     if (!datasetId) { setSummary(null); setCross(null); setChi(null); return; }
+    setLoading(true);
     setError(null);
     Promise.all([
       apiRequest<AnalyticsSummary>("/analytics/titulados/financing?datasetId=" + encodeURIComponent(datasetId) + filterQuery),
@@ -47,13 +49,15 @@ export function FinancingCompletePage({ printAll = false }: { printAll?: boolean
       try {
         setChi(await apiRequest<ChiResult>("/analitica/chi-cuadrado", { method: "POST", body: JSON.stringify({ frecuencias: frequencies, alfa: 0.05 }) }));
       } catch { setChi(null); }
-    }).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)));
+    }).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setLoading(false));
   }, [datasetId, columnField, filterQuery]);
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5">
       <PageHeading title="Financiamiento" description="Fuente estimada para financiar estudios de posgrado y su relación con el nivel de interés." tone="titulados" />
       <DatasetSelect datasets={datasets} value={datasetId} onChange={setDatasetId} loading={datasetsLoading} />
+      {loading && <StatusPanel kind="loading" title="Cargando financiamiento" description="Consultando las respuestas del dataset." />}
       {error && <StatusPanel kind="warning" title="No se pudo cargar financiamiento" description={error} />}
+      {!loading && !error && !summary && <StatusPanel kind="info" title="Sin dataset de titulados" description="Importa un CSV de titulados desde Cargar datos para ver esta sección." />}
       {summary && !printAll && <FilterToolbar summary={summary} onQueryChange={setFilterQuery} />}
       {summary && <DistributionCard title="Fuente de financiamiento estimada para posgrado" distribution={summary.distributions.financiamiento_posgrado_estimado ?? { validCount: 0, counts: {}, percentages: {} }} tone="titulados" />}
       <Card className={`${printAll ? "print-hide " : ""}rounded-xl border-0 shadow-sm`}><CardContent className="flex flex-wrap items-center gap-4 py-4">
