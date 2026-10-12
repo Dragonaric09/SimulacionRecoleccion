@@ -86,44 +86,47 @@ export function CompetenceMeanBars({ competences }: { competences: DashboardComp
   )
 }
 
-/** Mapa de calor tamaño × competencia: media de cada celda, con el número dentro. */
+/** Mapa de calor competencia × tamaño: media de cada celda, con el número dentro. */
 export function SizeCompetenceHeatmap({ cells, sizes, competences, sizeLabel }: {
   cells: SizeCompetenceCell[]
   sizes: string[]
   competences: DashboardCompetence[]
   sizeLabel: (size: string) => string
 }) {
-  const columns = competences.map((item) => ({ code: item.code, label: competenceLabel(item.code, item.name) }))
   const byKey = new Map(cells.map((cell) => [`${cell.size}|${cell.code}`, cell]))
-  const rows = sizes.filter((size) => columns.some((column) => (byKey.get(`${size}|${column.code}`)?.answered ?? 0) > 0))
+  const rows = competences
+    .map((item) => ({ code: item.code, label: competenceLabel(item.code, item.name) }))
+    .filter((row) => sizes.some((size) => (byKey.get(`${size}|${row.code}`)?.answered ?? 0) > 0))
+  const columns = sizes.filter((size) => rows.some((row) => (byKey.get(`${size}|${row.code}`)?.answered ?? 0) > 0))
+  const getColumnWidth = (label: string) => `${Math.max(96, Math.min(170, (label.length + 2) * 8.5))}px`
   if (rows.length === 0 || columns.length === 0) return <EmptyChart text="Sin valoraciones por tamaño." />
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[860px] border-separate border-spacing-1 text-sm" aria-label="Media de competencias por tamaño de organización">
+      <table className="border-separate border-spacing-1 text-sm" style={{ width: 'max-content', minWidth: '100%' }} aria-label="Media por tamaño y competencia">
         <thead>
           <tr>
-            <th scope="col" className="w-40 pb-2 text-left text-xs font-medium text-ink-600">Tamaño</th>
+            <th scope="col" className="w-40 pb-2 text-left text-xs font-medium text-ink-600">Competencia</th>
             {columns.map((column) => (
-              <th key={column.code} scope="col" className="pb-2 text-center align-bottom text-xs font-medium text-ink-600">
-                <span className="inline-block max-w-[84px] whitespace-normal leading-tight">{column.label}</span>
+              <th key={column} scope="col" className="pb-2 text-center align-bottom text-xs font-medium text-ink-600" style={{ minWidth: getColumnWidth(sizeLabel(column)) }}>
+                <span className="inline-block whitespace-normal leading-tight">{sizeLabel(column)}</span>
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {rows.map((size) => (
-            <tr key={size}>
-              <th scope="row" className="pr-2 text-left align-middle text-xs font-medium text-ink-900">{sizeLabel(size)}</th>
+          {rows.map((row) => (
+            <tr key={row.code}>
+              <th scope="row" className="pr-2 text-left align-middle text-xs font-medium text-ink-900">{row.label}</th>
               {columns.map((column) => {
-                const cell = byKey.get(`${size}|${column.code}`)
+                const cell = byKey.get(`${column}|${row.code}`)
                 const average = cell?.average ?? null
                 const background = average === null ? '#F8FAFC' : likertColor(average)
                 return (
                   <td
-                    key={column.code}
-                    className="h-11 min-w-[56px] rounded-md text-center text-sm font-semibold tabular-nums"
-                    style={{ background, color: average === null ? '#94A3B8' : contrastTextColor(background) }}
-                    title={`${sizeLabel(size)} · ${column.label}: ${average === null ? 'sin valoraciones' : `media ${formatDecimal(average, 2)} (n = ${cell?.answered ?? 0})`}`}
+                    key={`${row.code}-${column}`}
+                    className="h-11 rounded-md text-center text-sm font-semibold tabular-nums"
+                    style={{ background, color: average === null ? '#94A3B8' : contrastTextColor(background), minWidth: getColumnWidth(sizeLabel(column)) }}
+                    title={`${row.label} · ${sizeLabel(column)}: ${average === null ? 'sin valoraciones' : `media ${formatDecimal(average, 2)} (n = ${cell?.answered ?? 0})`}`}
                   >
                     {average === null ? '—' : formatDecimal(average, 1)}
                   </td>
