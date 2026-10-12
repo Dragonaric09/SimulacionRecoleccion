@@ -6,8 +6,7 @@ import jakarta.persistence.*;
 @Table(name = "competence_rating")
 public class CompetenceRatingEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    pri
-    ate Long id;
+    private Long id;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "response_id", nullable = false)
     private SurveyResponseEntity response;
@@ -22,30 +21,17 @@ public class CompetenceRatingEntity {
     private String originalLabel;
 
     protected CompetenceRatingEntity() { }
-    public CompetenceRatingEntity(Survey
-    e
-
+    public CompetenceRatingEntity(SurveyResponseEntity response, CompetenceCatalogEntity competence,
                                   Short numericValue, boolean notObserved, String originalLabel) {
-            
+        this.response = response;
         this.competence = competence;
         this.numericValue = numericValue;
         this.notObserved = notObserved;
         this.originalLabel = originalLabel;
     }
-    p
+    public SurveyResponseEntity getResponse() { return response; }
+    public CompetenceCatalogEntity getCompetence() { return competence; }
+    public Short getNumericValue() { return numericValue; }
+    public boolean isNotObserved() { return notObserved; }
+}
 
-    public CompetenceCatalogEntity getCompetenc
-        () { return comp
-    t
-
-    public Short getNumericValue() { return numericV
-        lue; }
-    
-
-    public boolean isNotObserved() {
-        return notObserved; 
-    
-
-    
-        
-    
