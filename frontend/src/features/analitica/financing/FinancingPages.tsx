@@ -64,7 +64,7 @@ export function FinancingCompletePage({ printAll = false }: { printAll?: boolean
         <label className="flex items-center gap-2 text-sm text-ink-600"><Checkbox checked={includeTotals} onCheckedChange={(checked) => setIncludeTotals(checked === true)} /> Totales</label>
         <label className="flex items-center gap-2 text-sm text-ink-600"><Checkbox checked={colorHeatmap} onCheckedChange={(checked) => setColorHeatmap(checked === true)} /> Aplicar mapa de calor</label>
       </CardContent></Card>
-      {cross && <><CrossTable cross={cross} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric="count" rowLabel="Fuente de financiamiento estimada" columnLabel={financingColumns.find((field) => field.key === columnField)?.label ?? "Nivel de posgrado de interés"} /><div className="financing-chi-card w-full"><ChiSquareCard result={chi} cross={cross} /></div></>}
+      {cross && <><CrossTable cross={cross} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric="count" rowLabel="Fuente de financiamiento estimada" columnLabel={financingColumns.find((field) => field.key === columnField)?.label ?? "Nivel de posgrado de interés"} swapAxes={columnField === "area_posgrado_interes"} /><div className="financing-chi-card w-full"><ChiSquareCard result={chi} cross={cross} /></div></>}
     </div>
   );
 }
@@ -104,7 +104,7 @@ export function FinancingPage() {
           <label className="label-default grid gap-1">Columnas<Select value={columnField} onValueChange={setColumnField}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="nivel_posgrado_interes">Nivel de posgrado de interés</SelectItem><SelectItem value="area_posgrado_interes">Área de interés</SelectItem><SelectItem value="modalidad_posgrado">Modalidad</SelectItem></SelectContent></Select></label>
           <Button onClick={loadCross} disabled={loading || !datasetId || rowField === columnField}>Generar tabla</Button>
         </CardContent></Card>
-        {cross && <CrossTable cross={cross} includeTotals colorHeatmap={false} metric="count" />}
+        {cross && <CrossTable cross={cross} includeTotals colorHeatmap={false} metric="count" swapAxes={columnField === "area_posgrado_interes"} />}
       </>}
     </div>
   );

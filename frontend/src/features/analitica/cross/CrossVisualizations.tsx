@@ -54,7 +54,7 @@ function expectedFrequencyWarning(cross: Cross) {
   );
 
   const sparseRatio = totalCells ? lowCells / totalCells : 0;
-  const isSevere = total < 50 || sparseRatio > 0.2;
+  const isSevere = total < 10 || sparseRatio > 0.2;
   return { lowCells, totalCells, isSevere };
 }
 
@@ -64,6 +64,11 @@ function observedSmallSampleSummary(cross: Cross) {
   );
   const lowCells = cells.filter((value) => value < 5).length;
   const totalCells = cells.length;
+
+  if (cross.validCount < 10) {
+    return `Muestra pequeña · n = ${cross.validCount}`;
+  }
+
   if (!lowCells || totalCells === 0) return "";
 
   const sparseRatio = lowCells / totalCells;
@@ -82,15 +87,18 @@ export function ChiSquareCard({
 }) {
   const warning = expectedFrequencyWarning(cross);
   const severeWarning = warning?.isSevere ?? false;
-  const reason = severeWarning
-    ? "frecuencias esperadas < 5 en una fracción relevante de la tabla"
-    : !cross.validCount
-    ? "No hay celdas con observaciones válidas para evaluar."
-    : cross.rowCategories.length < 2
-      ? `La matriz solo tiene ${cross.rowCategories.length} categoría de fila; se requieren al menos 2.`
-      : cross.columnCategories.length < 2
-        ? `La matriz solo tiene ${cross.columnCategories.length} categoría de columna; se requieren al menos 2.`
-        : "No se pudo completar el cálculo de χ² para esta matriz.";
+  const tooSmallForTest = cross.validCount < 10;
+  const reason = tooSmallForTest
+    ? `Con n = ${cross.validCount} no se puede probar si hay relación. Se muestran los conteos.`
+    : severeWarning
+      ? "Con pocos datos no se puede concluir; los conteos son orientativos."
+      : !cross.validCount
+        ? "No hay celdas con observaciones válidas para evaluar."
+        : cross.rowCategories.length < 2
+          ? `La matriz solo tiene ${cross.rowCategories.length} categoría de fila; se requieren al menos 2.`
+          : cross.columnCategories.length < 2
+            ? `La matriz solo tiene ${cross.columnCategories.length} categoría de columna; se requieren al menos 2.`
+            : "No se pudo completar el cálculo de χ² para esta matriz.";
   return (
     <Card className="gap-2 rounded-xl border-0 shadow-sm">
       <CardHeader className="grid-cols-[1fr_auto] gap-x-4 gap-y-1 pb-0">
@@ -99,17 +107,17 @@ export function ChiSquareCard({
         </CardTitle>
         <div className="flex flex-col items-end gap-1">
           <Badge tone="neutral">
-            {result && !severeWarning
+            {result && !severeWarning && !tooSmallForTest
               ? result.rechazaIndependencia
                 ? "p < α"
                 : "p ≥ α"
               : "No aplicable"}
           </Badge>
-          {result && !severeWarning && <span className="text-xs text-ink-600">α = 0,05</span>}
+          {result && !severeWarning && !tooSmallForTest && <span className="text-xs text-ink-600">α = 0,05</span>}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {result && !severeWarning ? (
+        {result && !severeWarning && !tooSmallForTest ? (
           <>
             <div className="grid items-center gap-4 md:grid-cols-3">
               <div>
@@ -153,6 +161,7 @@ export function CrossTable({
   rowLabel = "Fila",
   columnLabel = "Columnas",
   action,
+  swapAxes = false,
 }: {
   cross: Cross;
   totalResponses?: number;
@@ -162,31 +171,41 @@ export function CrossTable({
   rowLabel?: string;
   columnLabel?: string;
   action?: ReactNode;
+  swapAxes?: boolean;
 }) {
+  const displayRows = swapAxes ? cross.columnCategories : cross.rowCategories;
+  const displayColumns = swapAxes ? cross.rowCategories : cross.columnCategories;
+  const displayRowLabel = swapAxes ? columnLabel : rowLabel;
+  const displayColumnLabel = swapAxes ? rowLabel : columnLabel;
+  const rawCellValue = (row: string, column: string) => {
+    const rawRow = swapAxes ? column : row;
+    const rawColumn = swapAxes ? row : column;
+    return cross.counts[rawRow]?.[rawColumn] ?? 0;
+  };
   const columnTotal = (column: string) =>
-    cross.rowCategories.reduce(
-      (sum, row) => sum + (cross.counts[row]?.[column] ?? 0),
+    displayRows.reduce(
+      (sum, row) => sum + rawCellValue(row, column),
       0,
     );
   const rowTotal = (row: string) =>
-    cross.columnCategories.reduce(
-      (sum, column) => sum + (cross.counts[row]?.[column] ?? 0),
+    displayColumns.reduce(
+      (sum, column) => sum + rawCellValue(row, column),
       0,
     );
   const columnPercent = (row: string, column: string) => {
     const total = columnTotal(column);
-    return total ? ((cross.counts[row]?.[column] ?? 0) * 100) / total : 0;
+    return total ? (rawCellValue(row, column) * 100) / total : 0;
   };
   const cellValue = (row: string, column: string) =>
     metric === "count"
-      ? (cross.counts[row]?.[column] ?? 0)
+      ? rawCellValue(row, column)
       : metric === "rowPercent"
-        ? (cross.percentages[row]?.[column] ?? 0)
+        ? (cross.percentages[swapAxes ? column : row]?.[swapAxes ? row : column] ?? 0)
         : columnPercent(row, column);
   const max = Math.max(
     1,
-    ...cross.rowCategories.flatMap((row) =>
-      cross.columnCategories.map((column) => cellValue(row, column)),
+    ...displayRows.flatMap((row) =>
+      displayColumns.map((column) => cellValue(row, column)),
     ),
   );
   const formatValue = (value: number) =>
@@ -205,16 +224,16 @@ export function CrossTable({
       : "0,0%";
   const labelColumnWidth = Math.min(
     44,
-    Math.max(28, 58 - cross.columnCategories.length * 5),
+    Math.max(28, 58 - displayColumns.length * 5),
   );
-  const valueColumnCount = cross.columnCategories.length + (includeTotals ? 1 : 0);
+  const valueColumnCount = displayColumns.length + (includeTotals ? 1 : 0);
   const valueColumnWidth = (100 - labelColumnWidth) / valueColumnCount;
   return (
     <Card className="min-w-0 overflow-visible">
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <CardTitle className="title-card">{rowLabel} × {columnLabel}</CardTitle>
+            <CardTitle className="title-card">{displayRowLabel} × {displayColumnLabel}</CardTitle>
             <CardDescription>
               {metricLabel.replace(" (conteos)", "")} · n = {cross.validCount}
               {totalResponses != null ? ` de ${totalResponses}` : ""}
@@ -228,7 +247,7 @@ export function CrossTable({
         <Table className="min-w-[620px] table-fixed text-sm">
           <colgroup>
             <col style={{ width: `${labelColumnWidth}%` }} />
-            {cross.columnCategories.map((column) => (
+            {displayColumns.map((column) => (
               <col
                 key={column}
                 style={{ width: `${valueColumnWidth}%` }}
@@ -239,15 +258,15 @@ export function CrossTable({
           <TableHeader>
             <TableRow className="bg-surface-container-low hover:bg-surface-container-low">
               <TableHead rowSpan={2} className="min-w-[210px] whitespace-nowrap p-2 text-left align-middle">
-                {rowLabel}
+                {displayRowLabel}
               </TableHead>
-              <TableHead colSpan={cross.columnCategories.length} className="p-2 text-center">
-                {columnLabel}
+              <TableHead colSpan={displayColumns.length} className="p-2 text-center">
+                {displayColumnLabel}
               </TableHead>
               {includeTotals && <TableHead rowSpan={2} className="w-20 break-words p-2 text-right align-middle">Total fila</TableHead>}
             </TableRow>
             <TableRow className="bg-surface-container-low hover:bg-surface-container-low">
-              {cross.columnCategories.map((column) => (
+              {displayColumns.map((column) => (
                 <TableHead
                   key={column}
                   className="whitespace-normal break-words p-2 text-right leading-tight"
@@ -258,12 +277,12 @@ export function CrossTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {cross.rowCategories.map((row) => (
+            {displayRows.map((row) => (
               <TableRow key={row} className="border-t hover:bg-transparent">
                 <TableCell className="min-w-[210px] whitespace-nowrap p-2 font-medium">
                   {booleanLabel(row)}
                 </TableCell>
-                {cross.columnCategories.map((column) => {
+                {displayColumns.map((column) => {
                   const value = cellValue(row, column);
                   const intensity = value / max;
                   return (
@@ -301,7 +320,7 @@ export function CrossTable({
                 <TableCell className="whitespace-nowrap p-2">
                   Total columna
                 </TableCell>
-                {cross.columnCategories.map((column) => (
+                {displayColumns.map((column) => (
                   <TableCell
                     key={column}
                     className="tabular-nums p-2 text-right"
@@ -342,7 +361,7 @@ export function CrossTable({
         )}
         {observedSmallSampleSummary(cross) && (
           <p className="mt-3 text-xs text-amber-800">
-            Muestra pequeña: interpretar con cautela
+            {observedSmallSampleSummary(cross)}
           </p>
         )}
       </CardContent>
