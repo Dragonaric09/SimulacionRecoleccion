@@ -11,6 +11,7 @@ export type Competence = {
   median: number;
   modalLevel: number;
   levelCounts: Record<string, number>;
+  notObservedCount?: number;
 };
 
 export type Cross = {

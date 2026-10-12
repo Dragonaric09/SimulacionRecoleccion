@@ -39,6 +39,7 @@ import {
 import { StatusPanel } from "@/components/analytics/StatusPanel";
 import { Badge } from "@/components/analytics/Badge";
 import { useDatasetContext } from "@/app/DatasetContext";
+import { toUploadableFile } from "./workbookCsv";
 import {
   deleteDataset,
   importDataset,
@@ -79,13 +80,15 @@ export function CargarDatosPage() {
       .catch(() => undefined);
   }, []);
 
-  async function chooseFile(next: File | null) {
-    setFile(next);
+  async function chooseFile(selected: File | null) {
+    setFile(null);
     setReport(null);
     setError(null);
-    if (!next) return;
+    if (!selected) return;
     setLoading("validate");
     try {
+      const next = await toUploadableFile(selected);
+      setFile(next);
       const nextReport = await validateDataset(next);
       setReport(nextReport);
       if (nextReport.surveyType === "TITULADOS" || nextReport.surveyType === "EMPLEADORES") {
@@ -99,7 +102,7 @@ export function CargarDatosPage() {
   }
 
   async function process() {
-    if (!file || !report || report.errors > 0 || report.rowsValid === 0) return;
+    if (!file || !report || report.rowsValid === 0) return;
     setLoading("import");
     setError(null);
     try {
@@ -169,7 +172,6 @@ export function CargarDatosPage() {
   const canProcess = Boolean(
     file &&
     report &&
-    report.errors === 0 &&
     report.rowsValid > 0 &&
     report.surveyType === surveyType,
   );
@@ -180,7 +182,7 @@ export function CargarDatosPage() {
         <div>
           <h1 className="headline-page tracking-tight">Cargar datos</h1>
           <p className="mt-1 max-w-3xl text-sm text-ink-600">
-            Importa el CSV para validar su
+            Importa el archivo de respuestas (.csv o .xlsx) para validar su
             estructura y preparar el dataset para el análisis cuantitativo.
           </p>
         </div>
@@ -208,13 +210,13 @@ export function CargarDatosPage() {
             <UploadCloud className={`size-5 ${surveyAccent.text}`} />
             Archivo de respuestas
           </CardTitle>
-          <CardDescription>Archivo CSV (UTF-8) exportado desde Google Forms</CardDescription>
+          <CardDescription>Archivo CSV (UTF-8) o Excel (.xlsx) exportado desde Google Forms</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <input
             ref={inputRef}
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             className="sr-only"
             onChange={(event) => chooseFile(event.target.files?.[0] ?? null)}
           />

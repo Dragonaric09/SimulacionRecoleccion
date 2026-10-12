@@ -133,7 +133,9 @@ function AppLayoutContent({ route }: Props) {
                 <h1 className="headline-page">{route.section === 'titulados' ? 'Titulados' : 'Empleadores'}</h1>
                 <p>Informe completo de análisis</p>
                 <p>Fecha de generación: {new Intl.DateTimeFormat('es-BO', { dateStyle: 'long', timeZone: 'America/La_Paz' }).format(new Date())}</p>
-                <p>Filtros activos: Año: Todos · Estado laboral: Todos · Sector: Todos</p>
+                <p>{route.section === 'titulados'
+                  ? 'Filtros activos: Año: Todos · Estado laboral: Todos · Sector: Todos'
+                  : 'Filtros activos: Tipo y tamaño de organización, según cada pantalla'}</p>
                 <p>Dataset: {activeReportDataset ? `${datasetDisplayName(activeReportDataset, reportDomain)} · ${activeReportDataset.rowsValid} válidas` : 'No seleccionado'}</p>
                 <p>Mostrando las respuestas válidas del dataset seleccionado.</p>
                 <p className="mt-4 text-xs text-ink-600">Los porcentajes excluyen “No sabe” y “No observado”. Con menos de 5 respuestas, las gráficas son solo referenciales.</p>

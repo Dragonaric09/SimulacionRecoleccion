@@ -30,6 +30,19 @@ import java.text.Normalizer;
 public class AnalyticsService {
     public static final int MINIMUM_SAMPLE_SIZE = 5;
     private static final int SEGMENT_REFERENCE_YEAR = 2024;
+    /** Variables de empleadores que admiten cruces: todas de opción única o escala. */
+    static final List<String> EMPLOYER_CROSS_FIELDS = List.of("tipo_organizacion", "tamano_organizacion",
+            "rubro_organizacion", "departamento_organizacion", "presencia_sedes", "contrato_titulados_ultimos_5_anios",
+            "posibilidad_incorporacion", "nivel_formacion_demandado", "medio_convocatoria");
+    /** Mismas opciones que el formulario de empleadores (orden 23). */
+    private static final List<String> CARGO_OPTIONS = List.of(
+            "De apoyo / asistencia tecnológica",
+            "Técnico (desarrollo de software, administración de sistemas, redes, bases de datos, soporte TI)",
+            "Analista (sistemas, datos, procesos o soluciones tecnológicas)",
+            "Especialista (ciberseguridad, arquitectura de software, infraestructura tecnológica, entre otros)",
+            "Supervisor / Coordinador de área tecnológica",
+            "Jefatura o Gerencial (gestión de proyectos, dirección de TI, transformación digital)",
+            "Consultor tecnológico");
     private final DatasetImportRepository datasets;
     private final SurveyResponseRepository responses;
     private final CompetenceRatingRepository ratings;
@@ -112,8 +125,9 @@ public class AnalyticsService {
         Map<String, Double> medians = new LinkedHashMap<>();
         Map<String, Double> standardDeviations = new LinkedHashMap<>();
         for (String field : fields) {
-            List<String> values = rowsForField(rows, field).stream().map(r -> value(r, field)).filter(this::isAnalyticValue)
-                    .toList();
+            boolean keepNonAnswers = "EMPLEADORES".equals(dataset.getSurveyType()) && field.startsWith("valoracion_");
+            List<String> values = rowsForField(rows, field).stream().map(r -> value(r, field))
+                    .filter(v -> keepNonAnswers ? v != null && !v.isBlank() : isAnalyticValue(v)).toList();
             if (numericField(field)) {
                 List<Double> numbers = values.stream().map(this::number).filter(java.util.Objects::nonNull).toList();
                 if (!numbers.isEmpty()) {
@@ -189,6 +203,10 @@ public class AnalyticsService {
     }
 
     private boolean matchesFilter(SurveyResponseEntity row, TituladosFilter filter) {
+        if (!filter.organizationTypes().isEmpty()
+                && filter.organizationTypes().stream().noneMatch(type -> normalize(value(row, "tipo_organizacion")).equals(normalize(type)))) return false;
+        if (!filter.organizationSizes().isEmpty()
+                && filter.organizationSizes().stream().noneMatch(size -> normalize(value(row, "tamano_organizacion")).equals(normalize(size)))) return false;
         Integer year = validYear(value(row, "anio_titulacion"));
         if (filter.yearFrom() != null && (year == null || year < filter.yearFrom())) return false;
         if (filter.yearTo() != null && (year == null || year > filter.yearTo())) return false;
@@ -302,36 +320,40 @@ public class AnalyticsService {
 
     @Transactional(readOnly = true)
     public List<CompetenceAverageDto> competenceGaps(UUID datasetId) {
-        return competenceGaps(datasetId, new TituladosFilter(null, null, List.of(), List.of()));
+        return competenceGaps(datasetId, TituladosFilter.none());
     }
+
+    /** «No observado» no entra en la media, la desviación ni la distribución: se cuenta aparte. */
     @Transactional(readOnly = true)
     public List<CompetenceAverageDto> competenceGaps(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, null);
         Map<String, List<CompetenceRatingEntity>> grouped = ratings.findByResponse_Dataset_Id(dataset.getId()).stream()
-                .filter(r -> !r.isNotObserved() && r.getNumericValue() != null)
-                .filter(r -> !"TITULADOS".equals(dataset.getSurveyType()) || matchesFilter(r.getResponse(), filter))
+                .filter(r -> !filter.active() || matchesFilter(r.getResponse(), filter))
                 .collect(Collectors.groupingBy(r -> r.getCompetence().getCode(), LinkedHashMap::new,
                         Collectors.toList()));
         List<CompetenceAverageDto> result = new ArrayList<>();
-        grouped.forEach((code, values) -> {
-            var competence = values.get(0).getCompetence();
-            double average = values.stream().mapToInt(r -> r.getNumericValue()).average().orElse(0);
-            List<Double> numbers = values.stream().map(r -> r.getNumericValue().doubleValue()).toList();
-            Map<Integer, Long> levelCounts = values.stream().collect(Collectors
+        grouped.forEach((code, competenceRatings) -> {
+            var competence = competenceRatings.get(0).getCompetence();
+            List<CompetenceRatingEntity> observed = competenceRatings.stream()
+                    .filter(r -> !r.isNotObserved() && r.getNumericValue() != null).toList();
+            long notObserved = competenceRatings.stream().filter(CompetenceRatingEntity::isNotObserved).count();
+            List<Double> numbers = observed.stream().map(r -> r.getNumericValue().doubleValue()).toList();
+            double average = observed.stream().mapToInt(r -> r.getNumericValue()).average().orElse(0);
+            Map<Integer, Long> levelCounts = observed.stream().collect(Collectors
                     .groupingBy(r -> r.getNumericValue().intValue(), java.util.TreeMap::new, Collectors.counting()));
             int modalLevel = levelCounts.entrySet().stream()
                     .max(Map.Entry.<Integer, Long>comparingByValue().thenComparing(Map.Entry.comparingByKey()))
                     .map(Map.Entry::getKey).orElse(0);
             result.add(new CompetenceAverageDto(code, competence.getName(), competence.getCompetenceGroup(),
-                    values.size(), round(average),
-                    sampleStandardDeviation(numbers), median(numbers), modalLevel, levelCounts));
+                    observed.size(), round(average), sampleStandardDeviation(numbers),
+                    numbers.isEmpty() ? null : median(numbers), modalLevel, levelCounts, notObserved));
         });
         return result;
     }
 
     @Transactional(readOnly = true)
     public CrossTabulationDto cross(UUID datasetId, String rowField, String columnField) {
-        return cross(datasetId, rowField, columnField, new TituladosFilter(null, null, List.of(), List.of()));
+        return cross(datasetId, rowField, columnField, TituladosFilter.none());
     }
 
     public CrossTabulationDto cross(UUID datasetId, String rowField, String columnField, TituladosFilter filter) {
@@ -339,8 +361,12 @@ public class AnalyticsService {
         if (rowField == null || rowField.isBlank() || columnField == null || columnField.isBlank()) {
             throw new IllegalArgumentException("rowField y columnField son obligatorios");
         }
-        List<SurveyResponseEntity> valid = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
-        if ("TITULADOS".equals(dataset.getSurveyType())) valid = applyFilter(valid, filter);
+        if ("EMPLEADORES".equals(dataset.getSurveyType())
+                && (!EMPLOYER_CROSS_FIELDS.contains(rowField) || !EMPLOYER_CROSS_FIELDS.contains(columnField))) {
+            throw new IllegalArgumentException("Variable no disponible para empleadores: " + rowField + " / " + columnField);
+        }
+        List<SurveyResponseEntity> valid = applyFilter(
+                responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA"), filter);
         List<SurveyResponseEntity> usable = valid.stream()
                 .filter(r -> crossFieldBranchAllows(r, rowField) && crossFieldBranchAllows(r, columnField))
                 .filter(r -> value(r, rowField) != null && value(r, columnField) != null).toList();
@@ -391,6 +417,9 @@ public class AnalyticsService {
         if ("formacion_complementaria_nivel".equals(field)) return canonicalEducationLevel(text);
         if ("edad_rango".equals(field)) return canonicalAgeRange(text);
         if ("sector_trabajo".equals(field) && normalize(text).matches("no trabaja|no trabajo")) return "Sin clasificar";
+        if ("contrato_titulados_ultimos_5_anios".equals(field)) {
+            return "true".equals(text) ? "Sí" : "false".equals(text) ? "No" : text;
+        }
         return text;
     }
 
@@ -457,6 +486,7 @@ public class AnalyticsService {
             case "asignaturas_ventaja" -> List.of("Introducción", "Base de Datos", "Inteligencia Artificial",
                     "Redes de Computadora", "Electivas", "T.I.S.", "Básicas (Física, Calculo, Algebras)",
                     "Planificación de Proyectos y Gestión", "Tecnología Redes Avanzadas");
+            case "cargos_titulados" -> CARGO_OPTIONS;
             case "asignaturas_poco_utiles" -> List.of("Básicas (Física, Calculo, Algebras)",
                     "Aplic. Interactivas para Televisión Digital", "Telefonía IP", "Web Semánticas", "Graficación por Computadora",
                     "Robótica", "Taller de Programación en Bajo Nivel", "Teoría de Autómatas y Leng. Formales",

@@ -9,9 +9,11 @@ import { formatDecimal } from "../shared/analyticsFormatters";
 export function CompetenceRadar({
   items,
   className = "",
+  color = "#1f6fb5",
 }: {
   items: Competence[];
   className?: string;
+  color?: string;
 }) {
   const plotted = items.slice(0, 8);
   const chartData = plotted.map((item) => ({
@@ -20,7 +22,7 @@ export function CompetenceRadar({
     name: item.name,
   }));
   const chartConfig = {
-    average: { label: "Media observada", color: "#1f6fb5" },
+    average: { label: "Media observada", color },
   };
   const renderRadarChart = (fixed = false) => (
     <RadarChart
@@ -34,8 +36,8 @@ export function CompetenceRadar({
       <Radar
         name="Media observada"
         dataKey="average"
-        stroke="#1f6fb5"
-        fill="#1f6fb5"
+        stroke={color}
+        fill={color}
         fillOpacity={0.24}
         strokeWidth={2.25}
         isAnimationActive={false}
@@ -66,7 +68,7 @@ export function CompetenceRadar({
               </ChartContainer>
             </div>
             <div className="radar-fixed-chart" aria-label="Radar de medias por competencia para impresión">
-              <RadarPrintSvg items={plotted} />
+              <RadarPrintSvg items={plotted} color={color} />
             </div>
             <div className="mt-2 flex flex-wrap items-center justify-center gap-5 border-t border-surface-container-high pt-3 text-xs">
               <span className="flex items-center gap-1.5 font-medium text-ink-900">
@@ -93,7 +95,7 @@ export function CompetenceRadar({
   );
 }
 
-function RadarPrintSvg({ items }: { items: Competence[] }) {
+function RadarPrintSvg({ items, color }: { items: Competence[]; color: string }) {
   const width = 760;
   const height = 400;
   const centerX = width / 2;
@@ -124,8 +126,8 @@ function RadarPrintSvg({ items }: { items: Competence[] }) {
           <tspan x={labelPoint.x} dy="13" fontWeight="700" fill="#0f3f6d">{formatDecimal(item.average)}</tspan>
         </text>
       </g>; })}
-      <polygon points={polygon} fill="#1f6fb5" fillOpacity="0.24" stroke="#1f6fb5" strokeWidth="2.25" />
-      {items.map((item, index) => { const p = point(index, item.average); return <circle key={`${item.code}-point`} cx={p.x} cy={p.y} r="3.5" fill="#1f6fb5" />; })}
+      <polygon points={polygon} fill={color} fillOpacity="0.24" stroke={color} strokeWidth="2.25" />
+      {items.map((item, index) => { const p = point(index, item.average); return <circle key={`${item.code}-point`} cx={p.x} cy={p.y} r="3.5" fill={color} />; })}
     </svg>
   );
 }

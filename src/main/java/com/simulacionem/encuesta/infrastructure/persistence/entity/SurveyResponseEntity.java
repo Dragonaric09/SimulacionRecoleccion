@@ -47,6 +47,13 @@ public class SurveyResponseEntity {
 
     public SurveyResponseEntity(DatasetImportEntity dataset, String surveyType, int sourceRowNumber,
                                 OffsetDateTime submittedAt, String responseStatus, Map<String, Object> rawPayload) {
+        this(dataset, surveyType, sourceRowNumber, submittedAt, responseStatus, rawPayload, rawPayload);
+    }
+
+    /** El payload original conserva las celdas tal como llegaron; el normalizado es el que usa el análisis. */
+    public SurveyResponseEntity(DatasetImportEntity dataset, String surveyType, int sourceRowNumber,
+                                OffsetDateTime submittedAt, String responseStatus,
+                                Map<String, Object> rawPayload, Map<String, Object> normalizedPayload) {
         this.dataset = dataset;
         this.id = UUID.randomUUID();
         this.surveyType = surveyType;
@@ -54,7 +61,7 @@ public class SurveyResponseEntity {
         this.submittedAt = submittedAt;
         this.responseStatus = responseStatus;
         this.rawPayload = rawPayload;
-        this.normalizedPayload = rawPayload;
+        this.normalizedPayload = normalizedPayload;
     }
 
     public UUID getId() { return id; }

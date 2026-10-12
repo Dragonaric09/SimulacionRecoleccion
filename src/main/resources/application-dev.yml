@@ -1,6 +1,7 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:${DB_PORT:5433}/simulacionem
+    # reWriteBatchedInserts agrupa los INSERT por lotes en un solo mensaje al servidor (importaciones grandes).
+    url: jdbc:postgresql://localhost:${DB_PORT:5433}/simulacionem?reWriteBatchedInserts=true
     username: simulacionem_dev
     password: dev_password_2026
   jpa:

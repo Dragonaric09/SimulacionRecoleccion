@@ -15,6 +15,9 @@ import type { Cross, CrossMetric, Domain, Tone } from "../shared/analyticsTypes"
 import { DatasetSelect, PageHeading, labelFor, useDatasets } from "../shared/AnalyticsPrimitives";
 import { crossMetricLabel, exportCrossCsv, exportCrossExcel, exportCrossPng } from "../shared/crossExportUtils";
 import { printAnalyticsPdf } from "@/components/analytics/PrintButton";
+import { EmployerFilterToolbar } from "@/features/empleadores/EmployerFilterToolbar";
+import { useEmployerFilters } from "@/features/empleadores/employerData";
+import { CROSS_FIELD_OPTIONS } from "@/features/empleadores/instrumento";
 import { ChiSquareCard, CrossBars, CrossTable } from "./CrossVisualizations";
 
 type ChiResult = {
@@ -43,6 +46,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
   const [chi, setChi] = useState<ChiResult | null>(null);
   const [filterSummary, setFilterSummary] = useState<AnalyticsSummary | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
+  const employerFilters = useEmployerFilters(datasetId);
   const [includeTotals, setIncludeTotals] = useState(true);
   const [metric, setMetric] = useState<CrossMetric>("count");
   const [colorHeatmap, setColorHeatmap] = useState(false);
@@ -116,28 +120,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
             group: "Trabajo",
           },
         ]
-      : [
-          {
-            key: "tipo_organizacion",
-            label: "Tipo de organización",
-            group: "Perfil",
-          },
-          {
-            key: "tamano_organizacion",
-            label: "Tamaño de organización",
-            group: "Perfil",
-          },
-          {
-            key: "rubro_organizacion",
-            label: "Rubro de la organización",
-            group: "Perfil",
-          },
-          {
-            key: "contrato_titulados_ultimos_5_anios",
-            label: "Contratación reciente",
-            group: "Perfil",
-          },
-        ];
+      : CROSS_FIELD_OPTIONS.map((field) => ({ key: field.key, label: field.label, group: field.group }));
   const fieldGroups = Array.from(
     new Set(fields.map((field) => field.group)),
   ).map((group) => ({
@@ -150,7 +133,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     setError(null);
     try {
       const nextCross = await apiRequest<Cross>(
-          `/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${domain === "TITULADOS" ? filterQuery : ""}`,
+          `${domain === "EMPLEADORES" ? "/analytics/employers/cross" : "/analytics/crosses"}?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
       );
       setCross(nextCross);
       try {
@@ -165,6 +148,9 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
       setLoading(false);
     }
   }
+  useEffect(() => {
+    if (domain === "EMPLEADORES") setFilterQuery(employerFilters.query);
+  }, [domain, employerFilters.query]);
   useEffect(() => {
     void loadCross();
   }, [datasetId, rowField, columnField, filterQuery, domain]);
@@ -192,6 +178,14 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
         loading={datasetsLoading}
       />
       {filterSummary && <FilterToolbar summary={filterSummary} onQueryChange={setFilterQuery} />}
+      {domain === "EMPLEADORES" && (
+        <EmployerFilterToolbar
+          filters={employerFilters.filters}
+          onToggle={employerFilters.toggle}
+          onClear={employerFilters.clear}
+          active={employerFilters.active}
+        />
+      )}
       <div className="cross-screen-grid grid items-start gap-5 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
         <div className="cross-screen-controls space-y-5">
           <Card className="rounded-xl border-0 shadow-sm">

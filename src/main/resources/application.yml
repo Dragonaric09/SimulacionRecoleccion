@@ -3,11 +3,17 @@ spring:
     name: simulacionem
   profiles:
     active: dev
+  servlet:
+    multipart:
+      # Respuestas de encuestas grandes: el límite por defecto de Spring (1 MB) rechaza archivos reales.
+      max-file-size: 200MB
+      max-request-size: 200MB
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:
       hibernate.jdbc.time_zone: UTC
+      hibernate.jdbc.batch_size: 500
 server:
   port: ${SERVER_PORT:8081}

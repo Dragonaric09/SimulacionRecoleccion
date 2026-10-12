@@ -79,14 +79,14 @@ export const navigation: NavigationItem[] = [
   },
   {
     path: '/empleadores/resumen-contratacion',
-    label: 'Resumen de contratación',
+    label: 'Resumen y contratación',
     description: 'Indicadores de empleadores',
     icon: LayoutDashboard,
     section: 'empleadores',
   },
   {
     path: '/empleadores/valoracion-carrera',
-    label: 'Valoración de la carrera',
+    label: 'Valoración de la Carrera',
     description: 'Distribución de respuestas por afirmación',
     icon: Scale,
     section: 'empleadores',
@@ -100,7 +100,7 @@ export const navigation: NavigationItem[] = [
   },
   {
     path: '/empleadores/cruces-exportacion',
-    label: 'Cruces y exportación',
+    label: 'Cruces y exportar',
     description: 'Matrices y salidas analíticas',
     icon: FileChartColumn,
     section: 'empleadores',

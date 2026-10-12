@@ -78,7 +78,7 @@ function TituladosFilterToolbar({ summary, onQueryChange }: { summary: Analytics
   </div>;
 }
 
-function FilterMenu({ label, value, open, onOpen, options, selected, onToggle, onClear }: { label: string; value: string; open: boolean; onOpen: () => void; options: string[]; selected: string[]; onToggle: (value: string) => void; onClear: () => void }) {
+export function FilterMenu({ label, value, open, onOpen, options, selected, onToggle, onClear }: { label: string; value: string; open: boolean; onOpen: () => void; options: string[]; selected: string[]; onToggle: (value: string) => void; onClear: () => void }) {
   return <div className="relative w-[170px] shrink-0"><button type="button" className="grid h-14 w-full gap-1 text-left" onClick={onOpen} aria-expanded={open}><span className="h-4 text-xs text-ink-600">{label}</span><span className="flex h-10 items-center rounded-md border border-surface-container-high bg-white px-3 text-sm text-ink-900">{value}</span></button>
     {open && <div className="absolute z-20 mt-1 w-64 rounded-md border border-surface-container-high bg-white p-3 shadow-lg"><div className="grid gap-2">{options.map((option) => <label key={option} className="flex items-center gap-2 text-sm"><Checkbox checked={selected.includes(option)} onCheckedChange={() => onToggle(option)} />{option}</label>)}</div><Button type="button" variant="ghost" size="sm" className="mt-2 px-0" onClick={onClear}>Limpiar</Button></div>}
   </div>;

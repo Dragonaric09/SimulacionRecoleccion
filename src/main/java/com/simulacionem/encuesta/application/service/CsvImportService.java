@@ -2,21 +2,17 @@ package com.simulacionem.encuesta.application.service;
 
 import com.simulacionem.encuesta.application.dto.ImportIssueDto;
 import com.simulacionem.encuesta.application.dto.ImportReportDto;
-import com.simulacionem.encuesta.infrastructure.persistence.entity.DatasetImportEntity;
+import com.simulacionem.encuesta.infrastructure.persistence.entity.CompetenceCatalogEntity;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.DatasetColumnMappingEntity;
-import com.simulacionem.encuesta.infrastructure.persistence.entity.EmployerResponseEntity;
-import com.simulacionem.encuesta.infrastructure.persistence.entity.CompetenceRatingEntity;
-import com.simulacionem.encuesta.infrastructure.persistence.entity.ImportIssueEntity;
-import com.simulacionem.encuesta.infrastructure.persistence.entity.SurveyResponseEntity;
-import com.simulacionem.encuesta.infrastructure.persistence.entity.TitledResponseEntity;
-import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetImportRepository;
-import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetColumnMappingRepository;
-import com.simulacionem.encuesta.infrastructure.persistence.repository.EmployerResponseRepository;
+import com.simulacionem.encuesta.infrastructure.persistence.entity.DatasetImportEntity;
+import com.simulacionem.encuesta.infrastructure.persistence.jdbc.SurveyResponseBatchWriter;
+import com.simulacionem.encuesta.infrastructure.persistence.jdbc.SurveyResponseBatchWriter.CompetenceValue;
+import com.simulacionem.encuesta.infrastructure.persistence.jdbc.SurveyResponseBatchWriter.EmployerFields;
+import com.simulacionem.encuesta.infrastructure.persistence.jdbc.SurveyResponseBatchWriter.IssueRow;
+import com.simulacionem.encuesta.infrastructure.persistence.jdbc.SurveyResponseBatchWriter.ResponseRow;
 import com.simulacionem.encuesta.infrastructure.persistence.repository.CompetenceCatalogRepository;
-import com.simulacionem.encuesta.infrastructure.persistence.repository.CompetenceRatingRepository;
-import com.simulacionem.encuesta.infrastructure.persistence.repository.ImportIssueRepository;
-import com.simulacionem.encuesta.infrastructure.persistence.repository.SurveyResponseRepository;
-import com.simulacionem.encuesta.infrastructure.persistence.repository.TitledResponseRepository;
+import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetColumnMappingRepository;
+import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetImportRepository;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -24,328 +20,428 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.text.Normalizer;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
+/**
+ * Importación de encuestas en un solo recorrido del CSV.
+ *
+ * Las filas se normalizan, se validan y se escriben por lotes ({@link #BATCH_SIZE}); nunca se
+ * mantienen todas en memoria. Un archivo ya importado se rechaza por su huella SHA-256.
+ * Cada fila se decide por sí misma: una fila con error no impide guardar el resto del archivo.
+ */
 @Service
 public class CsvImportService {
+    /** Filas por lote de escritura. */
+    static final int BATCH_SIZE = 1_000;
+    /** Incidencias que se guardan en import_issue. El contador sigue contando las que no se guardan. */
+    static final int MAX_STORED_ISSUES = 50_000;
+    /** Incidencias que se devuelven en la respuesta HTTP. */
+    static final int MAX_REPORTED_ISSUES = 300;
+
     private static final DateTimeFormatter TIMESTAMP = DateTimeFormatter.ofPattern("d/M/uuuu H:mm:ss");
     private static final ZoneId SOURCE_ZONE = ZoneId.of("America/La_Paz");
+    /** Origen de los números de serie de fecha de Excel (sistema de 1900 con el error del año bisiesto corregido). */
+    private static final LocalDateTime EXCEL_EPOCH = LocalDateTime.of(1899, 12, 30, 0, 0);
+    private static final byte[] UTF8_BOM = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+
     private final DatasetImportRepository datasetImports;
-    private final SurveyResponseRepository responses;
-    private final ImportIssueRepository issues;
     private final DatasetColumnMappingRepository mappings;
-    private final TitledResponseRepository titledResponses;
-    private final EmployerResponseRepository employerResponses;
     private final CompetenceCatalogRepository competenceCatalog;
-    private final CompetenceRatingRepository competenceRatings;
     private final SurveyFieldMapperFactory fieldMapperFactory;
     private final SurveyTypeDetector surveyTypeDetector;
+    private final SurveyResponseBatchWriter writer;
 
     public CsvImportService(DatasetImportRepository datasetImports,
-                            SurveyResponseRepository responses,
-                            ImportIssueRepository issues,
                             DatasetColumnMappingRepository mappings,
-                            TitledResponseRepository titledResponses,
-                            EmployerResponseRepository employerResponses,
                             CompetenceCatalogRepository competenceCatalog,
-                            CompetenceRatingRepository competenceRatings,
                             SurveyFieldMapperFactory fieldMapperFactory,
-                            SurveyTypeDetector surveyTypeDetector) {
+                            SurveyTypeDetector surveyTypeDetector,
+                            SurveyResponseBatchWriter writer) {
         this.datasetImports = datasetImports;
-        this.responses = responses;
-        this.issues = issues;
         this.mappings = mappings;
-        this.titledResponses = titledResponses;
-        this.employerResponses = employerResponses;
         this.competenceCatalog = competenceCatalog;
-        this.competenceRatings = competenceRatings;
         this.fieldMapperFactory = fieldMapperFactory;
         this.surveyTypeDetector = surveyTypeDetector;
+        this.writer = writer;
     }
 
+    /** Valida el archivo sin guardar nada. */
     public ImportReportDto validate(MultipartFile file) throws IOException {
-        ParsedCsv parsed = parse(file);
-        return report(null, parsed);
+        return process(file, false);
     }
 
+    /** Valida e importa el archivo como dataset nuevo. */
     @Transactional
     public ImportReportDto importFile(MultipartFile file) throws IOException {
-        ParsedCsv parsed = parse(file);
-        String status = parsed.errors() > 0 ? "CON_ERRORES" : (parsed.warnings() > 0 ? "CON_ADVERTENCIAS" : "LISTO");
-        DatasetImportEntity dataset = new DatasetImportEntity(parsed.surveyType(), safeName(file.getOriginalFilename()), status);
-        dataset.setSourceFileSha256(sha256(file.getBytes()));
-        dataset.setRowsRead(parsed.rowsRead());
-        dataset.setRowsValid(parsed.validRows());
-        dataset.setRowsRejected(parsed.rejectedRows());
-        dataset.setWarningsCount(parsed.warnings());
-        dataset.setErrorsCount(parsed.errors());
-        dataset.setPeriod(parsed.period());
-        dataset = datasetImports.saveAndFlush(dataset);
+        return process(file, true);
+    }
 
-        for (int i = 0; i < parsed.headers().size(); i++) {
-            String header = parsed.headers().get(i);
-            boolean personal = personal(header == null ? "" : header.toLowerCase(Locale.ROOT));
-            String internalKey = internalKey(header);
+    private ImportReportDto process(MultipartFile file, boolean persist) throws IOException {
+        if (file == null || file.isEmpty()) {
+            return failure("ARCHIVO_VACIO", "El archivo CSV está vacío");
+        }
+        String fileName = safeName(file.getOriginalFilename());
+        if (!fileName.toLowerCase(Locale.ROOT).endsWith(".csv")) {
+            return failure("EXTENSION_INVALIDA", "El archivo debe tener extensión .csv");
+        }
+        byte[] bytes = withoutBom(file.getBytes());
+        if (!isUtf8(bytes)) {
+            return failure("CODIFICACION_INVALIDA", "El archivo debe estar codificado en UTF-8");
+        }
+        String sha256 = sha256(bytes);
+        if (datasetImports.existsBySourceFileSha256(sha256)) {
+            return failure("ARCHIVO_YA_IMPORTADO", "Este archivo ya fue importado como dataset");
+        }
+
+        try (CSVParser parser = csvParser(bytes)) {
+            List<String> rawHeaders = parser.getHeaderNames();
+            if (rawHeaders.isEmpty() || rawHeaders.stream().allMatch(h -> clean(h) == null)) {
+                return failure("ENCABEZADO_AUSENTE", "El CSV no contiene encabezados válidos");
+            }
+            if (rawHeaders.size() < 10) {
+                return failure("COLUMNAS_INSUFICIENTES", "El CSV no contiene el mínimo de columnas esperado");
+            }
+            SurveyType detected = surveyTypeDetector.detect(rawHeaders);
+            if (detected == null) {
+                return failure("TIPO_NO_RECONOCIDO", "No se pudo identificar si el CSV corresponde a titulados o empleadores");
+            }
+            String type = detected.name();
+            List<String> headers = rawHeaders.stream().map(this::clean).toList();
+
+            Tally tally = new Tally();
+            addHeaderIssues(headers, tally);
+            int timestampColumn = indexOf(headers, "marca temporal");
+            boolean[] personalColumns = personalColumns(headers);
+
+            DatasetImportEntity dataset = null;
+            Map<String, Long> competenceIds = Map.of();
+            if (persist) {
+                dataset = datasetImports.saveAndFlush(new DatasetImportEntity(type, fileName, "VALIDANDO"));
+                dataset.setSourceFileSha256(sha256);
+                saveColumnMappings(dataset, headers, type);
+                competenceIds = competenceIds();
+            }
+
+            List<ResponseRow> batch = new ArrayList<>(persist ? BATCH_SIZE : 0);
+            for (CSVRecord record : parser) {
+                RowResult row = readRow(type, headers, timestampColumn, personalColumns, record, rawHeaders.size());
+                tally.addRow(row);
+                tally.addAll(row.issues());
+                if (persist) {
+                    batch.add(toResponseRow(type, row, competenceIds));
+                    if (batch.size() >= BATCH_SIZE) {
+                        writer.writeResponses(dataset.getId(), type, batch);
+                        batch = new ArrayList<>(BATCH_SIZE);
+                    }
+                }
+            }
+
+            String status = tally.errors > 0 ? "CON_ERRORES" : (tally.warnings > 0 ? "CON_ADVERTENCIAS" : "LISTO");
+            if (persist) {
+                writer.writeResponses(dataset.getId(), type, batch);
+                writer.writeIssues(dataset.getId(), tally.stored.stream()
+                        .map(issue -> new IssueRow(issue.row(), issue.column(), issue.columnName(), issue.originalValue(),
+                                issue.severity(), issue.code(), issue.message()))
+                        .toList());
+                dataset.setStatus(status);
+                dataset.setRowsRead(tally.rowsRead);
+                dataset.setRowsValid(tally.rowsValid);
+                dataset.setRowsRejected(tally.rowsRejected);
+                dataset.setWarningsCount(tally.warnings);
+                dataset.setErrorsCount(tally.errors);
+                dataset.setPeriod(tally.period);
+                datasetImports.save(dataset);
+            }
+            return report(dataset == null ? null : dataset.getId(), type, status, tally);
+        }
+    }
+
+    private RowResult readRow(String type, List<String> headers, int timestampColumn, boolean[] personalColumns,
+                              CSVRecord record, int expectedColumns) {
+        int rowNumber = (int) record.getRecordNumber() + 1;
+        List<Issue> rowIssues = new ArrayList<>();
+        if (record.size() != expectedColumns) {
+            rowIssues.add(new Issue(rowNumber, null, null, null, "ERROR", "FILA_DESALINEADA",
+                    "La fila no tiene la misma cantidad de columnas que el encabezado"));
+        }
+        Map<String, Object> raw = rawValues(headers, personalColumns, record);
+        Map<String, Object> values = normalizedValues(type, headers, record, rowIssues);
+
+        OffsetDateTime submittedAt = null;
+        String timestamp = timestampColumn >= 0 && timestampColumn < record.size() ? clean(record.get(timestampColumn)) : null;
+        if (timestamp != null) {
+            try {
+                LocalDateTime parsed = timestampOf(timestamp);
+                submittedAt = parsed.atZone(SOURCE_ZONE).toOffsetDateTime();
+                values.put("submitted_at", submittedAt.toString());
+            } catch (DateTimeParseException ex) {
+                rowIssues.add(new Issue(rowNumber, timestampColumn + 1, "Marca temporal", timestamp, "ADVERTENCIA",
+                        "FECHA_NO_RECONOCIDA", "La fecha no se pudo convertir; se conserva el valor original"));
+            }
+        }
+        return new RowResult(rowNumber, raw, values, submittedAt, rowIssues);
+    }
+
+    private void addHeaderIssues(List<String> headers, Tally tally) {
+        Map<String, Integer> occurrences = new LinkedHashMap<>();
+        Set<String> warned = new HashSet<>();
+        for (int i = 0; i < headers.size(); i++) {
+            String header = headers.get(i);
+            if (header == null) {
+                tally.add(new Issue(null, i + 1, null, null, "ERROR", "COLUMNA_SIN_NOMBRE", "Existe una columna sin nombre"));
+                continue;
+            }
+            String normalized = header.toLowerCase(Locale.ROOT);
+            if (occurrences.merge(normalized, 1, Integer::sum) > 1 && warned.add(normalized)) {
+                tally.add(new Issue(null, i + 1, header, null, "ADVERTENCIA", "ENCABEZADO_DUPLICADO",
+                        "El encabezado aparece más de una vez; por fila se conserva el primer valor no vacío"));
+            }
+        }
+    }
+
+    private void saveColumnMappings(DatasetImportEntity dataset, List<String> headers, String type) {
+        for (int i = 0; i < headers.size(); i++) {
+            String header = headers.get(i) == null ? "(sin nombre)" : headers.get(i);
+            boolean personal = personal(header.toLowerCase(Locale.ROOT));
+            String internalKey = internalKey(type, header);
             mappings.save(new DatasetColumnMappingEntity(dataset, i + 1, header,
                     internalKey, dataType(internalKey), personal,
                     personal ? "EXCLUDED" : (internalKey == null ? "UNMAPPED" : "MAPPED")));
         }
-
-        if (parsed.errors() == 0) {
-            for (RowResult row : parsed.rows()) {
-                if (row.valid()) {
-                    SurveyResponseEntity response = responses.saveAndFlush(new SurveyResponseEntity(
-                            dataset, parsed.surveyType(), row.rowNumber(), row.submittedAt(), "VALIDA", row.values()));
-                    if (response.getId() == null) {
-                        response = responses.findByDataset_IdAndSourceRowNumber(dataset.getId(), row.rowNumber()).orElseThrow();
-                    }
-                    persistSpecificResponse(parsed.surveyType(), response);
-                    persistCompetences(response, row.values());
-                }
-            }
-        }
-        for (Issue issue : parsed.issues()) {
-            issues.save(new ImportIssueEntity(dataset, issue.row(), issue.column(), issue.columnName(),
-                    issue.originalValue(), issue.severity(), issue.code(), issue.message()));
-        }
-        return report(dataset.getId(), parsed, status);
     }
 
-    private ParsedCsv parse(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            return ParsedCsv.error("ARCHIVO_VACIO", "El archivo CSV está vacío");
+    private Map<String, Long> competenceIds() {
+        Map<String, Long> ids = new LinkedHashMap<>();
+        for (CompetenceCatalogEntity competence : competenceCatalog.findAll()) {
+            ids.put(competence.getCode(), competence.getId());
         }
-        String fileName = safeName(file.getOriginalFilename()).toLowerCase(Locale.ROOT);
-        if (!fileName.endsWith(".csv")) {
-            return ParsedCsv.error("EXTENSION_INVALIDA", "El archivo debe tener extensión .csv");
+        return ids;
+    }
+
+    private ResponseRow toResponseRow(String type, RowResult row, Map<String, Long> competenceIds) {
+        boolean valid = row.valid();
+        Map<String, Object> values = row.values();
+        List<CompetenceValue> competences = valid ? competenceValues(values, competenceIds) : List.of();
+        Short graduationYear = "TITULADOS".equals(type) ? numberAsShort(values.get("anio_titulacion")) : null;
+        EmployerFields employer = valid && "EMPLEADORES".equals(type) ? employerFields(values, competences) : null;
+        return new ResponseRow(UUID.randomUUID(), row.rowNumber(), row.submittedAt(), valid ? "VALIDA" : "RECHAZADA",
+                row.raw(), values, graduationYear, employer, competences);
+    }
+
+    private List<CompetenceValue> competenceValues(Map<String, Object> values, Map<String, Long> competenceIds) {
+        List<CompetenceValue> result = new ArrayList<>();
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
+            if (!entry.getKey().startsWith("competence:")) continue;
+            Long id = competenceIds.get(entry.getKey().substring("competence:".length()));
+            if (id == null) continue;
+            String original = String.valueOf(entry.getValue());
+            boolean notObserved = original.toLowerCase(Locale.ROOT).contains("no observado");
+            Short numeric = notObserved ? null : ratingValue(original);
+            if (notObserved || numeric != null) {
+                result.add(new CompetenceValue(id, numeric, notObserved, original));
+            }
         }
-        byte[] bytes = file.getBytes();
-        if (bytes.length >= 3 && bytes[0] == (byte) 0xEF && bytes[1] == (byte) 0xBB && bytes[2] == (byte) 0xBF) {
-            bytes = java.util.Arrays.copyOfRange(bytes, 3, bytes.length);
+        return result;
+    }
+
+    private EmployerFields employerFields(Map<String, Object> values, List<CompetenceValue> competences) {
+        List<Short> numbers = competences.stream().map(CompetenceValue::numericValue).filter(java.util.Objects::nonNull).toList();
+        BigDecimal average = numbers.isEmpty() ? null : BigDecimal.valueOf(
+                numbers.stream().mapToInt(Short::intValue).average().orElse(0)).setScale(2, RoundingMode.HALF_UP);
+        Short[] valuations = new Short[EmpleadoresFieldMapper.VALUATIONS.size()];
+        for (int i = 0; i < valuations.length; i++) {
+            valuations[i] = valuationCode(stringValue(values.get(EmpleadoresFieldMapper.VALUATIONS.get(i).key())));
         }
-        try { StandardCharsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(bytes)); }
-        catch (java.nio.charset.CharacterCodingException ex) {
-            return ParsedCsv.error("CODIFICACION_INVALIDA", "El archivo debe estar codificado en UTF-8");
+        short fullAgreement = (short) Arrays.stream(valuations).filter(code -> code != null && code == 1).count();
+        Object hired = values.get("contrato_titulados_ultimos_5_anios");
+        return new EmployerFields(
+                stringValue(values.get("tipo_organizacion")),
+                stringValue(values.get("tamano_organizacion")),
+                stringValue(values.get("rubro_organizacion")),
+                hired instanceof Boolean flag ? flag : null,
+                stringValue(values.get("posibilidad_incorporacion")),
+                stringValue(values.get("nivel_formacion_demandado")),
+                stringValue(values.get("departamento_organizacion")),
+                stringValue(values.get("presencia_sedes")),
+                average,
+                fullAgreement,
+                valuations,
+                stringValue(values.get("medio_convocatoria")),
+                stringValue(values.get("cargos_titulados")));
+    }
+
+    /** 1 = Totalmente de acuerdo, 2 = Parcialmente de acuerdo, 3 = Totalmente desacuerdo, 4 = No sabe; null si no es una de ellas. */
+    private static Short valuationCode(String answer) {
+        if (answer == null) return null;
+        String normalized = FieldMappingSupport.matchable(answer);
+        if (normalized.equals("totalmente de acuerdo")) return (short) 1;
+        if (normalized.equals("parcialmente de acuerdo")) return (short) 2;
+        if (normalized.equals("totalmente desacuerdo")) return (short) 3;
+        if (normalized.equals("no sabe")) return (short) 4;
+        return null;
+    }
+
+    private ImportReportDto report(UUID datasetId, String type, String status, Tally tally) {
+        List<ImportIssueDto> reported = tally.stored.stream().limit(MAX_REPORTED_ISSUES)
+                .map(i -> new ImportIssueDto(i.row(), i.column(), i.columnName(), i.severity(), i.code(), i.message()))
+                .toList();
+        return new ImportReportDto(datasetId, type, status, tally.rowsRead, tally.rowsValid, tally.rowsRejected,
+                tally.warnings, tally.errors, reported);
+    }
+
+    private ImportReportDto failure(String code, String message) {
+        return new ImportReportDto(null, "DESCONOCIDO", "CON_ERRORES", 0, 0, 0, 0, 1,
+                List.of(new ImportIssueDto(null, null, null, "ERROR", code, message)));
+    }
+
+    /** Contadores y incidencias del archivo. Las incidencias se guardan hasta {@link #MAX_STORED_ISSUES}. */
+    private static final class Tally {
+        final List<Issue> stored = new ArrayList<>();
+        int rowsRead;
+        int rowsValid;
+        int rowsRejected;
+        int errors;
+        int warnings;
+        Short period;
+
+        void addRow(RowResult row) {
+            rowsRead++;
+            if (row.valid()) rowsValid++;
+            else rowsRejected++;
+            if (period == null && row.submittedAt() != null) period = (short) row.submittedAt().getYear();
         }
-        try (CSVParser parser = CSVFormat.DEFAULT.builder()
+
+        void addAll(List<Issue> issues) {
+            issues.forEach(this::add);
+        }
+
+        void add(Issue issue) {
+            if ("ERROR".equals(issue.severity())) errors++;
+            else warnings++;
+            if (stored.size() < MAX_STORED_ISSUES) stored.add(issue);
+        }
+    }
+
+    private record RowResult(int rowNumber, Map<String, Object> raw, Map<String, Object> values,
+                             OffsetDateTime submittedAt, List<Issue> issues) {
+        boolean valid() {
+            return issues.stream().noneMatch(issue -> issue.severity().equals("ERROR"));
+        }
+    }
+
+    private record Issue(Integer row, Integer column, String columnName, String originalValue, String severity,
+                         String code, String message) { }
+
+    private CSVParser csvParser(byte[] bytes) throws IOException {
+        return CSVFormat.DEFAULT.builder()
                 .setHeader()
                 .setSkipHeaderRecord(true)
                 .setIgnoreEmptyLines(true)
                 .setAllowMissingColumnNames(true)
                 .build()
-                .parse(new InputStreamReader(new java.io.ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {
-            List<String> headers = parser.getHeaderNames();
-            List<Issue> parsedIssues = new ArrayList<>();
-            if (headers.isEmpty() || headers.stream().allMatch(h -> clean(h) == null)) {
-                return ParsedCsv.error("ENCABEZADO_AUSENTE", "El CSV no contiene encabezados válidos");
-            }
-            if (headers.size() < 10) {
-                return ParsedCsv.error("COLUMNAS_INSUFICIENTES", "El CSV no contiene el mínimo de columnas esperado");
-            }
-            SurveyType detectedType = surveyTypeDetector.detect(headers);
-            if (detectedType == null) {
-                parsedIssues.add(new Issue(null, null, null, null, "ERROR", "TIPO_NO_RECONOCIDO", "No se pudo identificar si el CSV corresponde a titulados o empleadores"));
-            }
-            String type = detectedType == null ? null : detectedType.name();
+                .parse(new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8));
+    }
 
-            headers = headers.stream().map(this::clean).toList();
-            Map<String, Integer> headerOccurrences = new LinkedHashMap<>();
-            Set<String> warnedHeaders = new HashSet<>();
-            for (int i = 0; i < headers.size(); i++) {
-                if (headers.get(i) == null) {
-                    parsedIssues.add(new Issue(null, i + 1, headers.get(i), null, "ERROR", "COLUMNA_SIN_NOMBRE", "Existe una columna sin nombre"));
-                } else {
-                    String normalized = headers.get(i).toLowerCase(Locale.ROOT);
-                    int occurrence = headerOccurrences.merge(normalized, 1, Integer::sum);
-                    if (occurrence > 1 && warnedHeaders.add(normalized)) {
-                        parsedIssues.add(new Issue(null, i + 1, headers.get(i), null, "ADVERTENCIA", "ENCABEZADO_DUPLICADO", "El encabezado aparece más de una vez; por fila se conserva el primer valor no vacío"));
-                    }
-                }
-            }
-            List<RowResult> rows = new ArrayList<>();
-            Short period = null;
-            for (CSVRecord record : parser) {
-                List<Issue> rowIssues = new ArrayList<>();
-                if (record.size() != headers.size()) {
-                    rowIssues.add(new Issue((int) record.getRecordNumber() + 1, null, null, null, "ERROR", "FILA_DESALINEADA", "La fila no tiene la misma cantidad de columnas que el encabezado"));
-                }
-                Map<String, Object> values = normalizedValues(type, headers, record, rowIssues);
-                String timestamp = firstValue(headers, record, "marca temporal");
-                OffsetDateTime submittedAt = null;
-                if (timestamp != null) {
-                    try {
-                        LocalDateTime parsedTimestamp = LocalDateTime.parse(timestamp, TIMESTAMP);
-                        submittedAt = parsedTimestamp.atZone(SOURCE_ZONE).toOffsetDateTime();
-                        values.put("submitted_at", submittedAt.toString());
-                        period = period == null ? (short) parsedTimestamp.getYear() : period;
-                    } catch (DateTimeParseException ex) {
-                        rowIssues.add(new Issue((int) record.getRecordNumber() + 1, indexOf(headers, "marca temporal") + 1, "Marca temporal", timestamp, "ADVERTENCIA", "FECHA_NO_RECONOCIDA", "La fecha no se pudo convertir; se conserva el valor original"));
-                    }
-                }
-                rows.add(new RowResult((int) record.getRecordNumber() + 1, values, submittedAt, rowIssues));
-                parsedIssues.addAll(rowIssues);
-            }
-            int errors = (int) parsedIssues.stream().filter(i -> i.severity().equals("ERROR")).count();
-            int warnings = (int) parsedIssues.stream().filter(i -> i.severity().equals("ADVERTENCIA")).count();
-            int valid = (int) rows.stream().filter(RowResult::valid).count();
-            return new ParsedCsv(type == null ? "TITULADOS" : type, headers, rows, parsedIssues, period,
-                    rows.size(), valid, rows.size() - valid, warnings, errors);
+    private static byte[] withoutBom(byte[] bytes) {
+        if (bytes.length >= 3 && Arrays.equals(Arrays.copyOf(bytes, 3), UTF8_BOM)) {
+            return Arrays.copyOfRange(bytes, 3, bytes.length);
+        }
+        return bytes;
+    }
+
+    private static boolean isUtf8(byte[] bytes) {
+        try {
+            StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes));
+            return true;
+        } catch (CharacterCodingException ex) {
+            return false;
         }
     }
 
     private Map<String, Object> normalizedValues(String surveyType, List<String> headers, CSVRecord record, List<Issue> rowIssues) {
-        if ("TITULADOS".equals(surveyType) || "EMPLEADORES".equals(surveyType)) {
-            List<FieldMappingSupport.MappingIssue> mappingIssues = new ArrayList<>();
-            SurveyFieldMapper mapper = fieldMapperFactory.forType(SurveyType.valueOf(surveyType));
-            Map<String, Object> values = mapper.map(headers, record, mappingIssues);
-            mappingIssues.forEach(issue -> rowIssues.add(new Issue(issue.row(), issue.column(), issue.columnName(),
-                    issue.originalValue(), issue.severity(), issue.code(), issue.message())));
-            addDerivedValues(values, headers, record, mapper.gridDefinitions());
-            return values;
-        }
-        if (surveyType == null) {
-            return GenericCsvFieldMapper.map(headers, record);
-        }
-        Map<String, Object> values = new LinkedHashMap<>();
-        for (int i = 0; i < headers.size(); i++) {
-            String header = clean(headers.get(i));
-            String value = i < record.size() ? clean(record.get(i)) : null;
-            if (header == null || value == null || personal(header)) continue;
-            values.put("column_" + (i + 1), value);
-        }
-        putKnown(values, headers, record, "edad_rango", "edad que tiene actualmente");
-        putKnown(values, headers, record, "genero", "género");
-        putKnown(values, headers, record, "anio_titulacion", "año de titulación");
-        putKnown(values, headers, record, "vinculo_laboral", "vinculo laboral");
-        putKnown(values, headers, record, "area_especializacion", "area de especialización");
-        putKnown(values, headers, record, "cargo_profesional", "cargo");
-        putKnown(values, headers, record, "titulo_profesional", "titulo de profesion");
-        putKnown(values, headers, record, "sector_trabajo", "sector en el que trabaja");
-        putKnown(values, headers, record, "antiguedad_trabajo", "antiguedad tiene en su actual trabajo");
-        putKnown(values, headers, record, "rubro_trabajo_actual", "rubro de la organización");
-        putKnown(values, headers, record, "rubro_otro", "otro rubro");
-        putKnown(values, headers, record, "area_trabajo", "área dentro de la organización");
-        putKnown(values, headers, record, "cargo_actual", "cargo que desempeña en su actual trabajo");
-        putKnown(values, headers, record, "departamento_trabajo", "departamento de bolivia");
-        putKnown(values, headers, record, "medio_obtencion_empleo", "a través de qué medio obtuvo el trabajo");
-        putKnown(values, headers, record, "pertinencia_trabajo_formacion", "peritnentes a sus formación");
-        putKnown(values, headers, record, "satisfaccion_formacion", "de manera global");
-        putKnown(values, headers, record, "concordancia_formacion_requerimientos", "existe concordancia entre");
-        putKnown(values, headers, record, "formacion_complementaria_nivel", "programa de formación complementaria de mayor nivel");
-        putKnown(values, headers, record, "institucion_formacion_complementaria", "donde ha cursado el programa indicado");
-        putKnown(values, headers, record, "nombre_programa_formacion", "indique el nombre del programa");
-        putKnown(values, headers, record, "nivel_posgrado_interes", "qué nivel de posgrado le interesa");
-        putKnown(values, headers, record, "area_posgrado_interes", "en cuál de las siguientes áreas le interesaría realizar el programa");
-        putKnown(values, headers, record, "modalidad_posgrado", "modalidad preferida");
-        putKnown(values, headers, record, "institucion_posgrado_interes", "organización educativa optaría por realizar sus estudios");
-        putKnown(values, headers, record, "financiamiento_posgrado_estimado", "cómo financiaría sus estudios");
-        putKnown(values, headers, record, "financiamiento_posgrado_cursado", "fuente de financiamiento para cursar el programa");
-        putKnown(values, headers, record, "aspectos_utiles", "aspectos de la Carrera les resultaron de bastante utilidad");
-        putKnown(values, headers, record, "aspectos_mejorables", "aspectos de la Carrera considera que pueden mejorarse");
-        putKnown(values, headers, record, "asignaturas_ventaja", "asignaturas cursadas en la Carrera que considera que le brindaron una ventaja competitiva");
-        putKnown(values, headers, record, "asignaturas_poco_utiles", "asignaturas cursadas en la Carrera que no le resultaron de mucha utilidad");
-        putKnown(values, headers, record, "remuneracion_rango", "remuneración promedio mensual");
-        putKnown(values, headers, record, "tipo_organizacion", "tipo de organización");
-        putKnown(values, headers, record, "anio_inicio_operaciones", "año de inicio de operaciones");
-        putKnown(values, headers, record, "departamento_organizacion", "departamento");
-        putKnown(values, headers, record, "presencia_sedes", "presencia de sedes");
-        putKnown(values, headers, record, "redes_sociales_activas", "redes sociales activas");
-        putKnown(values, headers, record, "area_representante", "área en la que se desempeña");
-        putKnown(values, headers, record, "cargo_representante", "cargo del representante");
-        putKnown(values, headers, record, "tamano_organizacion", "tamaño de la organización");
-        putKnown(values, headers, record, "rubro_organizacion", "rubro o sector principal");
-        putKnown(values, headers, record, "posibilidad_incorporacion", "posibilidad de incorporar ingenieros");
-        putKnown(values, headers, record, "nivel_formacion_demandado", "nivel de formación académica o actualización profesional");
-        putKnown(values, headers, record, "medio_convocatoria", "medio convoca a profesionales");
-        putKnown(values, headers, record, "cargos_titulados", "tipo de cargos desempeñan los profesionales titulados");
-        putKnown(values, headers, record, "areas_conocimiento_demandadas", "nuevas áreas de conocimiento");
-        putKnown(values, headers, record, "herramientas_tecnologicas_demandadas", "nuevas herramientas tecnológicas");
-        putKnown(values, headers, record, "habilidades_demandadas", "habilidades, competencias y destrezas");
-        putKnown(values, headers, record, "origen_emprendimiento", "origen del desarrollo de su propio emprendimiento");
-        putKnown(values, headers, record, "entregable_emprendimiento", "tipo de entregable genera el negocio");
-        putKnown(values, headers, record, "financiamiento_emprendimiento", "requerido financiamiento externo para su negocio");
-        putKnown(values, headers, record, "razon_no_trabaja", "razón por la que actualmente no trabaja");
-        normalizeLaborStatus(values, headers, record, "situación laboral actual");
-        normalizeBoolean(values, headers, record, "tiene_formacion_complementaria", "ha realizado o se encuentra realizando");
-        normalizeBoolean(values, headers, record, "interes_posgrado", "estaría interesado en realizar estudios");
-        normalizeBoolean(values, headers, record, "contrato_titulados_ultimos_5_anios", "ha contratado ingenieros");
-        normalizeBoolean(values, headers, record, "experiencia_laboral_previa", "ha tenido algún trabajo antes");
-        normalizeBoolean(values, headers, record, "primera_experiencia_laboral", "primer empleo");
-        normalizeNumber(values, headers, record, "anio_titulacion", "año de titulación", rowIssues);
-        normalizeNumber(values, headers, record, "anio_inicio_operaciones", "año de inicio de operaciones", rowIssues);
-        normalizeNumber(values, headers, record, "anios_vida_profesional", "años de vida profesional", rowIssues);
-        normalizeNumber(values, headers, record, "anios_desempleo", "cantidad corresponde al total de tiempo", rowIssues);
-        putKnown(values, headers, record, "cantidad_empleos", "en cuántos empleos usted se ha desempeñado");
-        putKnown(values, headers, record, "tiempo_primer_empleo", "cuánto tiempo se demoró en conseguir su primer trabajo");
-        for (int i = 0; i < headers.size(); i++) {
-            String header = clean(headers.get(i));
-            if (header == null || !header.toLowerCase(Locale.ROOT).contains("competencias")) continue;
-            String marker = header.indexOf('[') >= 0 && header.indexOf(']') > header.indexOf('[')
-                    ? header.substring(header.indexOf('[') + 1, header.indexOf(']')) : null;
-            if (marker != null && i < record.size()) {
-                String value = clean(record.get(i));
-                if (value != null) values.put("competence:" + competenceCode(marker), value);
-            }
-        }
-        for (int i = 0; i < headers.size(); i++) {
-            String header = clean(headers.get(i));
-            if (i < 14 || i > 31 || header == null || !header.contains("[") || header.toLowerCase(Locale.ROOT).contains("competencias")) continue;
-            int valuationIndex = i - 13;
-            String value = i < record.size() ? clean(record.get(i)) : null;
-            if (value == null) continue;
-            String group = valuationIndex <= 10 ? "formacion" : "relacion";
-            values.put("valoracion_" + group + "_" + (valuationIndex <= 10 ? valuationIndex : valuationIndex - 10), value);
-        }
+        SurveyFieldMapper mapper = fieldMapperFactory.forType(SurveyType.valueOf(surveyType));
+        List<FieldMappingSupport.MappingIssue> mappingIssues = new ArrayList<>();
+        Map<String, Object> values = mapper.map(headers, record, mappingIssues);
+        mappingIssues.forEach(issue -> rowIssues.add(toIssue(issue)));
+        addDerivedValues(values, headers, record, mapper.gridDefinitions());
+        mapper.validate(values, (int) record.getRecordNumber() + 1).forEach(issue -> rowIssues.add(toIssue(issue)));
         return values;
+    }
+
+    /** Celdas originales de las columnas no personales, tal como llegaron del CSV. */
+    private Map<String, Object> rawValues(List<String> headers, boolean[] personalColumns, CSVRecord record) {
+        Map<String, Object> raw = new LinkedHashMap<>();
+        for (int i = 0; i < headers.size() && i < record.size(); i++) {
+            String header = headers.get(i);
+            String value = clean(record.get(i));
+            if (header == null || value == null || personalColumns[i]) continue;
+            raw.put("column_" + (i + 1), value);
+        }
+        return raw;
+    }
+
+    private boolean[] personalColumns(List<String> headers) {
+        boolean[] personal = new boolean[headers.size()];
+        for (int i = 0; i < headers.size(); i++) {
+            personal[i] = headers.get(i) != null && personal(headers.get(i).toLowerCase(Locale.ROOT));
+        }
+        return personal;
+    }
+
+    private Issue toIssue(FieldMappingSupport.MappingIssue issue) {
+        return new Issue(issue.row(), issue.column(), issue.columnName(), issue.originalValue(),
+                issue.severity(), issue.code(), issue.message());
+    }
+
+    /**
+     * Marca temporal del formulario: texto «d/M/aaaa H:mm:ss» (CSV de Google Forms o de Excel) o número de
+     * serie de Excel (celda de fecha leída sin formato). Cualquier otro valor lanza DateTimeParseException.
+     */
+    private LocalDateTime timestampOf(String raw) {
+        if (raw.matches("\\d+(\\.\\d+)?")) {
+            return EXCEL_EPOCH.plusSeconds(Math.round(Double.parseDouble(raw) * 86_400));
+        }
+        return LocalDateTime.parse(raw, TIMESTAMP);
     }
 
     private void addDerivedValues(Map<String, Object> values, List<String> headers, CSVRecord record,
                                   List<GridMappingDefinition> definitions) {
+        if (definitions.isEmpty()) return;
         GridMappingSupport.applyMappings(values, headers, record, definitions, this::competenceCode);
     }
 
-    private void persistSpecificResponse(String surveyType, SurveyResponseEntity response) {
-        Map<String, Object> payload = response.getNormalizedPayload();
-        if ("TITULADOS".equals(surveyType)) {
-            Short year = numberAsShort(payload.get("anio_titulacion"));
-            titledResponses.save(new TitledResponseEntity(response, year));
-        } else if ("EMPLEADORES".equals(surveyType)) {
-            employerResponses.save(new EmployerResponseEntity(response, stringValue(payload.get("tipo_organizacion"))));
-        }
-    }
-
-    private void persistCompetences(SurveyResponseEntity response, Map<String, Object> values) {
-        values.entrySet().stream().filter(entry -> entry.getKey().startsWith("competence:")).forEach(entry -> {
-            String code = entry.getKey().substring("competence:".length());
-            competenceCatalog.findByCode(code).ifPresent(catalog -> {
-                String original = String.valueOf(entry.getValue());
-                boolean notObserved = original.toLowerCase(Locale.ROOT).contains("no observado");
-                Short numeric = notObserved ? null : ratingValue(original);
-                if (notObserved || numeric != null) competenceRatings.save(new CompetenceRatingEntity(response, catalog, numeric, notObserved, original));
-            });
-        });
-    }
-
-    private String internalKey(String header) {
+    private String internalKey(String surveyType, String header) {
         if (header == null || clean(header) == null) return null;
+        if ("EMPLEADORES".equals(surveyType)) {
+            return personal(header.toLowerCase(Locale.ROOT)) ? null
+                    : fieldMapperFactory.forType(SurveyType.EMPLEADORES).columnKey(header);
+        }
         String lower = clean(header).toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
-        String gridKey = gridInternalKey(header, lower);
+        String gridKey = gridInternalKey(header);
         if (gridKey != null) return gridKey;
         if (personal(lower)) return null;
         if (lower.contains("marca temporal")) return "submitted_at";
@@ -417,8 +513,9 @@ public class CsvImportService {
         return null;
     }
 
-    private String gridInternalKey(String header, String lower) {
-        lower = matchable(header);
+    /** Claves de titulados en cuadrícula. Las de empleadores las resuelve su mapeador. */
+    private String gridInternalKey(String header) {
+        String lower = FieldMappingSupport.matchable(header);
         boolean competenceGrid = lower.contains("competencias tecnicas") || lower.contains("competencias transversales");
         if (competenceGrid && header.contains("[") && header.contains("]")) {
             int start = header.indexOf('[');
@@ -429,24 +526,6 @@ public class CsvImportService {
         if (lower.contains("evalua su formacion")) return "valoracion_formacion_2";
         if (lower.contains("de manera global")) return "valoracion_formacion_3";
         if (lower.contains("existe concordancia entre")) return "valoracion_formacion_5";
-        if (lower.contains("brinda confianza")) return "valoracion_formacion_1";
-        if (lower.contains("titulo profesional otorgado")) return "valoracion_formacion_2";
-        if (lower.contains("consultan regularmente nuestra opinion")) return "valoracion_formacion_3";
-        if (lower.contains("conozco el perfil profesional")) return "valoracion_formacion_4";
-        if (lower.contains("perfil profesional declarado")) return "valoracion_formacion_5";
-        if (lower.contains("formacion proporcionada")) return "valoracion_formacion_6";
-        if (lower.contains("considera nuestra opinion")) return "valoracion_formacion_7";
-        if (lower.contains("desempeno profesional de los titulados")) return "valoracion_formacion_8";
-        if (lower.contains("valores y actitudes")) return "valoracion_formacion_9";
-        if (lower.contains("procesos de recopilacion")) return "valoracion_formacion_10";
-        if (lower.contains("mantiene vinculos")) return "valoracion_relacion_1";
-        if (lower.contains("actividades de vinculacion con el entorno")) return "valoracion_relacion_2";
-        if (lower.contains("actividades de difusion")) return "valoracion_relacion_3";
-        if (lower.contains("vinculacion entre profesionales")) return "valoracion_relacion_4";
-        if (lower.contains("como empleador, he sido consultado")) return "valoracion_relacion_5";
-        if (lower.contains("ha consultado nuestra opinion")) return "valoracion_relacion_6";
-        if (lower.contains("recurrimos a la universidad")) return "valoracion_relacion_7";
-        if (lower.contains("consultado periodicamente")) return "valoracion_relacion_8";
         if (lower.contains("rendimiento actual de su negocio")) return "satisfaccion_emprendimiento";
         if (lower.contains("importante considera que fue su formacion en ingenieria de sistemas")) {
             return "importancia_formacion_emprendimiento";
@@ -471,10 +550,14 @@ public class CsvImportService {
                 || key.contains("modalidad") || key.contains("sector_") || key.contains("situacion_")) return "category";
         return "text";
     }
-    private String slug(String value) { return value.toLowerCase(Locale.ROOT).replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u").replaceAll("[^a-z0-9]+", "_").replaceAll("^_|_$", ""); }
+
+    private String slug(String value) {
+        return value.toLowerCase(Locale.ROOT).replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+                .replaceAll("[^a-z0-9]+", "_").replaceAll("^_|_$", "");
+    }
+
     private String competenceCode(String value) {
-        String slug = slug(value);
-        return switch (slug) {
+        return switch (slug(value)) {
             case "programacion_y_desarrollo_de_software" -> "programacion_software";
             case "bases_de_datos" -> "bases_datos";
             case "redes_e_infraestructura" -> "redes_infraestructura";
@@ -484,88 +567,38 @@ public class CsvImportService {
             case "comunicacion_oral_y_escrita" -> "comunicacion";
             case "trabajo_en_equipo" -> "trabajo_equipo";
             case "resolucion_de_problemas" -> "resolucion_problemas";
-            default -> slug;
+            default -> slug(value);
         };
     }
+
     private String stringValue(Object value) { return value == null ? null : String.valueOf(value); }
-    private Short numberAsShort(Object value) { try { return value == null ? null : (short) Double.parseDouble(String.valueOf(value)); } catch (NumberFormatException ex) { return null; } }
-    private Short ratingValue(String value) { try { return (short) Integer.parseInt(value.trim().replaceFirst("[^0-9]*([1-5]).*", "$1")); } catch (NumberFormatException ex) { return null; } }
 
-    private void putKnown(Map<String, Object> values, List<String> headers, CSVRecord record, String key, String fragment) {
-        String value = firstValue(headers, record, fragment);
-        if (value != null) values.put(key, value);
-    }
-
-    private void normalizeBoolean(Map<String, Object> values, List<String> headers, CSVRecord record, String key, String fragment) {
-        String value = firstValue(headers, record, fragment);
-        if (value == null) return;
-        String normalized = clean(value).toLowerCase(Locale.ROOT);
-        if (normalized.equals("si") || normalized.equals("sí")) values.put(key, true);
-        else if (normalized.equals("no")) values.put(key, false);
-        else values.put(key, value);
-    }
-
-    private void normalizeLaborStatus(Map<String, Object> values, List<String> headers, CSVRecord record, String fragment) {
-        String value = firstValue(headers, record, fragment);
-        if (value == null) return;
-        String normalized = clean(value).toLowerCase(Locale.ROOT)
-                .replace("á", "a").replace("é", "e").replace("í", "i")
-                .replace("ó", "o").replace("ú", "u");
-        if (normalized.contains("trabaj") && (normalized.contains("organizacion") || normalized.contains("empresa"))) {
-            values.put("situacion_laboral_actual", "Trabaja en una organización");
-        } else if (normalized.contains("emprend")) {
-            values.put("situacion_laboral_actual", "Emprendimiento propio");
-        } else if (normalized.contains("busqueda") || normalized.contains("desemple") || normalized.contains("no trabaja")) {
-            values.put("situacion_laboral_actual", "En búsqueda laboral");
-        } else {
-            values.put("situacion_laboral_actual", value);
-        }
-    }
-
-    private void normalizeNumber(Map<String, Object> values, List<String> headers, CSVRecord record, String key, String fragment, List<Issue> rowIssues) {
-        String value = firstValue(headers, record, fragment);
-        if (value == null) return;
-        String normalized = clean(value).toLowerCase(Locale.ROOT)
-                .replace("á", "a").replace("é", "e").replace("í", "i")
-                .replace("ó", "o").replace("ú", "u");
-        if (Set.of("no aplica", "no corresponde", "n/a", "na", "no sabe", "no responde", "sin respuesta", "-").contains(normalized)) {
-            return;
-        }
+    private Short numberAsShort(Object value) {
         try {
-            String numeric = value.replace(',', '.').replaceFirst("[^0-9.+-].*$", "");
-            values.put(key, Double.parseDouble(numeric));
+            return value == null ? null : (short) Double.parseDouble(String.valueOf(value));
         } catch (NumberFormatException ex) {
-            rowIssues.add(new Issue((int) record.getRecordNumber() + 1, indexOf(headers, fragment) + 1, fragment, value, "ADVERTENCIA", "NUMERO_NO_RECONOCIDO", "La respuesta «" + value + "» no es numérica para «" + fragment + "» y se omitirá del cálculo"));
+            return null;
         }
     }
 
-    private String firstValue(List<String> headers, CSVRecord record, String fragment) {
-        String wanted = clean(fragment);
-        for (int i = 0; i < headers.size() && i < record.size(); i++) {
-            String header = clean(headers.get(i));
-            if (header != null && matchable(header).contains(matchable(wanted))) {
-                String value = clean(record.get(i));
-                if (value != null) return value;
-            }
+    private Short ratingValue(String value) {
+        try {
+            return (short) Integer.parseInt(value.trim().replaceFirst("[^0-9]*([1-5]).*", "$1"));
+        } catch (NumberFormatException ex) {
+            return null;
         }
-        return null;
     }
 
     private int indexOf(List<String> headers, String fragment) {
-        String wanted = clean(fragment);
+        String wanted = FieldMappingSupport.matchable(fragment);
         for (int i = 0; i < headers.size(); i++) {
-            String header = clean(headers.get(i));
-            if (header != null && matchable(header).contains(matchable(wanted))) return i;
+            if (headers.get(i) != null && FieldMappingSupport.matchable(headers.get(i)).contains(wanted)) return i;
         }
         return -1;
     }
 
     private boolean personal(String header) {
-        header = header.toLowerCase(Locale.ROOT);
-        return header.contains("correo") || header.contains("email") || header.contains("nombre") || header.contains("apellido")
-                || header.contains("nombre de la empresa") || header.contains("nombre comercial") || header.contains("nit") || header.contains("razon social") || header.contains("direccion")
-                || header.contains("telefono") || header.contains("whatsapp") || header.contains("linkedin") || header.contains("representante")
-                || header.contains("pagina web") || header.contains("redes sociales");
+        return FieldMappingSupport.isPersonal(header);
     }
 
     private String clean(String value) {
@@ -574,34 +607,13 @@ public class CsvImportService {
         return result.isEmpty() ? null : result;
     }
 
-    private String matchable(String value) {
-        return Normalizer.normalize(value == null ? "" : value, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .toLowerCase(Locale.ROOT)
-                .replaceAll("\\s+", " ")
-                .trim();
-    }
-
     private String safeName(String name) { return name == null || name.isBlank() ? "archivo.csv" : name; }
 
-    private String sha256(byte[] data) throws IOException {
+    private static String sha256(byte[] data) throws IOException {
         try {
-            byte[] digest = MessageDigest.getInstance("SHA-256").digest(data);
-            return java.util.HexFormat.of().formatHex(digest);
-        } catch (java.security.NoSuchAlgorithmException ex) {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(data));
+        } catch (NoSuchAlgorithmException ex) {
             throw new IOException("No se pudo calcular la huella del archivo", ex);
         }
-    }
-
-    private ImportReportDto report(java.util.UUID id, ParsedCsv parsed) { return report(id, parsed, parsed.errors() > 0 ? "CON_ERRORES" : (parsed.warnings() > 0 ? "CON_ADVERTENCIAS" : "LISTO")); }
-    private ImportReportDto report(java.util.UUID id, ParsedCsv parsed, String status) {
-        return new ImportReportDto(id, parsed.surveyType(), status, parsed.rowsRead(), parsed.validRows(), parsed.rejectedRows(), parsed.warnings(), parsed.errors(),
-                parsed.issues().stream().map(i -> new ImportIssueDto(i.row(), i.column(), i.columnName(), i.severity(), i.code(), i.message())).toList());
-    }
-
-    private record Issue(Integer row, Integer column, String columnName, String originalValue, String severity, String code, String message) { }
-    private record RowResult(int rowNumber, Map<String, Object> values, OffsetDateTime submittedAt, List<Issue> issues) { boolean valid() { return issues.stream().noneMatch(i -> i.severity().equals("ERROR")); } }
-    private record ParsedCsv(String surveyType, List<String> headers, List<RowResult> rows, List<Issue> issues, Short period, int rowsRead, int validRows, int rejectedRows, int warnings, int errors) {
-        static ParsedCsv error(String code, String message) { return new ParsedCsv("DESCONOCIDO", List.of(), List.of(), List.of(new Issue(null, null, null, null, "ERROR", code, message)), null, 0, 0, 0, 0, 1); }
     }
 }

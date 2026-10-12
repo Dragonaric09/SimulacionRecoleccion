@@ -8,8 +8,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 final class FieldMappingSupport {
+    /** Límite de las memorias de normalización; los encabezados son pocos, así que casi nunca se alcanza. */
+    private static final int CACHE_LIMIT = 20_000;
+    private static final Map<String, String> MATCHABLE_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, Boolean> PERSONAL_CACHE = new ConcurrentHashMap<>();
+
     private FieldMappingSupport() { }
 
     static Map<String, Object> baseValues(List<String> headers, CSVRecord record) {
@@ -17,7 +23,7 @@ final class FieldMappingSupport {
         for (int i = 0; i < headers.size(); i++) {
             String header = clean(headers.get(i));
             String value = i < record.size() ? clean(record.get(i)) : null;
-            if (header == null || value == null || personal(header)) continue;
+            if (header == null || value == null || isPersonal(header)) continue;
             values.put("column_" + (i + 1), value);
         }
         return values;
@@ -111,17 +117,37 @@ final class FieldMappingSupport {
         return result.isEmpty() ? null : result;
     }
 
-    private static boolean personal(String header) {
-        String value = header.toLowerCase(Locale.ROOT);
-        return value.contains("correo") || value.contains("email") || value.contains("apellido")
-                || value.contains("nombre de la empresa") || value.contains("nombre comercial")
-                || value.contains("nit") || value.contains("razon social") || value.contains("direccion")
-                || value.contains("telefono") || value.contains("whatsapp") || value.contains("linkedin") || value.contains("representante")
-                || value.contains("pagina web");
+    /**
+     * Datos personales o de identificación que nunca se analizan ni se muestran: correo, nombres,
+     * teléfono, LinkedIn, NIT, razón social, nombre comercial, dirección, representante y página web.
+     * Es la única lista del proyecto; la comparación ignora acentos y mayúsculas.
+     */
+    static boolean isPersonal(String header) {
+        if (header == null) return false;
+        if (PERSONAL_CACHE.size() > CACHE_LIMIT) PERSONAL_CACHE.clear();
+        return PERSONAL_CACHE.computeIfAbsent(header, FieldMappingSupport::isPersonalUncached);
     }
 
+    private static boolean isPersonalUncached(String header) {
+        String value = matchable(header);
+        return value.contains("correo") || value.contains("email") || value.contains("nombre") || value.contains("apellido")
+                || value.contains("razon social") || value.contains("direccion") || value.contains("telefon")
+                || value.contains("whatsapp") || value.contains("linkedin") || value.contains("representante")
+                || value.contains("pagina web") || value.matches(".*\\bnit\\b.*");
+    }
+
+    /**
+     * Forma comparable de un texto (sin acentos, minúsculas, espacios simples). Se memoriza porque el mismo
+     * encabezado se compara en cada una de las filas de un archivo grande.
+     */
     static String matchable(String value) {
-        return Normalizer.normalize(value == null ? "" : value, Normalizer.Form.NFD)
+        if (value == null) return "";
+        if (MATCHABLE_CACHE.size() > CACHE_LIMIT) MATCHABLE_CACHE.clear();
+        return MATCHABLE_CACHE.computeIfAbsent(value, FieldMappingSupport::matchableUncached);
+    }
+
+    private static String matchableUncached(String value) {
+        return Normalizer.normalize(value, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")
                 .toLowerCase(Locale.ROOT)
                 .replaceAll("\\s+", " ")

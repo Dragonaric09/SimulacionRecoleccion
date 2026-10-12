@@ -5,6 +5,7 @@ import com.simulacionem.analitica.application.dto.CompetenceAverageDto;
 import com.simulacionem.analitica.application.dto.CrossTabulationDto;
 import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
 import com.simulacionem.analitica.application.service.AnalyticsService;
+import com.simulacionem.analitica.application.service.TituladosFilter;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -140,16 +141,22 @@ public class AnalyticsController {
 
     @GetMapping("/employers/summary")
     public AnalyticsSummaryDto employersSummary(@RequestParam(required = false) UUID datasetId,
-                                                @RequestParam(required = false) String fields) {
-        return analytics.summary(datasetId, "EMPLEADORES", split(fields));
+                                                @RequestParam(required = false) String fields,
+                                                @RequestParam(required = false) List<String> organizationType,
+                                                @RequestParam(required = false) List<String> organizationSize) {
+        return analytics.summary(datasetId, "EMPLEADORES", split(fields),
+                TituladosFilter.organization(organizationType, organizationSize));
     }
 
     @GetMapping("/employers/valuation")
-    public AnalyticsSummaryDto employersValuation(@RequestParam(required = false) UUID datasetId) {
+    public AnalyticsSummaryDto employersValuation(@RequestParam(required = false) UUID datasetId,
+                                                  @RequestParam(required = false) List<String> organizationType,
+                                                  @RequestParam(required = false) List<String> organizationSize) {
         List<String> fields = new java.util.ArrayList<>();
         for (int i = 1; i <= 10; i++) fields.add("valoracion_formacion_" + i);
         for (int i = 1; i <= 8; i++) fields.add("valoracion_relacion_" + i);
-        return analytics.summary(datasetId, "EMPLEADORES", fields);
+        return analytics.summary(datasetId, "EMPLEADORES", fields,
+                TituladosFilter.organization(organizationType, organizationSize));
     }
 
     @GetMapping("/competencies/gaps")
@@ -157,8 +164,11 @@ public class AnalyticsController {
                                                      @RequestParam(required = false) Integer yearFrom,
                                                      @RequestParam(required = false) Integer yearTo,
                                                      @RequestParam(required = false) List<String> laborStatus,
-                                                     @RequestParam(required = false) List<String> sector) {
-        return analytics.competenceGaps(datasetId, filter(yearFrom, yearTo, laborStatus, sector));
+                                                     @RequestParam(required = false) List<String> sector,
+                                                     @RequestParam(required = false) List<String> organizationType,
+                                                     @RequestParam(required = false) List<String> organizationSize) {
+        return analytics.competenceGaps(datasetId,
+                filter(yearFrom, yearTo, laborStatus, sector, organizationType, organizationSize));
     }
 
     @GetMapping("/crosses")
@@ -168,8 +178,11 @@ public class AnalyticsController {
                                       @RequestParam(required = false) Integer yearFrom,
                                       @RequestParam(required = false) Integer yearTo,
                                       @RequestParam(required = false) List<String> laborStatus,
-                                      @RequestParam(required = false) List<String> sector) {
-        return analytics.cross(datasetId, rowField, columnField, filter(yearFrom, yearTo, laborStatus, sector));
+                                      @RequestParam(required = false) List<String> sector,
+                                      @RequestParam(required = false) List<String> organizationType,
+                                      @RequestParam(required = false) List<String> organizationSize) {
+        return analytics.cross(datasetId, rowField, columnField,
+                filter(yearFrom, yearTo, laborStatus, sector, organizationType, organizationSize));
     }
 
     @PostMapping("/simulation/multinomial")
@@ -230,6 +243,12 @@ public class AnalyticsController {
 
     private double round(double value) { return Math.round(value * 100.0) / 100.0; }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> invalidRequest(IllegalArgumentException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
     @ExceptionHandler(NoSuchElementException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> datasetNotFound(NoSuchElementException ex) {
@@ -240,12 +259,16 @@ public class AnalyticsController {
         return fields == null || fields.isBlank() ? List.of() : Arrays.stream(fields.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
     }
 
-    private com.simulacionem.analitica.application.service.TituladosFilter filter(Integer yearFrom, Integer yearTo,
-                                                                                     List<String> laborStatus,
-                                                                                     List<String> sector) {
-        return new com.simulacionem.analitica.application.service.TituladosFilter(
-                yearFrom, yearTo,
+    private TituladosFilter filter(Integer yearFrom, Integer yearTo, List<String> laborStatus, List<String> sector) {
+        return filter(yearFrom, yearTo, laborStatus, sector, null, null);
+    }
+
+    private TituladosFilter filter(Integer yearFrom, Integer yearTo, List<String> laborStatus, List<String> sector,
+                                   List<String> organizationType, List<String> organizationSize) {
+        return new TituladosFilter(yearFrom, yearTo,
                 laborStatus == null ? Collections.emptyList() : laborStatus,
-                sector == null ? Collections.emptyList() : sector);
+                sector == null ? Collections.emptyList() : sector,
+                organizationType == null ? Collections.emptyList() : organizationType,
+                organizationSize == null ? Collections.emptyList() : organizationSize);
     }
 }
