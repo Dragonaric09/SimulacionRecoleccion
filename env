@@ -1,0 +1,3 @@
+comando para correr: 
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\start-dev.ps1"
+tener el docker abierto 
