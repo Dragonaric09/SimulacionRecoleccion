@@ -27,6 +27,7 @@ function booleanLabel(value: string) {
 function expectedFrequencyWarning(cross: Cross) {
   const total = cross.validCount;
   if (!total) return null;
+
   const rowTotals = cross.rowCategories.map((row) =>
     cross.columnCategories.reduce(
       (sum, column) => sum + (cross.counts[row]?.[column] ?? 0),
@@ -39,6 +40,7 @@ function expectedFrequencyWarning(cross: Cross) {
       0,
     ),
   );
+
   const totalCells = cross.rowCategories.length * cross.columnCategories.length;
   const lowCells = rowTotals.reduce(
     (count, rowTotal) =>
@@ -50,7 +52,10 @@ function expectedFrequencyWarning(cross: Cross) {
       ),
     0,
   );
-  return { lowCells, totalCells };
+
+  const sparseRatio = totalCells ? lowCells / totalCells : 0;
+  const isSevere = total < 50 || sparseRatio > 0.2;
+  return { lowCells, totalCells, isSevere };
 }
 
 function observedSmallSampleSummary(cross: Cross) {
@@ -58,8 +63,14 @@ function observedSmallSampleSummary(cross: Cross) {
     cross.columnCategories.map((column) => cross.counts[row]?.[column] ?? 0),
   );
   const lowCells = cells.filter((value) => value < 5).length;
-  if (!lowCells) return "";
-  return `${lowCells} de ${cells.length} celdas tienen n < 5`;
+  const totalCells = cells.length;
+  if (!lowCells || totalCells === 0) return "";
+
+  const sparseRatio = lowCells / totalCells;
+  if (cross.validCount >= 200 && sparseRatio <= 0.2) return "";
+  if (cross.validCount < 30) return `${lowCells} de ${totalCells} celdas tienen n < 5`;
+  if (sparseRatio > 0.2) return `${lowCells} de ${totalCells} celdas tienen n < 5`;
+  return "";
 }
 
 export function ChiSquareCard({
@@ -70,8 +81,9 @@ export function ChiSquareCard({
   cross: Cross;
 }) {
   const warning = expectedFrequencyWarning(cross);
-  const reason = warning?.lowCells
-    ? "frecuencias esperadas < 5"
+  const severeWarning = warning?.isSevere ?? false;
+  const reason = severeWarning
+    ? "frecuencias esperadas < 5 en una fracción relevante de la tabla"
     : !cross.validCount
     ? "No hay celdas con observaciones válidas para evaluar."
     : cross.rowCategories.length < 2
@@ -87,17 +99,17 @@ export function ChiSquareCard({
         </CardTitle>
         <div className="flex flex-col items-end gap-1">
           <Badge tone="neutral">
-            {result && !warning?.lowCells
+            {result && !severeWarning
               ? result.rechazaIndependencia
                 ? "p < α"
                 : "p ≥ α"
               : "No aplicable"}
           </Badge>
-          {result && !warning?.lowCells && <span className="text-xs text-ink-600">α = 0,05</span>}
+          {result && !severeWarning && <span className="text-xs text-ink-600">α = 0,05</span>}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {result && !warning?.lowCells ? (
+        {result && !severeWarning ? (
           <>
             <div className="grid items-center gap-4 md:grid-cols-3">
               <div>
