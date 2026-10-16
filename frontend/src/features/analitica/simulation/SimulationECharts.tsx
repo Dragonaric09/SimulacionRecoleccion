@@ -78,6 +78,37 @@ export async function createSimulationChartDataUrl(result: Simulation, variable?
   }
 }
 
+/** Creates the same chart as a vector SVG for pdfmake. */
+export async function createSimulationChartSvg(result: Simulation, variable?: string) {
+  const host = document.createElement("div");
+  host.style.position = "fixed";
+  host.style.left = "-10000px";
+  host.style.top = "0";
+  host.style.width = "1100px";
+  host.style.height = "500px";
+  host.style.background = "#ffffff";
+  document.body.appendChild(host);
+  const chart = echarts.init(host, undefined, { renderer: "svg", width: 1100, height: 500 });
+  try {
+    const kind = kindFor(variable, result);
+    const option = buildSimulationChartOption(kind, result, { Observado: true, "Media simulada": true, "Rango / bigotes": true });
+    if (kind === "pie" || kind === "boolean") {
+      const pieOption = option as { legend?: Record<string, unknown>; series: Array<{ center?: [string, string]; radius?: string | string[]; [key: string]: unknown }> };
+      pieOption.legend = { ...pieOption.legend, bottom: 34 };
+      pieOption.series = pieOption.series.map((series) => ({ ...series, radius: kind === "pie" ? "40%" : series.radius, center: [series.center?.[0] ?? "50%", "38%"] }));
+    }
+    chart.setOption({ ...option, animation: false, animationDuration: 0 });
+    await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+    // ECharts ya expone el SVG renderizado cuando se usa SVGRenderer. Usar
+    // renderToSVGString evita convertir un data URL (y evita que pdfmake
+    // reciba accidentalmente el prefijo `data:image/svg+xml,...`).
+    return chart.renderToSVGString();
+  } finally {
+    chart.dispose();
+    host.remove();
+  }
+}
+
 function kindFor(variable: string | undefined, result: Simulation) {
   if (["sector_trabajo", "situacion_laboral_actual"].includes(variable ?? "")) return "unordered";
   const labels = result.categories.map((item) => item.category.toLowerCase());

@@ -1,7 +1,7 @@
 import * as XLSX from "xlsx-js-style";
-import { createElement, type ReactElement } from "react";
 import type { Simulation } from "./analyticsTypes";
-import { createSimulationChartDataUrl } from "../simulation/SimulationECharts";
+import { createSimulationChartSvg } from "../simulation/SimulationECharts";
+import { simulationDelta } from "../simulation/simulationUtils";
 
 export type SimulationExportData = {
   result: Simulation;
@@ -15,6 +15,29 @@ export type SimulationExportData = {
   segment?: string;
   variable?: string;
 };
+
+type PdfMakeModule = typeof import("pdfmake/build/pdfmake");
+type PdfVfsModule = typeof import("pdfmake/build/vfs_fonts");
+let pdfMakeReady: Promise<{ pdfMake: PdfMakeModule["default"]; vfs: PdfVfsModule["default"] }> | null = null;
+
+function loadPdfMake() {
+  if (!pdfMakeReady) {
+    pdfMakeReady = Promise.all([
+      import("pdfmake/build/pdfmake"),
+      import("pdfmake/build/vfs_fonts"),
+    ]).then(([pdfMakeModule, vfsModule]) => {
+      const pdfMake = pdfMakeModule.default;
+      pdfMake.addVirtualFileSystem(vfsModule.default);
+      return { pdfMake, vfs: vfsModule.default };
+    });
+  }
+  return pdfMakeReady;
+}
+
+/** Precarga los módulos pesados para que la primera previsualización no espere su descarga. */
+export function preloadSimulationPdf() {
+  void loadPdfMake();
+}
 
 function downloadFile(content: BlobPart, name: string, type: string) {
   const url = URL.createObjectURL(new Blob([content], { type }));
@@ -96,14 +119,58 @@ export function exportSimulationExcel(data: SimulationExportData) {
 }
 
 export async function buildSimulationPdf(data: SimulationExportData) {
-  const [{ pdf }, { SimulationPdfDocument }] = await Promise.all([
-    import("@react-pdf/renderer"),
-    import("../simulation/SimulationPdfDocument"),
+  const { pdfMake } = await loadPdfMake();
+  const chartSvg = await createSimulationChartSvg(data.result, data.variable);
+  const categories = data.result.categories;
+  const text = (value: string, style?: string) => style ? { text: value, style } : value;
+  const probabilityRows = categories.map((category) => [
+    data.categoryLabel(category.category),
+    `${percent((data.observedProbabilities[category.category] ?? 0) * 100)}${data.adjusted ? ` → ${percent((data.usedProbabilities[category.category] ?? 0) * 100)}` : ""}`,
   ]);
-  const chartDataUrl = await createSimulationChartDataUrl(data.result, data.variable);
-  const document = createElement(SimulationPdfDocument, { data, chartDataUrl }) as unknown as ReactElement;
-  const renderPdf = pdf as unknown as (document: ReactElement) => { toBlob: () => Promise<Blob> };
-  return renderPdf(document).toBlob();
+  const tableBody = [
+    ["Categoría", "Obs. n", "% obs.", ...(data.adjusted ? ["Prob. usada"] : []), "Media", "Mediana", "Diferencia", "Rango 95 %", "Desv. est."].map((value) => text(value, "tableHeader")),
+    ...categories.map((category) => [
+      data.categoryLabel(category.category), String(category.observedCount), percent(category.observedPercentage),
+      ...(data.adjusted ? [percent((data.usedProbabilities[category.category] ?? 0) * 100)] : []),
+      percent(category.simulatedMean), percent(category.median ?? category.simulatedMean), simulationDelta(category.simulatedMean, category.observedPercentage),
+      `[${percent(category.lower95)} - ${percent(category.upper95)}]`, percent(category.standardDeviation),
+    ]),
+    [text("Total", "tableTotal"), text(String(data.observedTotal), "tableTotal"), text("100,0 %", "tableTotal"), ...(data.adjusted ? [text("100,0 %", "tableTotal")] : []), text("100,0 %", "tableTotal"), text("—", "tableTotal"), text("0,0 pp", "tableTotal"), text("—", "tableTotal"), text("—", "tableTotal")],
+  ];
+  const probabilityHeader = [text(`Probabilidades ${data.adjusted ? "observadas y usadas" : "observadas"}`, "panelTitle"), ""];
+  const definition = {
+    info: { title: `Simulación de escenarios: ${data.variableLabel}`, author: "Simulación" },
+    pageSize: "A4",
+    pageOrientation: "landscape",
+    pageMargins: [28, 28, 28, 28],
+    defaultStyle: { font: "Roboto", fontSize: 8, color: "#172033" },
+    styles: {
+      title: { fontSize: 20, bold: true, margin: [0, 0, 0, 5] },
+      subtitle: { fontSize: 9, color: "#52627a", margin: [0, 0, 0, 12] },
+      warning: { fontSize: 9, bold: true, color: "#9a3412", margin: [0, 0, 0, 10] },
+      panelTitle: { fontSize: 11, bold: true, margin: [0, 0, 0, 7] },
+      tableHeader: { bold: true, fillColor: "#e2e8f0" },
+      tableTotal: { bold: true, fillColor: "#f1f5f9" },
+      note: { fontSize: 8, color: "#52627a", margin: [0, 10, 0, 0] },
+    },
+    footer: (currentPage: number, pageCount: number) => ({ text: `Página ${currentPage} de ${pageCount}`, alignment: "right", fontSize: 7, color: "#64748b", margin: [28, 0, 28, 12] }),
+    content: [
+      text(`Simulación de escenarios: ${data.variableLabel}`, "title"),
+      text(`Dataset: ${data.datasetName} · Generado: ${new Intl.DateTimeFormat("es-BO", { timeZone: "America/La_Paz", dateStyle: "short" }).format(new Date())}`, "subtitle"),
+      text("Escenario hipotético, no es una predicción", "warning"),
+      { table: { widths: ["auto", "auto", "auto", "auto", "auto", "*"] , body: [["Variable", data.variableLabel, "Segmento", data.segment ?? "Todos", "N / Réplicas", `${data.result.sampleSize} / ${data.result.repetitions}`], ["Semilla", String(data.result.seed), "Ajustes", data.adjusted ? "Personalizados" : "Observados", "Método", "Monte Carlo por transformada inversa"]] }, layout: "lightHorizontalLines", margin: [0, 0, 0, 10] },
+      { table: { widths: ["*", "auto"], body: [probabilityHeader, ...probabilityRows] }, layout: "lightHorizontalLines", margin: [0, 0, 0, 10] },
+      { unbreakable: true, stack: [text("Observado contra escenario", "panelTitle"), text("Distribución con media simulada y rango del 95 % de las réplicas.", "subtitle"), { svg: chartSvg, width: 780, height: 300 }] },
+      { text: "Tabla comparativa", style: "title", pageBreak: "before" },
+      text("Frecuencias, diferencias, medianas y rangos de todas las categorías.", "subtitle"),
+      { table: { headerRows: 1, dontBreakRows: true, widths: ["*", 42, 48, ...(data.adjusted ? [58] : []), 52, 52, 58, 92, 55], body: tableBody }, layout: "lightHorizontalLines" },
+      { text: ["El rango del 95 % es el intervalo en que cayeron el 95 % de las réplicas. No es un intervalo de confianza.\n", `Semilla: ${data.result.seed}. Permite repetir exactamente el resultado.`], style: "note" },
+      { text: "Cómo funciona", style: "title", margin: [0, 18, 0, 5], pageBreakBefore: (currentNode: { startPosition?: { verticalRatio?: number } }) => Boolean(currentNode.startPosition && (currentNode.startPosition.verticalRatio ?? 0) > 0.55) },
+      text("Transformada inversa y primeros sorteos.", "subtitle"),
+      { columns: [{ width: "50%", stack: [text("Probabilidad acumulada", "panelTitle"), ...(data.result.cumulativeProbabilities ?? []).map((end, index) => ({ columns: [data.categoryLabel(categories[index]?.category ?? ""), `${percent(end * 100)}`], margin: [0, 0, 0, 4] }))] }, { width: "50%", stack: [text("Primeros 10 números aleatorios", "panelTitle"), { columns: Array.from({ length: 2 }, (_, column) => (data.result.firstDraws ?? []).filter((_, index) => index % 2 === column).map((draw, index) => ({ text: `${index * 2 + column + 1}. ${draw.random.toFixed(2)} -> ${data.categoryLabel(draw.category)}`, margin: [0, 0, 0, 4] }))) }] }], columnGap: 24, unbreakable: true },
+    ],
+  };
+  return pdfMake.createPdf(definition).getBlob();
 }
 
 export async function exportSimulationPdf(data: SimulationExportData) {

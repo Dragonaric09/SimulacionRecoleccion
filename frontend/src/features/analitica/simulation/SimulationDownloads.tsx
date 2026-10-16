@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { buildSimulationPdf, exportSimulationCsv, exportSimulationExcel, exportSimulationPng, type SimulationExportData } from "../shared/simulationExportUtils";
+import { buildSimulationPdf, exportSimulationCsv, exportSimulationExcel, exportSimulationPng, preloadSimulationPdf, type SimulationExportData } from "../shared/simulationExportUtils";
 
 export type SimulationRun = SimulationExportData & {
   datasetId: string;
@@ -14,9 +14,8 @@ export type SimulationRun = SimulationExportData & {
 
 export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
   const menuRef = useRef<HTMLDetailsElement>(null);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   useEffect(() => {
     const closeWhenClickingOutside = (event: MouseEvent) => {
       if (menuRef.current?.open && event.target instanceof Node && !menuRef.current.contains(event.target)) menuRef.current.open = false;
@@ -24,7 +23,9 @@ export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
     document.addEventListener("mousedown", closeWhenClickingOutside);
     return () => document.removeEventListener("mousedown", closeWhenClickingOutside);
   }, []);
-  useEffect(() => () => { if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl); }, [pdfPreviewUrl]);
+  useEffect(() => {
+    if (run) preloadSimulationPdf();
+  }, [run]);
   if (!run) {
     return (
       <TooltipProvider>
@@ -39,35 +40,36 @@ export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
   }
   const download = (format: "pdf" | "xlsx" | "csv" | "png") => {
     if (format === "pdf") {
+      // Abrimos la pestaña dentro del gesto del usuario para que el navegador
+      // no bloquee el popup mientras se genera el PDF de forma asíncrona.
+      const previewWindow = window.open("", "_blank");
+      if (!previewWindow) {
+        setPdfError("El navegador bloqueó la nueva pestaña. Permite ventanas emergentes para previsualizar el PDF.");
+        return;
+      }
+      previewWindow.document.title = "Previsualización del PDF de simulación";
+      previewWindow.document.body.innerHTML = "<p style=\"font-family: sans-serif; padding: 2rem\">Preparando la previsualización…</p>";
       setPdfLoading(true);
+      setPdfError(null);
       void buildSimulationPdf(run).then((blob) => {
-        setPdfBlob(blob);
-        setPdfPreviewUrl((previous) => {
-          if (previous) URL.revokeObjectURL(previous);
-          return URL.createObjectURL(blob);
-        });
+        const previewUrl = URL.createObjectURL(blob);
+        const safePreviewUrl = previewUrl.replace(/"/g, "&quot;");
+        // Conservamos la pestaña nueva, pero usamos el mismo visor PDF nativo
+        // dentro de un iframe de pantalla completa. Algunos navegadores no
+        // renderizan directamente una URL blob al navegar desde about:blank.
+        previewWindow.document.open();
+        previewWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Previsualización del PDF de simulación</title><style>html,body,iframe{width:100%;height:100%;margin:0;border:0;overflow:hidden;background:#525659}iframe{display:block}</style></head><body><iframe title="Previsualización del PDF de simulación" src="${safePreviewUrl}"></iframe></body></html>`);
+        previewWindow.document.close();
+      }).catch((error: unknown) => {
+        console.error("No se pudo generar el PDF de simulación", error);
+        previewWindow.close();
+        setPdfError("No se pudo generar la previsualización. Revisa la consola para más detalles.");
       }).finally(() => setPdfLoading(false));
     }
     if (format === "xlsx") exportSimulationExcel(run);
     if (format === "csv") exportSimulationCsv(run);
     if (format === "png") exportSimulationPng(run);
     if (menuRef.current) menuRef.current.open = false;
-  };
-  const closePreview = () => {
-    setPdfPreviewUrl((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return null;
-    });
-    setPdfBlob(null);
-  };
-  const downloadPreview = () => {
-    if (!pdfBlob) return;
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "titulados_simulacion.pdf";
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 0);
   };
   return (
     <>
@@ -77,26 +79,14 @@ export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
           <Download className="size-4" /> Descargar <span aria-hidden="true">▾</span>
         </summary>
         <div className="absolute right-0 z-30 mt-2 w-72 rounded-lg border border-border-line bg-white p-1.5 shadow-lg">
-          <SimulationDownloadOption label={pdfLoading ? "Preparando PDF..." : "Previsualizar PDF"} help="Revisar parámetros, gráfica y tabla antes de descargar" onClick={() => !pdfLoading && download("pdf")} />
+          <SimulationDownloadOption label={pdfLoading ? "Preparando PDF..." : "Previsualizar PDF"} help="Revisar el mismo PDF que se descargará" onClick={() => !pdfLoading && download("pdf")} />
           <SimulationDownloadOption label="Excel (.xlsx)" help="Tabla comparativa + hoja de parámetros" onClick={() => download("xlsx")} />
           <SimulationDownloadOption label="Tabla CSV" help="Solo la tabla comparativa" onClick={() => download("csv")} />
           <SimulationDownloadOption label="Imagen PNG" help="Gráfico de rangos" onClick={() => download("png")} />
         </div>
       </details>
     </div>
-    {pdfPreviewUrl && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" role="dialog" aria-modal="true" aria-label="Previsualización del PDF de simulación">
-      <div className="flex h-[min(92vh,900px)] w-[min(1200px,96vw)] flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between gap-3 border-b border-border-line px-4 py-3">
-          <div><p className="text-sm font-semibold text-ink-900">Previsualización del PDF</p><p className="text-xs text-ink-600">Revisa el documento antes de descargarlo.</p></div>
-          <button type="button" onClick={closePreview} className="rounded-md px-2 py-1 text-sm text-ink-600 hover:bg-surface-container-low" aria-label="Cerrar previsualización">Cerrar</button>
-        </div>
-        <iframe title="PDF de simulación" src={pdfPreviewUrl} className="min-h-0 flex-1 bg-slate-100" />
-        <div className="flex justify-end gap-2 border-t border-border-line px-4 py-3">
-          <Button type="button" variant="outline" onClick={closePreview}>Cerrar</Button>
-          <Button type="button" onClick={downloadPreview}>Descargar PDF</Button>
-        </div>
-      </div>
-    </div>}
+    {pdfError && <div role="alert" className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border border-red-200 bg-white px-4 py-3 text-sm text-red-800 shadow-lg">{pdfError}</div>}
     </>
   );
 }
