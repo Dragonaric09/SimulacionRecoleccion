@@ -226,13 +226,15 @@ export function SimulationComparisonTable({
   result,
   observedTotal,
   scenarioPercentages,
+  defaultOpen = false,
 }: {
   result: Simulation;
   observedTotal: number;
   scenarioPercentages: Record<string, number> | null;
+  defaultOpen?: boolean;
 }) {
   return (
-    <Accordion type="single" collapsible className="overflow-hidden rounded-xl border border-border-line bg-white shadow-sm">
+    <Accordion type="single" collapsible defaultValue={defaultOpen ? "simulation-comparison-table" : undefined} className="overflow-hidden rounded-xl border border-border-line bg-white shadow-sm">
       <AccordionItem value="simulation-comparison-table" className="border-0">
         <AccordionTrigger className="rounded-xl px-5 py-4 hover:no-underline">
           <span><span className="text-sm font-semibold text-ink-900">Ver tabla</span><span className="ml-2 text-xs font-normal text-ink-600">Frecuencias, diferencias y rangos de todas las categorías</span></span>

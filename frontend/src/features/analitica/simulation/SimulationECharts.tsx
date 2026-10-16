@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import * as echarts from "echarts/core";
 import { BarChart, BoxplotChart, LineChart, PieChart } from "echarts/charts";
 import { GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TitleComponent, TooltipComponent } from "echarts/components";
-import { SVGRenderer } from "echarts/renderers";
+import { CanvasRenderer, SVGRenderer } from "echarts/renderers";
 import type { Simulation } from "../shared/analyticsTypes";
 import { simulationCategoryLabel, simulationDelta, simulationPercent } from "./simulationUtils";
 
-echarts.use([BarChart, BoxplotChart, LineChart, PieChart, GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TitleComponent, TooltipComponent, SVGRenderer]);
+echarts.use([BarChart, BoxplotChart, LineChart, PieChart, GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TitleComponent, TooltipComponent, CanvasRenderer, SVGRenderer]);
 
 type Props = {
   result: Simulation;
@@ -22,8 +22,10 @@ export function SimulationECharts({ result, variable, selectedCategory, onSelect
   const kind = kindFor(variable, result);
   const selected = result.categories.find((category) => category.category === selectedCategory);
   const [legendSelection, setLegendSelection] = useState<Record<string, boolean>>({});
-  const option = buildOption(kind, result, kind === "unordered" ? legendSelection : undefined);
+  const chartRef = useRef<echarts.ECharts | null>(null);
+  const option = buildSimulationChartOption(kind, result, kind === "unordered" ? legendSelection : undefined);
   const chartHeight = kind === "pie" || kind === "boolean" ? 270 : kind === "unordered" ? Math.max(220, Math.min(360, result.categories.length * 52 + 90)) : 310;
+  usePrintResize(chartRef);
   const onEvents = {
     click: (params: { name?: string; data?: ChartDatum }) => {
       const raw = params.data?.extra?.category ?? result.categories.find((category) => simulationCategoryLabel(category.category) === params.name)?.category;
@@ -34,9 +36,46 @@ export function SimulationECharts({ result, variable, selectedCategory, onSelect
     },
   };
   return <div className="space-y-3">
-    <ReactEChartsCore echarts={echarts} option={option} onEvents={onEvents} style={{ height: chartHeight, width: "100%" }} opts={{ renderer: "svg" }} notMerge lazyUpdate />
+    <ReactEChartsCore echarts={echarts} option={option} onEvents={onEvents} onChartReady={(chart) => { chartRef.current = chart; }} style={{ height: chartHeight, width: "100%" }} opts={{ renderer: "svg" }} notMerge lazyUpdate />
     {selected && <ReplicaChart selected={selected} />}
   </div>;
+}
+
+/** Creates an image from the same ECharts option used by the interactive chart. */
+export async function createSimulationChartDataUrl(result: Simulation, variable?: string) {
+  const host = document.createElement("div");
+  host.style.position = "fixed";
+  host.style.left = "-10000px";
+  host.style.top = "0";
+  host.style.width = "1100px";
+  host.style.height = "500px";
+  host.style.background = "#ffffff";
+  document.body.appendChild(host);
+  const chart = echarts.init(host, undefined, { renderer: "canvas", width: 1100, height: 500 });
+  try {
+    const kind = kindFor(variable, result);
+    const option = buildSimulationChartOption(kind, result, { Observado: true, "Media simulada": true, "Rango / bigotes": true });
+    if (kind === "pie" || kind === "boolean") {
+      const pieOption = option as { legend?: Record<string, unknown>; series: Array<{ center?: [string, string]; radius?: string | string[]; [key: string]: unknown }> };
+      pieOption.legend = { ...pieOption.legend, bottom: 34 };
+      pieOption.series = pieOption.series.map((series) => ({
+        ...series,
+        radius: kind === "pie" ? "40%" : series.radius,
+        center: [series.center?.[0] ?? "50%", "38%"],
+      }));
+    }
+    chart.setOption({
+      ...option,
+      animation: false,
+      animationDuration: 0,
+    });
+    await new Promise<void>((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve())));
+    chart.resize({ width: 1100, height: 500 });
+    return chart.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: "#ffffff" });
+  } finally {
+    chart.dispose();
+    host.remove();
+  }
 }
 
 function kindFor(variable: string | undefined, result: Simulation) {
@@ -85,7 +124,7 @@ function wrapAxisLabel(value: string, maxCharacters: number) {
   return lines.join("\n");
 }
 
-function buildOption(kind: string, result: Simulation, legendSelection?: Record<string, boolean>) {
+export function buildSimulationChartOption(kind: string, result: Simulation, legendSelection?: Record<string, boolean>) {
   const categories = result.categories;
   const common = { animationDuration: 250, color: colors, tooltip: { trigger: "item", confine: true, formatter: tooltipFormatter } };
   if (kind === "pie" || kind === "boolean") {
@@ -122,11 +161,25 @@ function buildOption(kind: string, result: Simulation, legendSelection?: Record<
 function ReplicaChart({ selected }: { selected: CategoryStat }) {
   const values = selected.replicaPercentages ?? [];
   const bins = Array.from({ length: 10 }, (_, index) => ({ label: `${index * 10}–${(index + 1) * 10}%`, value: values.filter((item) => item >= index * 10 && item < (index + 1) * 10).length }));
+  const chartRef = useRef<echarts.ECharts | null>(null);
+  usePrintResize(chartRef);
   return <div className="rounded-lg border border-primary/20 bg-slate-50 p-3">
     <div className="mb-2 flex items-center justify-between gap-3">
       <p className="text-xs font-semibold text-ink-900">Histograma de réplicas · {simulationCategoryLabel(selected.category)}</p>
       <span className="text-[11px] tabular-nums text-primary">Media {simulationPercent(selected.simulatedMean)}</span>
     </div>
-    <ReactEChartsCore echarts={echarts} option={{ animationDuration: 250, grid: { left: 48, right: 18, top: 8, bottom: 35 }, tooltip: { trigger: "axis", confine: true, formatter: (params: unknown) => { const item = Array.isArray(params) ? params[0] as { axisValue: string; data: number } : params as { axisValue: string; data: number }; return `${item.axisValue}<br/><strong>${item.data} réplicas</strong>`; } }, xAxis: { type: "category", data: bins.map((bin) => bin.label), axisLabel: { fontSize: 10, interval: 0 } }, yAxis: { type: "value", name: "Réplicas", minInterval: 1 }, series: [{ type: "bar", data: bins.map((bin) => bin.value), itemStyle: { color: "#1f6fb5", borderRadius: [3, 3, 0, 0] } }] }} style={{ height: 185, width: "100%" }} opts={{ renderer: "svg" }} notMerge lazyUpdate />
+    <ReactEChartsCore echarts={echarts} option={{ animationDuration: 250, grid: { left: 48, right: 18, top: 8, bottom: 35 }, tooltip: { trigger: "axis", confine: true, formatter: (params: unknown) => { const item = Array.isArray(params) ? params[0] as { axisValue: string; data: number } : params as { axisValue: string; data: number }; return `${item.axisValue}<br/><strong>${item.data} réplicas</strong>`; } }, xAxis: { type: "category", data: bins.map((bin) => bin.label), axisLabel: { fontSize: 10, interval: 0 } }, yAxis: { type: "value", name: "Réplicas", minInterval: 1 }, series: [{ type: "bar", data: bins.map((bin) => bin.value), itemStyle: { color: "#1f6fb5", borderRadius: [3, 3, 0, 0] } }] }} onChartReady={(chart) => { chartRef.current = chart; }} style={{ height: 185, width: "100%" }} opts={{ renderer: "svg" }} notMerge lazyUpdate />
   </div>;
+}
+
+function usePrintResize(chartRef: { current: echarts.ECharts | null }) {
+  useEffect(() => {
+    const resize = () => window.requestAnimationFrame(() => chartRef.current?.resize());
+    window.addEventListener("beforeprint", resize);
+    window.addEventListener("afterprint", resize);
+    return () => {
+      window.removeEventListener("beforeprint", resize);
+      window.removeEventListener("afterprint", resize);
+    };
+  }, [chartRef]);
 }

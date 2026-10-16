@@ -70,7 +70,7 @@ import { groupDisplayName, groupLabel } from "./competence/competenceHelpers";
 import { CompetencePrintGroup, CurriculumPanel } from "./competence/CompetencePrintSections";
 import { normalizeAnalyticsLabel } from "./shared/analyticsLabels";
 import { SimulationComparisonTable, SimulationDistribution, SimulationHowItWorks, SimulationWeights } from "./simulation/SimulationComponents";
-import { simulationCategories, simulationPercent } from "./simulation/simulationUtils";
+import { simulationCategories } from "./simulation/simulationUtils";
 import { SimulationDownloadMenu } from "./simulation/SimulationDownloads";
 import { useSimulationScenario } from "./simulation/useSimulationScenario";
 export { FinancingCompletePage, FinancingPage } from "./financing/FinancingPages";
@@ -1511,39 +1511,6 @@ export function SimulationPage() {
       )}
       {result && <SimulationComparisonTable result={result} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} scenarioPercentages={executedRun?.scenarioPercentages ?? scenarioPercentages} />}
       {result && <SimulationHowItWorks result={result} />}
-      {executedRun && (
-        <div className="print-only print-page simulation-pdf-page space-y-3" aria-label="Versión de impresión de la simulación">
-          <h2 className="headline-page">Simulación de escenarios: {executedRun.variableLabel}</h2>
-          <p className="text-sm text-ink-600">Dataset: {executedRun.datasetName} · Generado: {new Intl.DateTimeFormat("es-BO", { timeZone: "America/La_Paz", dateStyle: "short" }).format(new Date())}</p>
-          <p className="text-sm font-semibold text-amber-800">Escenario hipotético, no es una predicción</p>
-          <div className="simulation-pdf-parameters grid grid-cols-6 gap-2 rounded-lg bg-surface-container-low p-3 text-xs">
-            <span><strong>Variable</strong><br />{executedRun.variableLabel}</span>
-            <span><strong>Personas (N)</strong><br />{executedRun.result.sampleSize}</span>
-            <span><strong>Réplicas (R)</strong><br />{executedRun.result.repetitions}</span>
-            <span><strong>Semilla</strong><br />{executedRun.result.seed}</span>
-            <span><strong>Probabilidades</strong><br />{executedRun.adjusted ? "Ajustadas manualmente" : "Observadas"}</span>
-            <span><strong>Método</strong><br />Monte Carlo por transformada inversa</span>
-          </div>
-          <div className="rounded-lg border border-border-line p-3 text-xs">
-            <strong>Probabilidades {executedRun.adjusted ? "observadas y usadas" : "observadas"}</strong>
-            <div className="mt-1 grid grid-cols-2 gap-x-5 gap-y-1">
-              {executedRun.result.categories.map((category) => (
-                <span key={category.category}>
-                  {executedRun.categoryLabel(category.category)}: {simulationPercent((executedRun.observedProbabilities[category.category] ?? 0) * 100)}
-                  {executedRun.adjusted && ` → ${simulationPercent((executedRun.usedProbabilities[category.category] ?? 0) * 100)}`}
-                </span>
-              ))}
-            </div>
-          </div>
-          <SimulationDistribution result={executedRun.result} variable={executedRun.variable} observedTotal={executedRun.observedTotal} loading={false} />
-          <SimulationComparisonTable result={executedRun.result} observedTotal={executedRun.observedTotal} scenarioPercentages={executedRun.scenarioPercentages} />
-          <div className="simulation-pdf-notes border-t border-surface-container-high pt-2 text-xs text-ink-700">
-            <p>El rango del 95 % es el intervalo en que cayeron el 95 % de las réplicas. No es un intervalo de confianza.</p>
-            <p className="font-semibold text-amber-800">Base observada n = {executedRun.observedTotal}: muestra muy pequeña.</p>
-            <p>Semilla: {executedRun.result.seed}. Permite repetir exactamente el resultado.</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

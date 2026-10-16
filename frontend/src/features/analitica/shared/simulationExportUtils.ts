@@ -1,5 +1,7 @@
 import * as XLSX from "xlsx-js-style";
+import { createElement, type ReactElement } from "react";
 import type { Simulation } from "./analyticsTypes";
+import { createSimulationChartDataUrl } from "../simulation/SimulationECharts";
 
 export type SimulationExportData = {
   result: Simulation;
@@ -11,6 +13,7 @@ export type SimulationExportData = {
   adjusted: boolean;
   categoryLabel: (category: string) => string;
   segment?: string;
+  variable?: string;
 };
 
 function downloadFile(content: BlobPart, name: string, type: string) {
@@ -33,6 +36,7 @@ function rows(data: SimulationExportData) {
     "% observado",
     ...(data.adjusted ? ["Probabilidad usada"] : []),
     "% simulado (media)",
+    "Mediana de réplicas",
     "Δ vs observado",
     "Rango 95 % de las repeticiones",
     "Desv. est. de las repeticiones",
@@ -43,13 +47,14 @@ function rows(data: SimulationExportData) {
     percent(category.observedPercentage),
     ...(data.adjusted ? [percent(data.usedProbabilities[category.category] ?? 0)] : []),
     percent(category.simulatedMean),
+    percent(category.median ?? category.simulatedMean),
     `${category.simulatedMean >= category.observedPercentage ? "+" : ""}${(category.simulatedMean - category.observedPercentage).toFixed(1).replace(".", ",")} pp`,
     `[${percent(category.lower95)} – ${percent(category.upper95)}]`,
     percent(category.standardDeviation),
   ]);
   const total = ["Total", String(data.observedTotal), "100,0 %"];
   if (data.adjusted) total.push("100,0 %");
-  total.push("100,0 %", "0,0 pp", "—", "—");
+  total.push("100,0 %", "—", "0,0 pp", "—", "—");
   return [headers, ...body, total];
 }
 
@@ -90,6 +95,22 @@ export function exportSimulationExcel(data: SimulationExportData) {
   downloadFile(XLSX.write(workbook, { bookType: "xlsx", type: "array" }), "titulados_simulacion.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 }
 
+export async function buildSimulationPdf(data: SimulationExportData) {
+  const [{ pdf }, { SimulationPdfDocument }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("../simulation/SimulationPdfDocument"),
+  ]);
+  const chartDataUrl = await createSimulationChartDataUrl(data.result, data.variable);
+  const document = createElement(SimulationPdfDocument, { data, chartDataUrl }) as unknown as ReactElement;
+  const renderPdf = pdf as unknown as (document: ReactElement) => { toBlob: () => Promise<Blob> };
+  return renderPdf(document).toBlob();
+}
+
+export async function exportSimulationPdf(data: SimulationExportData) {
+  const blob = await buildSimulationPdf(data);
+  downloadFile(blob, "titulados_simulacion.pdf", "application/pdf");
+}
+
 export function exportSimulationPng(data: SimulationExportData) {
   const width = 1200;
   const left = 270;
@@ -102,9 +123,11 @@ export function exportSimulationPng(data: SimulationExportData) {
     const mean = Math.max(0, Math.min(100, category.simulatedMean));
     const lower = Math.max(0, Math.min(100, category.lower95));
     const upper = Math.max(lower, Math.min(100, category.upper95));
-    return `<text x="${left - 14}" y="${y + 20}" text-anchor="end" font-family="Arial" font-size="14" fill="#0f172a">${escapeSvg(data.categoryLabel(category.category))}</text><line x1="${left + (lower / 100) * plotWidth}" y1="${y + 14}" x2="${left + (upper / 100) * plotWidth}" y2="${y + 14}" stroke="#0f172a" stroke-width="4"/><rect x="${left}" y="${y + 4}" width="${(mean / 100) * plotWidth}" height="20" rx="4" fill="#1f6fb5" opacity="0.78"/><circle cx="${left + (mean / 100) * plotWidth}" cy="${y + 14}" r="5" fill="#1f6fb5"/><text x="${left + plotWidth + 12}" y="${y + 20}" font-family="Arial" font-size="13" fill="#334155">${percent(mean)}</text>`;
+    const observed = Math.max(0, Math.min(100, category.observedPercentage));
+    const median = Math.max(0, Math.min(100, category.median ?? mean));
+    return `<text x="${left - 14}" y="${y + 20}" text-anchor="end" font-family="Arial" font-size="14" fill="#0f172a">${escapeSvg(data.categoryLabel(category.category))}</text><line x1="${left + (lower / 100) * plotWidth}" y1="${y + 14}" x2="${left + (upper / 100) * plotWidth}" y2="${y + 14}" stroke="#0f172a" stroke-width="4"/><rect x="${left + (category.firstQuartile ?? lower) / 100 * plotWidth}" y="${y + 4}" width="${Math.max(2, ((category.thirdQuartile ?? upper) - (category.firstQuartile ?? lower)) / 100 * plotWidth)}" height="20" rx="2" fill="#dbeafe" stroke="#1f6fb5"/><line x1="${left + (median / 100) * plotWidth}" y1="${y + 4}" x2="${left + (median / 100) * plotWidth}" y2="${y + 24}" stroke="#1f6fb5" stroke-width="2"/><line x1="${left + (observed / 100) * plotWidth}" y1="${y + 1}" x2="${left + (observed / 100) * plotWidth}" y2="${y + 27}" stroke="#64748b" stroke-width="2"/><circle cx="${left + (mean / 100) * plotWidth}" cy="${y + 14}" r="5" fill="#1f6fb5"/><text x="${left + plotWidth + 12}" y="${y + 20}" font-family="Arial" font-size="13" fill="#334155">${percent(mean)}</text>`;
   }).join("");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/><text x="30" y="30" font-family="Arial" font-size="20" font-weight="bold" fill="#0f172a">Simulación de escenarios: ${escapeSvg(data.variableLabel)}</text><text x="30" y="52" font-family="Arial" font-size="13" fill="#64748b">Media simulada y rango del 95 % · N = ${data.result.sampleSize} · R = ${data.result.repetitions}</text><rect x="30" y="72" width="14" height="14" fill="#1f6fb5"/><text x="52" y="84" font-family="Arial" font-size="12" fill="#334155">Media estimada</text><line x1="180" y1="79" x2="205" y2="79" stroke="#0f172a" stroke-width="4"/><text x="213" y="84" font-family="Arial" font-size="12" fill="#334155">Rango 95 %</text>${bars}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/><text x="30" y="30" font-family="Arial" font-size="20" font-weight="bold" fill="#0f172a">Simulación de escenarios: ${escapeSvg(data.variableLabel)}</text><text x="30" y="52" font-family="Arial" font-size="13" fill="#64748b">Segmento: ${escapeSvg(data.segment ?? "Todos")} · N = ${data.result.sampleSize} · R = ${data.result.repetitions} · Semilla = ${data.result.seed} · Ajustes: ${data.adjusted ? "personalizados" : "observados"}</text><rect x="30" y="72" width="14" height="14" fill="#1f6fb5"/><text x="52" y="84" font-family="Arial" font-size="12" fill="#334155">Media simulada</text><line x1="180" y1="79" x2="205" y2="79" stroke="#64748b" stroke-width="2"/><text x="213" y="84" font-family="Arial" font-size="12" fill="#334155">Observado</text><line x1="290" y1="79" x2="315" y2="79" stroke="#0f172a" stroke-width="4"/><text x="323" y="84" font-family="Arial" font-size="12" fill="#334155">Rango 95 %</text><line x1="430" y1="72" x2="430" y2="86" stroke="#1f6fb5" stroke-width="2"/><text x="440" y="84" font-family="Arial" font-size="12" fill="#334155">Mediana</text>${bars}</svg>`;
   const image = new Image();
   image.onload = () => {
     const canvas = document.createElement("canvas");
