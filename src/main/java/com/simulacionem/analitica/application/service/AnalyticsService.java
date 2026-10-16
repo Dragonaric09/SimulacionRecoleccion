@@ -215,7 +215,17 @@ public class AnalyticsService {
                 && !filter.laborStatuses().stream().anyMatch(status -> laborCategory(row).equals(normalize(status)))) return false;
         if (!filter.sectors().isEmpty()
                 && !filter.sectors().stream().anyMatch(sector -> sectorMatches(value(row, "sector_trabajo"), sector))) return false;
+        if (!filter.genders().isEmpty()
+                && filter.genders().stream().noneMatch(gender -> genderMatches(value(row, "genero"), gender))) return false;
         return true;
+    }
+
+    private boolean genderMatches(String actual, String requested) {
+        String actualValue = normalize(actual);
+        String requestedValue = normalize(requested);
+        if (requestedValue.equals("mujer")) return actualValue.equals("mujer") || actualValue.equals("femenino") || actualValue.equals("female");
+        if (requestedValue.equals("hombre")) return actualValue.equals("hombre") || actualValue.equals("masculino") || actualValue.equals("male");
+        return actualValue.equals(requestedValue);
     }
 
     private String laborCategory(SurveyResponseEntity row) {

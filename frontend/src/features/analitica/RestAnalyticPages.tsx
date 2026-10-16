@@ -68,7 +68,7 @@ import { groupDisplayName, groupLabel } from "./competence/competenceHelpers";
 import { CompetencePrintGroup, CurriculumPanel } from "./competence/CompetencePrintSections";
 import { normalizeAnalyticsLabel } from "./shared/analyticsLabels";
 import { SimulationComparisonTable, SimulationDistribution, SimulationWeights } from "./simulation/SimulationComponents";
-import { simulationPercent } from "./simulation/simulationUtils";
+import { simulationCategories, simulationPercent } from "./simulation/simulationUtils";
 import { SimulationDownloadMenu } from "./simulation/SimulationDownloads";
 import { useSimulationScenario } from "./simulation/useSimulationScenario";
 export { FinancingCompletePage, FinancingPage } from "./financing/FinancingPages";
@@ -1351,6 +1351,8 @@ export function SimulationPage() {
     summary,
     variable,
     setVariable,
+    segment,
+    setSegment,
     weights,
     setWeights,
     sampleSize,
@@ -1375,6 +1377,37 @@ export function SimulationPage() {
     seedValid,
     parseInteger,
   } = useSimulationScenario();
+  const [scenarioName, setScenarioName] = useState("Observado");
+  const [moveFrom, setMoveFrom] = useState("");
+  const [moveTo, setMoveTo] = useState("");
+  const [movePoints, setMovePoints] = useState("10");
+  const currentDistribution = summary?.distributions[variable];
+  const selectScenario = (value: string) => {
+    setScenarioName(value);
+    if (!currentDistribution || value === "Observado") { setWeights({}); return; }
+    const categories = simulationCategories(variable, currentDistribution.counts);
+    const total = categories.reduce((sum, category) => sum + (currentDistribution.counts[category] ?? 0), 0);
+    if (value === "Más muestra") { setSampleSize(1000); setSampleSizeInput("1000"); return; }
+    if (value === "Igualar categorías") { setWeights(Object.fromEntries(categories.map((category) => [category, total / Math.max(categories.length, 1)]))); return; }
+    if (value === "Líder +10 puntos") {
+      const ranked = [...categories].sort((a, b) => (currentDistribution.counts[b] ?? 0) - (currentDistribution.counts[a] ?? 0));
+      const leader = ranked[0]; const next = ranked[1];
+      if (leader && next) { const amount = Math.min(currentDistribution.counts[next] ?? 0, total * 0.1); const weights = Object.fromEntries(categories.map((category) => [category, currentDistribution.counts[category] ?? 0])); weights[leader] += amount; weights[next] -= amount; setWeights(weights); }
+    }
+  };
+  const applyMove = () => {
+    if (!currentDistribution || !moveFrom || !moveTo || moveFrom === moveTo) return;
+    const points = Number(movePoints);
+    if (!Number.isFinite(points) || points <= 0) return;
+    const categories = simulationCategories(variable, currentDistribution.counts);
+    const total = categories.reduce((sum, category) => sum + (currentDistribution.counts[category] ?? 0), 0);
+    const next = Object.fromEntries(categories.map((category) => [category, currentDistribution.counts[category] ?? 0]));
+    const amount = Math.min(next[moveFrom] ?? 0, total * points / 100);
+    next[moveFrom] = (next[moveFrom] ?? 0) - amount;
+    next[moveTo] = (next[moveTo] ?? 0) + amount;
+    setWeights(next);
+    setScenarioName("Personalizado");
+  };
   return (
       <div className="simulation-screen-page mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
@@ -1405,14 +1438,36 @@ export function SimulationPage() {
               <Select value={variable} onValueChange={setVariable}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="area_posgrado_interes">Área de posgrado de interés</SelectItem>
-                  <SelectItem value="nivel_posgrado_interes">Nivel de posgrado de interés</SelectItem>
-                  <SelectItem value="modalidad_posgrado">Modalidad preferida</SelectItem>
-                  <SelectItem value="financiamiento_posgrado_estimado">Fuente de financiamiento estimada</SelectItem>
-                  <SelectItem value="interes_posgrado">Interés en posgrado</SelectItem>
-                  <SelectItem value="situacion_laboral_actual">Estado laboral</SelectItem>
+                  <SelectItem value="genero">Perfil · Género</SelectItem>
+                  <SelectItem value="edad_rango">Perfil · Rango de edad</SelectItem>
+                  <SelectItem value="situacion_laboral_actual">Empleo · Estado laboral</SelectItem>
+                  <SelectItem value="sector_trabajo">Empleo · Sector</SelectItem>
+                  <SelectItem value="remuneracion_rango">Empleo · Remuneración mensual</SelectItem>
+                  <SelectItem value="tiempo_primer_empleo">Empleo · Tiempo hasta el primer empleo</SelectItem>
+                  <SelectItem value="satisfaccion_formacion">Formación · Satisfacción con la formación</SelectItem>
+                  <SelectItem value="concordancia_formacion_requerimientos">Formación · Concordancia formación-mercado</SelectItem>
+                  <SelectItem value="interes_posgrado">Posgrado · Interés</SelectItem>
+                  <SelectItem value="nivel_posgrado_interes">Posgrado · Nivel</SelectItem>
+                  <SelectItem value="modalidad_posgrado">Posgrado · Modalidad</SelectItem>
+                  <SelectItem value="financiamiento_posgrado_estimado">Posgrado · Fuente de financiamiento</SelectItem>
                 </SelectContent>
               </Select>
+            </label>
+            <label className="label-default grid gap-1">Escenario
+              <Select value={scenarioName} onValueChange={selectScenario}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                <SelectItem value="Observado">Observado</SelectItem><SelectItem value="Más muestra">Más muestra (N = 1.000)</SelectItem><SelectItem value="Líder +10 puntos">Líder +10 puntos</SelectItem><SelectItem value="Igualar categorías">Igualar categorías</SelectItem><SelectItem value="Personalizado">Personalizado</SelectItem>
+              </SelectContent></Select>
+            </label>
+            {currentDistribution && <div className="rounded-lg border border-border-line p-3 text-xs">
+              <p className="mb-2 font-semibold text-ink-800">Mover puntos</p>
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1"><Select value={moveFrom} onValueChange={setMoveFrom}><SelectTrigger><SelectValue placeholder="De" /></SelectTrigger><SelectContent>{simulationCategories(variable, currentDistribution.counts).map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select><span>→</span><Select value={moveTo} onValueChange={setMoveTo}><SelectTrigger><SelectValue placeholder="A" /></SelectTrigger><SelectContent>{simulationCategories(variable, currentDistribution.counts).map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select></div>
+              <div className="mt-2 flex gap-2"><Input className="h-8" type="number" min="0.1" step="0.1" value={movePoints} onChange={(event) => setMovePoints(event.target.value)} /><Button type="button" size="sm" onClick={applyMove}>Aplicar puntos</Button></div>
+            </div>}
+            <label className="label-default grid gap-1">Segmento
+              <Select value={segment} onValueChange={setSegment}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                <SelectItem value="all">Todos</SelectItem><SelectItem value="Mujer">Mujer</SelectItem><SelectItem value="Hombre">Hombre</SelectItem>
+              </SelectContent></Select>
+              {summary && summary.validResponses < 5 && <span className="text-xs text-amber-700">Muestra pequeña · n = {summary.validResponses}</span>}
             </label>
             <label className="label-default grid gap-1">
               Personas a simular (N)

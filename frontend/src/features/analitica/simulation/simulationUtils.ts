@@ -8,6 +8,8 @@ const POSTGRADUATE_AREA_OPTIONS = [
   "Robótica",
   "Base de Datos",
 ];
+const NATURAL_AGE_RANGES = ["15 - 18 años", "19 - 22 años", "23 - 26 años", "27 - 30 años", "31 - 34 años", "35 años o más"];
+const NATURAL_SALARY_RANGES = ["Menos de Bs. 2.500", "Bs. 2.500 - 4.000", "Bs. 4.001 - 6.000", "Bs. 6.001 - 8.000", "Más de Bs. 8.000"];
 
 export function simulationCategoryIdentity(label: string) {
   const normalized = label.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
@@ -46,6 +48,10 @@ export function simulationCategories(variable: string, counts: Record<string, nu
       return countDifference !== 0 ? countDifference : optionOrder.indexOf(simulationCategoryIdentity(a)) - optionOrder.indexOf(simulationCategoryIdentity(b));
     });
   }
+  if (["edad_rango", "remuneracion_rango"].includes(variable)) {
+    const order = variable === "edad_rango" ? NATURAL_AGE_RANGES : NATURAL_SALARY_RANGES;
+    return categories.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  }
   if (variable !== "nivel_posgrado_interes") return categories;
   return categories.sort((a, b) => {
     const aIndex = NATURAL_POSTGRADUATE_LEVELS.indexOf(a);
@@ -62,6 +68,13 @@ export function simulationVariableLabel(variable: string) {
     financiamiento_posgrado_estimado: "Fuente de financiamiento estimada",
     interes_posgrado: "Interés en posgrado",
     situacion_laboral_actual: "Estado laboral",
+    genero: "Género",
+    edad_rango: "Rango de edad",
+    sector_trabajo: "Sector",
+    remuneracion_rango: "Remuneración mensual",
+    tiempo_primer_empleo: "Tiempo hasta el primer empleo",
+    satisfaccion_formacion: "Satisfacción con la formación",
+    concordancia_formacion_requerimientos: "Concordancia formación-mercado",
   };
   return labels[variable] ?? variable;
 }

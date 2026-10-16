@@ -39,8 +39,9 @@ public class AnalyticsController {
                                                 @RequestParam(required = false) Integer yearFrom,
                                                 @RequestParam(required = false) Integer yearTo,
                                                 @RequestParam(required = false) List<String> laborStatus,
-                                                @RequestParam(required = false) List<String> sector) {
-        return analytics.summary(datasetId, "TITULADOS", split(fields), filter(yearFrom, yearTo, laborStatus, sector));
+                                                @RequestParam(required = false) List<String> sector,
+                                                @RequestParam(required = false) List<String> gender) {
+        return analytics.summary(datasetId, "TITULADOS", split(fields), filter(yearFrom, yearTo, laborStatus, sector, gender));
     }
 
     @GetMapping("/titulados/employment")
@@ -260,7 +261,15 @@ public class AnalyticsController {
     }
 
     private TituladosFilter filter(Integer yearFrom, Integer yearTo, List<String> laborStatus, List<String> sector) {
-        return filter(yearFrom, yearTo, laborStatus, sector, null, null);
+        return filter(yearFrom, yearTo, laborStatus, sector, null, null, null);
+    }
+
+    private TituladosFilter filter(Integer yearFrom, Integer yearTo, List<String> laborStatus, List<String> sector, List<String> gender) {
+        return new TituladosFilter(yearFrom, yearTo,
+                laborStatus == null ? Collections.emptyList() : laborStatus,
+                sector == null ? Collections.emptyList() : sector,
+                gender == null ? Collections.emptyList() : gender,
+                Collections.emptyList(), Collections.emptyList());
     }
 
     private TituladosFilter filter(Integer yearFrom, Integer yearTo, List<String> laborStatus, List<String> sector,
@@ -268,6 +277,7 @@ public class AnalyticsController {
         return new TituladosFilter(yearFrom, yearTo,
                 laborStatus == null ? Collections.emptyList() : laborStatus,
                 sector == null ? Collections.emptyList() : sector,
+                Collections.emptyList(),
                 organizationType == null ? Collections.emptyList() : organizationType,
                 organizationSize == null ? Collections.emptyList() : organizationSize);
     }

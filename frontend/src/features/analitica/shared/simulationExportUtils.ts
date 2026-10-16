@@ -10,6 +10,7 @@ export type SimulationExportData = {
   usedProbabilities: Record<string, number>;
   adjusted: boolean;
   categoryLabel: (category: string) => string;
+  segment?: string;
 };
 
 function downloadFile(content: BlobPart, name: string, type: string) {
@@ -67,6 +68,7 @@ export function exportSimulationExcel(data: SimulationExportData) {
     ["Dataset", data.datasetName],
     ["Fecha de generación", new Intl.DateTimeFormat("en-CA", { timeZone: "America/La_Paz" }).format(new Date())],
     ["Variable", data.variableLabel],
+    ["Segmento", data.segment ?? "Todos"],
     ["Personas simuladas (N)", String(data.result.sampleSize)],
     ["Réplicas (R)", String(data.result.repetitions)],
     ["Semilla", String(data.result.seed)],

@@ -10,6 +10,7 @@ export type SimulationRun = SimulationExportData & {
   variable: string;
   weights: Record<string, number>;
   scenarioPercentages: Record<string, number> | null;
+  segment: string;
 };
 
 export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
