@@ -229,6 +229,10 @@ public class AnalyticsController {
         for (int i = 0; i < request.categories().size(); i++) {
             double mean = sums[i] / request.repetitions();
             double deviation = request.repetitions() > 1 ? Math.sqrt((squares[i] - request.repetitions() * mean * mean) / (request.repetitions() - 1)) : 0;
+            List<Double> replicas = replicaPercentages.get(i);
+            double q1 = percentile(replicas, 0.25);
+            double median = percentile(replicas, 0.50);
+            double q3 = percentile(replicas, 0.75);
             long observedCount = request.observedCounts() != null && i < request.observedCounts().size()
                     ? request.observedCounts().get(i) : 0L;
             double observedPercentage = observedTotal > 0
@@ -237,7 +241,8 @@ public class AnalyticsController {
             result.add(new SimulationCategory(request.categories().get(i), observedCount,
                     round(observedPercentage), round(mean),
                     round(Math.max(0, mean - 1.96 * deviation)),
-                    round(Math.min(100, mean + 1.96 * deviation)), round(deviation), replicaPercentages.get(i)));
+                    round(Math.min(100, mean + 1.96 * deviation)), round(deviation), replicas,
+                    round(q1), round(median), round(q3)));
         }
         List<Double> cumulativeRounded = new ArrayList<>();
         for (double value : cumulative) cumulativeRounded.add(round(value));
@@ -248,12 +253,24 @@ public class AnalyticsController {
                                     int sampleSize, int repetitions, long seed) { }
     public record SimulationCategory(String category, long observedCount, double observedPercentage,
                                      double simulatedMean, double lower95, double upper95,
-                                     double standardDeviation, List<Double> replicaPercentages) { }
+                                     double standardDeviation, List<Double> replicaPercentages,
+                                     double firstQuartile, double median, double thirdQuartile) { }
     public record SimulationDraw(double random, String category) { }
     public record SimulationResult(int sampleSize, int repetitions, long seed, List<SimulationCategory> categories,
                                    List<Double> cumulativeProbabilities, List<SimulationDraw> firstDraws) { }
 
     private double round(double value) { return Math.round(value * 100.0) / 100.0; }
+
+    private double percentile(List<Double> values, double probability) {
+        if (values.isEmpty()) return 0;
+        List<Double> sorted = values.stream().sorted().toList();
+        double position = probability * (sorted.size() - 1);
+        int lower = (int) Math.floor(position);
+        int upper = (int) Math.ceil(position);
+        if (lower == upper) return sorted.get(lower);
+        double fraction = position - lower;
+        return sorted.get(lower) + fraction * (sorted.get(upper) - sorted.get(lower));
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

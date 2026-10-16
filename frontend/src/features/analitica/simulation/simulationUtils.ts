@@ -48,6 +48,9 @@ export function simulationCategories(variable: string, counts: Record<string, nu
       return countDifference !== 0 ? countDifference : optionOrder.indexOf(simulationCategoryIdentity(a)) - optionOrder.indexOf(simulationCategoryIdentity(b));
     });
   }
+  if (["sector_trabajo", "situacion_laboral_actual"].includes(variable)) {
+    return categories.sort((a, b) => (counts[b] ?? 0) - (counts[a] ?? 0));
+  }
   if (["edad_rango", "remuneracion_rango"].includes(variable)) {
     const order = variable === "edad_rango" ? NATURAL_AGE_RANGES : NATURAL_SALARY_RANGES;
     return categories.sort((a, b) => order.indexOf(a) - order.indexOf(b));

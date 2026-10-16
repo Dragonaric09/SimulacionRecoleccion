@@ -47,6 +47,8 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
+  SelectLabel,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -1382,6 +1384,7 @@ export function SimulationPage() {
   const [moveTo, setMoveTo] = useState("");
   const [movePoints, setMovePoints] = useState("10");
   const currentDistribution = summary?.distributions[variable];
+  const observedBase = currentDistribution?.validCount ?? 0;
   const selectScenario = (value: string) => {
     setScenarioName(value);
     if (!currentDistribution || value === "Observado") { setWeights({}); return; }
@@ -1438,18 +1441,11 @@ export function SimulationPage() {
               <Select value={variable} onValueChange={setVariable}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="genero">Perfil · Género</SelectItem>
-                  <SelectItem value="edad_rango">Perfil · Rango de edad</SelectItem>
-                  <SelectItem value="situacion_laboral_actual">Empleo · Estado laboral</SelectItem>
-                  <SelectItem value="sector_trabajo">Empleo · Sector</SelectItem>
-                  <SelectItem value="remuneracion_rango">Empleo · Remuneración mensual</SelectItem>
-                  <SelectItem value="tiempo_primer_empleo">Empleo · Tiempo hasta el primer empleo</SelectItem>
-                  <SelectItem value="satisfaccion_formacion">Formación · Satisfacción con la formación</SelectItem>
-                  <SelectItem value="concordancia_formacion_requerimientos">Formación · Concordancia formación-mercado</SelectItem>
-                  <SelectItem value="interes_posgrado">Posgrado · Interés</SelectItem>
-                  <SelectItem value="nivel_posgrado_interes">Posgrado · Nivel</SelectItem>
-                  <SelectItem value="modalidad_posgrado">Posgrado · Modalidad</SelectItem>
-                  <SelectItem value="financiamiento_posgrado_estimado">Posgrado · Fuente de financiamiento</SelectItem>
+                  <SelectGroup><SelectLabel>Perfil</SelectLabel><SelectItem value="genero">Género</SelectItem><SelectItem value="edad_rango">Rango de edad</SelectItem></SelectGroup>
+                  <SelectGroup><SelectLabel>Empleo</SelectLabel><SelectItem value="situacion_laboral_actual">Estado laboral</SelectItem><SelectItem value="sector_trabajo">Sector</SelectItem><SelectItem value="remuneracion_rango">Remuneración mensual</SelectItem><SelectItem value="tiempo_primer_empleo">Tiempo hasta el primer empleo</SelectItem></SelectGroup>
+                  <SelectGroup><SelectLabel>Formación</SelectLabel><SelectItem value="satisfaccion_formacion">Satisfacción con la formación</SelectItem><SelectItem value="concordancia_formacion_requerimientos">Concordancia formación-mercado</SelectItem></SelectGroup>
+                  <SelectGroup><SelectLabel>Posgrado</SelectLabel><SelectItem value="interes_posgrado">Interés</SelectItem><SelectItem value="nivel_posgrado_interes">Nivel</SelectItem><SelectItem value="modalidad_posgrado">Modalidad</SelectItem><SelectItem value="financiamiento_posgrado_estimado">Fuente de financiamiento</SelectItem></SelectGroup>
+                  <SelectGroup><SelectLabel>Área de posgrado</SelectLabel><SelectItem value="area_posgrado_interes" disabled>Multirrespuesta · pendiente de decisión</SelectItem></SelectGroup>
                 </SelectContent>
               </Select>
             </label>
@@ -1472,6 +1468,7 @@ export function SimulationPage() {
             <label className="label-default grid gap-1">
               Personas a simular (N)
               <Input className="w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" type="number" min="1" max="10000" step="1" value={sampleSizeInput} aria-invalid={!sampleSizeValid} onChange={(event) => setSampleSizeInput(event.target.value)} onBlur={() => setSampleSize(parseInteger(sampleSizeInput, sampleSize))} />
+              <Button type="button" variant="link" size="xs" className="justify-self-start px-0" disabled={!observedBase} onClick={() => { setSampleSize(observedBase); setSampleSizeInput(String(observedBase)); }}>Usar N = base observada{observedBase ? ` (${observedBase})` : ""}</Button>
               {!sampleSizeValid && <span className="text-xs text-destructive">Usa un entero entre 1 y 10.000.</span>}
             </label>
             <div className="grid grid-cols-2 gap-3">

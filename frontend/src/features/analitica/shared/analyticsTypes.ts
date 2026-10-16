@@ -40,6 +40,9 @@ export type Simulation = {
     upper95: number;
     standardDeviation: number;
     replicaPercentages?: number[];
+    firstQuartile?: number;
+    median?: number;
+    thirdQuartile?: number;
   }[];
 };
 

@@ -25,6 +25,17 @@ export function SimulationWeights({
   if (!distribution) return null;
   const entries = simulationCategories(variable, distribution.counts).map((label) => [label, distribution.counts[label] ?? 0] as const);
   const currentTotal = entries.reduce((sum, [label, count]) => sum + (weights[label] ?? count), 0);
+  const observedTotal = distribution.validCount;
+  const updatePreservingTotal = (label: string, nextValue: number) => setWeights((current) => {
+    const values = Object.fromEntries(entries.map(([key, count]) => [key, current[key] ?? count]));
+    const previous = values[label] ?? 0;
+    const delta = nextValue - previous;
+    values[label] = nextValue;
+    const others = entries.filter(([key]) => key !== label);
+    const available = others.reduce((sum, [key]) => sum + Math.max(0, values[key] ?? 0), 0);
+    if (available > 0) others.forEach(([key]) => { values[key] = Math.max(0, (values[key] ?? 0) - delta * ((values[key] ?? 0) / available)); });
+    return values;
+  });
   return (
     <details className="rounded-lg bg-surface-container-low p-3">
       <summary className="cursor-pointer list-none text-sm font-semibold text-ink-700">Ajustar probabilidades <span className="text-xs font-normal">(opcional)</span></summary>
@@ -34,8 +45,8 @@ export function SimulationWeights({
         const value = weights[label] ?? count;
         return (
           <label key={label} className="grid gap-1 text-xs">
-            <span className="flex justify-between gap-2"><span className="truncate">{simulationCategoryLabel(label)}</span><strong>{value} de {currentTotal} · {currentTotal ? simulationPercent((value * 100) / currentTotal) : "—"}</strong></span>
-            <Slider min={0} max={Math.max(10, Math.max(...entries.map(([, item]) => item)) * 2)} step={1} value={[value]} onValueChange={(next) => setWeights((current) => ({ ...current, [label]: next[0] ?? value }))} />
+            <span className="flex justify-between gap-2"><span className="truncate">{simulationCategoryLabel(label)}</span><strong>{observedTotal ? simulationPercent((count * 100) / observedTotal) : "—"} → {currentTotal ? simulationPercent((value * 100) / currentTotal) : "—"}</strong></span>
+            <Slider min={0} max={Math.max(10, currentTotal)} step={1} value={[value]} onValueChange={(next) => updatePreservingTotal(label, next[0] ?? value)} />
           </label>
         );
       })}
@@ -73,7 +84,8 @@ export function SimulationDistribution({ result, observedTotal, loading = false,
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <SimulationTypedChart result={result} variable={variable} selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
+        <SimulationTypedChartV2 result={result} variable={variable} selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
+        <ReplicaHistogram result={result} category={selectedCategory} />
         <div className="flex justify-between pl-1 text-[11px] tabular-nums text-ink-500"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></div>
         {result.categories.map((category) => (
           <HoverCard key={category.category} openDelay={120} closeDelay={100}><HoverCardTrigger asChild><div className="space-y-1 cursor-help">
@@ -102,6 +114,16 @@ export function SimulationDistribution({ result, observedTotal, loading = false,
   );
 }
 
+function ReplicaHistogram({ result, category }: { result: Simulation; category: string | null }) {
+  const selected = result.categories.find((item) => item.category === category);
+  if (!selected) return null;
+  const values = selected.replicaPercentages ?? [];
+  const bins = Array.from({ length: 10 }, () => 0);
+  values.forEach((value) => bins[Math.min(9, Math.floor(value / 10))]++);
+  const max = Math.max(...bins, 1);
+  return <div className="rounded-lg border border-border-line bg-white p-3"><p className="text-xs font-semibold">Histograma de réplicas · {simulationCategoryLabel(selected.category)}</p><div className="mt-2 flex h-20 items-end gap-1">{bins.map((value, index) => <div key={index} className="flex-1 rounded-t bg-primary/70" style={{ height: `${value * 100 / max}%` }} title={`${value} réplicas`} />)}</div><div className="flex justify-between text-[10px] text-ink-500"><span>0 %</span><span>100 %</span></div></div>;
+}
+
 function chartKind(result: Simulation, variable?: string) {
   if (["sector_trabajo", "situacion_laboral_actual"].includes(variable ?? "")) return "unordered";
   const labels = result.categories.map((item) => item.category.toLowerCase());
@@ -112,7 +134,15 @@ function chartKind(result: Simulation, variable?: string) {
   return "ordered";
 }
 
-function SimulationTypedChart({ result, variable, selectedCategory, onSelect }: { result: Simulation; variable?: string; selectedCategory: string | null; onSelect: (category: string | null) => void }) {
+function SimulationTypedChartV2({ result, variable, selectedCategory, onSelect }: { result: Simulation; variable?: string; selectedCategory: string | null; onSelect: (category: string | null) => void }) {
+  const kind = chartKind(result, variable);
+  const values = kind === "unordered" ? [...result.categories].sort((a, b) => b.simulatedMean - a.simulatedMean) : result.categories;
+  if (kind === "pie" || kind === "boolean") return <div className="flex flex-wrap items-center justify-center gap-8">{[true, false].map((observed) => <div key={String(observed)} className="text-center"><div className={`mx-auto size-32 rounded-full ${kind === "boolean" ? "p-7" : ""}`} style={{ background: pieGradient(result, observed) }}><div className={`${kind === "boolean" ? "size-full" : "hidden"} rounded-full bg-white`} /></div><p className="mt-2 text-xs font-semibold">{observed ? "Observado" : "Escenario"}</p></div>)}</div>;
+  if (kind === "scale") return <div className="space-y-2">{values.map((category) => <div key={category.category}><div className="mb-1 flex justify-between text-xs"><span>{simulationCategoryLabel(category.category)}</span><span>{simulationPercent(category.simulatedMean)}</span></div><div className="flex h-5 overflow-hidden rounded"><div className="bg-slate-400" style={{ width: `${category.observedPercentage}%` }} /><div className="bg-primary" style={{ width: `${category.simulatedMean}%` }} /></div></div>)}</div>;
+  return <div className="space-y-2">{values.map((category) => <button type="button" key={category.category} onClick={() => onSelect(selectedCategory === category.category ? null : category.category)} className="block w-full text-left"><div className="mb-1 flex justify-between text-xs"><span>{simulationCategoryLabel(category.category)}</span><span>{simulationPercent(category.simulatedMean)}</span></div><div className="relative h-7 rounded bg-white">{kind === "unordered" ? <><div className="absolute top-1/2 h-0.5 w-full -translate-y-1/2 bg-ink-900/40" /><div className="absolute top-1/2 h-4 -translate-y-1/2 rounded border border-primary bg-primary/25" style={{ left: `${category.firstQuartile ?? category.lower95}%`, width: `${Math.max(0, (category.thirdQuartile ?? category.upper95) - (category.firstQuartile ?? category.lower95))}%` }} /><span className="absolute top-1/2 h-5 w-px -translate-y-1/2 bg-ink-900" style={{ left: `${category.median ?? category.simulatedMean}%` }} /><span className="absolute top-1/2 size-2 -translate-y-1/2 rounded-full bg-primary" style={{ left: `${category.simulatedMean}%` }} /></> : <><div className="absolute inset-y-0 left-0 bg-slate-300" style={{ width: `${category.observedPercentage}%` }} /><div className="absolute inset-y-0 left-0 bg-primary/80" style={{ width: `${category.simulatedMean}%` }} /><div className="absolute inset-y-0 w-px bg-ink-900" style={{ left: `${category.observedPercentage}%` }} /></>}</div></button>)}</div>;
+}
+
+export function SimulationTypedChart({ result, variable, selectedCategory, onSelect }: { result: Simulation; variable?: string; selectedCategory: string | null; onSelect: (category: string | null) => void }) {
   const kind = chartKind(result, variable);
   const selected = result.categories.find((category) => category.category === selectedCategory);
   return <div className="rounded-lg border border-border-line bg-surface-container-low p-4">

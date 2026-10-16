@@ -54,7 +54,16 @@ function rows(data: SimulationExportData) {
 }
 
 export function exportSimulationCsv(data: SimulationExportData) {
-  const csv = rows(data).map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")).join("\n");
+  const metadata = [
+    ["Variable", data.variableLabel],
+    ["Segmento", data.segment ?? "Todos"],
+    ["Semilla", String(data.result.seed)],
+    ["N", String(data.result.sampleSize)],
+    ["Réplicas", String(data.result.repetitions)],
+    ["Ajustes", data.adjusted ? "Personalizados" : "Observado"],
+    [],
+  ];
+  const csv = [...metadata, ...rows(data)].map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")).join("\n");
   downloadFile(csv, "titulados_simulacion.csv", "text/csv;charset=utf-8");
 }
 
