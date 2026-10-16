@@ -1,12 +1,12 @@
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import * as echarts from "echarts/core";
-import { BarChart, BoxplotChart, PieChart } from "echarts/charts";
+import { BarChart, BoxplotChart, PieChart, ScatterChart } from "echarts/charts";
 import { GridComponent, LegendComponent, MarkPointComponent, TitleComponent, TooltipComponent } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
 import type { Simulation } from "../shared/analyticsTypes";
 import { simulationCategoryLabel, simulationDelta, simulationPercent } from "./simulationUtils";
 
-echarts.use([BarChart, BoxplotChart, PieChart, GridComponent, LegendComponent, MarkPointComponent, TitleComponent, TooltipComponent, SVGRenderer]);
+echarts.use([BarChart, BoxplotChart, PieChart, ScatterChart, GridComponent, LegendComponent, MarkPointComponent, TitleComponent, TooltipComponent, SVGRenderer]);
 
 type Props = {
   result: Simulation;
@@ -51,6 +51,23 @@ function datum(category: CategoryStat): ChartDatum {
   return { name: simulationCategoryLabel(category.category), value: category.simulatedMean, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } };
 }
 
+function wrapAxisLabel(value: string, maxCharacters: number) {
+  const words = value.split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+  words.forEach((word) => {
+    const next = current ? `${current} ${word}` : word;
+    if (current && next.length > maxCharacters) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  });
+  if (current) lines.push(current);
+  return lines.join("\n");
+}
+
 function buildOption(kind: string, result: Simulation) {
   const categories = result.categories;
   const common = { animationDuration: 250, color: colors, tooltip: { trigger: "item", confine: true, formatter: tooltipFormatter } };
@@ -62,10 +79,13 @@ function buildOption(kind: string, result: Simulation) {
   }
   if (kind === "unordered") {
     const ordered = [...categories].sort((a, b) => b.simulatedMean - a.simulatedMean);
-    return { ...common, grid: { left: 125, right: 30, top: 20, bottom: 45 }, xAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, yAxis: { type: "category", inverse: true, data: ordered.map((category) => simulationCategoryLabel(category.category)) }, series: [{ name: "Caja y bigotes", type: "boxplot", boxWidth: [12, 28], data: ordered.map((category) => [category.lower95, category.firstQuartile ?? category.lower95, category.median ?? category.simulatedMean, category.thirdQuartile ?? category.upper95, category.upper95]), itemStyle: { color: "#dbeafe", borderColor: "#1f6fb5" }, markPoint: { data: ordered.map((category) => ({ coord: [category.simulatedMean, simulationCategoryLabel(category.category)], value: category.simulatedMean, itemStyle: { color: "#1f6fb5" } })) } }] };
+    return { ...common, legend: { bottom: 6, data: ["Observado", "Media simulada", "Rango / bigotes"] }, grid: { left: 170, right: 30, top: 20, bottom: 48 }, xAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, yAxis: { type: "category", inverse: true, data: ordered.map((category) => simulationCategoryLabel(category.category)), axisLabel: { width: 155, lineHeight: 14, formatter: (value: string) => wrapAxisLabel(value, 22) } }, series: [{ name: "Rango / bigotes", type: "boxplot", boxWidth: [12, 28], data: ordered.map((category) => ({ value: [category.lower95, category.firstQuartile ?? category.lower95, category.median ?? category.simulatedMean, category.thirdQuartile ?? category.upper95, category.upper95], extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } })), itemStyle: { color: "#dbeafe", borderColor: "#1f6fb5" } }, { name: "Observado", type: "scatter", symbol: "rect", symbolSize: [2, 22], itemStyle: { color: "#64748b" }, data: ordered.map((category) => ({ value: [category.observedPercentage, simulationCategoryLabel(category.category)], extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } })) }, { name: "Media simulada", type: "scatter", symbolSize: 9, itemStyle: { color: "#1f6fb5", borderColor: "#fff", borderWidth: 1 }, data: ordered.map((category) => ({ value: [category.simulatedMean, simulationCategoryLabel(category.category)], extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } })) }] };
   }
-  const ordered = kind === "ordered" ? categories : categories;
-  return { ...common, grid: { left: 45, right: 25, top: 20, bottom: 60 }, legend: { bottom: 8 }, xAxis: { type: "category", data: ordered.map((category) => simulationCategoryLabel(category.category)), axisLabel: { interval: 0, rotate: ordered.length > 6 ? 25 : 0 } }, yAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, series: [
+  if (kind === "scale") {
+    return { ...common, legend: { bottom: 6, type: "scroll" }, grid: { left: 82, right: 25, top: 15, bottom: 48 }, xAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, yAxis: { type: "category", data: ["Observado", "Escenario"], axisTick: { show: false } }, series: categories.map((category, index) => ({ name: simulationCategoryLabel(category.category), type: "bar", stack: "distribución", barWidth: 30, label: { show: true, formatter: (params: { value: number }) => params.value >= 6 ? `${params.value.toFixed(1)}%` : "", color: "#fff", fontSize: 10 }, itemStyle: { color: colors[index % colors.length] }, data: [{ value: category.observedPercentage, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } }, { value: category.simulatedMean, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } }] })) };
+  }
+  const ordered = categories;
+  return { ...common, grid: { left: 45, right: 25, top: 20, bottom: 70 }, legend: { bottom: 8, type: "scroll" }, xAxis: { type: "category", data: ordered.map((category) => simulationCategoryLabel(category.category)), axisLabel: { interval: 0, rotate: ordered.length > 6 ? 25 : 0, formatter: (value: string) => value.length > 18 ? `${value.slice(0, 17)}…` : value } }, yAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, series: [
     { name: "Observado", type: "bar", barGap: "-75%", barWidth: "55%", itemStyle: { color: "#94a3b8" }, data: ordered.map((category) => ({ ...datum(category), value: category.observedPercentage })) },
     { name: "Escenario", type: "bar", barWidth: "35%", itemStyle: { color: "#1f6fb5" }, data: ordered.map((category) => ({ ...datum(category), value: category.simulatedMean })) },
   ] };
@@ -74,5 +94,11 @@ function buildOption(kind: string, result: Simulation) {
 function ReplicaChart({ selected }: { selected: CategoryStat }) {
   const values = selected.replicaPercentages ?? [];
   const bins = Array.from({ length: 10 }, (_, index) => ({ label: `${index * 10}–${(index + 1) * 10}%`, value: values.filter((item) => item >= index * 10 && item < (index + 1) * 10).length }));
-  return <div className="rounded-lg border border-primary/20 bg-slate-50 p-2"><ReactEChartsCore echarts={echarts} option={{ animationDuration: 250, grid: { left: 40, right: 20, top: 35, bottom: 35 }, title: { text: `Réplicas · ${simulationCategoryLabel(selected.category)}`, textStyle: { fontSize: 12, fontWeight: 600 }, left: 8, top: 6 }, tooltip: { trigger: "axis", confine: true, formatter: (params: unknown) => { const item = Array.isArray(params) ? params[0] as { axisValue: string; data: number } : params as { axisValue: string; data: number }; return `${item.axisValue}<br/><strong>${item.data} réplicas</strong>`; } }, xAxis: { type: "category", data: bins.map((bin) => bin.label), axisLabel: { fontSize: 10 } }, yAxis: { type: "value", name: "Réplicas", minInterval: 1 }, series: [{ type: "bar", data: bins.map((bin) => bin.value), itemStyle: { color: "#1f6fb5", borderRadius: [3, 3, 0, 0] } }] }} style={{ height: 190, width: "100%" }} opts={{ renderer: "svg" }} notMerge lazyUpdate /></div>;
+  return <div className="rounded-lg border border-primary/20 bg-slate-50 p-3">
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <p className="text-xs font-semibold text-ink-900">Histograma de réplicas · {simulationCategoryLabel(selected.category)}</p>
+      <span className="text-[11px] tabular-nums text-primary">Media {simulationPercent(selected.simulatedMean)}</span>
+    </div>
+    <ReactEChartsCore echarts={echarts} option={{ animationDuration: 250, grid: { left: 48, right: 18, top: 8, bottom: 35 }, tooltip: { trigger: "axis", confine: true, formatter: (params: unknown) => { const item = Array.isArray(params) ? params[0] as { axisValue: string; data: number } : params as { axisValue: string; data: number }; return `${item.axisValue}<br/><strong>${item.data} réplicas</strong>`; } }, xAxis: { type: "category", data: bins.map((bin) => bin.label), axisLabel: { fontSize: 10, interval: 0 } }, yAxis: { type: "value", name: "Réplicas", minInterval: 1 }, series: [{ type: "bar", data: bins.map((bin) => bin.value), itemStyle: { color: "#1f6fb5", borderRadius: [3, 3, 0, 0] } }] }} style={{ height: 185, width: "100%" }} opts={{ renderer: "svg" }} notMerge lazyUpdate />
+  </div>;
 }
