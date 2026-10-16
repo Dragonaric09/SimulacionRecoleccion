@@ -201,6 +201,8 @@ public class AnalyticsController {
         Random random = new Random(request.seed());
         double[] sums = new double[request.categories().size()];
         double[] squares = new double[request.categories().size()];
+        List<List<Double>> replicaPercentages = new ArrayList<>();
+        List<SimulationDraw> firstDraws = new ArrayList<>();
         double[] cumulative = new double[request.probabilities().size()];
         double running = 0;
         for (int i = 0; i < request.probabilities().size(); i++) {
@@ -213,6 +215,11 @@ public class AnalyticsController {
                 double value = random.nextDouble();
                 int category = IntStream.range(0, cumulative.length).filter(index -> value <= cumulative[index]).findFirst().orElse(cumulative.length - 1);
                 counts[category]++;
+                if (repetition == 0 && firstDraws.size() < 10) firstDraws.add(new SimulationDraw(round(value), request.categories().get(category)));
+            }
+            for (int i = 0; i < counts.length; i++) {
+                if (replicaPercentages.size() <= i) replicaPercentages.add(new ArrayList<>());
+                replicaPercentages.get(i).add(round(counts[i] * 100.0 / request.sampleSize()));
             }
             for (int i = 0; i < counts.length; i++) { sums[i] += counts[i] * 100.0 / request.sampleSize(); squares[i] += Math.pow(counts[i] * 100.0 / request.sampleSize(), 2); }
         }
@@ -230,17 +237,21 @@ public class AnalyticsController {
             result.add(new SimulationCategory(request.categories().get(i), observedCount,
                     round(observedPercentage), round(mean),
                     round(Math.max(0, mean - 1.96 * deviation)),
-                    round(Math.min(100, mean + 1.96 * deviation)), round(deviation)));
+                    round(Math.min(100, mean + 1.96 * deviation)), round(deviation), replicaPercentages.get(i)));
         }
-        return new SimulationResult(request.sampleSize(), request.repetitions(), request.seed(), result);
+        List<Double> cumulativeRounded = new ArrayList<>();
+        for (double value : cumulative) cumulativeRounded.add(round(value));
+        return new SimulationResult(request.sampleSize(), request.repetitions(), request.seed(), result, cumulativeRounded, firstDraws);
     }
 
     public record SimulationRequest(List<String> categories, List<Double> probabilities, List<Long> observedCounts,
                                     int sampleSize, int repetitions, long seed) { }
     public record SimulationCategory(String category, long observedCount, double observedPercentage,
                                      double simulatedMean, double lower95, double upper95,
-                                     double standardDeviation) { }
-    public record SimulationResult(int sampleSize, int repetitions, long seed, List<SimulationCategory> categories) { }
+                                     double standardDeviation, List<Double> replicaPercentages) { }
+    public record SimulationDraw(double random, String category) { }
+    public record SimulationResult(int sampleSize, int repetitions, long seed, List<SimulationCategory> categories,
+                                   List<Double> cumulativeProbabilities, List<SimulationDraw> firstDraws) { }
 
     private double round(double value) { return Math.round(value * 100.0) / 100.0; }
 

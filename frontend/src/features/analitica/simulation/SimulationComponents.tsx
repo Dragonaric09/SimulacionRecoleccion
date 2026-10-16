@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Badge } from "@/components/analytics/Badge";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -43,7 +44,8 @@ export function SimulationWeights({
   );
 }
 
-export function SimulationDistribution({ result, observedTotal, loading = false }: { result: Simulation; observedTotal: number; loading?: boolean }) {
+export function SimulationDistribution({ result, observedTotal, loading = false, variable }: { result: Simulation; observedTotal: number; loading?: boolean; variable?: string }) {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   return (
     <Card className="rounded-xl border-0 shadow-sm">
       <CardHeader>
@@ -71,6 +73,7 @@ export function SimulationDistribution({ result, observedTotal, loading = false 
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        <SimulationTypedChart result={result} variable={variable} selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
         <div className="flex justify-between pl-1 text-[11px] tabular-nums text-ink-500"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></div>
         {result.categories.map((category) => (
           <HoverCard key={category.category} openDelay={120} closeDelay={100}><HoverCardTrigger asChild><div className="space-y-1 cursor-help">
@@ -97,6 +100,50 @@ export function SimulationDistribution({ result, observedTotal, loading = false 
       </CardContent>
     </Card>
   );
+}
+
+function chartKind(result: Simulation, variable?: string) {
+  if (["sector_trabajo", "situacion_laboral_actual"].includes(variable ?? "")) return "unordered";
+  const labels = result.categories.map((item) => item.category.toLowerCase());
+  if (labels.some((label) => label.includes("satisf") || label.includes("concord") || label.includes("muy de acuerdo"))) return "scale";
+  if (labels.every((label) => ["true", "false", "sí", "si", "no"].includes(label))) return "boolean";
+  if (result.categories.length <= 5) return "pie";
+  if (labels.some((label) => label.includes("sector") || label.includes("área") || label.includes("area") || label.includes("trabaja"))) return "unordered";
+  return "ordered";
+}
+
+function SimulationTypedChart({ result, variable, selectedCategory, onSelect }: { result: Simulation; variable?: string; selectedCategory: string | null; onSelect: (category: string | null) => void }) {
+  const kind = chartKind(result, variable);
+  const selected = result.categories.find((category) => category.category === selectedCategory);
+  return <div className="rounded-lg border border-border-line bg-surface-container-low p-4">
+    <div className="mb-3 flex items-center justify-between gap-3"><p className="text-sm font-semibold text-ink-900">{kind === "unordered" ? "Caja y bigotes por opción" : kind === "scale" ? "Distribución por nivel" : kind === "boolean" ? "Anillo observado y escenario" : kind === "pie" ? "Observado contra simulado" : "Categorías en orden natural"}</p><span className="text-xs text-ink-600">Haz clic en una opción para ver sus réplicas</span></div>
+    {kind === "pie" || kind === "boolean" ? <div className="flex flex-wrap items-center justify-center gap-8">{["Observado", "Escenario"].map((label, index) => <div key={label} className="text-center"><div className={`mx-auto size-32 rounded-full ${kind === "boolean" ? "p-7" : ""}`} style={{ background: pieGradient(result, index === 0) }}><div className={`${kind === "boolean" ? "size-full" : "hidden"} rounded-full bg-white`} /></div><p className="mt-2 text-xs font-semibold">{label}</p></div>)}</div> : kind === "scale" ? <div className="space-y-2">{result.categories.map((category) => <div key={category.category} className="flex items-center gap-2"><span className="w-36 truncate text-xs">{simulationCategoryLabel(category.category)}</span><div className="flex h-5 flex-1 overflow-hidden rounded"><div className="bg-slate-400" style={{ width: `${category.observedPercentage}%` }} /><div className="bg-primary" style={{ width: `${category.simulatedMean}%` }} /></div><span className="w-14 text-right text-xs tabular-nums">{simulationPercent(category.simulatedMean)}</span></div>)}</div> : <div className="space-y-2">{result.categories.map((category) => <button type="button" key={category.category} onClick={() => onSelect(selectedCategory === category.category ? null : category.category)} className="block w-full text-left"><div className="mb-1 flex justify-between gap-3 text-xs"><span className="truncate">{simulationCategoryLabel(category.category)}</span><span className="tabular-nums">{simulationPercent(category.simulatedMean)}</span></div>{kind === "unordered" ? <div className="relative h-5 rounded bg-white"><div className="absolute top-1/2 h-0.5 -translate-y-1/2 bg-ink-900" style={{ left: `${category.lower95}%`, width: `${category.upper95 - category.lower95}%` }} /><span className="absolute top-1/2 size-3 -translate-y-1/2 rounded-full border-2 border-primary bg-white" style={{ left: `${category.simulatedMean}%` }} /></div> : <div className="relative h-5 rounded bg-white"><div className="absolute inset-y-0 left-0 bg-slate-300" style={{ width: `${category.observedPercentage}%` }} /><div className="absolute inset-y-0 left-0 bg-primary/80" style={{ width: `${category.simulatedMean}%` }} /></div>}</button>)}</div>}
+    {selected && <div className="mt-4 border-t border-border-line pt-3"><p className="text-xs font-semibold">Histograma de réplicas · {simulationCategoryLabel(selected.category)}</p><div className="mt-2 flex h-20 items-end gap-1">{histogram(selected.replicaPercentages ?? [], selected).map((height, index) => <div key={index} className="flex-1 rounded-t bg-primary/70" style={{ height: `${height}%` }} title={`${height}% relativo`} />)}</div><div className="flex justify-between text-[10px] text-ink-500"><span>0 %</span><span>100 %</span></div></div>}
+  </div>;
+}
+
+function pieGradient(result: Simulation, observed: boolean) {
+  const colors = ["#1f6fb5", "#8b5bd1", "#0f766e", "#d97706", "#64748b", "#be123c", "#65a30d", "#475569"];
+  let offset = 0;
+  const segments = result.categories.map((category, index) => {
+    const value = observed ? category.observedPercentage : category.simulatedMean;
+    const segment = `${colors[index % colors.length]} ${offset}% ${offset + value}%`;
+    offset += value;
+    return segment;
+  });
+  return `conic-gradient(${segments.join(", ")})`;
+}
+
+function histogram(values: number[], category: { lower95: number; upper95: number }) {
+  if (!values.length) return [category.lower95 < category.upper95 ? 55 : 100];
+  const bins = Array.from({ length: 10 }, () => 0);
+  values.forEach((value) => bins[Math.min(9, Math.floor(value / 10))]++);
+  const max = Math.max(...bins, 1);
+  return bins.map((value) => value * 100 / max);
+}
+
+export function SimulationHowItWorks({ result }: { result: Simulation }) {
+  return <details className="rounded-xl border border-border-line bg-white shadow-sm"><summary className="cursor-pointer list-none p-5 text-sm font-semibold text-ink-900">Cómo funciona <span className="ml-2 text-xs font-normal text-ink-600">Transformada inversa y primeros sorteos</span></summary><div className="grid gap-5 border-t border-border-line p-5 lg:grid-cols-2"><div><p className="mb-2 text-xs font-semibold">Probabilidad acumulada</p><div className="space-y-1">{result.categories.map((category, index) => <div key={category.category} className="flex justify-between gap-3 text-xs"><span>{simulationCategoryLabel(category.category)}</span><span className="tabular-nums">{simulationPercent((result.cumulativeProbabilities?.[index] ?? 0) * 100)}</span></div>)}</div></div><div><p className="mb-2 text-xs font-semibold">Primeros 10 números aleatorios</p><div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">{(result.firstDraws ?? []).map((draw, index) => <span key={`${draw.random}-${index}`} className="tabular-nums">{index + 1}. {draw.random.toFixed(2)} → {simulationCategoryLabel(draw.category)}</span>)}</div></div></div></details>;
 }
 
 export function SimulationComparisonTable({

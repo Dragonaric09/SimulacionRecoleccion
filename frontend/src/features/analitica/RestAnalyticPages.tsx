@@ -67,7 +67,7 @@ import { CompetenceRadar as CompetenceRadarView } from "./competence/CompetenceR
 import { groupDisplayName, groupLabel } from "./competence/competenceHelpers";
 import { CompetencePrintGroup, CurriculumPanel } from "./competence/CompetencePrintSections";
 import { normalizeAnalyticsLabel } from "./shared/analyticsLabels";
-import { SimulationComparisonTable, SimulationDistribution, SimulationWeights } from "./simulation/SimulationComponents";
+import { SimulationComparisonTable, SimulationDistribution, SimulationHowItWorks, SimulationWeights } from "./simulation/SimulationComponents";
 import { simulationCategories, simulationPercent } from "./simulation/simulationUtils";
 import { SimulationDownloadMenu } from "./simulation/SimulationDownloads";
 import { useSimulationScenario } from "./simulation/useSimulationScenario";
@@ -1502,7 +1502,7 @@ export function SimulationPage() {
           </CardContent>
         </Card>
         <div className="space-y-5">
-          {result ? <SimulationDistribution result={result} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} loading={loading} /> : <StatusPanel kind="info" title="Calculando simulación" description="La distribución se generará automáticamente con su rango del 95 % de las repeticiones." />}
+          {result ? <SimulationDistribution result={result} variable={variable} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} loading={loading} /> : <StatusPanel kind="info" title="Calculando simulación" description="La distribución se generará automáticamente con su rango del 95 % de las repeticiones." />}
         </div>
       </div>
       {error && (
@@ -1513,6 +1513,7 @@ export function SimulationPage() {
         />
       )}
       {result && <SimulationComparisonTable result={result} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} scenarioPercentages={executedRun?.scenarioPercentages ?? scenarioPercentages} />}
+      {result && <SimulationHowItWorks result={result} />}
       {executedRun && (
         <div className="print-only print-page simulation-pdf-page space-y-3" aria-label="Versión de impresión de la simulación">
           <h2 className="headline-page">Simulación de escenarios: {executedRun.variableLabel}</h2>
@@ -1537,7 +1538,7 @@ export function SimulationPage() {
               ))}
             </div>
           </div>
-          <SimulationDistribution result={executedRun.result} observedTotal={executedRun.observedTotal} loading={false} />
+          <SimulationDistribution result={executedRun.result} variable={executedRun.variable} observedTotal={executedRun.observedTotal} loading={false} />
           <SimulationComparisonTable result={executedRun.result} observedTotal={executedRun.observedTotal} scenarioPercentages={executedRun.scenarioPercentages} />
           <div className="simulation-pdf-notes border-t border-surface-container-high pt-2 text-xs text-ink-700">
             <p>El rango del 95 % es el intervalo en que cayeron el 95 % de las réplicas. No es un intervalo de confianza.</p>
