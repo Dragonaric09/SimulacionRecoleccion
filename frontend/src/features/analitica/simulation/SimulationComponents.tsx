@@ -5,6 +5,8 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { CategoryDistribution } from "../api";
 import type { Simulation } from "../shared/analyticsTypes";
@@ -191,7 +193,33 @@ function histogram(values: number[], category: { lower95: number; upper95: numbe
 }
 
 export function SimulationHowItWorks({ result }: { result: Simulation }) {
-  return <details className="rounded-xl border border-border-line bg-white shadow-sm"><summary className="cursor-pointer list-none p-5 text-sm font-semibold text-ink-900">Cómo funciona <span className="ml-2 text-xs font-normal text-ink-600">Transformada inversa y primeros sorteos</span></summary><div className="grid gap-5 border-t border-border-line p-5 lg:grid-cols-2"><div><p className="mb-2 text-xs font-semibold">Probabilidad acumulada</p><div className="space-y-1">{result.categories.map((category, index) => <div key={category.category} className="flex justify-between gap-3 text-xs"><span>{simulationCategoryLabel(category.category)}</span><span className="tabular-nums">{simulationPercent((result.cumulativeProbabilities?.[index] ?? 0) * 100)}</span></div>)}</div></div><div><p className="mb-2 text-xs font-semibold">Primeros 10 números aleatorios</p><div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">{(result.firstDraws ?? []).map((draw, index) => <span key={`${draw.random}-${index}`} className="tabular-nums">{index + 1}. {draw.random.toFixed(2)} → {simulationCategoryLabel(draw.category)}</span>)}</div></div></div></details>;
+  const cumulative = result.cumulativeProbabilities ?? [];
+  return <Accordion type="single" collapsible className="overflow-hidden rounded-xl border border-border-line bg-white shadow-sm">
+    <AccordionItem value="simulation-how-it-works" className="border-0">
+      <AccordionTrigger className="rounded-xl px-5 py-4 hover:no-underline">
+        <span><span className="text-sm font-semibold text-ink-900">Cómo funciona</span><span className="ml-2 text-xs font-normal text-ink-600">Transformada inversa y primeros sorteos</span></span>
+      </AccordionTrigger>
+      <AccordionContent>
+    <div className="grid gap-4 p-4 lg:grid-cols-2">
+      <section className="rounded-lg border border-border-line bg-surface-container-low/50 p-4">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div><p className="text-sm font-semibold text-ink-900">Probabilidad acumulada</p><p className="mt-0.5 text-xs text-ink-600">Cada número aleatorio cae en el primer intervalo que alcanza su valor.</p></div>
+          <span className="rounded-full bg-white px-2 py-1 text-[10px] font-medium text-ink-600">Transformada inversa</span>
+        </div>
+        <div className="space-y-3">{result.categories.map((category, index) => {
+          const end = (cumulative[index] ?? 0) * 100;
+          const start = index === 0 ? 0 : (cumulative[index - 1] ?? 0) * 100;
+          return <div key={category.category} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 text-xs"><div className="min-w-0"><div className="flex justify-between gap-2"><span className="truncate font-medium text-ink-800">{simulationCategoryLabel(category.category)}</span><span className="tabular-nums text-ink-600">{simulationPercent(end)}</span></div><Progress value={end} className="mt-1 h-2 bg-white" /></div><span className="rounded-md border border-border-line bg-white px-2 py-1 tabular-nums text-[10px] text-ink-600">{simulationPercent(start)}–{simulationPercent(end)}</span></div>;
+        })}</div>
+      </section>
+      <section className="rounded-lg border border-border-line bg-surface-container-low/50 p-4">
+        <div className="mb-3 flex items-start justify-between gap-3"><div><p className="text-sm font-semibold text-ink-900">Primeros 10 números aleatorios</p><p className="mt-0.5 text-xs text-ink-600">Ejemplos de cómo la semilla asigna cada sorteo a una categoría.</p></div><span className="rounded-full bg-white px-2 py-1 text-[10px] font-medium text-ink-600">Semilla {result.seed}</span></div>
+        <div className="grid gap-2 sm:grid-cols-2">{(result.firstDraws ?? []).map((draw, index) => <div key={`${draw.random}-${index}`} className="flex items-center gap-2 rounded-md border border-border-line bg-white px-2.5 py-2 text-xs"><span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">{index + 1}</span><span className="tabular-nums text-ink-600">{draw.random.toFixed(2)}</span><span className="text-ink-400">→</span><span className="min-w-0 truncate font-medium text-ink-800">{simulationCategoryLabel(draw.category)}</span></div>)}</div>
+      </section>
+    </div>
+      </AccordionContent>
+    </AccordionItem>
+  </Accordion>;
 }
 
 export function SimulationComparisonTable({
@@ -204,8 +232,12 @@ export function SimulationComparisonTable({
   scenarioPercentages: Record<string, number> | null;
 }) {
   return (
-    <details className="rounded-xl border-0 bg-white shadow-sm">
-      <summary className="cursor-pointer list-none p-5 text-sm font-semibold text-ink-900">Ver tabla <span className="ml-2 text-xs font-normal text-ink-600">Frecuencias, diferencias y rangos de todas las categorías</span></summary>
+    <Accordion type="single" collapsible className="overflow-hidden rounded-xl border border-border-line bg-white shadow-sm">
+      <AccordionItem value="simulation-comparison-table" className="border-0">
+        <AccordionTrigger className="rounded-xl px-5 py-4 hover:no-underline">
+          <span><span className="text-sm font-semibold text-ink-900">Ver tabla</span><span className="ml-2 text-xs font-normal text-ink-600">Frecuencias, diferencias y rangos de todas las categorías</span></span>
+        </AccordionTrigger>
+        <AccordionContent>
       <Card className="rounded-none border-0 shadow-none">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
@@ -238,6 +270,8 @@ export function SimulationComparisonTable({
         </Table>
       </CardContent>
       </Card>
-    </details>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }
