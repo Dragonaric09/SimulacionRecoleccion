@@ -23,6 +23,7 @@ export function SimulationECharts({ result, variable, selectedCategory, onSelect
   const selected = result.categories.find((category) => category.category === selectedCategory);
   const [legendSelection, setLegendSelection] = useState<Record<string, boolean>>({});
   const option = buildOption(kind, result, kind === "unordered" ? legendSelection : undefined);
+  const chartHeight = kind === "pie" || kind === "boolean" ? 270 : kind === "unordered" ? Math.max(220, Math.min(360, result.categories.length * 52 + 90)) : 310;
   const onEvents = {
     click: (params: { name?: string; data?: ChartDatum }) => {
       const raw = params.data?.extra?.category ?? result.categories.find((category) => simulationCategoryLabel(category.category) === params.name)?.category;
@@ -33,7 +34,7 @@ export function SimulationECharts({ result, variable, selectedCategory, onSelect
     },
   };
   return <div className="space-y-3">
-    <ReactEChartsCore echarts={echarts} option={option} onEvents={onEvents} style={{ height: kind === "pie" || kind === "boolean" ? 270 : 310, width: "100%" }} opts={{ renderer: "svg" }} notMerge lazyUpdate />
+    <ReactEChartsCore echarts={echarts} option={option} onEvents={onEvents} style={{ height: chartHeight, width: "100%" }} opts={{ renderer: "svg" }} notMerge lazyUpdate />
     {selected && <ReplicaChart selected={selected} />}
   </div>;
 }
@@ -48,10 +49,12 @@ function kindFor(variable: string | undefined, result: Simulation) {
 }
 
 function tooltipFormatter(params: unknown) {
-  const item = Array.isArray(params) ? params[0] as { data?: ChartDatum; value?: unknown } : params as { data?: ChartDatum; value?: unknown };
+  const item = Array.isArray(params) ? params[0] as { data?: ChartDatum; value?: unknown; seriesName?: string } : params as { data?: ChartDatum; value?: unknown; seriesName?: string };
   const data = item?.data?.extra;
   if (!data) return "";
-  return `<strong>${simulationCategoryLabel(data.category)}</strong><br/>Observado: ${simulationPercent(data.observed)}<br/>Media simulada: ${simulationPercent(data.mean)}<br/>Rango 95 %: ${simulationPercent(data.lower)} – ${simulationPercent(data.upper)}<br/>Desviación: ${simulationPercent(data.deviation)}<br/>Diferencia: ${simulationDelta(data.mean, data.observed)}`;
+  const focus = item.seriesName === "Observado" ? "Observado" : item.seriesName === "Media simulada" ? "Media simulada" : "Rango / bigotes";
+  const line = (label: string, value: string, active: boolean) => active ? `<strong>${label}: ${value}</strong>` : `${label}: ${value}`;
+  return `<strong>${simulationCategoryLabel(data.category)}</strong><br/>${line("Observado", simulationPercent(data.observed), focus === "Observado")}<br/>${line("Media simulada", simulationPercent(data.mean), focus === "Media simulada")}<br/>${line("Mediana de réplicas", simulationPercent(data.median ?? data.mean), focus === "Rango / bigotes")}<br/>${line("Rango 95 %", `${simulationPercent(data.lower)} – ${simulationPercent(data.upper)}`, focus === "Rango / bigotes")}<br/>${line("Desviación", simulationPercent(data.deviation), false)}<br/>${line("Diferencia", simulationDelta(data.mean, data.observed), false)}`;
 }
 
 type CategoryStat = Simulation["categories"][number];
@@ -59,6 +62,10 @@ type ChartDatum = { value?: unknown; name?: string; extra?: CategoryStat & { cat
 
 function datum(category: CategoryStat): ChartDatum {
   return { name: simulationCategoryLabel(category.category), value: category.simulatedMean, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } };
+}
+
+function categoryExtra(category: CategoryStat) {
+  return { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation };
 }
 
 function wrapAxisLabel(value: string, maxCharacters: number) {
@@ -90,8 +97,8 @@ function buildOption(kind: string, result: Simulation, legendSelection?: Record<
   if (kind === "unordered") {
     const ordered = [...categories].sort((a, b) => b.simulatedMean - a.simulatedMean);
     const selected = { Observado: true, "Media simulada": true, "Rango / bigotes": true, ...legendSelection };
-    const observedMarks = ordered.map((category) => ({ name: "Observado", coord: [category.observedPercentage, simulationCategoryLabel(category.category)], value: category.observedPercentage, symbol: "rect", symbolSize: [2, 22], itemStyle: { color: "#64748b" } }));
-    const simulatedMarks = ordered.map((category) => ({ name: "Media simulada", coord: [category.simulatedMean, simulationCategoryLabel(category.category)], value: category.simulatedMean, symbol: "circle", symbolSize: 9, itemStyle: { color: "#1f6fb5", borderColor: "#fff", borderWidth: 1 } }));
+    const observedMarks = ordered.map((category) => ({ name: "Observado", coord: [category.observedPercentage, simulationCategoryLabel(category.category)], value: category.observedPercentage, symbol: "rect", symbolSize: [3, 24], itemStyle: { color: "#64748b" }, extra: categoryExtra(category) }));
+    const simulatedMarks = ordered.map((category) => ({ name: "Media simulada", coord: [category.simulatedMean, simulationCategoryLabel(category.category)], value: category.simulatedMean, symbol: "diamond", symbolSize: 12, z: 10, itemStyle: { color: "#1f6fb5", borderColor: "#fff", borderWidth: 1 }, extra: categoryExtra(category) }));
     const rangeSeries = {
       name: "Rango / bigotes",
       type: "boxplot",
@@ -100,7 +107,7 @@ function buildOption(kind: string, result: Simulation, legendSelection?: Record<
       itemStyle: { color: "#dbeafe", borderColor: "#1f6fb5" },
     };
     const segmentedGuides = { name: "__guías de distribución", type: "line", data: [], silent: true, showSymbol: false, lineStyle: { opacity: 0 }, markLine: { symbol: "none", label: { show: false }, lineStyle: { color: "#cbd5e1", type: "dashed", width: 1 }, data: ordered.map((category) => [{ coord: [0, simulationCategoryLabel(category.category)] }, { coord: [100, simulationCategoryLabel(category.category)] }]) } };
-    return { ...common, legend: { bottom: 6, selectedMode: true, selected, data: ["Observado", "Media simulada", "Rango / bigotes"] }, grid: { left: "10%", right: "10%", top: 20, bottom: 48, containLabel: false }, xAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, axisLine: { lineStyle: { color: "#cbd5e1" } }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, yAxis: { type: "category", inverse: true, data: ordered.map((category) => simulationCategoryLabel(category.category)), axisLabel: { margin: 8, lineHeight: 14, align: "right", formatter: (value: string) => wrapAxisLabel(value, 20) } }, series: [rangeSeries, segmentedGuides, { name: "Observado", type: "line", data: [], showSymbol: false, lineStyle: { opacity: 0 }, markPoint: { label: { show: false }, data: selected.Observado ? observedMarks : [] } }, { name: "Media simulada", type: "line", data: [], showSymbol: false, lineStyle: { opacity: 0 }, markPoint: { label: { show: false }, data: selected["Media simulada"] ? simulatedMarks : [] } }] };
+    return { ...common, legend: { bottom: 12, left: "center", itemGap: 24, padding: [0, 8], selectedMode: true, selected, data: [{ name: "Observado", icon: "rect" }, { name: "Media simulada", icon: "diamond" }, { name: "Rango / bigotes", icon: "roundRect" }] }, grid: { left: "10%", right: "10%", top: 20, bottom: 62, containLabel: false }, xAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, axisLine: { lineStyle: { color: "#cbd5e1" } }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, yAxis: { type: "category", inverse: true, data: ordered.map((category) => simulationCategoryLabel(category.category)), axisLabel: { margin: 8, lineHeight: 14, align: "right", formatter: (value: string) => wrapAxisLabel(value, 20) } }, series: [rangeSeries, segmentedGuides, { name: "Observado", type: "line", data: [], showSymbol: false, itemStyle: { color: "#64748b" }, lineStyle: { opacity: 0 }, markPoint: { label: { show: false }, tooltip: { formatter: tooltipFormatter }, data: selected.Observado ? observedMarks : [] } }, { name: "Media simulada", type: "line", data: [], showSymbol: false, itemStyle: { color: "#1f6fb5" }, lineStyle: { opacity: 0 }, markPoint: { label: { show: false }, tooltip: { formatter: tooltipFormatter }, data: selected["Media simulada"] ? simulatedMarks : [] } }] };
   }
   if (kind === "scale") {
     return { ...common, legend: { bottom: 6, type: "scroll" }, grid: { left: 82, right: 25, top: 15, bottom: 48 }, xAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, yAxis: { type: "category", data: ["Observado", "Escenario"], axisTick: { show: false } }, series: categories.map((category, index) => ({ name: simulationCategoryLabel(category.category), type: "bar", stack: "distribución", barWidth: 30, label: { show: true, formatter: (params: { value: number }) => params.value >= 6 ? `${params.value.toFixed(1)}%` : "", color: "#fff", fontSize: 10 }, itemStyle: { color: colors[index % colors.length] }, data: [{ value: category.observedPercentage, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } }, { value: category.simulatedMean, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } }] })) };
