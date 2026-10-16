@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { CategoryDistribution } from "../api";
 import type { Simulation } from "../shared/analyticsTypes";
 import { simulationCategories, simulationCategoryLabel, simulationDelta, simulationPercent, simulationVariableLabel } from "./simulationUtils";
+import { SimulationECharts } from "./SimulationECharts";
 
 
 export function SimulationWeights({
@@ -85,9 +86,9 @@ export function SimulationDistribution({ result, observedTotal, loading = false,
       </CardHeader>
       <CardContent className="space-y-4">
         {!(["pie", "boolean"].includes(chartKind(result, variable))) && <div className="flex justify-between pl-1 text-[11px] tabular-nums text-ink-500"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></div>}
-        <SimulationTypedChartV2 result={result} variable={variable} selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
+        <SimulationECharts result={result} variable={variable} selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
         <div className="flex flex-wrap gap-5 border-t border-border-line pt-3 text-xs text-ink-600"><span><i className="mr-1 inline-block size-2 rounded-sm bg-slate-400" />Observado</span><span><i className="mr-1 inline-block size-2 rounded-sm bg-primary" />Escenario / media simulada</span><span><i className="mr-1 inline-block h-0.5 w-4 bg-ink-900 align-middle" />Rango / bigotes</span><span className="ml-auto">{result.repetitions.toLocaleString("es-BO")} réplicas · semilla {result.seed}</span></div>
-        <ReplicaHistogram result={result} category={selectedCategory} />
+
         {false && <>
         <div className="flex justify-between pl-1 text-[11px] tabular-nums text-ink-500"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></div>
         {result.categories.map((category) => (
@@ -118,7 +119,7 @@ export function SimulationDistribution({ result, observedTotal, loading = false,
   );
 }
 
-function ReplicaHistogram({ result, category }: { result: Simulation; category: string | null }) {
+export function ReplicaHistogram({ result, category }: { result: Simulation; category: string | null }) {
   const selected = result.categories.find((item) => item.category === category);
   if (!selected) return null;
   const values = selected.replicaPercentages ?? [];
@@ -140,7 +141,7 @@ function chartKind(result: Simulation, variable?: string) {
   return "ordered";
 }
 
-function SimulationTypedChartV2({ result, variable, selectedCategory, onSelect }: { result: Simulation; variable?: string; selectedCategory: string | null; onSelect: (category: string | null) => void }) {
+export function SimulationTypedChartV2({ result, variable, selectedCategory, onSelect }: { result: Simulation; variable?: string; selectedCategory: string | null; onSelect: (category: string | null) => void }) {
   const kind = chartKind(result, variable);
   const values = kind === "unordered" ? [...result.categories].sort((a, b) => b.simulatedMean - a.simulatedMean) : result.categories;
   if (kind === "pie" || kind === "boolean") return <div className="grid gap-6 md:grid-cols-2">{[true, false].map((observed) => <PieFigure key={String(observed)} result={result} observed={observed} ring={kind === "boolean"} />)}</div>;
