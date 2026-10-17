@@ -1,4 +1,5 @@
 import { apiRequest } from '@/api/client'
+import type { Cross } from './shared/analyticsTypes'
 
 export interface ResultadoChiCuadrado {
   estadistico: number
@@ -27,5 +28,41 @@ export function ejecutarChiCuadrado(frecuencias: number[][], alfa: number) {
   return apiRequest<ResultadoChiCuadrado>('/analitica/chi-cuadrado', {
     method: 'POST',
     body: JSON.stringify({ frecuencias, alfa }),
+  })
+}
+
+/** Prueba de asociación elegida por el backend según el tamaño de muestra y las frecuencias esperadas. */
+export interface ResultadoPruebaAsociacion {
+  codigo: 'CHI_CUADRADO' | 'FISHER_EXACTA' | 'FISHER_FREEMAN_HALTON' | 'NO_APLICABLE'
+  nombrePrueba: string
+  aplicable: boolean
+  estadistico: number | null
+  gradosLibertad: number | null
+  pValor: number | null
+  alfa: number
+  rechazaHipotesis: boolean
+  motivo: string
+  n: number
+  celdasEsperadasMenores5: number
+  totalCeldas: number
+  esperadaMinima: number | null
+  vCramer: number | null
+  simulaciones: number | null
+}
+
+/** Variables de casillas: una persona puede caer en varias categorías, así que no admiten χ² ni Fisher. */
+export const MULTI_RESPONSE_FIELDS = ['area_posgrado_interes', 'area_trabajo', 'cargos_titulados']
+
+/** Frecuencias observadas en el orden de filas y columnas del cruce, para enviarlas a la prueba. */
+export function crossFrequencies(cross: Cross) {
+  return cross.rowCategories.map((row) =>
+    cross.columnCategories.map((column) => cross.counts[row]?.[column] ?? 0),
+  )
+}
+
+export function ejecutarPruebaAsociacion(frecuencias: number[][], alfa: number, respuestaMultiple = false) {
+  return apiRequest<ResultadoPruebaAsociacion>('/analitica/prueba-seleccion', {
+    method: 'POST',
+    body: JSON.stringify({ frecuencias, alfa, respuestaMultiple }),
   })
 }

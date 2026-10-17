@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { AnalyticsSummary } from "../api";
+import { MULTI_RESPONSE_FIELDS, crossFrequencies, ejecutarPruebaAsociacion, type AnalyticsSummary, type ResultadoPruebaAsociacion } from "../api";
 import type { Cross, CrossMetric, Domain, Tone } from "../shared/analyticsTypes";
 import { DatasetSelect, PageHeading, labelFor, useDatasets } from "../shared/AnalyticsPrimitives";
 import { crossMetricLabel, exportCrossCsv, exportCrossExcel, exportCrossPng } from "../shared/crossExportUtils";
@@ -19,14 +19,6 @@ import { EmployerFilterToolbar } from "@/features/empleadores/EmployerFilterTool
 import { useEmployerFilters } from "@/features/empleadores/employerData";
 import { CROSS_FIELD_OPTIONS } from "@/features/empleadores/instrumento";
 import { ChiSquareCard, CrossBars, CrossTable } from "./CrossVisualizations";
-
-type ChiResult = {
-  estadistico: number;
-  gradosLibertad: number;
-  pValor: number;
-  alfa: number;
-  rechazaIndependencia: boolean;
-};
 
 export function CrossExportPage({ domain }: { domain: Domain }) {
   const tone: Tone = domain === "TITULADOS" ? "titulados" : "empleadores";
@@ -43,7 +35,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     domain === "TITULADOS" ? "interes_posgrado" : "tamano_organizacion",
   );
   const [cross, setCross] = useState<Cross | null>(null);
-  const [chi, setChi] = useState<ChiResult | null>(null);
+  const [chi, setChi] = useState<ResultadoPruebaAsociacion | null>(null);
   const [filterSummary, setFilterSummary] = useState<AnalyticsSummary | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
   const employerFilters = useEmployerFilters(datasetId);
@@ -115,7 +107,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
             group: "Trabajo",
           },
           {
-            key: "primera_experiencia_laboral",
+            key: "es_primer_empleo",
             label: "¿Es su primer empleo? (Sí/No)",
             group: "Trabajo",
           },
@@ -131,14 +123,15 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     if (!datasetId || rowField === columnField) return;
     setLoading(true);
     setError(null);
+    setChi(null);
     try {
       const nextCross = await apiRequest<Cross>(
           `${domain === "EMPLEADORES" ? "/analytics/employers/cross" : "/analytics/crosses"}?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
       );
       setCross(nextCross);
       try {
-        const frequencies = nextCross.rowCategories.map((row) => nextCross.columnCategories.map((column) => nextCross.counts[row]?.[column] ?? 0));
-        setChi(await apiRequest<ChiResult>("/analitica/chi-cuadrado", { method: "POST", body: JSON.stringify({ frecuencias: frequencies, alfa: 0.05 }) }));
+        const multiResponse = MULTI_RESPONSE_FIELDS.includes(rowField) || MULTI_RESPONSE_FIELDS.includes(columnField);
+        setChi(await ejecutarPruebaAsociacion(crossFrequencies(nextCross), 0.05, multiResponse));
       } catch {
         setChi(null);
       }
@@ -403,6 +396,11 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
               title="Genera una matriz de cruce"
               description="Selecciona las variables de filas y columnas para mostrar la tabla bivariada."
             />
+          )}
+          {cross && (
+            <div className="print-hide">
+              <ChiSquareCard result={chi} cross={cross} />
+            </div>
           )}
           {cross && (
             <div className="print-only print-page cross-pdf-page space-y-4" aria-label="Versión de impresión del cruce">

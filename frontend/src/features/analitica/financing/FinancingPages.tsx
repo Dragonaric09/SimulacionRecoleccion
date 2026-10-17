@@ -6,25 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { AnalyticsSummary } from "../api";
+import { MULTI_RESPONSE_FIELDS, crossFrequencies, ejecutarPruebaAsociacion, type AnalyticsSummary, type ResultadoPruebaAsociacion } from "../api";
 import type { Cross } from "../shared/analyticsTypes";
 import { DatasetSelect, DistributionCard, PageHeading, useDatasets } from "../shared/AnalyticsPrimitives";
 import { ChiSquareCard, CrossTable } from "../cross/CrossVisualizations";
-
-type ChiResult = {
-  estadistico: number;
-  gradosLibertad: number;
-  pValor: number;
-  alfa: number;
-  rechazaIndependencia: boolean;
-};
 
 export function FinancingCompletePage({ printAll = false }: { printAll?: boolean } = {}) {
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets("TITULADOS");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
   const [cross, setCross] = useState<Cross | null>(null);
-  const [chi, setChi] = useState<ChiResult | null>(null);
+  const [chi, setChi] = useState<ResultadoPruebaAsociacion | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [includeTotals, setIncludeTotals] = useState(true);
@@ -45,9 +37,8 @@ export function FinancingCompletePage({ printAll = false }: { printAll?: boolean
       apiRequest<Cross>("/analytics/crosses?datasetId=" + encodeURIComponent(datasetId) + "&rowField=" + rowField + "&columnField=" + columnField + filterQuery),
     ]).then(async ([nextSummary, nextCross]) => {
       setSummary(nextSummary); setCross(nextCross);
-      const frequencies = nextCross.rowCategories.map((row) => nextCross.columnCategories.map((column) => nextCross.counts[row]?.[column] ?? 0));
       try {
-        setChi(await apiRequest<ChiResult>("/analitica/chi-cuadrado", { method: "POST", body: JSON.stringify({ frecuencias: frequencies, alfa: 0.05 }) }));
+        setChi(await ejecutarPruebaAsociacion(crossFrequencies(nextCross), 0.05, MULTI_RESPONSE_FIELDS.includes(columnField)));
       } catch { setChi(null); }
     }).catch((cause) => setError(cause instanceof Error ? cause.message : String(cause))).finally(() => setLoading(false));
   }, [datasetId, columnField, filterQuery]);

@@ -2,18 +2,11 @@ import type { ReactNode } from "react";
 import { Badge } from "@/components/analytics/Badge";
 import { contrastTextColor } from "@/lib/utils";
 import type { Cross, CrossMetric } from "../shared/analyticsTypes";
+import type { ResultadoPruebaAsociacion } from "../api";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-type ChiResult = {
-  estadistico: number;
-  gradosLibertad: number;
-  pValor: number;
-  alfa: number;
-  rechazaIndependencia: boolean;
-};
 
 function booleanLabel(value: string) {
   if (value.toLowerCase() === "true") return "Sí";
@@ -24,38 +17,17 @@ function booleanLabel(value: string) {
   return sentence.replace(/\bia\b/gi, "IA").replace(/\bdevops\b/gi, "DevOps").replace(/\b(modular|presencial|virtual)\(/gi, "$1 (");
 }
 
-function expectedFrequencyWarning(cross: Cross) {
-  const total = cross.validCount;
-  if (!total) return null;
+const formatDecimal = (value: number, digits: number) => value.toFixed(digits).replace(".", ",");
 
-  const rowTotals = cross.rowCategories.map((row) =>
-    cross.columnCategories.reduce(
-      (sum, column) => sum + (cross.counts[row]?.[column] ?? 0),
-      0,
-    ),
-  );
-  const columnTotals = cross.columnCategories.map((column) =>
-    cross.rowCategories.reduce(
-      (sum, row) => sum + (cross.counts[row]?.[column] ?? 0),
-      0,
-    ),
-  );
+function formatPValue(value: number) {
+  return value < 0.001 ? "p < 0,001" : `p = ${formatDecimal(value, 3)}`;
+}
 
-  const totalCells = cross.rowCategories.length * cross.columnCategories.length;
-  const lowCells = rowTotals.reduce(
-    (count, rowTotal) =>
-      count +
-      columnTotals.reduce(
-        (innerCount, columnTotal) =>
-          innerCount + ((rowTotal * columnTotal) / total < 5 ? 1 : 0),
-        0,
-      ),
-    0,
-  );
-
-  const sparseRatio = totalCells ? lowCells / totalCells : 0;
-  const isSevere = total < 10 || sparseRatio > 0.2;
-  return { lowCells, totalCells, isSevere };
+function cramerStrength(value: number) {
+  if (value < 0.1) return "despreciable";
+  if (value < 0.3) return "débil";
+  if (value < 0.5) return "moderada";
+  return "fuerte";
 }
 
 function observedSmallSampleSummary(cross: Cross) {
@@ -82,64 +54,71 @@ export function ChiSquareCard({
   result,
   cross,
 }: {
-  result: ChiResult | null;
+  result: ResultadoPruebaAsociacion | null;
   cross: Cross;
 }) {
-  const warning = expectedFrequencyWarning(cross);
-  const severeWarning = warning?.isSevere ?? false;
-  const tooSmallForTest = cross.validCount < 10;
-  const reason = tooSmallForTest
-    ? `Con n = ${cross.validCount} no se puede probar si hay relación. Se muestran los conteos.`
-    : severeWarning
-      ? "Con pocos datos no se puede concluir; los conteos son orientativos."
-      : !cross.validCount
-        ? "No hay celdas con observaciones válidas para evaluar."
-        : cross.rowCategories.length < 2
-          ? `La matriz solo tiene ${cross.rowCategories.length} categoría de fila; se requieren al menos 2.`
-          : cross.columnCategories.length < 2
-            ? `La matriz solo tiene ${cross.columnCategories.length} categoría de columna; se requieren al menos 2.`
-            : "No se pudo completar el cálculo de χ² para esta matriz.";
+  const applicable = Boolean(result?.aplicable && result.pValor != null);
+  const reason = result
+    ? result.motivo
+    : !cross.validCount
+      ? "No hay celdas con observaciones válidas para evaluar."
+      : "No se pudo completar el cálculo de la prueba para esta matriz.";
   return (
     <Card className="gap-2 rounded-xl border-0 shadow-sm">
       <CardHeader className="grid-cols-[1fr_auto] gap-x-4 gap-y-1 pb-0">
         <CardTitle className="title-card">
-          Prueba de independencia (χ²)
+          Prueba de asociación{applicable && result ? ` · ${result.nombrePrueba}` : ""}
         </CardTitle>
         <div className="flex flex-col items-end gap-1">
           <Badge tone="neutral">
-            {result && !severeWarning && !tooSmallForTest
-              ? result.rechazaIndependencia
+            {applicable && result
+              ? result.rechazaHipotesis
                 ? "p < α"
                 : "p ≥ α"
               : "No aplicable"}
           </Badge>
-          {result && !severeWarning && !tooSmallForTest && <span className="text-xs text-ink-600">α = 0,05</span>}
+          {applicable && result && <span className="text-xs text-ink-600">α = {formatDecimal(result.alfa, 2)}</span>}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {result && !severeWarning && !tooSmallForTest ? (
+        {applicable && result && result.pValor != null ? (
           <>
             <div className="grid items-center gap-4 md:grid-cols-3">
               <div>
                 <p className="display-kpi tabular-nums text-ink-900">
-                  p = {result.pValor.toFixed(3).replace(".", ",")}
+                  {formatPValue(result.pValor)}
                 </p>
               </div>
               <div className="rounded-lg bg-surface-container-low p-4">
-                <span className="caption-meta">χ² calculado</span>
-                <p className="title-card tabular-nums">
-                  {result.estadistico.toFixed(2).replace(".", ",")}
-                </p>
+                {result.estadistico != null ? (
+                  <>
+                    <span className="caption-meta">χ² calculado · gl = {result.gradosLibertad}</span>
+                    <p className="title-card tabular-nums">{formatDecimal(result.estadistico, 2)}</p>
+                  </>
+                ) : (
+                  <>
+                    <span className="caption-meta">Cálculo</span>
+                    <p className="title-card">
+                      {result.simulaciones ? `${result.simulaciones.toLocaleString("es-BO")} simulaciones` : "Probabilidad exacta"}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="rounded-lg bg-surface-container-low p-4">
-                <span className="caption-meta">Grados de libertad</span>
+                <span className="caption-meta">V de Cramér (tamaño del efecto)</span>
                 <p className="title-card tabular-nums">
-                  {result.gradosLibertad}
+                  {result.vCramer != null ? `${formatDecimal(result.vCramer, 2)} · ${cramerStrength(result.vCramer)}` : "—"}
                 </p>
               </div>
             </div>
+            <p className="text-sm text-ink-900">
+              {result.rechazaHipotesis
+                ? "Se rechaza la independencia: las dos variables están asociadas de forma estadísticamente significativa."
+                : "No hay evidencia suficiente para afirmar que las variables estén asociadas."}
+            </p>
             <p className="text-xs text-ink-600">
-              Prueba asintótica de Pearson para la tabla de contingencia.
+              <strong>Por qué esta prueba:</strong> {result.motivo} n = {result.n} · {result.celdasEsperadasMenores5} de {result.totalCeldas} celdas con esperada &lt; 5
+              {result.esperadaMinima != null ? ` · esperada mínima ${formatDecimal(result.esperadaMinima, 2)}` : ""}.
             </p>
           </>
         ) : (

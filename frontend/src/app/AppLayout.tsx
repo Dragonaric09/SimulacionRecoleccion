@@ -3,7 +3,7 @@ import { Database, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DatasetProvider, useDatasetContext, type DatasetDomain } from './DatasetContext'
-import { navigation, navigate, sectionLabels, type NavigationItem } from './navigation'
+import { isDomainSection, navigation, navigate, sectionLabels, type NavigationItem } from './navigation'
 import { PlaceholderPage } from './PlaceholderPage'
 import { PrintButton } from '@/components/analytics/PrintButton'
 import { EmpleadoresPrintBundle } from '@/features/empleadores/EmpleadoresPages'
@@ -20,7 +20,8 @@ function AppLayoutContent({ route }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const reportDomain = route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'
-  const activeReportDataset = route.section !== 'general'
+  const domainSection = isDomainSection(route.section)
+  const activeReportDataset = domainSection
     ? datasets[reportDomain].find((dataset) => dataset.id === activeIds[reportDomain])
     : undefined
 
@@ -51,7 +52,7 @@ function AppLayoutContent({ route }: Props) {
             )}
           </div>
           <nav className="scrollbar-sidebar flex-1 space-y-5 overflow-y-auto px-2 py-3" aria-label="Navegación principal">
-            {(['general', 'titulados', 'empleadores'] as const).map((section) => {
+            {(['general', 'titulados', 'empleadores', 'comparacion'] as const).map((section) => {
               const items = navigation.filter((item) => item.section === section)
               return (
                 <div key={section} className="space-y-1">
@@ -119,15 +120,21 @@ function AppLayoutContent({ route }: Props) {
                 <p className="text-xs text-ink-600">{route.description}</p>
               </div>
             </div>
-            {route.section !== 'general' && (
+            {domainSection && (
               <div className="print-hide flex min-w-0 flex-wrap items-center justify-end gap-2">
                 <GlobalDatasetSelector domain={route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'} />
                 {!route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && <PrintButton domain={route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'} />}
               </div>
             )}
+            {route.section === 'comparacion' && (
+              <div className="print-hide flex min-w-0 flex-wrap items-center justify-end gap-2">
+                <GlobalDatasetSelector domain="TITULADOS" />
+                <GlobalDatasetSelector domain="EMPLEADORES" />
+              </div>
+            )}
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
-            {route.section !== 'general' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
+            {domainSection && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
               <section className="print-only print-cover mb-6" aria-label="Portada del informe">
                 <p className="caption-bold uppercase tracking-wider text-ink-600">SIMULACIONEM · INFORME ANALÍTICO</p>
                 <h1 className="headline-page">{route.section === 'titulados' ? 'Titulados' : 'Empleadores'}</h1>
@@ -142,7 +149,7 @@ function AppLayoutContent({ route }: Props) {
               </section>
             )}
             <div className={route.path.includes('cruces-exportacion') ? 'cross-screen-root' : route.path.includes('simulacion-escenarios') ? 'simulation-screen-root' : 'screen-content'}><PlaceholderPage route={route} /></div>
-            {route.section !== 'general' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
+            {domainSection && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
               <div className="print-bundle" aria-label="Informe completo para impresión">
                 {route.section === 'titulados' ? <TituladosPrintBundle /> : <EmpleadoresPrintBundle />}
               </div>

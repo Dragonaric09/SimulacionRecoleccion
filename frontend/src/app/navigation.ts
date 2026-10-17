@@ -2,6 +2,7 @@ import {
   BarChart3,
   BriefcaseBusiness,
   FileChartColumn,
+  GitCompareArrows,
   GraduationCap,
   LayoutDashboard,
   Network,
@@ -15,8 +16,15 @@ export type NavigationItem = {
   label: string
   description: string
   icon: LucideIcon
-  section: 'general' | 'titulados' | 'empleadores'
+  section: NavigationSection
   implemented?: boolean
+}
+
+export type NavigationSection = 'general' | 'titulados' | 'empleadores' | 'comparacion'
+
+/** Secciones ligadas a una sola encuesta: tienen dataset activo, informe PDF y tono propio. */
+export function isDomainSection(section: NavigationSection): section is 'titulados' | 'empleadores' {
+  return section === 'titulados' || section === 'empleadores'
 }
 
 export const navigation: NavigationItem[] = [
@@ -105,12 +113,20 @@ export const navigation: NavigationItem[] = [
     icon: FileChartColumn,
     section: 'empleadores',
   },
+  {
+    path: '/comparacion/titulados-empleadores',
+    label: 'Titulados vs. empleadores',
+    description: 'Valoración de competencias en ambas encuestas',
+    icon: GitCompareArrows,
+    section: 'comparacion',
+  },
 ]
 
 export const sectionLabels = {
   general: 'Datos',
   titulados: 'Titulados',
   empleadores: 'Empleadores',
+  comparacion: 'Cruce entre encuestas',
 } as const
 
 export function findNavigationItem(pathname: string) {
