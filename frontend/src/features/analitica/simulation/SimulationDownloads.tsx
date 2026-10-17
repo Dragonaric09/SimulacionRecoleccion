@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { buildSimulationPdf, exportSimulationCsv, exportSimulationExcel, exportSimulationPng, preloadSimulationPdf, type SimulationExportData } from "../shared/simulationExportUtils";
+import { exportSimulationCsv, exportSimulationExcel, exportSimulationPng, openSimulationPdf, preloadSimulationPdf, type SimulationExportData } from "../shared/simulationExportUtils";
 
 export type SimulationRun = SimulationExportData & {
   datasetId: string;
@@ -51,15 +51,8 @@ export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
       previewWindow.document.body.innerHTML = "<p style=\"font-family: sans-serif; padding: 2rem\">Preparando la previsualización…</p>";
       setPdfLoading(true);
       setPdfError(null);
-      void buildSimulationPdf(run).then((blob) => {
-        const previewUrl = URL.createObjectURL(blob);
-        const safePreviewUrl = previewUrl.replace(/"/g, "&quot;");
-        // Conservamos la pestaña nueva, pero usamos el mismo visor PDF nativo
-        // dentro de un iframe de pantalla completa. Algunos navegadores no
-        // renderizan directamente una URL blob al navegar desde about:blank.
-        previewWindow.document.open();
-        previewWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Previsualización del PDF de simulación</title><style>html,body,iframe{width:100%;height:100%;margin:0;border:0;overflow:hidden;background:#525659}iframe{display:block}</style></head><body><iframe title="Previsualización del PDF de simulación" src="${safePreviewUrl}"></iframe></body></html>`);
-        previewWindow.document.close();
+      void openSimulationPdf(run, previewWindow).then(() => {
+        previewWindow.document.title = `Simulación de escenarios: ${run.variableLabel}`;
       }).catch((error: unknown) => {
         console.error("No se pudo generar el PDF de simulación", error);
         previewWindow.close();

@@ -1,6 +1,7 @@
 declare module "pdfmake/build/pdfmake" {
   type PdfDocument = {
     getBlob: () => Promise<Blob>;
+    open: (targetWindow?: Window) => void | Promise<void>;
     download: (filename?: string) => void;
   };
   type PdfMake = {
