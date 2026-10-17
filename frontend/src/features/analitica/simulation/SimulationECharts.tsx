@@ -62,6 +62,10 @@ export async function createSimulationChartDataUrl(result: Simulation, variable?
         ...series,
         radius: kind === "pie" ? "40%" : series.radius,
         center: [series.center?.[0] ?? "50%", "38%"],
+        // pdfmake conserva las líneas guía SVG de ECharts, pero puede perder
+        // el texto asociado. Las etiquetas se agregan como SVG plano abajo.
+        label: { show: false },
+        labelLine: { show: false },
       }));
     }
     chart.setOption({
@@ -102,11 +106,49 @@ export async function createSimulationChartSvg(result: Simulation, variable?: st
     // ECharts ya expone el SVG renderizado cuando se usa SVGRenderer. Usar
     // renderToSVGString evita convertir un data URL (y evita que pdfmake
     // reciba accidentalmente el prefijo `data:image/svg+xml,...`).
-    return chart.renderToSVGString();
+    const svg = chart.renderToSVGString();
+    return kind === "pie" ? addPdfPieLabels(svg, result) : svg;
   } finally {
     chart.dispose();
     host.remove();
   }
+}
+
+function addPdfPieLabels(svg: string, result: Simulation) {
+  const width = 1100;
+  const height = 500;
+  const centers = [{ x: 308, y: 190 }, { x: 792, y: 190 }];
+  const radius = 200;
+  const modes = [
+    { key: "observedPercentage" as const, color: "#64748b" },
+    { key: "simulatedMean" as const, color: "#1f6fb5" },
+  ];
+  const labels = modes.map((mode, modeIndex) => {
+    const center = centers[modeIndex];
+    let startAngle = -Math.PI / 2;
+    return result.categories.map((category) => {
+      const value = Math.max(0, category[mode.key]);
+      const angleSize = result.categories.reduce((sum, item) => sum + Math.max(0, item[mode.key]), 0) > 0
+        ? (value / result.categories.reduce((sum, item) => sum + Math.max(0, item[mode.key]), 0)) * Math.PI * 2
+        : 0;
+      const middleAngle = startAngle + angleSize / 2;
+      startAngle += angleSize;
+      const lineStartRadius = radius * 0.92;
+      const lineEndRadius = radius + 22;
+      const lineStart = { x: center.x + Math.cos(middleAngle) * lineStartRadius, y: center.y + Math.sin(middleAngle) * lineStartRadius };
+      const lineEnd = { x: center.x + Math.cos(middleAngle) * lineEndRadius, y: center.y + Math.sin(middleAngle) * lineEndRadius };
+      const isRight = Math.cos(middleAngle) >= 0;
+      const textX = Math.max(12, Math.min(width - 12, lineEnd.x + (isRight ? 8 : -8)));
+      const textY = Math.max(26, Math.min(height - 30, lineEnd.y + 4));
+      const label = `${simulationCategoryLabel(category.category)}: ${simulationPercent(category[mode.key])}`;
+      return `<line x1="${lineStart.x.toFixed(1)}" y1="${lineStart.y.toFixed(1)}" x2="${lineEnd.x.toFixed(1)}" y2="${lineEnd.y.toFixed(1)}" stroke="${mode.color}" stroke-width="1"/><text x="${textX.toFixed(1)}" y="${textY.toFixed(1)}" text-anchor="${isRight ? "start" : "end"}" font-family="Arial, sans-serif" font-size="13" fill="#334155">${escapeSvgText(label)}</text>`;
+    }).join("");
+  }).join("");
+  return svg.replace("</svg>", `${labels}</svg>`);
+}
+
+function escapeSvgText(value: string) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
 
 function kindFor(variable: string | undefined, result: Simulation) {
@@ -116,6 +158,10 @@ function kindFor(variable: string | undefined, result: Simulation) {
   if (labels.every((label) => ["true", "false", "sí", "si", "no"].includes(label))) return "boolean";
   if (result.categories.length <= 5) return "pie";
   return "ordered";
+}
+
+export function simulationChartUsesPie(result: Simulation, variable?: string) {
+  return kindFor(variable, result) === "pie";
 }
 
 function tooltipFormatter(params: unknown) {

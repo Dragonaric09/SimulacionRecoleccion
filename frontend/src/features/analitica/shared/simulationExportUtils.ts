@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx-js-style";
 import type { Simulation } from "./analyticsTypes";
-import { createSimulationChartSvg } from "../simulation/SimulationECharts";
+import { createSimulationChartSvg, simulationChartUsesPie } from "../simulation/SimulationECharts";
 import { simulationDelta } from "../simulation/simulationUtils";
 
 export type SimulationExportData = {
@@ -122,6 +122,8 @@ export async function buildSimulationPdf(data: SimulationExportData) {
   const { pdfMake } = await loadPdfMake();
   const chartSvg = await createSimulationChartSvg(data.result, data.variable);
   const categories = data.result.categories;
+  const segmentLabel = data.segment && data.segment.toLowerCase() !== "all" ? data.segment : "Todos";
+  const isPie = simulationChartUsesPie(data.result, data.variable);
   const text = (value: string, style?: string) => style ? { text: value, style } : value;
   const probabilityRows = categories.map((category) => [
     data.categoryLabel(category.category),
@@ -137,6 +139,26 @@ export async function buildSimulationPdf(data: SimulationExportData) {
     ]),
     [text("Total", "tableTotal"), text(String(data.observedTotal), "tableTotal"), text("100,0 %", "tableTotal"), ...(data.adjusted ? [text("100,0 %", "tableTotal")] : []), text("100,0 %", "tableTotal"), text("—", "tableTotal"), text("0,0 pp", "tableTotal"), text("—", "tableTotal"), text("—", "tableTotal")],
   ];
+  const pieDetails = simulationChartUsesPie(data.result, data.variable) ? {
+    columns: [
+      {
+        stack: [text("Observado", "panelTitle"), ...categories.map((category) => text(`${data.categoryLabel(category.category)}: ${percent(category.observedPercentage)}`, "note"))],
+      },
+      {
+        stack: [text("Escenario", "panelTitle"), ...categories.map((category) => text(`${data.categoryLabel(category.category)}: ${percent(category.simulatedMean)}`, "note"))],
+      },
+    ],
+    columnGap: 32,
+    margin: [0, 4, 0, 0],
+  } : null;
+  const pieHeadings = isPie ? {
+    columns: [
+      text("Observado", "panelTitle"),
+      text("Escenario", "panelTitle"),
+    ],
+    columnGap: 32,
+    margin: [0, 0, 0, 2],
+  } : null;
   const probabilityHeader = [text(`Probabilidades ${data.adjusted ? "observadas y usadas" : "observadas"}`, "panelTitle"), ""];
   const definition = {
     info: { title: `Simulación de escenarios: ${data.variableLabel}`, author: "Simulación" },
@@ -158,13 +180,14 @@ export async function buildSimulationPdf(data: SimulationExportData) {
       text(`Simulación de escenarios: ${data.variableLabel}`, "title"),
       text(`Dataset: ${data.datasetName} · Generado: ${new Intl.DateTimeFormat("es-BO", { timeZone: "America/La_Paz", dateStyle: "short" }).format(new Date())}`, "subtitle"),
       text("Escenario hipotético, no es una predicción", "warning"),
-      { table: { widths: ["auto", "auto", "auto", "auto", "auto", "*"] , body: [["Variable", data.variableLabel, "Segmento", data.segment ?? "Todos", "N / Réplicas", `${data.result.sampleSize} / ${data.result.repetitions}`], ["Semilla", String(data.result.seed), "Ajustes", data.adjusted ? "Personalizados" : "Observados", "Método", "Monte Carlo por transformada inversa"]] }, layout: "lightHorizontalLines", margin: [0, 0, 0, 10] },
+      { table: { widths: ["auto", "auto", "auto", "auto", "auto", "*"] , body: [["Variable", data.variableLabel, "Segmento", segmentLabel, "N / Réplicas", `${data.result.sampleSize} / ${data.result.repetitions}`], ["Semilla", String(data.result.seed), "Ajustes", data.adjusted ? "Personalizados" : "Observados", "Método", "Monte Carlo por transformada inversa"]] }, layout: "lightHorizontalLines", margin: [0, 0, 0, 10] },
       { table: { widths: ["*", "auto"], body: [probabilityHeader, ...probabilityRows] }, layout: "lightHorizontalLines", margin: [0, 0, 0, 10] },
-      { unbreakable: true, stack: [text("Observado contra escenario", "panelTitle"), text("Distribución con media simulada y rango del 95 % de las réplicas.", "subtitle"), { svg: chartSvg, width: 780, height: 300 }] },
+      { unbreakable: true, stack: [text("Observado contra escenario", "panelTitle"), text("Distribución con media simulada y rango del 95 % de las réplicas.", "subtitle"), ...(pieHeadings ? [pieHeadings] : []), { svg: chartSvg, width: 780, height: isPie ? 285 : 300 }] },
       { text: "Tabla comparativa", style: "title", pageBreak: "before" },
       text("Frecuencias, diferencias, medianas y rangos de todas las categorías.", "subtitle"),
       { table: { headerRows: 1, dontBreakRows: true, widths: ["*", 42, 48, ...(data.adjusted ? [58] : []), 52, 52, 58, 92, 55], body: tableBody }, layout: "lightHorizontalLines" },
       { text: ["El rango del 95 % es el intervalo en que cayeron el 95 % de las réplicas. No es un intervalo de confianza.\n", `Semilla: ${data.result.seed}. Permite repetir exactamente el resultado.`], style: "note" },
+      ...(pieDetails ? [{ text: "Detalle de la distribución", style: "panelTitle", margin: [0, 14, 0, 0] }, pieDetails] : []),
       { text: "Cómo funciona", style: "title", margin: [0, 18, 0, 5], pageBreakBefore: (currentNode: { startPosition?: { verticalRatio?: number } }) => Boolean(currentNode.startPosition && (currentNode.startPosition.verticalRatio ?? 0) > 0.55) },
       text("Transformada inversa y primeros sorteos.", "subtitle"),
       { columns: [{ width: "50%", stack: [text("Probabilidad acumulada", "panelTitle"), ...(data.result.cumulativeProbabilities ?? []).map((end, index) => ({ columns: [data.categoryLabel(categories[index]?.category ?? ""), `${percent(end * 100)}`], margin: [0, 0, 0, 4] }))] }, { width: "50%", stack: [text("Primeros 10 números aleatorios", "panelTitle"), { columns: Array.from({ length: 2 }, (_, column) => (data.result.firstDraws ?? []).filter((_, index) => index % 2 === column).map((draw, index) => ({ text: `${index * 2 + column + 1}. ${draw.random.toFixed(2)} -> ${data.categoryLabel(draw.category)}`, margin: [0, 0, 0, 4] }))) }] }], columnGap: 24, unbreakable: true },
