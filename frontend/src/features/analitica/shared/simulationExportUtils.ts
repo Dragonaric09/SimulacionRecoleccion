@@ -232,7 +232,7 @@ async function createSimulationPdf(data: SimulationExportData) {
       text("Escenario hipotético, no es una predicción", "warning"),
       { table: { widths: ["auto", "auto", "auto", "auto", "auto", "*"] , body: [["Variable", data.variableLabel, "Segmento", segmentLabel, "N / Réplicas", `${data.result.sampleSize} / ${data.result.repetitions}`], ["Semilla", String(data.result.seed), "Ajustes", data.adjusted ? "Personalizados" : "Observados", "Método", "Monte Carlo por transformada inversa"]] }, layout: "lightHorizontalLines", margin: [0, 0, 0, 10] },
       { table: { widths: ["*", "auto"], body: [probabilityHeader, ...probabilityRows] }, layout: "lightHorizontalLines", margin: [0, 0, 0, 10] },
-      { unbreakable: true, stack: [text("Observado contra escenario", "panelTitle"), text("Distribución con media simulada y rango del 95 % de las réplicas.", "subtitle"), ...(pieHeadings ? [pieHeadings] : []), { svg: chartSvg, fit: [780, isBoxplot ? 270 : isPie ? 285 : 300], alignment: "center" }] },
+      { unbreakable: true, stack: [text("Observado contra escenario", "panelTitle"), text("Distribución con media simulada y rango del 95 % de las réplicas.", "subtitle"), ...(pieHeadings ? [pieHeadings] : []), { svg: chartSvg, fit: [780, isBoxplot ? 270 : isPie ? 285 : 260], alignment: "center" }] },
       { text: "Tabla comparativa", style: "title", pageBreak: "before" },
       text("Frecuencias, diferencias, medianas y rangos de todas las categorías.", "subtitle"),
       { table: { headerRows: 1, dontBreakRows: true, widths: ["*", 58, 58, ...(hasScenarioPercentages ? [70] : []), 66, 66, 64, 108, 70], body: tableBody }, layout: "lightHorizontalLines" },

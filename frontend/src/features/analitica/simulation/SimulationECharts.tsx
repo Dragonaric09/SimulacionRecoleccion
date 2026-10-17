@@ -44,7 +44,11 @@ export function SimulationECharts({ result, variable, selectedCategory, onSelect
 /** Creates the same chart as a vector SVG for pdfmake. */
 export async function createSimulationChartSvg(result: Simulation, variable?: string): Promise<string> {
   const kind = kindFor(variable, result);
-  const chartHeight = kind === "unordered" ? Math.max(320, Math.min(460, result.categories.length * 62 + 170)) : 500;
+  const chartHeight = kind === "unordered"
+    ? Math.max(320, Math.min(460, result.categories.length * 62 + 170))
+    : kind === "ordered"
+      ? Math.max(360, Math.min(440, result.categories.length * 20 + 300))
+      : 500;
   const host = document.createElement("div");
   host.style.position = "fixed";
   host.style.left = "-10000px";
@@ -192,7 +196,8 @@ export function buildSimulationChartOption(kind: string, result: Simulation, leg
     return { ...common, legend: { bottom: 6, type: "scroll" }, grid: { left: 82, right: 25, top: 15, bottom: 48 }, xAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, yAxis: { type: "category", data: ["Observado", "Escenario"], axisTick: { show: false } }, series: categories.map((category, index) => ({ name: simulationCategoryLabel(category.category), type: "bar", stack: "distribución", barWidth: 30, label: { show: true, formatter: (params: { value: number }) => params.value >= 6 ? `${params.value.toFixed(1)}%` : "", color: "#fff", fontSize: 10 }, itemStyle: { color: colors[index % colors.length] }, data: [{ value: category.observedPercentage, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } }, { value: category.simulatedMean, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } }] })) };
   }
   const ordered = categories;
-  return { ...common, grid: { left: 45, right: 25, top: 20, bottom: 70 }, legend: { bottom: 8, type: "scroll" }, xAxis: { type: "category", data: ordered.map((category) => simulationCategoryLabel(category.category)), axisLabel: { interval: 0, rotate: ordered.length > 6 ? 25 : 0, formatter: (value: string) => value.length > 18 ? `${value.slice(0, 17)}…` : value } }, yAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, series: [
+  const orderedLabelRotation = ordered.length > 4 ? 32 : 0;
+  return { ...common, grid: { left: 45, right: 25, top: 20, bottom: orderedLabelRotation ? 96 : 70 }, legend: { bottom: 8, type: "scroll" }, xAxis: { type: "category", data: ordered.map((category) => simulationCategoryLabel(category.category)), axisLabel: { interval: 0, rotate: orderedLabelRotation, margin: orderedLabelRotation ? 14 : 8, align: orderedLabelRotation ? "right" : "center", formatter: (value: string) => value.length > 18 ? `${value.slice(0, 17)}…` : value } }, yAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, series: [
     { name: "Observado", type: "bar", barGap: "-75%", barWidth: "55%", itemStyle: { color: "#94a3b8" }, data: ordered.map((category) => ({ ...datum(category), value: category.observedPercentage })) },
     { name: "Escenario", type: "bar", barWidth: "35%", itemStyle: { color: "#1f6fb5" }, data: ordered.map((category) => ({ ...datum(category), value: category.simulatedMean })) },
   ] };
