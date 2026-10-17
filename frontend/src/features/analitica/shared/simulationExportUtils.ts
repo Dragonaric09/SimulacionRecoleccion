@@ -108,7 +108,7 @@ function rows(data: SimulationExportData) {
     ...(hasScenarioPercentages ? [percent(data.scenarioPercentages?.[category.category] ?? 0)] : []),
     percent(category.simulatedMean),
     percent(category.median ?? category.simulatedMean),
-    `${category.simulatedMean >= category.observedPercentage ? "+" : ""}${(category.simulatedMean - category.observedPercentage).toFixed(1).replace(".", ",")} pp`,
+    simulationDelta(category.simulatedMean, category.observedPercentage),
     `[${percent(category.lower95)} – ${percent(category.upper95)}]`,
     category.standardDeviation == null ? "—" : percent(category.standardDeviation),
   ]);
@@ -129,7 +129,7 @@ export function exportSimulationCsv(data: SimulationExportData) {
     ["Ajustes", data.adjusted ? "Personalizados" : "Observado"],
     [],
   ];
-  const csv = [...metadata, ...rows(data)].map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")).join("\n");
+  const csv = "\uFEFF" + [...metadata, ...rows(data)].map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")).join("\r\n");
   downloadFile(csv, "titulados_simulacion.csv", "text/csv;charset=utf-8");
 }
 
