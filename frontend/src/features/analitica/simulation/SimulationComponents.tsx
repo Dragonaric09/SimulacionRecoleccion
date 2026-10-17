@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Badge } from "@/components/analytics/Badge";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -93,78 +93,6 @@ export function SimulationDistribution({ result, observedTotal, variable }: { re
       </CardContent>
     </Card>
   );
-}
-
-export function ReplicaHistogram({ result, category }: { result: Simulation; category: string | null }) {
-  const selected = result.categories.find((item) => item.category === category);
-  if (!selected) return null;
-  const values = selected.replicaPercentages ?? [];
-  const bins = Array.from({ length: 10 }, () => 0);
-  values.forEach((value) => bins[Math.min(9, Math.floor(value / 10))]++);
-  const max = Math.max(...bins, 1);
-  const mean = selected.simulatedMean;
-  const observed = selected.observedPercentage;
-  return <div className="rounded-lg border border-primary/20 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold text-ink-900">Histograma de réplicas · {simulationCategoryLabel(selected.category)}</p><p className="mt-1 text-[11px] text-ink-600">Cada barra representa un intervalo de porcentaje en {result.repetitions.toLocaleString("es-BO")} réplicas.</p></div><span className="rounded-md bg-white px-2 py-1 text-[11px] font-semibold tabular-nums text-primary">Media {simulationPercent(mean)}</span></div><div className="relative mt-4 h-28 border-b border-l border-border-line bg-white px-2 pt-2"><div className="absolute inset-y-0 border-l border-dashed border-amber-600" style={{ left: `${observed}%` }} title={`Observado: ${simulationPercent(observed)}`} /><div className="absolute inset-y-0 border-l-2 border-primary" style={{ left: `${mean}%` }} title={`Media simulada: ${simulationPercent(mean)}`} /><div className="relative flex h-full items-end gap-1">{bins.map((value, index) => <div key={index} className="group relative flex-1 rounded-t bg-primary/75 transition-colors hover:bg-primary" style={{ height: `${value * 100 / max}%` }} title={`${value} réplicas · ${index * 10}–${(index + 1) * 10} %`}><span className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-ink-900 px-1.5 py-1 text-[10px] text-white group-hover:block">{value} réplicas</span></div>)}</div></div><div className="mt-2 flex justify-between text-[10px] tabular-nums text-ink-500"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></div><div className="mt-2 flex flex-wrap gap-4 text-[11px] text-ink-600"><span><i className="mr-1 inline-block h-3 w-px bg-amber-600 align-middle" />Observado {simulationPercent(observed)}</span><span><i className="mr-1 inline-block h-3 w-0.5 bg-primary align-middle" />Media {simulationPercent(mean)}</span><span>Rango 95 %: {simulationPercent(selected.lower95)} – {simulationPercent(selected.upper95)}</span></div></div>;
-}
-
-function chartKind(result: Simulation, variable?: string) {
-  if (["sector_trabajo", "situacion_laboral_actual"].includes(variable ?? "")) return "unordered";
-  const labels = result.categories.map((item) => item.category.toLowerCase());
-  if (labels.some((label) => label.includes("satisf") || label.includes("concord") || label.includes("muy de acuerdo"))) return "scale";
-  if (labels.every((label) => ["true", "false", "sí", "si", "no"].includes(label))) return "boolean";
-  if (result.categories.length <= 5) return "pie";
-  if (labels.some((label) => label.includes("sector") || label.includes("área") || label.includes("area") || label.includes("trabaja"))) return "unordered";
-  return "ordered";
-}
-
-export function SimulationTypedChartV2({ result, variable, selectedCategory, onSelect }: { result: Simulation; variable?: string; selectedCategory: string | null; onSelect: (category: string | null) => void }) {
-  const kind = chartKind(result, variable);
-  const values = kind === "unordered" ? [...result.categories].sort((a, b) => b.simulatedMean - a.simulatedMean) : result.categories;
-  if (kind === "pie" || kind === "boolean") return <div className="grid gap-6 md:grid-cols-2">{[true, false].map((observed) => <PieFigure key={String(observed)} result={result} observed={observed} ring={kind === "boolean"} />)}</div>;
-  if (kind === "scale") return <div className="space-y-2">{values.map((category) => <SimulationCategoryHover key={category.category} category={category} result={result}><div><div className="mb-1 flex justify-between text-xs"><span>{simulationCategoryLabel(category.category)}</span><span>{simulationPercent(category.simulatedMean)}</span></div><div className="flex h-5 overflow-hidden rounded"><div className="bg-slate-400" style={{ width: `${category.observedPercentage}%` }} /><div className="bg-primary" style={{ width: `${category.simulatedMean}%` }} /></div></div></SimulationCategoryHover>)}</div>;
-  return <div className="space-y-2">{values.map((category) => <SimulationCategoryHover key={category.category} category={category} result={result}><button type="button" onClick={() => onSelect(selectedCategory === category.category ? null : category.category)} className="block w-full text-left"><div className="mb-1 flex justify-between text-xs"><span>{simulationCategoryLabel(category.category)}</span><span>{simulationPercent(category.simulatedMean)}</span></div><div className="relative h-7 rounded bg-white">{kind === "unordered" ? <><div className="absolute top-1/2 h-0.5 w-full -translate-y-1/2 bg-ink-900/40" /><div className="absolute top-1/2 h-4 -translate-y-1/2 rounded border border-primary bg-primary/25" style={{ left: `${category.firstQuartile ?? category.lower95}%`, width: `${Math.max(0, (category.thirdQuartile ?? category.upper95) - (category.firstQuartile ?? category.lower95))}%` }} /><span className="absolute top-1/2 h-5 w-px -translate-y-1/2 bg-ink-900" style={{ left: `${category.median ?? category.simulatedMean}%` }} /><span className="absolute top-1/2 size-2 -translate-y-1/2 rounded-full bg-primary" style={{ left: `${category.simulatedMean}%` }} /></> : <><div className="absolute inset-y-0 left-0 bg-slate-300" style={{ width: `${category.observedPercentage}%` }} /><div className="absolute inset-y-0 left-0 bg-primary/80" style={{ width: `${category.simulatedMean}%` }} /><div className="absolute inset-y-0 w-px bg-ink-900" style={{ left: `${category.observedPercentage}%` }} /></>}</div></button></SimulationCategoryHover>)}</div>;
-}
-
-function SimulationCategoryHover({ category, result, children }: { category: Simulation["categories"][number]; result: Simulation; children: ReactNode }) {
-  return <HoverCard openDelay={150} closeDelay={100}><HoverCardTrigger asChild>{children}</HoverCardTrigger><HoverCardContent side="top" align="end" className="w-80"><p className="font-semibold text-ink-900">{simulationCategoryLabel(category.category)}</p><p className="mt-1 text-xs text-ink-600">Observado: {simulationPercent(category.observedPercentage)} · Media simulada: {simulationPercent(category.simulatedMean)}</p><p className="text-xs text-ink-600">Rango: {simulationPercent(category.lower95)} – {simulationPercent(category.upper95)} · Desviación: {simulationPercent(category.standardDeviation)} · Diferencia: {simulationDelta(category.simulatedMean, category.observedPercentage)}</p><p className="mt-2 text-xs leading-relaxed text-ink-600">Si se encuestara a {result.sampleSize} personas, 95 de cada 100 veces este porcentaje caería entre {simulationPercent(category.lower95)} y {simulationPercent(category.upper95)}.</p></HoverCardContent></HoverCard>;
-}
-
-function PieFigure({ result, observed, ring }: { result: Simulation; observed: boolean; ring: boolean }) {
-  return <div className="text-center"><div className={`mx-auto size-32 rounded-full ${ring ? "p-7" : ""}`} style={{ background: pieGradient(result, observed) }}><div className={`${ring ? "size-full" : "hidden"} rounded-full bg-white`} /></div><p className="mt-2 text-xs font-semibold">{observed ? "Observado" : "Escenario"}</p><div className="mx-auto mt-2 grid max-w-xs gap-1 text-left text-[11px]">{result.categories.map((category, index) => <SimulationCategoryHover key={category.category} category={category} result={result}><div className="flex items-center justify-between gap-3"><span className="flex min-w-0 items-center gap-1"><i className="size-2 shrink-0 rounded-full" style={{ backgroundColor: pieColor(index) }} /> <span className="truncate">{simulationCategoryLabel(category.category)}</span></span><span className="tabular-nums">{simulationPercent(observed ? category.observedPercentage : category.simulatedMean)}</span></div></SimulationCategoryHover>)}</div></div>;
-}
-
-export function SimulationTypedChart({ result, variable, selectedCategory, onSelect }: { result: Simulation; variable?: string; selectedCategory: string | null; onSelect: (category: string | null) => void }) {
-  const kind = chartKind(result, variable);
-  const selected = result.categories.find((category) => category.category === selectedCategory);
-  return <div className="rounded-lg border border-border-line bg-surface-container-low p-4">
-    <div className="mb-3 flex items-center justify-between gap-3"><p className="text-sm font-semibold text-ink-900">{kind === "unordered" ? "Caja y bigotes por opción" : kind === "scale" ? "Distribución por nivel" : kind === "boolean" ? "Anillo observado y escenario" : kind === "pie" ? "Observado contra simulado" : "Categorías en orden natural"}</p><span className="text-xs text-ink-600">Haz clic en una opción para ver sus réplicas</span></div>
-    {kind === "pie" || kind === "boolean" ? <div className="flex flex-wrap items-center justify-center gap-8">{["Observado", "Escenario"].map((label, index) => <div key={label} className="text-center"><div className={`mx-auto size-32 rounded-full ${kind === "boolean" ? "p-7" : ""}`} style={{ background: pieGradient(result, index === 0) }}><div className={`${kind === "boolean" ? "size-full" : "hidden"} rounded-full bg-white`} /></div><p className="mt-2 text-xs font-semibold">{label}</p></div>)}</div> : kind === "scale" ? <div className="space-y-2">{result.categories.map((category) => <div key={category.category} className="flex items-center gap-2"><span className="w-36 truncate text-xs">{simulationCategoryLabel(category.category)}</span><div className="flex h-5 flex-1 overflow-hidden rounded"><div className="bg-slate-400" style={{ width: `${category.observedPercentage}%` }} /><div className="bg-primary" style={{ width: `${category.simulatedMean}%` }} /></div><span className="w-14 text-right text-xs tabular-nums">{simulationPercent(category.simulatedMean)}</span></div>)}</div> : <div className="space-y-2">{result.categories.map((category) => <button type="button" key={category.category} onClick={() => onSelect(selectedCategory === category.category ? null : category.category)} className="block w-full text-left"><div className="mb-1 flex justify-between gap-3 text-xs"><span className="truncate">{simulationCategoryLabel(category.category)}</span><span className="tabular-nums">{simulationPercent(category.simulatedMean)}</span></div>{kind === "unordered" ? <div className="relative h-5 rounded bg-white"><div className="absolute top-1/2 h-0.5 -translate-y-1/2 bg-ink-900" style={{ left: `${category.lower95}%`, width: `${category.upper95 - category.lower95}%` }} /><span className="absolute top-1/2 size-3 -translate-y-1/2 rounded-full border-2 border-primary bg-white" style={{ left: `${category.simulatedMean}%` }} /></div> : <div className="relative h-5 rounded bg-white"><div className="absolute inset-y-0 left-0 bg-slate-300" style={{ width: `${category.observedPercentage}%` }} /><div className="absolute inset-y-0 left-0 bg-primary/80" style={{ width: `${category.simulatedMean}%` }} /></div>}</button>)}</div>}
-    {selected && <div className="mt-4 border-t border-border-line pt-3"><p className="text-xs font-semibold">Histograma de réplicas · {simulationCategoryLabel(selected.category)}</p><div className="mt-2 flex h-20 items-end gap-1">{histogram(selected.replicaPercentages ?? [], selected).map((height, index) => <div key={index} className="flex-1 rounded-t bg-primary/70" style={{ height: `${height}%` }} title={`${height}% relativo`} />)}</div><div className="flex justify-between text-[10px] text-ink-500"><span>0 %</span><span>100 %</span></div></div>}
-  </div>;
-}
-
-function pieGradient(result: Simulation, observed: boolean) {
-  const colors = ["#1f6fb5", "#8b5bd1", "#0f766e", "#d97706", "#64748b", "#be123c", "#65a30d", "#475569"];
-  let offset = 0;
-  const segments = result.categories.map((category, index) => {
-    const value = observed ? category.observedPercentage : category.simulatedMean;
-    const segment = `${colors[index % colors.length]} ${offset}% ${offset + value}%`;
-    offset += value;
-    return segment;
-  });
-  return `conic-gradient(${segments.join(", ")})`;
-}
-
-function pieColor(index: number) {
-  return ["#1f6fb5", "#8b5bd1", "#0f766e", "#d97706", "#64748b", "#be123c", "#65a30d", "#475569"][index % 8];
-}
-
-function histogram(values: number[], category: { lower95: number; upper95: number }) {
-  if (!values.length) return [category.lower95 < category.upper95 ? 55 : 100];
-  const bins = Array.from({ length: 10 }, () => 0);
-  values.forEach((value) => bins[Math.min(9, Math.floor(value / 10))]++);
-  const max = Math.max(...bins, 1);
-  return bins.map((value) => value * 100 / max);
 }
 
 export function SimulationHowItWorks({ result }: { result: Simulation }) {
