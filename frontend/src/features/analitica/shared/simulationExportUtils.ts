@@ -10,6 +10,8 @@ export type SimulationExportData = {
   datasetName: string;
   observedProbabilities: Record<string, number>;
   usedProbabilities: Record<string, number>;
+  /** Percentages configured for the scenario, when they differ from observed. */
+  scenarioPercentages?: Record<string, number> | null;
   adjusted: boolean;
   categoryLabel: (category: string) => string;
   segment?: string;
@@ -53,11 +55,12 @@ function percent(value: number) {
 }
 
 function rows(data: SimulationExportData) {
+  const hasScenarioPercentages = data.scenarioPercentages != null;
   const headers = [
     "Categoría",
     "Frecuencia observada (n)",
     "% observado",
-    ...(data.adjusted ? ["Probabilidad usada"] : []),
+    ...(hasScenarioPercentages ? ["Probabilidad usada"] : []),
     "% simulado (media)",
     "Mediana de réplicas",
     "Δ vs observado",
@@ -68,15 +71,16 @@ function rows(data: SimulationExportData) {
     data.categoryLabel(category.category),
     String(category.observedCount),
     percent(category.observedPercentage),
-    ...(data.adjusted ? [percent(data.usedProbabilities[category.category] ?? 0)] : []),
+    ...(hasScenarioPercentages ? [percent(data.scenarioPercentages?.[category.category] ?? 0)] : []),
     percent(category.simulatedMean),
     percent(category.median ?? category.simulatedMean),
     `${category.simulatedMean >= category.observedPercentage ? "+" : ""}${(category.simulatedMean - category.observedPercentage).toFixed(1).replace(".", ",")} pp`,
     `[${percent(category.lower95)} – ${percent(category.upper95)}]`,
-    percent(category.standardDeviation),
+    category.standardDeviation == null ? "—" : percent(category.standardDeviation),
   ]);
-  const total = ["Total", String(data.observedTotal), "100,0 %"];
-  if (data.adjusted) total.push("100,0 %");
+  const observedTotal = data.result.categories.reduce((sum, category) => sum + category.observedCount, 0);
+  const total = ["Total", String(observedTotal), "100,0 %"];
+  if (hasScenarioPercentages) total.push("100,0 %");
   total.push("100,0 %", "—", "0,0 pp", "—", "—");
   return [headers, ...body, total];
 }
@@ -126,20 +130,22 @@ async function createSimulationPdf(data: SimulationExportData) {
   // Usamos el SVG string generado por ECharts. En pdfmake 0.3.x esta ruta
   // conserva los <text> de las etiquetas sin depender del CSS del DOM.
   const chartSvg = await createSimulationChartSvg(data.result, data.variable);
+  const hasScenarioPercentages = data.scenarioPercentages != null;
+  const observedTotal = categories.reduce((sum, category) => sum + category.observedCount, 0);
   const text = (value: string, style?: string) => style ? { text: value, style } : value;
   const probabilityRows = categories.map((category) => [
     data.categoryLabel(category.category),
-    `${percent((data.observedProbabilities[category.category] ?? 0) * 100)}${data.adjusted ? ` → ${percent((data.usedProbabilities[category.category] ?? 0) * 100)}` : ""}`,
+    `${percent((data.observedProbabilities[category.category] ?? 0) * 100)}${hasScenarioPercentages ? ` → ${percent(data.scenarioPercentages?.[category.category] ?? 0)}` : ""}`,
   ]);
   const tableBody = [
-    ["Categoría", "Obs. n", "% obs.", ...(data.adjusted ? ["Prob. usada"] : []), "Media", "Mediana", "Diferencia", "Rango 95 %", "Desv. est."].map((value) => text(value, "tableHeader")),
+    ["Categoría", "Frecuencia observada (n)", "% observado", ...(hasScenarioPercentages ? ["Probabilidad usada"] : []), "% simulado (media)", "Mediana de réplicas", "Δ vs observado", "Rango 95 % de repeticiones", "Desv. est. de las repeticiones"].map((value) => text(value, "tableHeader")),
     ...categories.map((category) => [
       data.categoryLabel(category.category), String(category.observedCount), percent(category.observedPercentage),
-      ...(data.adjusted ? [percent((data.usedProbabilities[category.category] ?? 0) * 100)] : []),
+      ...(hasScenarioPercentages ? [percent(data.scenarioPercentages?.[category.category] ?? 0)] : []),
       percent(category.simulatedMean), percent(category.median ?? category.simulatedMean), simulationDelta(category.simulatedMean, category.observedPercentage),
-      `[${percent(category.lower95)} - ${percent(category.upper95)}]`, percent(category.standardDeviation),
+      `[${percent(category.lower95)} – ${percent(category.upper95)}]`, category.standardDeviation == null ? "—" : percent(category.standardDeviation),
     ]),
-    [text("Total", "tableTotal"), text(String(data.observedTotal), "tableTotal"), text("100,0 %", "tableTotal"), ...(data.adjusted ? [text("100,0 %", "tableTotal")] : []), text("100,0 %", "tableTotal"), text("—", "tableTotal"), text("0,0 pp", "tableTotal"), text("—", "tableTotal"), text("—", "tableTotal")],
+    [text("Total", "tableTotal"), text(String(observedTotal), "tableTotal"), text("100,0 %", "tableTotal"), ...(hasScenarioPercentages ? [text("100,0 %", "tableTotal")] : []), text("100,0 %", "tableTotal"), text("—", "tableTotal"), text("0,0 pp", "tableTotal"), text("—", "tableTotal"), text("—", "tableTotal")],
   ];
   const pieHeadings = isPie ? {
     columns: [
@@ -149,7 +155,7 @@ async function createSimulationPdf(data: SimulationExportData) {
     columnGap: 32,
     margin: [0, 0, 0, 2],
   } : null;
-  const probabilityHeader = [text(`Probabilidades ${data.adjusted ? "observadas y usadas" : "observadas"}`, "panelTitle"), ""];
+  const probabilityHeader = [text(`Probabilidades ${hasScenarioPercentages ? "observadas y usadas" : "observadas"}`, "panelTitle"), ""];
   const definition = {
     info: { title: `Simulación de escenarios: ${data.variableLabel}`, author: "Simulación" },
     pageSize: "A4",
@@ -161,7 +167,7 @@ async function createSimulationPdf(data: SimulationExportData) {
       subtitle: { fontSize: 9, color: "#52627a", margin: [0, 0, 0, 12] },
       warning: { fontSize: 9, bold: true, color: "#9a3412", margin: [0, 0, 0, 10] },
       panelTitle: { fontSize: 11, bold: true, margin: [0, 0, 0, 7] },
-      tableHeader: { bold: true, fillColor: "#e2e8f0" },
+      tableHeader: { bold: true, fontSize: 7, fillColor: "#e2e8f0" },
       tableTotal: { bold: true, fillColor: "#f1f5f9" },
       note: { fontSize: 8, color: "#52627a", margin: [0, 10, 0, 0] },
     },
@@ -175,7 +181,7 @@ async function createSimulationPdf(data: SimulationExportData) {
       { unbreakable: true, stack: [text("Observado contra escenario", "panelTitle"), text("Distribución con media simulada y rango del 95 % de las réplicas.", "subtitle"), ...(pieHeadings ? [pieHeadings] : []), { svg: chartSvg, fit: [780, isPie ? 285 : 300], alignment: "center" }] },
       { text: "Tabla comparativa", style: "title", pageBreak: "before" },
       text("Frecuencias, diferencias, medianas y rangos de todas las categorías.", "subtitle"),
-      { table: { headerRows: 1, dontBreakRows: true, widths: ["*", 42, 48, ...(data.adjusted ? [58] : []), 52, 52, 58, 92, 55], body: tableBody }, layout: "lightHorizontalLines" },
+      { table: { headerRows: 1, dontBreakRows: true, widths: ["*", 58, 58, ...(hasScenarioPercentages ? [70] : []), 66, 66, 64, 108, 70], body: tableBody }, layout: "lightHorizontalLines" },
       { text: ["El rango del 95 % es el intervalo en que cayeron el 95 % de las réplicas. No es un intervalo de confianza.\n", `Semilla: ${data.result.seed}. Permite repetir exactamente el resultado.`], style: "note" },
       { text: "Cómo funciona", style: "title", margin: [0, 18, 0, 5], pageBreakBefore: (currentNode: { startPosition?: { verticalRatio?: number } }) => Boolean(currentNode.startPosition && (currentNode.startPosition.verticalRatio ?? 0) > 0.55) },
       text("Transformada inversa y primeros sorteos.", "subtitle"),
