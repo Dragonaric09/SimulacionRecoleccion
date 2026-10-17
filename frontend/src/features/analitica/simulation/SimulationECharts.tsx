@@ -59,7 +59,7 @@ export async function createSimulationChartSvg(result: Simulation, variable?: st
   document.body.appendChild(host);
   const chart = echarts.init(host, undefined, { renderer: "svg", width: 1100, height: chartHeight });
   try {
-    const option = buildSimulationChartOption(kind, result, { Observado: true, "Media simulada": true, "Rango / bigotes": true });
+    const option = buildSimulationChartOption(kind, result, { Observado: true, "Media simulada": true, "Rango / bigotes": true }, true);
     if (kind === "pie" || kind === "boolean") {
       const pieOption = option as { legend?: Record<string, unknown>; series: Array<{ center?: [string, string]; radius?: string | string[]; [key: string]: unknown }> };
       pieOption.legend = { ...pieOption.legend, bottom: 34 };
@@ -77,7 +77,8 @@ export async function createSimulationChartSvg(result: Simulation, variable?: st
     // los <text> generados por ECharts sin depender de getComputedStyle del DOM.
     const rawSvg = chart.renderToSVGString();
     const normalizedSvg = normalizeEchartsSvgTextForPdf(rawSvg);
-    return normalizedSvg;
+    const pdfSvg = kind === "unordered" ? addPdfBoxplotAxisLabels(normalizedSvg, result, chartHeight) : normalizedSvg;
+    return pdfSvg;
   } finally {
     chart.dispose();
     host.remove();
@@ -98,10 +99,11 @@ function normalizeEchartsSvgTextForPdf(svg: string) {
       const anchor = attributes.match(/text-anchor="([^\"]+)"/)?.[1] ?? "start";
       const fill = attributes.match(/fill="([^\"]+)"/)?.[1] ?? "#334155";
       const fontSize = attributes.match(/font-size:([0-9.]+)px/)?.[1] ?? attributes.match(/font-size="([^\"]+)"/)?.[1] ?? "11";
-      const tspans = [...content.matchAll(/<tspan[^>]*>([\s\S]*?)<\/tspan>/g)].map((item) => item[1]);
-      // La leyenda y los textos simples ya tienen coordenadas válidas.
-      // Solo hay que intervenir las etiquetas multilínea del eje Y.
-      if (tspans.length === 0) return _match;
+      const tspans = [...content.matchAll(/<tspan\b[^>]*>([\s\S]*?)<\/tspan>/gi)].map((item) => item[1]);
+      // La leyenda ya tiene coordenadas x/y válidas. Las etiquetas de pie y
+      // otros textos transformados necesitan pasar a x/y explícitos para que
+      // pdfmake los pinte.
+      if (tspans.length === 0 && !content.toLowerCase().includes("<tspan") && /\bx=/.test(attributes)) return _match;
       if (tspans.length > 0) {
         const lineHeight = Number(fontSize) * 1.2;
         const firstLineY = Number(y) - ((tspans.length - 1) * lineHeight) / 2;
@@ -109,9 +111,33 @@ function normalizeEchartsSvgTextForPdf(svg: string) {
           .map((line, index) => `<text x="${x}" y="${firstLineY + index * lineHeight}" text-anchor="${anchor}" fill="${fill}" font-family="Arial, sans-serif" font-size="${fontSize}">${line}</text>`)
           .join("");
       }
+      if (content.toLowerCase().includes("<tspan")) {
+        const plainText = content.replace(/<[^>]+>/g, "").trim();
+        return `<text x="${x}" y="${y}" text-anchor="${anchor}" fill="${fill}" font-family="Arial, sans-serif" font-size="${fontSize}">${plainText}</text>`;
+      }
       return `<text x="${x}" y="${y}" text-anchor="${anchor}" fill="${fill}" font-family="Arial, sans-serif" font-size="${fontSize}">${content}</text>`;
     },
   );
+}
+
+function addPdfBoxplotAxisLabels(svg: string, result: Simulation, chartHeight: number) {
+  const ordered = [...result.categories].sort((a, b) => b.simulatedMean - a.simulatedMean);
+  const plotTop = 20;
+  const plotBottom = 62;
+  const plotHeight = chartHeight - plotTop - plotBottom;
+  const x = 252;
+  const labels = ordered.map((category, index) => {
+    const lines = wrapAxisLabel(simulationCategoryLabel(category.category), 24).split("\n");
+    const centerY = plotTop + ((index + 0.5) * plotHeight) / ordered.length;
+    const lineHeight = 14;
+    const firstY = centerY - ((lines.length - 1) * lineHeight) / 2;
+    return lines.map((line, lineIndex) => `<text x="${x}" y="${firstY + lineIndex * lineHeight}" text-anchor="end" fill="#334155" font-family="Arial, sans-serif" font-size="12">${escapeSvgText(line)}</text>`).join("");
+  }).join("");
+  return svg.replace("</svg>", `${labels}</svg>`);
+}
+
+function escapeSvgText(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 function kindFor(variable: string | undefined, result: Simulation) {
@@ -177,7 +203,7 @@ function wrapAxisLabel(value: string, maxCharacters: number) {
   return lines.join("\n");
 }
 
-export function buildSimulationChartOption(kind: string, result: Simulation, legendSelection?: Record<string, boolean>) {
+export function buildSimulationChartOption(kind: string, result: Simulation, legendSelection?: Record<string, boolean>, forPdf = false) {
   const categories = result.categories;
   const common = { animationDuration: 250, color: colors, tooltip: { trigger: "item", confine: true, formatter: tooltipFormatter } };
   if (kind === "pie" || kind === "boolean") {
@@ -199,7 +225,7 @@ export function buildSimulationChartOption(kind: string, result: Simulation, leg
       itemStyle: { color: "#dbeafe", borderColor: "#1f6fb5" },
     };
     const segmentedGuides = { name: "__guías de distribución", type: "line", data: [], silent: true, showSymbol: false, lineStyle: { opacity: 0 }, markLine: { symbol: "none", label: { show: false }, lineStyle: { color: "#cbd5e1", type: "dashed", width: 1 }, data: ordered.map((category) => [{ coord: [0, simulationCategoryLabel(category.category)] }, { coord: [100, simulationCategoryLabel(category.category)] }]) } };
-    return { ...common, legend: { bottom: 12, left: "center", itemGap: 24, padding: [0, 8], selectedMode: true, selected, data: [{ name: "Observado", icon: "rect" }, { name: "Media simulada", icon: "diamond" }, { name: "Rango / bigotes", icon: "roundRect" }] }, grid: { left: "10%", right: "10%", top: 20, bottom: 62, containLabel: false }, xAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, axisLine: { lineStyle: { color: "#cbd5e1" } }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, yAxis: { type: "category", inverse: true, data: ordered.map((category) => simulationCategoryLabel(category.category)), axisTick: { show: false }, axisLabel: { margin: 8, lineHeight: 14, align: "right", formatter: (value: string) => wrapAxisLabel(value, 20) } }, series: [rangeSeries, segmentedGuides, { name: "Observado", type: "line", data: [], showSymbol: false, itemStyle: { color: "#64748b" }, lineStyle: { opacity: 0 }, markPoint: { label: { show: false }, tooltip: { formatter: tooltipFormatter }, data: selected.Observado ? observedMarks : [] } }, { name: "Media simulada", type: "line", data: [], showSymbol: false, itemStyle: { color: "#1f6fb5" }, lineStyle: { opacity: 0 }, markPoint: { label: { show: false }, tooltip: { formatter: tooltipFormatter }, data: selected["Media simulada"] ? simulatedMarks : [] } }] };
+    return { ...common, legend: { bottom: 12, left: "center", itemGap: 24, padding: [0, 8], selectedMode: true, selected, data: [{ name: "Observado", icon: "rect" }, { name: "Media simulada", icon: "diamond" }, { name: "Rango / bigotes", icon: "roundRect" }] }, grid: forPdf ? { left: 260, right: 55, top: 20, bottom: 62, containLabel: false } : { left: "10%", right: "10%", top: 20, bottom: 62, containLabel: false }, xAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, axisLine: { lineStyle: { color: "#cbd5e1" } }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, yAxis: { type: "category", inverse: true, data: ordered.map((category) => simulationCategoryLabel(category.category)), axisTick: { show: false }, axisLabel: forPdf ? { show: false } : { margin: 8, lineHeight: 14, align: "right", formatter: (value: string) => wrapAxisLabel(value, 20) } }, series: [rangeSeries, segmentedGuides, { name: "Observado", type: "line", data: [], showSymbol: false, itemStyle: { color: "#64748b" }, lineStyle: { opacity: 0 }, markPoint: { label: { show: false }, tooltip: { formatter: tooltipFormatter }, data: selected.Observado ? observedMarks : [] } }, { name: "Media simulada", type: "line", data: [], showSymbol: false, itemStyle: { color: "#1f6fb5" }, lineStyle: { opacity: 0 }, markPoint: { label: { show: false }, tooltip: { formatter: tooltipFormatter }, data: selected["Media simulada"] ? simulatedMarks : [] } }] };
   }
   if (kind === "scale") {
     return { ...common, legend: { bottom: 6, type: "scroll" }, grid: { left: 82, right: 25, top: 15, bottom: 48 }, xAxis: { type: "value", min: 0, max: 100, axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: "#e2e8f0" } } }, yAxis: { type: "category", data: ["Observado", "Escenario"], axisTick: { show: false } }, series: categories.map((category, index) => ({ name: simulationCategoryLabel(category.category), type: "bar", stack: "distribución", barWidth: 30, label: { show: true, formatter: (params: { value: number }) => params.value >= 6 ? `${params.value.toFixed(1)}%` : "", color: "#fff", fontSize: 10 }, itemStyle: { color: colors[index % colors.length] }, data: [{ value: category.observedPercentage, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } }, { value: category.simulatedMean, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } }] })) };
