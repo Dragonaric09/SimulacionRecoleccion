@@ -265,34 +265,33 @@ export async function exportSimulationPdf(data: SimulationExportData) {
   downloadFile(blob, "titulados_simulacion.pdf", "application/pdf");
 }
 
-export function exportSimulationPng(data: SimulationExportData) {
-  const width = 1200;
-  const left = 270;
-  const plotWidth = 850;
-  const rowHeight = 62;
-  const top = 100;
-  const height = top + Math.max(1, data.result.categories.length) * rowHeight + 50;
-  const bars = data.result.categories.map((category, index) => {
-    const y = top + index * rowHeight;
-    const mean = Math.max(0, Math.min(100, category.simulatedMean));
-    const lower = Math.max(0, Math.min(100, category.lower95));
-    const upper = Math.max(lower, Math.min(100, category.upper95));
-    const observed = Math.max(0, Math.min(100, category.observedPercentage));
-    const median = Math.max(0, Math.min(100, category.median ?? mean));
-    return `<text x="${left - 14}" y="${y + 20}" text-anchor="end" font-family="Arial" font-size="14" fill="#0f172a">${escapeSvg(data.categoryLabel(category.category))}</text><line x1="${left + (lower / 100) * plotWidth}" y1="${y + 14}" x2="${left + (upper / 100) * plotWidth}" y2="${y + 14}" stroke="#0f172a" stroke-width="4"/><rect x="${left + (category.firstQuartile ?? lower) / 100 * plotWidth}" y="${y + 4}" width="${Math.max(2, ((category.thirdQuartile ?? upper) - (category.firstQuartile ?? lower)) / 100 * plotWidth)}" height="20" rx="2" fill="#dbeafe" stroke="#1f6fb5"/><line x1="${left + (median / 100) * plotWidth}" y1="${y + 4}" x2="${left + (median / 100) * plotWidth}" y2="${y + 24}" stroke="#1f6fb5" stroke-width="2"/><line x1="${left + (observed / 100) * plotWidth}" y1="${y + 1}" x2="${left + (observed / 100) * plotWidth}" y2="${y + 27}" stroke="#64748b" stroke-width="2"/><circle cx="${left + (mean / 100) * plotWidth}" cy="${y + 14}" r="5" fill="#1f6fb5"/><text x="${left + plotWidth + 12}" y="${y + 20}" font-family="Arial" font-size="13" fill="#334155">${percent(mean)}</text>`;
-  }).join("");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white"/><text x="30" y="30" font-family="Arial" font-size="20" font-weight="bold" fill="#0f172a">Simulación de escenarios: ${escapeSvg(data.variableLabel)}</text><text x="30" y="52" font-family="Arial" font-size="13" fill="#64748b">Segmento: ${escapeSvg(data.segment ?? "Todos")} · N = ${data.result.sampleSize} · R = ${data.result.repetitions} · Semilla = ${data.result.seed} · Ajustes: ${data.adjusted ? "personalizados" : "observados"}</text><rect x="30" y="72" width="14" height="14" fill="#1f6fb5"/><text x="52" y="84" font-family="Arial" font-size="12" fill="#334155">Media simulada</text><line x1="180" y1="79" x2="205" y2="79" stroke="#64748b" stroke-width="2"/><text x="213" y="84" font-family="Arial" font-size="12" fill="#334155">Observado</text><line x1="290" y1="79" x2="315" y2="79" stroke="#0f172a" stroke-width="4"/><text x="323" y="84" font-family="Arial" font-size="12" fill="#334155">Rango 95 %</text><line x1="430" y1="72" x2="430" y2="86" stroke="#1f6fb5" stroke-width="2"/><text x="440" y="84" font-family="Arial" font-size="12" fill="#334155">Mediana</text>${bars}</svg>`;
-  const image = new Image();
-  image.onload = () => {
+export async function exportSimulationPng(data: SimulationExportData) {
+  const svg = await getCachedChartSvg(data.result, data.variable);
+  const width = Number(svg.match(/\bwidth="([\d.]+)/)?.[1] ?? 1100);
+  const height = Number(svg.match(/\bheight="([\d.]+)/)?.[1] ?? 500);
+  const scale = 2;
+  const imageUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const element = new Image();
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error("No se pudo convertir el SVG de ECharts a PNG."));
+      element.src = imageUrl;
+    });
     const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    canvas.getContext("2d")?.drawImage(image, 0, 0);
-    canvas.toBlob((blob) => blob && downloadFile(blob, "titulados_simulacion.png", "image/png"));
-  };
-  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
-
-function escapeSvg(value: string) {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("El navegador no dispone de un contexto Canvas para exportar el PNG.");
+    context.setTransform(scale, 0, 0, scale, 0, 0);
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((value) => value ? resolve(value) : reject(new Error("No se pudo crear el archivo PNG.")), "image/png");
+    });
+    downloadFile(blob, "titulados_simulacion.png", "image/png");
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
 }

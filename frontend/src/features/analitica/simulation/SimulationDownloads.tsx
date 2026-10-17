@@ -61,7 +61,12 @@ export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
     }
     if (format === "xlsx") exportSimulationExcel(run);
     if (format === "csv") exportSimulationCsv(run);
-    if (format === "png") exportSimulationPng(run);
+    if (format === "png") {
+      void exportSimulationPng(run).catch((error: unknown) => {
+        console.error("No se pudo generar el PNG de simulación", error);
+        setPdfError("No se pudo generar la imagen PNG. Revisa la consola para más detalles.");
+      });
+    }
     if (menuRef.current) menuRef.current.open = false;
   };
   return (
