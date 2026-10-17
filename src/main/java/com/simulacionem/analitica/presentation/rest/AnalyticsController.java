@@ -289,7 +289,7 @@ public class AnalyticsController {
     }
 
     private TituladosFilter filter(Integer yearFrom, Integer yearTo, List<String> laborStatus, List<String> sector) {
-        return filter(yearFrom, yearTo, laborStatus, sector, null, null, null);
+        return filter(yearFrom, yearTo, laborStatus, sector, null, null);
     }
 
     private TituladosFilter filter(Integer yearFrom, Integer yearTo, List<String> laborStatus, List<String> sector, List<String> gender) {
