@@ -38,6 +38,10 @@ export function useSimulationScenario() {
 
   useEffect(() => {
     if (!datasetId) return;
+    setResult(null);
+    setScenarioPercentages(null);
+    setExecutedRun(null);
+    setError(null);
     const gender = segment === "all" ? "" : `&gender=${encodeURIComponent(segment)}`;
     apiRequest<AnalyticsSummary>(
       `/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=${encodeURIComponent(variable)}${gender}`,
@@ -48,6 +52,14 @@ export function useSimulationScenario() {
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)));
   }, [datasetId, variable, segment]);
+
+  const currentResult = result && executedRun
+    && executedRun.datasetId === datasetId
+    && executedRun.variable === variable
+    && executedRun.segment === segment
+    ? result
+    : null;
+  const currentExecutedRun = currentResult ? executedRun : null;
 
   const run = useCallback(async () => {
     if (!parametersValid || !datasetId) {
@@ -140,9 +152,9 @@ export function useSimulationScenario() {
     seedInput,
     setSeedInput,
     setSeed,
-    result,
+    result: currentResult,
     scenarioPercentages,
-    executedRun,
+    executedRun: currentExecutedRun,
     loading,
     error,
     sampleSizeValid,
