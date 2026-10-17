@@ -135,9 +135,23 @@ export function exportSimulationCsv(data: SimulationExportData) {
 
 export function exportSimulationExcel(data: SimulationExportData) {
   const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.aoa_to_sheet(rows(data));
-  worksheet["!cols"] = rows(data)[0].map((_, index) => ({ wch: index === 0 ? 30 : 22 }));
+  const comparisonRows = rows(data);
+  const worksheet = XLSX.utils.aoa_to_sheet(comparisonRows);
+  worksheet["!cols"] = comparisonRows[0].map((header, index) => ({ wch: index === 0 ? Math.max(28, header.length + 2) : Math.min(30, Math.max(16, header.length + 2)) }));
+  worksheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+  worksheet["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: comparisonRows.length - 1, c: comparisonRows[0].length - 1 } }) };
+  comparisonRows.forEach((row, rowIndex) => row.forEach((_, columnIndex) => {
+    const address = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
+    const isHeader = rowIndex === 0;
+    const isTotal = rowIndex === comparisonRows.length - 1;
+    worksheet[address].s = {
+      fill: { fgColor: { rgb: isHeader ? "E2E8F0" : isTotal ? "F1F5F9" : "FFFFFF" } },
+      font: { bold: isHeader || isTotal, color: "172033" },
+      alignment: { horizontal: columnIndex === 0 ? "left" : "right", vertical: "center", wrapText: isHeader },
+    };
+  }));
   XLSX.utils.book_append_sheet(workbook, worksheet, "Comparativa");
+  const hasScenarioPercentages = data.scenarioPercentages != null;
   const parameters = [
     ["Parámetro", "Valor"],
     ["Dataset", data.datasetName],
@@ -149,10 +163,21 @@ export function exportSimulationExcel(data: SimulationExportData) {
     ["Semilla", String(data.result.seed)],
     ["Base observada", String(data.observedTotal)],
     ["Probabilidades", data.adjusted ? "Ajustadas manualmente" : "Observadas"],
-    ...data.result.categories.map((category) => [data.categoryLabel(category.category), percent(data.usedProbabilities[category.category] ?? 0)]),
+    ...data.result.categories.map((category) => [data.categoryLabel(category.category), percent(hasScenarioPercentages ? data.scenarioPercentages?.[category.category] ?? 0 : (data.usedProbabilities[category.category] ?? 0) * 100)]),
     ["Método", "Monte Carlo por transformada inversa"],
   ];
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(parameters), "Parámetros");
+  const parameterSheet = XLSX.utils.aoa_to_sheet(parameters);
+  parameterSheet["!cols"] = [{ wch: 28 }, { wch: 42 }];
+  parameters.forEach((row, rowIndex) => row.forEach((_, columnIndex) => {
+    const address = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
+    parameterSheet[address].s = {
+      fill: { fgColor: { rgb: rowIndex === 0 ? "E2E8F0" : "FFFFFF" } },
+      font: { bold: rowIndex === 0, color: "172033" },
+      alignment: { vertical: "center", wrapText: true },
+    };
+  }));
+  parameterSheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+  XLSX.utils.book_append_sheet(workbook, parameterSheet, "Parámetros");
   downloadFile(XLSX.write(workbook, { bookType: "xlsx", type: "array" }), "titulados_simulacion.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 }
 
