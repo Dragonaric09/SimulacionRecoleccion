@@ -58,7 +58,7 @@ export function SimulationWeights({
   );
 }
 
-export function SimulationDistribution({ result, observedTotal, loading = false, variable }: { result: Simulation; observedTotal: number; loading?: boolean; variable?: string }) {
+export function SimulationDistribution({ result, observedTotal, variable }: { result: Simulation; observedTotal: number; variable?: string }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   return (
     <Card className="rounded-xl border-0 shadow-sm">
@@ -90,31 +90,6 @@ export function SimulationDistribution({ result, observedTotal, loading = false,
         <SimulationECharts result={result} variable={variable} selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
         <div className="border-t border-border-line pt-3 text-xs text-ink-600">{result.repetitions.toLocaleString("es-BO")} réplicas · semilla {result.seed}. Haz clic en una categoría para abrir el histograma de sus réplicas.</div>
 
-        {false && <>
-        <div className="flex justify-between pl-1 text-[11px] tabular-nums text-ink-500"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></div>
-        {result.categories.map((category) => (
-          <HoverCard key={category.category} openDelay={120} closeDelay={100}><HoverCardTrigger asChild><div className="space-y-1 cursor-help">
-            <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="min-w-0 truncate font-medium">{simulationCategoryLabel(category.category)}</span>
-              <span className="whitespace-nowrap tabular-nums text-primary">{simulationPercent(category.simulatedMean)}</span>
-            </div>
-              <div className="relative h-5 rounded bg-surface-container-low transition-opacity duration-200" style={{ opacity: loading ? 0.55 : 1 }}>
-                <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-ink-300" style={{ width: `${category.observedPercentage}%` }} />
-                <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-primary/75" style={{ width: `${category.simulatedMean}%` }} />
-                <div className="absolute top-1/2 h-0.5 -translate-y-1/2 bg-ink-900" style={{ left: `${category.lower95}%`, width: `${Math.max(0, category.upper95 - category.lower95)}%` }} />
-                <span className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" style={{ left: `${category.simulatedMean}%` }} />
-                <span className="absolute top-0 h-full w-px bg-amber-600" style={{ left: `${category.observedPercentage}%` }} title={`Observado: ${simulationPercent(category.observedPercentage)}`} />
-            </div>
-          </div></HoverCardTrigger><HoverCardContent side="top" align="end" className="w-80"><p className="font-semibold">{simulationCategoryLabel(category.category)}</p><p className="mt-1 text-xs text-ink-600">Observado: {simulationPercent(category.observedPercentage)} · Media simulada: {simulationPercent(category.simulatedMean)}</p><p className="text-xs text-ink-600">Rango: {simulationPercent(category.lower95)} – {simulationPercent(category.upper95)} · Desviación: {simulationPercent(category.standardDeviation)} · Diferencia: {simulationDelta(category.simulatedMean, category.observedPercentage)}</p><p className="mt-2 text-xs text-ink-600">Si se encuestara a {result.sampleSize} personas, 95 de cada 100 veces este porcentaje caería dentro de ese rango.</p></HoverCardContent></HoverCard>
-        ))}
-        <div className="flex flex-wrap gap-5 border-t border-border-line pt-3 text-xs text-ink-600">
-          <span><i className="mr-1 inline-block size-2 rounded-sm bg-ink-300" />Observado</span>
-          <span><i className="mr-1 inline-block size-2 rounded-sm bg-primary" />Media estimada</span>
-          <span><i className="mr-1 inline-block h-0.5 w-4 bg-ink-900 align-middle" />Rango del 95 % de las repeticiones</span>
-          <span><i className="mr-1 inline-block h-3 w-px bg-amber-600 align-middle" />Observado</span>
-          <span className="ml-auto">{result.repetitions.toLocaleString("es-BO")} réplicas · semilla {result.seed}</span>
-        </div>
-        </>}
       </CardContent>
     </Card>
   );

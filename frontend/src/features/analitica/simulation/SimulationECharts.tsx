@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import * as echarts from "echarts/core";
 import { BarChart, BoxplotChart, LineChart, PieChart } from "echarts/charts";
-import { GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TitleComponent, TooltipComponent } from "echarts/components";
-import { CanvasRenderer, SVGRenderer } from "echarts/renderers";
+import { GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TooltipComponent } from "echarts/components";
+import { SVGRenderer } from "echarts/renderers";
 import type { Simulation } from "../shared/analyticsTypes";
 import { simulationCategoryLabel, simulationDelta, simulationPercent } from "./simulationUtils";
 
-echarts.use([BarChart, BoxplotChart, LineChart, PieChart, GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TitleComponent, TooltipComponent, CanvasRenderer, SVGRenderer]);
+echarts.use([BarChart, BoxplotChart, LineChart, PieChart, GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TooltipComponent, SVGRenderer]);
 
 type Props = {
   result: Simulation;

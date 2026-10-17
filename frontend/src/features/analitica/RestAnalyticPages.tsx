@@ -1136,7 +1136,6 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
     items,
     satisfaction,
     curriculum,
-    loading,
     error,
     tabGroup,
     visibleItems,
@@ -1233,7 +1232,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
           onQueryChange={setFilterQuery}
         />
       )}
-      {loading && (
+      {datasetsLoading && (
         <StatusPanel
           kind="loading"
           title="Cargando competencias"
@@ -1247,7 +1246,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
           description={error}
         />
       )}
-      {!loading && !error && !datasetId && (
+      {!datasetsLoading && !error && !datasetId && (
         <StatusPanel
           kind="info"
           title="Sin dataset seleccionado"
@@ -1372,7 +1371,6 @@ export function SimulationPage() {
     result,
     scenarioPercentages,
     executedRun,
-    loading,
     error,
     sampleSizeValid,
     repetitionsValid,
@@ -1499,7 +1497,7 @@ export function SimulationPage() {
           </CardContent>
         </Card>
         <div className="space-y-5">
-          {result ? <SimulationDistribution result={result} variable={variable} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} loading={loading} /> : <StatusPanel kind="info" title="Calculando simulación" description="La distribución se generará automáticamente con su rango del 95 % de las repeticiones." />}
+          {result ? <SimulationDistribution result={result} variable={variable} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} /> : <StatusPanel kind="info" title="Calculando simulación" description="La distribución se generará automáticamente con su rango del 95 % de las repeticiones." />}
         </div>
       </div>
       {error && (
