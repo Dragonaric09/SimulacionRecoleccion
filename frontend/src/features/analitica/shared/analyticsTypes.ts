@@ -29,6 +29,8 @@ export type Simulation = {
   sampleSize: number;
   repetitions: number;
   seed: number;
+  cumulativeProbabilities?: number[];
+  firstDraws?: { random: number; category: string }[];
   categories: {
     category: string;
     observedCount: number;
@@ -37,6 +39,10 @@ export type Simulation = {
     lower95: number;
     upper95: number;
     standardDeviation: number;
+    replicaPercentages?: number[];
+    firstQuartile?: number;
+    median?: number;
+    thirdQuartile?: number;
   }[];
 };
 

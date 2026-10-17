@@ -14,7 +14,8 @@ import {
 export function useSimulationScenario() {
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets("TITULADOS");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
-  const [variable, setVariable] = useState("area_posgrado_interes");
+  const [variable, setVariable] = useState("genero");
+  const [segment, setSegment] = useState("all");
   const [weights, setWeights] = useState<Record<string, number>>({});
   const [sampleSize, setSampleSize] = useState(100);
   const [sampleSizeInput, setSampleSizeInput] = useState("100");
@@ -37,15 +38,28 @@ export function useSimulationScenario() {
 
   useEffect(() => {
     if (!datasetId) return;
+    setResult(null);
+    setScenarioPercentages(null);
+    setExecutedRun(null);
+    setError(null);
+    const gender = segment === "all" ? "" : `&gender=${encodeURIComponent(segment)}`;
     apiRequest<AnalyticsSummary>(
-      `/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=${encodeURIComponent(variable)}`,
+      `/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=${encodeURIComponent(variable)}${gender}`,
     )
       .then((next) => {
         setSummary(next);
         setWeights({});
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)));
-  }, [datasetId, variable]);
+  }, [datasetId, variable, segment]);
+
+  const currentResult = result && executedRun
+    && executedRun.datasetId === datasetId
+    && executedRun.variable === variable
+    && executedRun.segment === segment
+    ? result
+    : null;
+  const currentExecutedRun = currentResult ? executedRun : null;
 
   const run = useCallback(async () => {
     if (!parametersValid || !datasetId) {
@@ -98,6 +112,7 @@ export function useSimulationScenario() {
         categoryLabel: simulationCategoryLabel,
         weights: { ...weights },
         scenarioPercentages: nextScenarioPercentages,
+        segment,
       });
     } catch (cause) {
       if (cause instanceof DOMException && cause.name === "AbortError") return;
@@ -121,6 +136,8 @@ export function useSimulationScenario() {
     summary,
     variable,
     setVariable,
+    segment,
+    setSegment,
     weights,
     setWeights,
     sampleSize,
@@ -135,9 +152,9 @@ export function useSimulationScenario() {
     seedInput,
     setSeedInput,
     setSeed,
-    result,
+    result: currentResult,
     scenarioPercentages,
-    executedRun,
+    executedRun: currentExecutedRun,
     loading,
     error,
     sampleSizeValid,

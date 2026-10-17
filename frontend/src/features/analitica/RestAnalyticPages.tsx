@@ -47,6 +47,8 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
+  SelectLabel,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -67,8 +69,8 @@ import { CompetenceRadar as CompetenceRadarView } from "./competence/CompetenceR
 import { groupDisplayName, groupLabel } from "./competence/competenceHelpers";
 import { CompetencePrintGroup, CurriculumPanel } from "./competence/CompetencePrintSections";
 import { normalizeAnalyticsLabel } from "./shared/analyticsLabels";
-import { SimulationComparisonTable, SimulationDistribution, SimulationWeights } from "./simulation/SimulationComponents";
-import { simulationPercent } from "./simulation/simulationUtils";
+import { SimulationComparisonTable, SimulationDistribution, SimulationHowItWorks, SimulationWeights } from "./simulation/SimulationComponents";
+import { simulationCategories } from "./simulation/simulationUtils";
 import { SimulationDownloadMenu } from "./simulation/SimulationDownloads";
 import { useSimulationScenario } from "./simulation/useSimulationScenario";
 export { FinancingCompletePage, FinancingPage } from "./financing/FinancingPages";
@@ -1134,7 +1136,6 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
     items,
     satisfaction,
     curriculum,
-    loading,
     error,
     tabGroup,
     visibleItems,
@@ -1231,7 +1232,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
           onQueryChange={setFilterQuery}
         />
       )}
-      {loading && (
+      {datasetsLoading && (
         <StatusPanel
           kind="loading"
           title="Cargando competencias"
@@ -1245,7 +1246,7 @@ export function CompetencePage({ domain, printAll = false }: { domain: Domain; p
           description={error}
         />
       )}
-      {!loading && !error && !datasetId && (
+      {!datasetsLoading && !error && !datasetId && (
         <StatusPanel
           kind="info"
           title="Sin dataset seleccionado"
@@ -1351,6 +1352,8 @@ export function SimulationPage() {
     summary,
     variable,
     setVariable,
+    segment,
+    setSegment,
     weights,
     setWeights,
     sampleSize,
@@ -1368,13 +1371,44 @@ export function SimulationPage() {
     result,
     scenarioPercentages,
     executedRun,
-    loading,
     error,
     sampleSizeValid,
     repetitionsValid,
     seedValid,
     parseInteger,
   } = useSimulationScenario();
+  const [scenarioName, setScenarioName] = useState("Observado");
+  const [moveFrom, setMoveFrom] = useState("");
+  const [moveTo, setMoveTo] = useState("");
+  const [movePoints, setMovePoints] = useState("10");
+  const currentDistribution = summary?.distributions[variable];
+  const observedBase = currentDistribution?.validCount ?? 0;
+  const selectScenario = (value: string) => {
+    setScenarioName(value);
+    if (!currentDistribution || value === "Observado") { setWeights({}); return; }
+    const categories = simulationCategories(variable, currentDistribution.counts);
+    const total = categories.reduce((sum, category) => sum + (currentDistribution.counts[category] ?? 0), 0);
+    if (value === "Más muestra") { setSampleSize(1000); setSampleSizeInput("1000"); return; }
+    if (value === "Igualar categorías") { setWeights(Object.fromEntries(categories.map((category) => [category, total / Math.max(categories.length, 1)]))); return; }
+    if (value === "Líder +10 puntos") {
+      const ranked = [...categories].sort((a, b) => (currentDistribution.counts[b] ?? 0) - (currentDistribution.counts[a] ?? 0));
+      const leader = ranked[0]; const next = ranked[1];
+      if (leader && next) { const amount = Math.min(currentDistribution.counts[next] ?? 0, total * 0.1); const weights = Object.fromEntries(categories.map((category) => [category, currentDistribution.counts[category] ?? 0])); weights[leader] += amount; weights[next] -= amount; setWeights(weights); }
+    }
+  };
+  const applyMove = () => {
+    if (!currentDistribution || !moveFrom || !moveTo || moveFrom === moveTo) return;
+    const points = Number(movePoints);
+    if (!Number.isFinite(points) || points <= 0) return;
+    const categories = simulationCategories(variable, currentDistribution.counts);
+    const total = categories.reduce((sum, category) => sum + (currentDistribution.counts[category] ?? 0), 0);
+    const next = Object.fromEntries(categories.map((category) => [category, currentDistribution.counts[category] ?? 0]));
+    const amount = Math.min(next[moveFrom] ?? 0, total * points / 100);
+    next[moveFrom] = (next[moveFrom] ?? 0) - amount;
+    next[moveTo] = (next[moveTo] ?? 0) + amount;
+    setWeights(next);
+    setScenarioName("Personalizado");
+  };
   return (
       <div className="simulation-screen-page mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
@@ -1405,18 +1439,34 @@ export function SimulationPage() {
               <Select value={variable} onValueChange={setVariable}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="area_posgrado_interes">Área de posgrado de interés</SelectItem>
-                  <SelectItem value="nivel_posgrado_interes">Nivel de posgrado de interés</SelectItem>
-                  <SelectItem value="modalidad_posgrado">Modalidad preferida</SelectItem>
-                  <SelectItem value="financiamiento_posgrado_estimado">Fuente de financiamiento estimada</SelectItem>
-                  <SelectItem value="interes_posgrado">Interés en posgrado</SelectItem>
-                  <SelectItem value="situacion_laboral_actual">Estado laboral</SelectItem>
+                  <SelectGroup><SelectLabel>Perfil</SelectLabel><SelectItem value="genero">Género</SelectItem><SelectItem value="edad_rango">Rango de edad</SelectItem></SelectGroup>
+                  <SelectGroup><SelectLabel>Empleo</SelectLabel><SelectItem value="situacion_laboral_actual">Estado laboral</SelectItem><SelectItem value="sector_trabajo">Sector</SelectItem><SelectItem value="remuneracion_rango">Remuneración mensual</SelectItem><SelectItem value="tiempo_primer_empleo">Tiempo hasta el primer empleo</SelectItem></SelectGroup>
+                  <SelectGroup><SelectLabel>Formación</SelectLabel><SelectItem value="satisfaccion_formacion">Satisfacción con la formación</SelectItem><SelectItem value="concordancia_formacion_requerimientos">Concordancia formación-mercado</SelectItem></SelectGroup>
+                  <SelectGroup><SelectLabel>Posgrado</SelectLabel><SelectItem value="interes_posgrado">Interés</SelectItem><SelectItem value="nivel_posgrado_interes">Nivel</SelectItem><SelectItem value="modalidad_posgrado">Modalidad</SelectItem><SelectItem value="financiamiento_posgrado_estimado">Fuente de financiamiento</SelectItem></SelectGroup>
+                  <SelectGroup><SelectLabel>Área de posgrado</SelectLabel><SelectItem value="area_posgrado_interes" disabled>Multirrespuesta · pendiente de decisión</SelectItem></SelectGroup>
                 </SelectContent>
               </Select>
+            </label>
+            <label className="label-default grid gap-1">Escenario
+              <Select value={scenarioName} onValueChange={selectScenario}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                <SelectItem value="Observado">Observado</SelectItem><SelectItem value="Más muestra">Más muestra (N = 1.000)</SelectItem><SelectItem value="Líder +10 puntos">Líder +10 puntos</SelectItem><SelectItem value="Igualar categorías">Igualar categorías</SelectItem><SelectItem value="Personalizado">Personalizado</SelectItem>
+              </SelectContent></Select>
+            </label>
+            {currentDistribution && <div className="rounded-lg border border-border-line p-3 text-xs">
+              <p className="mb-2 font-semibold text-ink-800">Mover puntos</p>
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1"><Select value={moveFrom} onValueChange={setMoveFrom}><SelectTrigger><SelectValue placeholder="De" /></SelectTrigger><SelectContent>{simulationCategories(variable, currentDistribution.counts).map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select><span>→</span><Select value={moveTo} onValueChange={setMoveTo}><SelectTrigger><SelectValue placeholder="A" /></SelectTrigger><SelectContent>{simulationCategories(variable, currentDistribution.counts).map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select></div>
+              <div className="mt-2 flex gap-2"><Input className="h-8" type="number" min="0.1" step="0.1" value={movePoints} onChange={(event) => setMovePoints(event.target.value)} /><Button type="button" size="sm" onClick={applyMove}>Aplicar puntos</Button></div>
+            </div>}
+            <label className="label-default grid gap-1">Segmento
+              <Select value={segment} onValueChange={setSegment}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                <SelectItem value="all">Todos</SelectItem><SelectItem value="Mujer">Mujer</SelectItem><SelectItem value="Hombre">Hombre</SelectItem>
+              </SelectContent></Select>
+              {summary && summary.validResponses < 5 && <span className="text-xs text-amber-700">Muestra pequeña · n = {summary.validResponses}</span>}
             </label>
             <label className="label-default grid gap-1">
               Personas a simular (N)
               <Input className="w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" type="number" min="1" max="10000" step="1" value={sampleSizeInput} aria-invalid={!sampleSizeValid} onChange={(event) => setSampleSizeInput(event.target.value)} onBlur={() => setSampleSize(parseInteger(sampleSizeInput, sampleSize))} />
+              <Button type="button" variant="link" size="xs" className="justify-self-start px-0" disabled={!observedBase} onClick={() => { setSampleSize(observedBase); setSampleSizeInput(String(observedBase)); }}>Usar N = base observada{observedBase ? ` (${observedBase})` : ""}</Button>
               {!sampleSizeValid && <span className="text-xs text-destructive">Usa un entero entre 1 y 10.000.</span>}
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -1447,7 +1497,7 @@ export function SimulationPage() {
           </CardContent>
         </Card>
         <div className="space-y-5">
-          {result ? <SimulationDistribution result={result} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} loading={loading} /> : <StatusPanel kind="info" title="Calculando simulación" description="La distribución se generará automáticamente con su rango del 95 % de las repeticiones." />}
+          {result ? <SimulationDistribution result={result} variable={variable} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} /> : <StatusPanel kind="info" title="Calculando simulación" description="La distribución se generará automáticamente con su rango del 95 % de las repeticiones." />}
         </div>
       </div>
       {error && (
@@ -1458,39 +1508,7 @@ export function SimulationPage() {
         />
       )}
       {result && <SimulationComparisonTable result={result} observedTotal={executedRun?.observedTotal ?? summary?.distributions[variable]?.validCount ?? 0} scenarioPercentages={executedRun?.scenarioPercentages ?? scenarioPercentages} />}
-      {executedRun && (
-        <div className="print-only print-page simulation-pdf-page space-y-3" aria-label="Versión de impresión de la simulación">
-          <h2 className="headline-page">Simulación de escenarios: {executedRun.variableLabel}</h2>
-          <p className="text-sm text-ink-600">Dataset: {executedRun.datasetName} · Generado: {new Intl.DateTimeFormat("es-BO", { timeZone: "America/La_Paz", dateStyle: "short" }).format(new Date())}</p>
-          <p className="text-sm font-semibold text-amber-800">Escenario hipotético, no es una predicción</p>
-          <div className="simulation-pdf-parameters grid grid-cols-6 gap-2 rounded-lg bg-surface-container-low p-3 text-xs">
-            <span><strong>Variable</strong><br />{executedRun.variableLabel}</span>
-            <span><strong>Personas (N)</strong><br />{executedRun.result.sampleSize}</span>
-            <span><strong>Réplicas (R)</strong><br />{executedRun.result.repetitions}</span>
-            <span><strong>Semilla</strong><br />{executedRun.result.seed}</span>
-            <span><strong>Probabilidades</strong><br />{executedRun.adjusted ? "Ajustadas manualmente" : "Observadas"}</span>
-            <span><strong>Método</strong><br />Monte Carlo por transformada inversa</span>
-          </div>
-          <div className="rounded-lg border border-border-line p-3 text-xs">
-            <strong>Probabilidades {executedRun.adjusted ? "observadas y usadas" : "observadas"}</strong>
-            <div className="mt-1 grid grid-cols-2 gap-x-5 gap-y-1">
-              {executedRun.result.categories.map((category) => (
-                <span key={category.category}>
-                  {executedRun.categoryLabel(category.category)}: {simulationPercent((executedRun.observedProbabilities[category.category] ?? 0) * 100)}
-                  {executedRun.adjusted && ` → ${simulationPercent((executedRun.usedProbabilities[category.category] ?? 0) * 100)}`}
-                </span>
-              ))}
-            </div>
-          </div>
-          <SimulationDistribution result={executedRun.result} observedTotal={executedRun.observedTotal} loading={false} />
-          <SimulationComparisonTable result={executedRun.result} observedTotal={executedRun.observedTotal} scenarioPercentages={executedRun.scenarioPercentages} />
-          <div className="simulation-pdf-notes border-t border-surface-container-high pt-2 text-xs text-ink-700">
-            <p>El rango del 95 % es el intervalo en que cayeron el 95 % de las réplicas. No es un intervalo de confianza.</p>
-            <p className="font-semibold text-amber-800">Base observada n = {executedRun.observedTotal}: muestra muy pequeña.</p>
-            <p>Semilla: {executedRun.result.seed}. Permite repetir exactamente el resultado.</p>
-          </div>
-        </div>
-      )}
+      {result && <SimulationHowItWorks result={result} />}
     </div>
   );
 }
