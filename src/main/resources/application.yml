@@ -16,4 +16,4 @@ spring:
       hibernate.jdbc.time_zone: UTC
       hibernate.jdbc.batch_size: 500
 server:
-  port: ${SERVER_PORT:8081}
+    port: ${SERVER_PORT:8081}
