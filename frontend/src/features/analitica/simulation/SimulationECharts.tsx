@@ -43,17 +43,18 @@ export function SimulationECharts({ result, variable, selectedCategory, onSelect
 
 /** Creates the same chart as a vector SVG for pdfmake. */
 export async function createSimulationChartSvg(result: Simulation, variable?: string): Promise<string> {
+  const kind = kindFor(variable, result);
+  const chartHeight = kind === "unordered" ? Math.max(320, Math.min(460, result.categories.length * 62 + 170)) : 500;
   const host = document.createElement("div");
   host.style.position = "fixed";
   host.style.left = "-10000px";
   host.style.top = "0";
   host.style.width = "1100px";
-  host.style.height = "500px";
+  host.style.height = `${chartHeight}px`;
   host.style.background = "#ffffff";
   document.body.appendChild(host);
-  const chart = echarts.init(host, undefined, { renderer: "svg", width: 1100, height: 500 });
+  const chart = echarts.init(host, undefined, { renderer: "svg", width: 1100, height: chartHeight });
   try {
-    const kind = kindFor(variable, result);
     const option = buildSimulationChartOption(kind, result, { Observado: true, "Media simulada": true, "Rango / bigotes": true });
     if (kind === "pie" || kind === "boolean") {
       const pieOption = option as { legend?: Record<string, unknown>; series: Array<{ center?: [string, string]; radius?: string | string[]; [key: string]: unknown }> };
@@ -113,6 +114,10 @@ export function simulationChartUsesPie(result: Simulation, variable?: string) {
   return kindFor(variable, result) === "pie";
 }
 
+export function simulationChartUsesBoxplot(result: Simulation, variable?: string) {
+  return kindFor(variable, result) === "unordered";
+}
+
 function tooltipFormatter(params: unknown) {
   const item = Array.isArray(params) ? params[0] as { data?: ChartDatum; value?: unknown; seriesName?: string } : params as { data?: ChartDatum; value?: unknown; seriesName?: string };
   const data = item?.data?.extra;
@@ -124,6 +129,15 @@ function tooltipFormatter(params: unknown) {
 
 type CategoryStat = Simulation["categories"][number];
 type ChartDatum = { value?: unknown; name?: string; extra?: CategoryStat & { category: string; observed: number; mean: number; lower: number; upper: number; deviation: number } };
+
+export function simulationReplicaBins(values: number[]) {
+  const bins = Array.from({ length: 10 }, () => 0);
+  values.forEach((value) => {
+    if (!Number.isFinite(value)) return;
+    bins[Math.max(0, Math.min(9, Math.floor(value / 10)))] += 1;
+  });
+  return bins;
+}
 
 function datum(category: CategoryStat): ChartDatum {
   return { name: simulationCategoryLabel(category.category), value: category.simulatedMean, extra: { ...category, category: category.category, observed: category.observedPercentage, mean: category.simulatedMean, lower: category.lower95, upper: category.upper95, deviation: category.standardDeviation } };
@@ -184,9 +198,40 @@ export function buildSimulationChartOption(kind: string, result: Simulation, leg
   ] };
 }
 
+export async function createSimulationHistogramSvgs(categories: CategoryStat[]): Promise<string[]> {
+  if (categories.length === 0) return [];
+  const host = document.createElement("div");
+  host.style.position = "fixed";
+  host.style.left = "-10000px";
+  host.style.top = "0";
+  host.style.width = "520px";
+  host.style.height = "190px";
+  host.style.background = "#ffffff";
+  document.body.appendChild(host);
+  const chart = echarts.init(host, undefined, { renderer: "svg", width: 520, height: 190 });
+  try {
+    await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+    return categories.map((category) => {
+      const bins = simulationReplicaBins(category.replicaPercentages ?? []);
+      chart.clear();
+      chart.setOption({
+        animation: false,
+        grid: { left: 48, right: 14, top: 14, bottom: 40 },
+        xAxis: { type: "category", data: bins.map((_, index) => `${index * 10}-${(index + 1) * 10}%`), axisLabel: { fontSize: 8, interval: 0 } },
+        yAxis: { type: "value", name: "Réplicas", nameTextStyle: { fontSize: 9 }, axisLabel: { fontSize: 9 }, minInterval: 1 },
+        series: [{ type: "bar", data: bins, barMaxWidth: 28, itemStyle: { color: "#1f6fb5", borderRadius: [3, 3, 0, 0] } }],
+      });
+      return normalizeEchartsSvgTextForPdf(chart.renderToSVGString());
+    });
+  } finally {
+    chart.dispose();
+    host.remove();
+  }
+}
+
 function ReplicaChart({ selected }: { selected: CategoryStat }) {
   const values = selected.replicaPercentages ?? [];
-  const bins = Array.from({ length: 10 }, (_, index) => ({ label: `${index * 10}–${(index + 1) * 10}%`, value: values.filter((item) => item >= index * 10 && item < (index + 1) * 10).length }));
+  const bins = simulationReplicaBins(values).map((value, index) => ({ label: `${index * 10}–${(index + 1) * 10}%`, value }));
   const chartRef = useRef<echarts.ECharts | null>(null);
   usePrintResize(chartRef);
   return <div className="rounded-lg border border-primary/20 bg-slate-50 p-3">

@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx-js-style";
 import type { Simulation } from "./analyticsTypes";
-import { createSimulationChartSvg, simulationChartUsesPie } from "../simulation/SimulationECharts";
+import { createSimulationChartSvg, createSimulationHistogramSvgs, simulationChartUsesBoxplot, simulationChartUsesPie } from "../simulation/SimulationECharts";
 import { simulationDelta } from "../simulation/simulationUtils";
 
 export type SimulationExportData = {
@@ -21,6 +21,8 @@ export type SimulationExportData = {
 type PdfMakeModule = typeof import("pdfmake/build/pdfmake");
 type PdfVfsModule = typeof import("pdfmake/build/vfs_fonts");
 let pdfMakeReady: Promise<{ pdfMake: PdfMakeModule["default"]; vfs: PdfVfsModule["default"] }> | null = null;
+const chartSvgCache = new WeakMap<Simulation, Map<string, Promise<string>>>();
+const histogramSvgCache = new WeakMap<Simulation, Map<string, Promise<string[]>>>();
 
 function loadPdfMake() {
   if (!pdfMakeReady) {
@@ -37,8 +39,40 @@ function loadPdfMake() {
 }
 
 /** Precarga los módulos pesados para que la primera previsualización no espere su descarga. */
-export function preloadSimulationPdf() {
+export function preloadSimulationPdf(data?: SimulationExportData) {
   void loadPdfMake();
+  if (!data) return;
+  void getCachedChartSvg(data.result, data.variable);
+  if (simulationChartUsesBoxplot(data.result, data.variable)) void getCachedHistogramSvgs(data.result, data.variable);
+}
+
+function getCachedChartSvg(result: Simulation, variable?: string) {
+  const key = variable ?? "";
+  let entries = chartSvgCache.get(result);
+  if (!entries) {
+    entries = new Map();
+    chartSvgCache.set(result, entries);
+  }
+  const existing = entries.get(key);
+  if (existing) return existing;
+  const pending = createSimulationChartSvg(result, variable);
+  entries.set(key, pending);
+  return pending;
+}
+
+function getCachedHistogramSvgs(result: Simulation, variable?: string) {
+  const key = variable ?? "";
+  let entries = histogramSvgCache.get(result);
+  if (!entries) {
+    entries = new Map();
+    histogramSvgCache.set(result, entries);
+  }
+  const existing = entries.get(key);
+  if (existing) return existing;
+  const categories = result.categories.filter((category) => (category.replicaPercentages?.length ?? 0) > 0);
+  const pending = createSimulationHistogramSvgs(categories);
+  entries.set(key, pending);
+  return pending;
 }
 
 function downloadFile(content: BlobPart, name: string, type: string) {
@@ -127,9 +161,12 @@ async function createSimulationPdf(data: SimulationExportData) {
   const categories = data.result.categories;
   const segmentLabel = data.segment && data.segment.toLowerCase() !== "all" ? data.segment : "Todos";
   const isPie = simulationChartUsesPie(data.result, data.variable);
+  const isBoxplot = simulationChartUsesBoxplot(data.result, data.variable);
   // Usamos el SVG string generado por ECharts. En pdfmake 0.3.x esta ruta
   // conserva los <text> de las etiquetas sin depender del CSS del DOM.
-  const chartSvg = await createSimulationChartSvg(data.result, data.variable);
+  const chartSvg = await getCachedChartSvg(data.result, data.variable);
+  const histogramCategories = isBoxplot ? categories.filter((category) => (category.replicaPercentages?.length ?? 0) > 0) : [];
+  const histogramSvgs = isBoxplot ? await getCachedHistogramSvgs(data.result, data.variable) : [];
   const hasScenarioPercentages = data.scenarioPercentages != null;
   const observedTotal = categories.reduce((sum, category) => sum + category.observedCount, 0);
   const text = (value: string, style?: string) => style ? { text: value, style } : value;
@@ -155,6 +192,23 @@ async function createSimulationPdf(data: SimulationExportData) {
     columnGap: 32,
     margin: [0, 0, 0, 2],
   } : null;
+  const histogramBlock = (index: number) => {
+    const category = histogramCategories[index];
+    return {
+      unbreakable: true,
+      stack: [
+        text(`Histograma de réplicas · ${data.categoryLabel(category.category)}`, "panelTitle"),
+        { svg: histogramSvgs[index], fit: [360, 150], alignment: "center" },
+        text(`Media simulada: ${percent(category.simulatedMean)} · Observado: ${percent(category.observedPercentage)} · Rango 95 %: [${percent(category.lower95)} – ${percent(category.upper95)}]`, "note"),
+      ],
+    };
+  };
+  const histogramRows = [];
+  for (let index = 0; index < histogramSvgs.length; index += 2) {
+    const columns = [histogramBlock(index)];
+    if (index + 1 < histogramSvgs.length) columns.push(histogramBlock(index + 1));
+    histogramRows.push({ columns, columnGap: 16, unbreakable: true });
+  }
   const probabilityHeader = [text(`Probabilidades ${hasScenarioPercentages ? "observadas y usadas" : "observadas"}`, "panelTitle"), ""];
   const definition = {
     info: { title: `Simulación de escenarios: ${data.variableLabel}`, author: "Simulación" },
@@ -178,11 +232,16 @@ async function createSimulationPdf(data: SimulationExportData) {
       text("Escenario hipotético, no es una predicción", "warning"),
       { table: { widths: ["auto", "auto", "auto", "auto", "auto", "*"] , body: [["Variable", data.variableLabel, "Segmento", segmentLabel, "N / Réplicas", `${data.result.sampleSize} / ${data.result.repetitions}`], ["Semilla", String(data.result.seed), "Ajustes", data.adjusted ? "Personalizados" : "Observados", "Método", "Monte Carlo por transformada inversa"]] }, layout: "lightHorizontalLines", margin: [0, 0, 0, 10] },
       { table: { widths: ["*", "auto"], body: [probabilityHeader, ...probabilityRows] }, layout: "lightHorizontalLines", margin: [0, 0, 0, 10] },
-      { unbreakable: true, stack: [text("Observado contra escenario", "panelTitle"), text("Distribución con media simulada y rango del 95 % de las réplicas.", "subtitle"), ...(pieHeadings ? [pieHeadings] : []), { svg: chartSvg, fit: [780, isPie ? 285 : 300], alignment: "center" }] },
+      { unbreakable: true, stack: [text("Observado contra escenario", "panelTitle"), text("Distribución con media simulada y rango del 95 % de las réplicas.", "subtitle"), ...(pieHeadings ? [pieHeadings] : []), { svg: chartSvg, fit: [780, isBoxplot ? 270 : isPie ? 285 : 300], alignment: "center" }] },
       { text: "Tabla comparativa", style: "title", pageBreak: "before" },
       text("Frecuencias, diferencias, medianas y rangos de todas las categorías.", "subtitle"),
       { table: { headerRows: 1, dontBreakRows: true, widths: ["*", 58, 58, ...(hasScenarioPercentages ? [70] : []), 66, 66, 64, 108, 70], body: tableBody }, layout: "lightHorizontalLines" },
       { text: ["El rango del 95 % es el intervalo en que cayeron el 95 % de las réplicas. No es un intervalo de confianza.\n", `Semilla: ${data.result.seed}. Permite repetir exactamente el resultado.`], style: "note" },
+      ...(histogramRows.length > 0 ? [
+        { text: "Distribución de réplicas", style: "title", margin: [0, 18, 0, 5] },
+        text("Detalle de las réplicas simuladas para cada categoría del boxplot.", "subtitle"),
+        ...histogramRows,
+      ] : []),
       { text: "Cómo funciona", style: "title", margin: [0, 18, 0, 5], pageBreakBefore: (currentNode: { startPosition?: { verticalRatio?: number } }) => Boolean(currentNode.startPosition && (currentNode.startPosition.verticalRatio ?? 0) > 0.55) },
       text("Transformada inversa y primeros sorteos.", "subtitle"),
       { columns: [{ width: "50%", stack: [text("Probabilidad acumulada", "panelTitle"), ...(data.result.cumulativeProbabilities ?? []).map((end, index) => ({ columns: [data.categoryLabel(categories[index]?.category ?? ""), `${percent(end * 100)}`], margin: [0, 0, 0, 4] }))] }, { width: "50%", stack: [text("Primeros 10 números aleatorios", "panelTitle"), { columns: Array.from({ length: 2 }, (_, column) => (data.result.firstDraws ?? []).filter((_, index) => index % 2 === column).map((draw, index) => ({ text: `${index * 2 + column + 1}. ${draw.random.toFixed(2)} -> ${data.categoryLabel(draw.category)}`, margin: [0, 0, 0, 4] }))) }] }], columnGap: 24, unbreakable: true },

@@ -24,7 +24,7 @@ export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
     return () => document.removeEventListener("mousedown", closeWhenClickingOutside);
   }, []);
   useEffect(() => {
-    if (run) preloadSimulationPdf();
+    if (run) preloadSimulationPdf(run);
   }, [run]);
   if (!run) {
     return (
