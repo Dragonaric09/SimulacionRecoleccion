@@ -88,6 +88,11 @@ function percent(value: number) {
   return `${value.toFixed(1).replace(".", ",")} %`;
 }
 
+function exportSegmentLabel(value?: string) {
+  const normalized = value?.trim();
+  return !normalized || normalized.toLowerCase() === "all" ? "Todos" : normalized;
+}
+
 function rows(data: SimulationExportData) {
   const hasScenarioPercentages = data.scenarioPercentages != null;
   const headers = [
@@ -122,7 +127,7 @@ function rows(data: SimulationExportData) {
 export function exportSimulationCsv(data: SimulationExportData) {
   const metadata = [
     ["Variable", data.variableLabel],
-    ["Segmento", data.segment ?? "Todos"],
+    ["Segmento", exportSegmentLabel(data.segment)],
     ["Semilla", String(data.result.seed)],
     ["N", String(data.result.sampleSize)],
     ["Réplicas", String(data.result.repetitions)],
@@ -157,7 +162,7 @@ export function exportSimulationExcel(data: SimulationExportData) {
     ["Dataset", data.datasetName],
     ["Fecha de generación", new Intl.DateTimeFormat("en-CA", { timeZone: "America/La_Paz" }).format(new Date())],
     ["Variable", data.variableLabel],
-    ["Segmento", data.segment ?? "Todos"],
+    ["Segmento", exportSegmentLabel(data.segment)],
     ["Personas simuladas (N)", String(data.result.sampleSize)],
     ["Réplicas (R)", String(data.result.repetitions)],
     ["Semilla", String(data.result.seed)],
@@ -184,7 +189,7 @@ export function exportSimulationExcel(data: SimulationExportData) {
 async function createSimulationPdf(data: SimulationExportData) {
   const { pdfMake } = await loadPdfMake();
   const categories = data.result.categories;
-  const segmentLabel = data.segment && data.segment.toLowerCase() !== "all" ? data.segment : "Todos";
+  const segmentLabel = exportSegmentLabel(data.segment);
   const isPie = simulationChartUsesPie(data.result, data.variable);
   const isBoxplot = simulationChartUsesBoxplot(data.result, data.variable);
   // Usamos el SVG string generado por ECharts. En pdfmake 0.3.x esta ruta
