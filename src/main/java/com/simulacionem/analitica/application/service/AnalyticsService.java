@@ -409,6 +409,9 @@ public class AnalyticsService {
         if ((filter == null || !filter.active()) && tituladosSql != null) {
             return tituladosSql.competenceGaps(dataset.getId());
         }
+        if (filter != null && filter.active() && tituladosSql != null) {
+            return tituladosSql.competenceGaps(dataset.getId(), tituladosSql.matchingIds(dataset.getId(), filter));
+        }
         List<CompetenceRatingEntity> ratingRows;
         if (filter != null && filter.active() && tituladosSql != null) {
             List<UUID> matchingIds = tituladosSql.matchingIds(dataset.getId(), filter);

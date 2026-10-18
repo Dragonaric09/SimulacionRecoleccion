@@ -41,7 +41,7 @@ public class TituladosSql {
         }
 
         addGenderFilter(sql, params, filter.genders());
-        addNormalizedIn(sql, params, "t.age_range", "ageRanges", filter.ageRanges());
+        addAgeRangeFilter(sql, params, filter.ageRanges());
         addBroadTextFilter(sql, params, "t.employment_sector", "sector", filter.sectors());
         addLaborFilter(sql, params, filter.laborStatuses());
         addNormalizedIn(sql, params, "CASE WHEN t.postgraduate_interest IS NULL THEN '' WHEN t.postgraduate_interest THEN 'si' ELSE 'no' END", "postgraduate", postgraduateValues(filter.postgraduateInterest()));
@@ -53,6 +53,18 @@ public class TituladosSql {
 
     /** Calcula las estadísticas de competencias directamente en PostgreSQL para el caso sin filtros. */
     public List<CompetenceAverageDto> competenceGaps(UUID datasetId) {
+        return competenceGaps(datasetId, null);
+    }
+
+    /** Calcula competencias sobre un subconjunto de respuestas ya reducido por filtros SQL. */
+    public List<CompetenceAverageDto> competenceGaps(UUID datasetId, List<UUID> responseIds) {
+        MapSqlParameterSource params = new MapSqlParameterSource("datasetId", datasetId);
+        String responseScope = "";
+        if (responseIds != null) {
+            if (responseIds.isEmpty()) return List.of();
+            responseScope = " AND s.id IN (:responseIds)";
+            params.addValue("responseIds", responseIds);
+        }
         String sql = """
                 SELECT c.code, c.name, c.competence_group,
                        count(*) FILTER (WHERE r.not_observed = false AND r.numeric_value IS NOT NULL) AS valid_count,
@@ -69,11 +81,11 @@ public class TituladosSql {
                 FROM competence_rating r
                 JOIN survey_response s ON s.id = r.response_id
                 JOIN competence_catalog c ON c.id = r.competence_id
-                WHERE s.dataset_id = :datasetId AND s.response_status = 'VALIDA'
+                WHERE s.dataset_id = :datasetId AND s.response_status = 'VALIDA'""" + responseScope + """
                 GROUP BY c.id, c.code, c.name, c.competence_group, c.display_order
                 ORDER BY c.competence_group, c.display_order
                 """;
-        return jdbc.query(sql, new MapSqlParameterSource("datasetId", datasetId), (rs, row) -> {
+        return jdbc.query(sql, params, (rs, row) -> {
             java.util.Map<Integer, Long> levels = new java.util.LinkedHashMap<>();
             for (int level = 1; level <= 5; level++) levels.put(level, rs.getLong("l" + level));
             int modalLevel = levels.entrySet().stream()
@@ -242,23 +254,38 @@ public class TituladosSql {
         sql.append(" AND (").append(String.join(" OR ", clauses)).append(")");
     }
 
+    private static void addAgeRangeFilter(StringBuilder sql, MapSqlParameterSource params, List<String> values) {
+        if (values.isEmpty()) return;
+        String age = normalizedSql("coalesce(t.age_range, '')");
+        String canonical = "CASE"
+                + " WHEN " + age + " LIKE '15%18%' THEN '15 - 18 anos'"
+                + " WHEN " + age + " LIKE '19%22%' THEN '19 - 22 anos'"
+                + " WHEN " + age + " LIKE '23%26%' THEN '23 - 26 anos'"
+                + " WHEN " + age + " LIKE '27%30%' THEN '27 - 30 anos'"
+                + " WHEN " + age + " LIKE '31%34%' THEN '31 - 34 anos'"
+                + " WHEN " + age + " LIKE '35%mas%' THEN '35 anos o mas'"
+                + " ELSE " + age + " END";
+        List<String> normalized = normalized(values);
+        params.addValue("ageRanges", normalized);
+        sql.append(" AND ").append(canonical).append(" IN (:ageRanges)");
+    }
+
     private static void addLaborFilter(StringBuilder sql, MapSqlParameterSource params, List<String> values) {
         if (values.isEmpty()) return;
         String status = normalizedSql("t.current_employment_status");
+        String category = "CASE WHEN " + status + " = '' THEN 'sin respuesta'"
+                + " WHEN " + status + " LIKE '%emprend%' THEN 'emprendimiento propio'"
+                + " WHEN " + status + " LIKE '%no trabaja%' OR " + status + " LIKE '%no trabajo%'"
+                + " OR " + status + " LIKE '%busqueda%' OR " + status + " LIKE '%desemple%'"
+                + " THEN 'actualmente no trabaja'"
+                + " WHEN " + status + " LIKE '%trabaja en%' OR " + status + " LIKE '%organizacion%'"
+                + " THEN 'trabaja en una organizacion' ELSE " + status + " END";
         List<String> clauses = new ArrayList<>();
         for (String raw : values) {
             String value = normalize(raw);
-            if (value.equals("sin respuesta")) clauses.add(status + " = ''");
-            else if (value.equals("actualmente no trabaja")) clauses.add("(" + status + " LIKE '%no trabaja%' OR " + status
-                    + " LIKE '%no trabajo%' OR " + status + " LIKE '%desemple%' OR " + status + " LIKE '%busqueda%')");
-            else if (value.equals("trabaja en una organizacion")) clauses.add("(" + status + " LIKE '%trabaja en%' OR " + status
-                    + " LIKE '%organizacion%' OR " + status + " LIKE '%empresa%')");
-            else if (value.equals("emprendimiento propio")) clauses.add(status + " LIKE '%emprend%'");
-            else {
-                String parameter = "labor" + clauses.size();
-                clauses.add(status + " = :" + parameter);
-                params.addValue(parameter, value);
-            }
+            String parameter = "labor" + clauses.size();
+            clauses.add(category + " = :" + parameter);
+            params.addValue(parameter, value);
         }
         sql.append(" AND (").append(String.join(" OR ", clauses)).append(")");
     }
