@@ -23,7 +23,7 @@ import java.util.Random;
 @Service
 public class SeleccionPruebaEstadisticaService {
 
-    public static final int MUESTRA_MINIMA = 10;
+    public static final int MUESTRA_MINIMA = AnalysisRules.MINIMUM_CONTINGENCY_SAMPLE;
     static final int SIMULACIONES_MONTE_CARLO = 10_000;
     private static final long SEMILLA = 20_260_101L;
 
@@ -231,8 +231,7 @@ public class SeleccionPruebaEstadisticaService {
     }
 
     private static double redondear(double valor, int decimales) {
-        double factor = Math.pow(10, decimales);
-        return Math.round(valor * factor) / factor;
+        return DescriptiveStatistics.round(valor, decimales);
     }
 
     private static ResultadoPrueba noAplicable(double alfa, long n, int totalCeldas, String motivo) {

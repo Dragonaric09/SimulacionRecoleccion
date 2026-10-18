@@ -23,7 +23,7 @@ import java.util.TreeSet;
 public class EmployerCrossService {
 
     static final double ALFA = 0.05;
-    private static final int SMALL_SAMPLE = 30;
+    private static final int SMALL_SAMPLE = AnalysisRules.MINIMUM_ASSOCIATION_SAMPLE;
 
     private final NamedParameterJdbcTemplate jdbc;
     private final EmployerSql sql;
@@ -79,7 +79,8 @@ public class EmployerCrossService {
                 long count = source.getOrDefault(columnCategories.get(j), 0L);
                 table[i][j] = count;
                 rowCounts.put(columnCategories.get(j), count);
-                rowPercentages.put(columnCategories.get(j), rowTotal == 0 ? 0 : Math.round(count * 10_000.0 / rowTotal) / 100.0);
+                rowPercentages.put(columnCategories.get(j),
+                        DescriptiveStatistics.percentageOrZero(count, rowTotal, 2));
             }
             total += rowTotal;
             counts.put(r, rowCounts);

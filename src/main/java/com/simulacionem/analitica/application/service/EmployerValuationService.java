@@ -248,13 +248,12 @@ public class EmployerValuationService {
     }
 
     private static Double mean(List<Row> rows, Function<Row, Double> value) {
-        double sum = 0;
-        int count = 0;
+        List<Double> values = new ArrayList<>();
         for (Row row : rows) {
             Double v = value.apply(row);
-            if (v != null) { sum += v; count++; }
+            if (v != null) values.add(v);
         }
-        return count == 0 ? null : round(sum / count);
+        return DescriptiveStatistics.mean(values, 1);
     }
 
     // ---------------------------------------------------------------- conocimiento × desempeño
@@ -307,7 +306,7 @@ public class EmployerValuationService {
                 n[a][b] = n[b][a] = pairs.size();
                 if (pairs.size() >= 3) {
                     Double r = spearman(pairs);
-                    rho[a][b] = rho[b][a] = r == null ? null : Math.round(r * 1000.0) / 1000.0;
+                    rho[a][b] = rho[b][a] = r == null ? null : DescriptiveStatistics.round(r, 3);
                     if (r != null && pairs.size() >= SeleccionPruebaEstadisticaService.MUESTRA_MINIMA) {
                         double pv = PruebaAsociacionService.pSpearmanT(r, pairs.size());
                         p[a][b] = p[b][a] = Math.round(pv * 1_000_000.0) / 1_000_000.0;
@@ -321,43 +320,21 @@ public class EmployerValuationService {
 
     /** ρ de Spearman con rangos medios; null si alguna de las dos variables es constante. */
     static Double spearman(List<double[]> pairs) {
-        double[] x = ranks(pairs.stream().mapToDouble(v -> v[0]).toArray());
-        double[] y = ranks(pairs.stream().mapToDouble(v -> v[1]).toArray());
-        double mx = Arrays.stream(x).average().orElse(0);
-        double my = Arrays.stream(y).average().orElse(0);
-        double cov = 0, vx = 0, vy = 0;
-        for (int i = 0; i < x.length; i++) {
-            cov += (x[i] - mx) * (y[i] - my);
-            vx += (x[i] - mx) * (x[i] - mx);
-            vy += (y[i] - my) * (y[i] - my);
-        }
-        return vx == 0 || vy == 0 ? null : cov / Math.sqrt(vx * vy);
+        return AssociationStatistics.spearman(pairs);
     }
 
     static double[] ranks(double[] values) {
-        Integer[] order = new Integer[values.length];
-        for (int i = 0; i < order.length; i++) order[i] = i;
-        Arrays.sort(order, Comparator.comparingDouble(i -> values[i]));
-        double[] ranks = new double[values.length];
-        int i = 0;
-        while (i < order.length) {
-            int j = i;
-            while (j + 1 < order.length && values[order[j + 1]] == values[order[i]]) j++;
-            double rank = (i + j) / 2.0 + 1;
-            for (int m = i; m <= j; m++) ranks[order[m]] = rank;
-            i = j + 1;
-        }
-        return ranks;
+        return AssociationStatistics.ranks(values);
     }
 
     // ---------------------------------------------------------------- utilidades
 
     private static Double share(long part, long base) {
-        return base == 0 ? null : round(part * 100.0 / base);
+        return DescriptiveStatistics.percentage(part, base, 1);
     }
 
     private static double round(double value) {
-        return Math.round(value * 10.0) / 10.0;
+        return DescriptiveStatistics.round(value, 1);
     }
 
     private static double roundKey(double value) {

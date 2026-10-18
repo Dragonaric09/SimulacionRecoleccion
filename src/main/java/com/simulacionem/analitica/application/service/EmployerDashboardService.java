@@ -40,9 +40,9 @@ import java.util.stream.Collectors;
 public class EmployerDashboardService {
 
     /** Respuestas mínimas en cada periodo para calcular una variación. */
-    static final int MIN_BASE = 5;
+    static final int MIN_BASE = AnalysisRules.MINIMUM_DESCRIPTIVE_SAMPLE;
     /** Respuestas por debajo de las cuales la pantalla avisa de muestra pequeña. */
-    static final int SMALL_SAMPLE = 5;
+    static final int SMALL_SAMPLE = AnalysisRules.MINIMUM_DESCRIPTIVE_SAMPLE;
     /** Por encima de este número de días, la serie temporal se agrupa por semana. */
     static final long WEEKLY_SERIES_DAYS = 90;
     static final String ZONE = "America/La_Paz";
@@ -69,7 +69,7 @@ public class EmployerDashboardService {
             "competencias", "e.competence_average",
             "acuerdo", "e.valuations_full_agreement");
 
-    private static final String OBSERVED = "NOT r.not_observed AND r.numeric_value IS NOT NULL";
+    private static final String OBSERVED = AnalysisRules.OBSERVED_NUMERIC_SQL;
     private static final String COMPETENCE_JOIN =
             "JOIN competence_rating r ON r.response_id = s.id JOIN competence_catalog c ON c.id = r.competence_id";
 
@@ -466,14 +466,14 @@ public class EmployerDashboardService {
     }
 
     static Double percent(long part, long base) {
-        return base == 0 ? null : round(part * 100.0 / base);
+        return DescriptiveStatistics.percentage(part, base, 2);
     }
 
     private static double percentOf(long part, long base) {
-        return base == 0 ? 0 : round(part * 100.0 / base);
+        return DescriptiveStatistics.percentageOrZero(part, base, 2);
     }
 
     static double round(double value) {
-        return Math.round(value * 100.0) / 100.0;
+        return DescriptiveStatistics.round(value, 2);
     }
 }
