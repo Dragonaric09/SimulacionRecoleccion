@@ -1,0 +1,13 @@
+# Perfil de producción (Render). Se activa con SPRING_PROFILES_ACTIVE=prod, que el Dockerfile ya define.
+# Ninguna credencial tiene valor por defecto: si falta una variable, la aplicación no arranca.
+spring:
+  datasource:
+    # Variables tomadas del panel de la base de datos en Render (Hostname, Port, Database, Username, Password).
+    # reWriteBatchedInserts agrupa los INSERT de las importaciones grandes.
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}?reWriteBatchedInserts=true&sslmode=${DB_SSLMODE:prefer}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false

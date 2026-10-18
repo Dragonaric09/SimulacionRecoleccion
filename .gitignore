@@ -19,6 +19,7 @@ frontend/.vite/
 # Env
 .env
 .env.*
+!.env.example
 
 /data/*
 

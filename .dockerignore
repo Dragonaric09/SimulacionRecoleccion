@@ -1,0 +1,26 @@
+# Git y entorno local: nada de esto entra en la imagen.
+.git
+.gitignore
+.env
+.env.*
+docker-compose.yml
+start-dev.ps1
+start-dev.sh
+
+# Datos privados y documentación interna (docs/ está en .gitignore).
+data
+docs
+*.md
+
+# Artefactos de compilación locales: la imagen los genera de nuevo.
+target
+**/node_modules
+frontend/dist
+src/main/resources/static
+
+# Carpetas que el backend y el frontend no necesitan en tiempo de ejecución.
+claude
+tools
+UI
+form
+**/*.log

@@ -16,4 +16,7 @@ spring:
       hibernate.jdbc.time_zone: UTC
       hibernate.jdbc.batch_size: 500
 server:
-    port: ${SERVER_PORT:8081}
+    # Render asigna el puerto en PORT (10000 por defecto); en desarrollo se usa SERVER_PORT.
+    port: ${PORT:${SERVER_PORT:8081}}
+    # Detrás del proxy de Render, las URLs y redirecciones deben salir con el esquema y host públicos.
+    forward-headers-strategy: framework
