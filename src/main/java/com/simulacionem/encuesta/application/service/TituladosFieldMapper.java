@@ -43,7 +43,7 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
             new FieldMappingDefinition("institucion_formacion_complementaria", "donde ha cursado el programa indicado", MappingKind.TEXT),
             new FieldMappingDefinition("nombre_programa_formacion", "indique el nombre del programa", MappingKind.TEXT),
             new FieldMappingDefinition("nivel_posgrado_interes", "qué nivel de posgrado le interesa", MappingKind.TEXT),
-            new FieldMappingDefinition("area_posgrado_interes", "en cuál de las siguientes áreas le interesaría realizar el programa", MappingKind.MULTI_CATEGORY),
+            new FieldMappingDefinition("area_posgrado_interes", "en cuál de las siguientes áreas le interesaría realizar el programa", MappingKind.CATEGORY),
             new FieldMappingDefinition("modalidad_posgrado", "modalidad preferida", MappingKind.TEXT),
             new FieldMappingDefinition("institucion_posgrado_interes", "organización educativa optaría por realizar sus estudios", MappingKind.TEXT),
             new FieldMappingDefinition("financiamiento_posgrado_estimado", "cómo financiaría sus estudios", MappingKind.TEXT),

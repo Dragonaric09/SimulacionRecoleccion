@@ -9,6 +9,7 @@ import com.simulacionem.encuesta.infrastructure.persistence.entity.CompetenceRat
 import com.simulacionem.encuesta.infrastructure.persistence.entity.DatasetImportEntity;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.SurveyResponseEntity;
 import com.simulacionem.encuesta.infrastructure.persistence.repository.CompetenceRatingRepository;
+import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetColumnMappingRepository;
 import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetImportRepository;
 import com.simulacionem.encuesta.infrastructure.persistence.repository.SurveyResponseRepository;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,7 @@ public class AnalyticsService {
     private final SurveyResponseRepository responses;
     private final CompetenceRatingRepository ratings;
     private final TituladosSql tituladosSql;
+    private final DatasetColumnMappingRepository columnMappings;
 
     /**
      * Las pantallas de analítica consultan varios indicadores del mismo dataset en paralelo.
@@ -68,16 +70,23 @@ public class AnalyticsService {
 
     public AnalyticsService(DatasetImportRepository datasets, SurveyResponseRepository responses,
             CompetenceRatingRepository ratings) {
-        this(datasets, responses, ratings, null);
+        this(datasets, responses, ratings, null, null);
     }
 
     @Autowired
     public AnalyticsService(DatasetImportRepository datasets, SurveyResponseRepository responses,
-            CompetenceRatingRepository ratings, TituladosSql tituladosSql) {
+            CompetenceRatingRepository ratings, TituladosSql tituladosSql,
+            DatasetColumnMappingRepository columnMappings) {
         this.datasets = datasets;
         this.responses = responses;
         this.ratings = ratings;
         this.tituladosSql = tituladosSql;
+        this.columnMappings = columnMappings;
+    }
+
+    public AnalyticsService(DatasetImportRepository datasets, SurveyResponseRepository responses,
+            CompetenceRatingRepository ratings, TituladosSql tituladosSql) {
+        this(datasets, responses, ratings, tituladosSql, null);
     }
 
     @Transactional(readOnly = true)
@@ -93,6 +102,25 @@ public class AnalyticsService {
         if (fields == null || fields.isEmpty())
             fields = defaultFields(dataset.getSurveyType());
         return summarize(dataset, rows, fields, allRows.size(), yearBounds(allRows), true);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> availableFields(UUID datasetId, String surveyType) {
+        DatasetImportEntity dataset = resolveDataset(datasetId, surveyType);
+        var payloadFields = validRows(dataset.getId()).stream()
+                .flatMap(row -> row.getNormalizedPayload().keySet().stream())
+                .filter(field -> !field.startsWith("column_"))
+                .distinct()
+                .collect(Collectors.toSet());
+        if (columnMappings != null) {
+            columnMappings.findByDataset_Id(dataset.getId()).stream()
+                    .filter(mapping -> !mapping.isPersonal())
+                    .map(mapping -> mapping.getInternalKey())
+                    .filter(Objects::nonNull)
+                    .filter(field -> !field.isBlank())
+                    .forEach(payloadFields::add);
+        }
+        return payloadFields.stream().sorted().toList();
     }
 
     @Transactional(readOnly = true)
@@ -699,7 +727,7 @@ public class AnalyticsService {
 
     private boolean multiCategoryField(String field) {
         return List.of("aspectos_utiles", "aspectos_mejorables", "asignaturas_ventaja", "asignaturas_poco_utiles",
-                "area_posgrado_interes", "area_trabajo", "redes_sociales_activas", "cargos_titulados")
+                "area_trabajo", "redes_sociales_activas", "cargos_titulados")
                 .contains(field);
     }
 

@@ -584,7 +584,7 @@ public class CsvImportService {
         if (key.startsWith("valoracion_") || key.contains("satisfaccion")
                 || key.contains("concordancia") || key.contains("pertinencia")
                 || key.contains("importancia_formacion")) return "likert";
-        if (Set.of("area_posgrado_interes", "area_trabajo", "aspectos_utiles", "aspectos_mejorables",
+        if (Set.of("area_trabajo", "aspectos_utiles", "aspectos_mejorables",
                 "asignaturas_ventaja", "asignaturas_poco_utiles", "cargos_titulados",
                 "redes_sociales_activas").contains(key)) return "multi_category";
         if (key.equals("rubro_empresa") || key.endsWith("_rango") || key.contains("nivel_")

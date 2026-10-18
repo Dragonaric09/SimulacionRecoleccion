@@ -21,3 +21,15 @@ export type ReportSelection = {
   orientation: 'landscape'
   paper: 'A4' | 'LETTER'
 }
+
+export type ReportFilters = {
+  yearFrom?: number
+  yearTo?: number
+  laborStatus: string[]
+  sector: string[]
+  gender: string[]
+  organizationType: string[]
+  organizationSize: string[]
+}
+
+export type ReportModuleAvailability = 'DISPONIBLE' | 'MUESTRA_PEQUENA' | 'NO_DISPONIBLE' | 'SIN_RESPUESTAS' | 'SIN_DATOS_CON_FILTRO'

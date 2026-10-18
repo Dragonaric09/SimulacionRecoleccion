@@ -37,4 +37,12 @@ public class DatasetColumnMappingEntity {
         this.personal = personal;
         this.mappingStatus = mappingStatus;
     }
+
+    public String getInternalKey() {
+        return internalKey;
+    }
+
+    public boolean isPersonal() {
+        return personal;
+    }
 }

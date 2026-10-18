@@ -6,4 +6,5 @@ import java.util.UUID;
 
 public interface DatasetColumnMappingRepository extends JpaRepository<DatasetColumnMappingEntity, Long> {
     long countByDataset_Id(UUID datasetId);
+    java.util.List<DatasetColumnMappingEntity> findByDataset_Id(UUID datasetId);
 }

@@ -10,9 +10,7 @@ export interface ResultadoChiCuadrado {
 }
 
 export type CategoryDistribution = { validCount: number; counts: Record<string, number>; percentages: Record<string, number> }
-export type AnalyticsSummary = {
-  datasetId: string
-  surveyType: string
+export type AnalyticsSummaryData = {
   totalResponses: number
   validResponses: number
   distributions: Record<string, CategoryDistribution>
@@ -23,6 +21,8 @@ export type AnalyticsSummary = {
   yearMin?: number
   yearMax?: number
 }
+export type ReportSummary = AnalyticsSummaryData & { availableFields: string[] }
+export type AnalyticsSummary = AnalyticsSummaryData & { datasetId: string; surveyType: string }
 
 export function ejecutarChiCuadrado(frecuencias: number[][], alfa: number) {
   return apiRequest<ResultadoChiCuadrado>('/analitica/chi-cuadrado', {
@@ -51,7 +51,7 @@ export interface ResultadoPruebaAsociacion {
 }
 
 /** Variables de casillas: una persona puede caer en varias categorías, así que no admiten χ² ni Fisher. */
-export const MULTI_RESPONSE_FIELDS = ['area_posgrado_interes', 'area_trabajo', 'cargos_titulados']
+export const MULTI_RESPONSE_FIELDS = ['area_trabajo', 'cargos_titulados']
 
 /** Frecuencias observadas en el orden de filas y columnas del cruce, para enviarlas a la prueba. */
 export function crossFrequencies(cross: Cross) {

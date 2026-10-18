@@ -137,6 +137,31 @@ class AnalyticsServiceStatisticsTest {
     }
 
     @Test
+    void areaDePosgradoUsaDistribucionExclusiva() {
+        UUID datasetId = UUID.randomUUID();
+        DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getId()).thenReturn(datasetId);
+        List<SurveyResponseEntity> rows = List.of(
+                new SurveyResponseEntity(dataset, "TITULADOS", 1, "VALIDA", Map.of("interes_posgrado", true, "area_posgrado_interes", "Ciencia de Datos")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 2, "VALIDA", Map.of("interes_posgrado", true, "area_posgrado_interes", "Robótica")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 3, "VALIDA", Map.of("interes_posgrado", true, "area_posgrado_interes", "Ciencia de Datos")));
+        DatasetImportRepository datasets = mock(DatasetImportRepository.class);
+        SurveyResponseRepository responses = mock(SurveyResponseRepository.class);
+        CompetenceRatingRepository ratings = mock(CompetenceRatingRepository.class);
+        when(datasets.findById(datasetId)).thenReturn(Optional.of(dataset));
+        when(responses.findByDataset_IdAndResponseStatus(datasetId, "VALIDA")).thenReturn(rows);
+
+        CategoryDistributionDto distribution = new AnalyticsService(datasets, responses, ratings)
+                .summary(datasetId, "TITULADOS", List.of("area_posgrado_interes"))
+                .distributions().get("area_posgrado_interes");
+
+        assertThat(distribution.validCount()).isEqualTo(3);
+        assertThat(distribution.counts()).containsEntry("Ciencia de datos", 2L).containsEntry("Robótica", 1L);
+        assertThat(distribution.counts().values().stream().mapToLong(Long::longValue).sum())
+                .isEqualTo(distribution.validCount());
+    }
+
+    @Test
     void filtroTodosConservaLasDoceRespuestasValidas() {
         UUID datasetId = UUID.randomUUID();
         DatasetImportEntity dataset = mock(DatasetImportEntity.class);

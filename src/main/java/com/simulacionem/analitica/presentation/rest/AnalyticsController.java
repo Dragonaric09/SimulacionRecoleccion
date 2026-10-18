@@ -4,6 +4,7 @@ import com.simulacionem.analitica.application.dto.AnalyticsSummaryDto;
 import com.simulacionem.analitica.application.dto.CompetenceAverageDto;
 import com.simulacionem.analitica.application.dto.CrossTabulationDto;
 import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
+import com.simulacionem.analitica.application.dto.ReportSummaryDto;
 import com.simulacionem.analitica.application.service.AnalyticsService;
 import com.simulacionem.analitica.application.service.TituladosFilter;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ import java.util.NoSuchElementException;
 import java.util.Map;
 import java.util.Random;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.stream.IntStream;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,6 +31,24 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @RestController
 @RequestMapping("/api/analytics")
 public class AnalyticsController {
+    private static final Set<String> ALLOWED_TITULADOS_SUMMARY_FIELDS = Set.of(
+            "anio_titulacion", "anios_vida_profesional", "anios_desempleo", "situacion_laboral_actual",
+            "sector_trabajo", "sector_trabajo_actual", "es_primer_empleo", "primera_experiencia_laboral",
+            "razon_no_trabaja", "experiencia_laboral_previa", "tiempo_primer_empleo", "cantidad_empleos",
+            "edad_rango", "genero", "rubro_trabajo_actual", "remuneracion_rango", "area_trabajo",
+            "pertinencia_trabajo_formacion", "tiene_formacion_complementaria", "formacion_complementaria_nivel",
+            "institucion_formacion_complementaria", "financiamiento_posgrado_cursado", "interes_posgrado",
+            "nivel_posgrado_interes", "area_posgrado_interes", "modalidad_posgrado", "institucion_posgrado_interes",
+            "financiamiento_posgrado_estimado", "valoracion_formacion_1", "valoracion_formacion_2",
+            "valoracion_formacion_3", "valoracion_formacion_4", "valoracion_formacion_5", "valoracion_relacion_1",
+            "valoracion_relacion_2", "valoracion_relacion_3", "satisfaccion_formacion",
+            "concordancia_formacion_requerimientos", "satisfaccion_emprendimiento", "importancia_formacion_emprendimiento",
+            "aspectos_utiles", "aspectos_mejorables", "asignaturas_ventaja", "asignaturas_poco_utiles");
+    private static final Set<String> ALLOWED_EMPLOYERS_SUMMARY_FIELDS = Set.of(
+            "tipo_organizacion", "tamano_organizacion", "rubro_organizacion", "departamento_organizacion",
+            "presencia_sedes", "contrato_titulados_ultimos_5_anios", "posibilidad_incorporacion",
+            "nivel_formacion_demandado", "medio_convocatoria", "cargos_titulados", "valoracion_formacion_1",
+            "valoracion_formacion_5", "valoracion_relacion_3");
     private final AnalyticsService analytics;
 
     public AnalyticsController(AnalyticsService analytics) { this.analytics = analytics; }
@@ -37,7 +57,16 @@ public class AnalyticsController {
     public AnalyticsSummaryDto tituladosSummary(@RequestParam(required = false) UUID datasetId,
                                                 @RequestParam(required = false) String fields,
                                                 @ModelAttribute TituladosQuery query) {
-        return analytics.summary(datasetId, "TITULADOS", split(fields), query.toFilter());
+        return analytics.summary(datasetId, "TITULADOS", allowedFields(fields, ALLOWED_TITULADOS_SUMMARY_FIELDS), query.toFilter());
+    }
+
+    @GetMapping("/report/titulados/summary")
+    public ReportSummaryDto reportTituladosSummary(@RequestParam(required = false) UUID datasetId,
+                                                   @RequestParam(required = false) String fields,
+                                                   @ModelAttribute TituladosQuery query) {
+        return ReportSummaryDto.from(analytics.summary(datasetId, "TITULADOS",
+                allowedFields(fields, ALLOWED_TITULADOS_SUMMARY_FIELDS), query.toFilter()),
+                allowedAvailableFields(analytics.availableFields(datasetId, "TITULADOS"), ALLOWED_TITULADOS_SUMMARY_FIELDS));
     }
 
     @GetMapping("/titulados/employment")
@@ -114,8 +143,19 @@ public class AnalyticsController {
                                                 @RequestParam(required = false) String fields,
                                                 @RequestParam(required = false) List<String> organizationType,
                                                 @RequestParam(required = false) List<String> organizationSize) {
-        return analytics.summary(datasetId, "EMPLEADORES", split(fields),
+        return analytics.summary(datasetId, "EMPLEADORES", allowedFields(fields, ALLOWED_EMPLOYERS_SUMMARY_FIELDS),
                 TituladosFilter.organization(organizationType, organizationSize));
+    }
+
+    @GetMapping("/report/employers/summary")
+    public ReportSummaryDto reportEmployersSummary(@RequestParam(required = false) UUID datasetId,
+                                                   @RequestParam(required = false) String fields,
+                                                   @RequestParam(required = false) List<String> organizationType,
+                                                   @RequestParam(required = false) List<String> organizationSize) {
+        return ReportSummaryDto.from(analytics.summary(datasetId, "EMPLEADORES",
+                allowedFields(fields, ALLOWED_EMPLOYERS_SUMMARY_FIELDS),
+                TituladosFilter.organization(organizationType, organizationSize)),
+                allowedAvailableFields(analytics.availableFields(datasetId, "EMPLEADORES"), ALLOWED_EMPLOYERS_SUMMARY_FIELDS));
     }
 
     @GetMapping("/employers/valuation")
@@ -243,5 +283,14 @@ public class AnalyticsController {
 
     private List<String> split(String fields) {
         return fields == null || fields.isBlank() ? List.of() : Arrays.stream(fields.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
+    }
+
+    private List<String> allowedFields(String fields, Set<String> allowed) {
+        return split(fields).stream().filter(allowed::contains).distinct().toList();
+    }
+
+    private List<String> allowedAvailableFields(List<String> fields, Set<String> allowed) {
+        if (fields == null) return List.of();
+        return fields.stream().filter(allowed::contains).distinct().sorted().toList();
     }
 }
