@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,20 @@ public class AnalyticsService {
     private final SurveyResponseRepository responses;
     private final CompetenceRatingRepository ratings;
 
+    /**
+     * Las pantallas de analítica consultan varios indicadores del mismo dataset en paralelo.
+     * Las respuestas válidas son inmutables durante la vida del dataset, por lo que se pueden
+     * reutilizar entre endpoints y evitar volver a deserializar el mismo JSON varias veces.
+     * Se limita a los últimos ocho datasets para no convertir la optimización en una caché ilimitada.
+     */
+    private final Map<UUID, List<SurveyResponseEntity>> validRowsCache = Collections.synchronizedMap(
+            new LinkedHashMap<>(16, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<UUID, List<SurveyResponseEntity>> eldest) {
+                    return size() > 8;
+                }
+            });
+
     public AnalyticsService(DatasetImportRepository datasets, SurveyResponseRepository responses,
             CompetenceRatingRepository ratings) {
         this.datasets = datasets;
@@ -63,7 +78,7 @@ public class AnalyticsService {
     @Transactional(readOnly = true)
     public AnalyticsSummaryDto summary(UUID datasetId, String surveyType, List<String> fields, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, surveyType);
-        List<SurveyResponseEntity> allRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<SurveyResponseEntity> allRows = validRows(dataset.getId());
         List<SurveyResponseEntity> rows = applyFilter(allRows, filter);
         if (fields == null || fields.isEmpty())
             fields = defaultFields(dataset.getSurveyType());
@@ -76,7 +91,7 @@ public class AnalyticsService {
     }
     public AnalyticsSummaryDto unemploymentSummary(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
-        List<SurveyResponseEntity> allRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<SurveyResponseEntity> allRows = validRows(dataset.getId());
         List<SurveyResponseEntity> rows = applyFilter(allRows, filter)
                 .stream()
                 .filter(this::isUnemployed)
@@ -91,7 +106,7 @@ public class AnalyticsService {
     }
     public AnalyticsSummaryDto firstEmploymentSummary(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
-        List<SurveyResponseEntity> allRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<SurveyResponseEntity> allRows = validRows(dataset.getId());
         List<SurveyResponseEntity> rows = applyFilter(allRows, filter).stream()
                 .filter(this::isFirstEmploymentBranch)
                 .toList();
@@ -104,7 +119,7 @@ public class AnalyticsService {
     }
     public AnalyticsSummaryDto entrepreneurshipSummary(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
-        List<SurveyResponseEntity> allRows = responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA");
+        List<SurveyResponseEntity> allRows = validRows(dataset.getId());
         List<SurveyResponseEntity> rows = applyFilter(allRows, filter)
                 .stream()
                 .filter(this::isEntrepreneur)
@@ -328,7 +343,7 @@ public class AnalyticsService {
     public EmploymentProfileDto employmentProfile(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
         List<SurveyResponseEntity> validRows = applyFilter(
-                responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA"), filter);
+                validRows(dataset.getId()), filter);
         List<EmploymentProfileDto.CohortPointDto> points = validRows
                 .stream()
                 .map(response -> {
@@ -391,8 +406,7 @@ public class AnalyticsService {
                 && (!EMPLOYER_CROSS_FIELDS.contains(rowField) || !EMPLOYER_CROSS_FIELDS.contains(columnField))) {
             throw new IllegalArgumentException("Variable no disponible para empleadores: " + rowField + " / " + columnField);
         }
-        List<SurveyResponseEntity> valid = applyFilter(
-                responses.findByDataset_IdAndResponseStatus(dataset.getId(), "VALIDA"), filter);
+        List<SurveyResponseEntity> valid = applyFilter(validRows(dataset.getId()), filter);
         List<SurveyResponseEntity> usable = valid.stream()
                 .filter(r -> crossFieldBranchAllows(r, rowField) && crossFieldBranchAllows(r, columnField))
                 .filter(r -> value(r, rowField) != null && value(r, columnField) != null).toList();
@@ -437,6 +451,17 @@ public class AnalyticsService {
                 .reduce((a, b) -> b)
                 .orElseThrow(
                         () -> new NoSuchElementException("No existe un dataset importado para el filtro solicitado"));
+    }
+
+    private List<SurveyResponseEntity> validRows(UUID datasetId) {
+        synchronized (validRowsCache) {
+            List<SurveyResponseEntity> cached = validRowsCache.get(datasetId);
+            if (cached != null) return cached;
+            List<SurveyResponseEntity> loaded = List.copyOf(
+                    responses.findByDataset_IdAndResponseStatus(datasetId, "VALIDA"));
+            validRowsCache.put(datasetId, loaded);
+            return loaded;
+        }
     }
 
     private String value(SurveyResponseEntity response, String field) {
