@@ -1,4 +1,3 @@
-import * as XLSX from "xlsx-js-style";
 import type { Cross, CrossMetric } from "./analyticsTypes";
 
 type CrossExportParameters = {
@@ -35,7 +34,8 @@ export function exportCrossCsv(cross: Cross, metric: CrossMetric, includeTotals:
   downloadFile(rows.map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")).join("\n"), "cruce.csv", "text/csv;charset=utf-8");
 }
 
-export function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean, parameters: CrossExportParameters = {}, rowLabel = "Fila", columnLabel = "Columnas") {
+export async function exportCrossExcel(cross: Cross, metric: CrossMetric, includeTotals: boolean, colorHeatmap: boolean, parameters: CrossExportParameters = {}, rowLabel = "Fila", columnLabel = "Columnas") {
+  const XLSX = await import("xlsx-js-style");
   const rows = crossExportRows(cross, metric, includeTotals, rowLabel);
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.aoa_to_sheet(rows);

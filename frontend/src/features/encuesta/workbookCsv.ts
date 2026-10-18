@@ -1,5 +1,3 @@
-import * as XLSX from 'xlsx-js-style'
-
 /**
  * Devuelve un CSV que el importador puede leer. Los .xlsx se convierten aquí, en el navegador,
  * con valores crudos: los números se escriben completos (sin notación científica como 1.76E8)
@@ -7,6 +5,7 @@ import * as XLSX from 'xlsx-js-style'
  */
 export async function toUploadableFile(file: File): Promise<File> {
   if (!/\.xlsx$/i.test(file.name)) return file
+  const XLSX = await import('xlsx-js-style')
   const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' })
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   if (!sheet) throw new Error('El archivo Excel no contiene hojas con datos.')

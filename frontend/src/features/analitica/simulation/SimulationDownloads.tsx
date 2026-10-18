@@ -59,7 +59,7 @@ export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
         setPdfError("No se pudo generar la previsualización. Revisa la consola para más detalles.");
       }).finally(() => setPdfLoading(false));
     }
-    if (format === "xlsx") exportSimulationExcel(run);
+    if (format === "xlsx") void exportSimulationExcel(run);
     if (format === "csv") exportSimulationCsv(run);
     if (format === "png") {
       void exportSimulationPng(run).catch((error: unknown) => {

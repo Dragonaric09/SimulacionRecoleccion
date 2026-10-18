@@ -511,7 +511,7 @@ function CrossDownloadMenu({
   }, []);
   const download = (format: "csv" | "xlsx" | "png" | "pdf") => {
     if (format === "csv") exportCrossCsv(cross, metric, includeTotals, rowLabel);
-    if (format === "xlsx") exportCrossExcel(cross, metric, includeTotals, colorHeatmap, { dataset: datasetName, filters }, rowLabel, columnLabel);
+    if (format === "xlsx") void exportCrossExcel(cross, metric, includeTotals, colorHeatmap, { dataset: datasetName, filters }, rowLabel, columnLabel);
     if (format === "png") exportCrossPng(cross, metric, includeTotals, colorHeatmap, activeView, rowLabel, columnLabel);
     if (format === "pdf") void printAnalyticsPdf(domain, "cruce");
     if (menuRef.current) menuRef.current.open = false;

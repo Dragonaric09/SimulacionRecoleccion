@@ -1,4 +1,3 @@
-import * as XLSX from "xlsx-js-style";
 import type { Simulation } from "./analyticsTypes";
 import { createSimulationChartSvg, createSimulationHistogramSvgs, simulationChartUsesBoxplot, simulationChartUsesPie } from "../simulation/SimulationECharts";
 import { simulationDelta } from "../simulation/simulationUtils";
@@ -138,7 +137,8 @@ export function exportSimulationCsv(data: SimulationExportData) {
   downloadFile(csv, "titulados_simulacion.csv", "text/csv;charset=utf-8");
 }
 
-export function exportSimulationExcel(data: SimulationExportData) {
+export async function exportSimulationExcel(data: SimulationExportData) {
+  const XLSX = await import("xlsx-js-style");
   const workbook = XLSX.utils.book_new();
   const comparisonRows = rows(data);
   const worksheet = XLSX.utils.aoa_to_sheet(comparisonRows);
