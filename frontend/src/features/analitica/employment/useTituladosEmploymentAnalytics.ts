@@ -30,20 +30,29 @@ export function useTituladosEmploymentAnalytics(datasetId?: string, filterQuery 
       return;
     }
     let cancelled = false;
+    const controller = new AbortController();
     setState((current) => ({ ...current, loading: true, error: null }));
     const query = `?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`;
-    Promise.all([
-      apiRequest<AnalyticsSummary>(`/analytics/titulados/employment${query}`),
-      apiRequest<EmploymentProfile>(`/analytics/titulados/employment/profile${query}`),
-      apiRequest<AnalyticsSummary>(`/analytics/titulados/employment/unemployment${query}`),
-      apiRequest<AnalyticsSummary>(`/analytics/titulados/employment/first-employment${query}`),
-      apiRequest<AnalyticsSummary>(`/analytics/titulados/employment/entrepreneurship${query}`),
-    ]).then(([summary, profile, unemploymentSummary, firstEmploymentSummary, entrepreneurshipSummary]) => {
-      if (!cancelled) setState({ summary, profile, unemploymentSummary, firstEmploymentSummary, entrepreneurshipSummary, loading: false, error: null });
-    }).catch((cause) => {
-      if (!cancelled) setState((current) => ({ ...current, loading: false, error: cause instanceof Error ? cause.message : String(cause) }));
-    });
-    return () => { cancelled = true; };
+    let settled = 0;
+    const finish = () => {
+      settled += 1;
+      if (settled === 5 && !cancelled) setState((current) => ({ ...current, loading: false }));
+    };
+    const run = <T,>(request: Promise<T>, apply: (data: T) => Partial<EmploymentAnalyticsState>) => {
+      request.then((data) => {
+        if (!cancelled) setState((current) => ({ ...current, ...apply(data) }));
+      }).catch((cause) => {
+        if (!controller.signal.aborted && !cancelled) {
+          setState((current) => ({ ...current, error: cause instanceof Error ? cause.message : String(cause) }));
+        }
+      }).finally(finish);
+    };
+    run(apiRequest<AnalyticsSummary>(`/analytics/titulados/employment${query}`, { signal: controller.signal }), (summary) => ({ summary }));
+    run(apiRequest<EmploymentProfile>(`/analytics/titulados/employment/profile${query}`, { signal: controller.signal }), (profile) => ({ profile }));
+    run(apiRequest<AnalyticsSummary>(`/analytics/titulados/employment/unemployment${query}`, { signal: controller.signal }), (unemploymentSummary) => ({ unemploymentSummary }));
+    run(apiRequest<AnalyticsSummary>(`/analytics/titulados/employment/first-employment${query}`, { signal: controller.signal }), (firstEmploymentSummary) => ({ firstEmploymentSummary }));
+    run(apiRequest<AnalyticsSummary>(`/analytics/titulados/employment/entrepreneurship${query}`, { signal: controller.signal }), (entrepreneurshipSummary) => ({ entrepreneurshipSummary }));
+    return () => { cancelled = true; controller.abort(); };
   }, [datasetId, filterQuery]);
 
   return state;

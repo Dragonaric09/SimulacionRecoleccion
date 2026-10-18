@@ -67,12 +67,15 @@ function TituladosFilterToolbar({ summary, onQueryChange }: { summary: Analytics
   }), [filters, minYear, maxYear]);
   useEffect(() => {
     if (!initialized) return;
-    onQueryChange?.(query);
-    try {
-      localStorage.setItem(`simulacionem.tituladosFilters.${summary.datasetId}`, query);
-    } catch {
-      /* sin almacenamiento: los filtros solo viven en la pantalla */
-    }
+    const timer = window.setTimeout(() => {
+      onQueryChange?.(query);
+      try {
+        localStorage.setItem(`simulacionem.tituladosFilters.${summary.datasetId}`, query);
+      } catch {
+        /* sin almacenamiento: los filtros solo viven en la pantalla */
+      }
+    }, 250);
+    return () => window.clearTimeout(timer);
   }, [initialized, query, onQueryChange, summary.datasetId]);
   const update = (next: TituladosFilterState) => setFilters(next);
   const toggle = (key: MultiKey, value: string) => update({ ...filters, [key]: filters[key].includes(value) ? filters[key].filter((item) => item !== value) : [...filters[key], value] });
