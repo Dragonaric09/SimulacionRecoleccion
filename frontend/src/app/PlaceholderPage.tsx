@@ -11,10 +11,14 @@ import { isEmpleadoresPath } from '@/features/empleadores/routePaths'
 import { TituladosPage } from '@/features/titulados/TituladosPages'
 import { isTituladosPath } from '@/features/titulados/routePaths'
 import { isDomainSection, type NavigationItem } from './navigation'
+import { ReportPage } from '@/features/reporting/ReportPage'
 
 export function PlaceholderPage({ route }: { route: NavigationItem }) {
   if (route.path === '/cargar-datos') {
     return <CargarDatosPage />
+  }
+  if (route.path === '/reporte') {
+    return <ReportPage />
   }
   if (route.path === '/comparacion/titulados-empleadores') {
     return <ComparacionPage />

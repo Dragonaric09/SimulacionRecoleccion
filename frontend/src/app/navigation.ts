@@ -6,6 +6,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   Network,
+  FileText,
   Scale,
   Upload,
 } from 'lucide-react'
@@ -33,6 +34,14 @@ export const navigation: NavigationItem[] = [
     label: 'Cargar datos',
     description: 'Importación y calidad de datasets',
     icon: Upload,
+    section: 'general',
+    implemented: true,
+  },
+  {
+    path: '/reporte',
+    label: 'Reporte',
+    description: 'Selecciona módulos y prepara el informe PDF',
+    icon: FileText,
     section: 'general',
     implemented: true,
   },
