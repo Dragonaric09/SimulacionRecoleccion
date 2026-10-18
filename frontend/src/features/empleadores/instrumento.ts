@@ -82,18 +82,36 @@ export const DEMANDED_LEVEL_ORDER = [
 
 export const HIRING_PROBABILITY_HIGH = 'Sí, existe una alta probabilidad de contratación'
 
-/** Campos que la sección puede cruzar: todos de opción única o escala, ninguno de texto libre. */
-export const CROSS_FIELD_OPTIONS = [
-  { key: 'tipo_organizacion', label: 'Tipo de organización', group: 'Perfil' },
-  { key: 'tamano_organizacion', label: 'Tamaño de la organización', group: 'Perfil' },
-  { key: 'rubro_organizacion', label: 'Rubro o sector principal', group: 'Perfil' },
-  { key: 'departamento_organizacion', label: 'Departamento', group: 'Perfil' },
-  { key: 'presencia_sedes', label: 'Presencia de sedes', group: 'Perfil' },
-  { key: 'contrato_titulados_ultimos_5_anios', label: 'Contratación en los últimos 5 años', group: 'Contratación' },
-  { key: 'posibilidad_incorporacion', label: 'Posibilidad de incorporar ingenieros', group: 'Contratación' },
-  { key: 'nivel_formacion_demandado', label: 'Nivel de formación que demanda', group: 'Contratación' },
-  { key: 'medio_convocatoria', label: 'Medio de convocatoria', group: 'Contratación' },
+/** Posibilidad de incorporar ingenieros, de menor a mayor intención. */
+export const HIRING_PROBABILITY_ORDER = [
+  'No requiere profesionales del área de Sistemas',
+  'No se tiene prevista la contratación actualmente',
+  'Sí, dependiendo del crecimiento o nuevos proyectos de la organización',
+  HIRING_PROBABILITY_HIGH,
 ] as const
+
+export const HIRED_OPTIONS = ['Sí', 'No'] as const
+
+/** Rubros del formulario, en su orden. */
+export const SECTOR_OPTIONS = [
+  'Desarrollo de software',
+  'Servicios de tecnologías de información (TI)',
+  'Telecomunicaciones y redes',
+  'Soporte técnico y mantenimiento de sistemas',
+  'Consultoría en sistemas / transformación digital',
+  'Banca y servicios financieros',
+  'Instituciones públicas / gobierno',
+  'Educación e investigación',
+  'Industria y manufactura',
+  'Comercio y comercio electrónico',
+  'Salud',
+  'Seguridad informática / ciberseguridad',
+  'Análisis de datos / inteligencia de negocios',
+  'Startups o emprendimientos tecnológicos',
+  'Otros',
+] as const
+
+export const DEPARTMENT_OPTIONS = ['La Paz', 'Cochabamba', 'Oruro', 'Potosi', 'Sucre', 'Tarija', 'Santa Cruz', 'Beni', 'Pando'] as const
 
 /** Competencias del formulario: hard skills y soft skills, en el orden del formulario. */
 export const COMPETENCE_ORDER = [

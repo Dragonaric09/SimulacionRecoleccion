@@ -1,6 +1,5 @@
 package com.simulacionem.analitica.application.service;
 
-import com.simulacionem.analitica.application.dto.CrossTabulationDto;
 import com.simulacionem.analitica.application.dto.EmployerDashboardDto;
 import com.simulacionem.analitica.application.dto.EmployerDashboardDto.CompetenceDto;
 import com.simulacionem.analitica.application.dto.EmployerDashboardDto.CountDto;
@@ -75,14 +74,16 @@ public class EmployerDashboardService {
             "JOIN competence_rating r ON r.response_id = s.id JOIN competence_catalog c ON c.id = r.competence_id";
 
     private final NamedParameterJdbcTemplate jdbc;
+    private final EmployerSql sql;
 
-    public EmployerDashboardService(NamedParameterJdbcTemplate jdbc) {
+    public EmployerDashboardService(NamedParameterJdbcTemplate jdbc, EmployerSql sql) {
         this.jdbc = jdbc;
+        this.sql = sql;
     }
 
     @Transactional(readOnly = true)
-    public EmployerDashboardDto dashboard(UUID datasetId, List<String> types, List<String> sizes) {
-        Filters filters = new Filters(employerDataset(datasetId), types, sizes);
+    public EmployerDashboardDto dashboard(EmployerFilters requested) {
+        EmployerFilters filters = requested.withDataset(sql.dataset(requested.datasetId()));
         Span span = span(filters.datasetId());
         Windows windows = windows(filters, span.last());
         long filtered = windows.total().n();
@@ -117,15 +118,14 @@ public class EmployerDashboardService {
     }
 
     @Transactional(readOnly = true)
-    public EmployerResponsePageDto responses(UUID datasetId, List<String> types, List<String> sizes,
-                                             int page, int size, String sort, String dir) {
-        Filters filters = new Filters(employerDataset(datasetId), types, sizes);
+    public EmployerResponsePageDto responses(EmployerFilters requested, int page, int size, String sort, String dir) {
+        EmployerFilters filters = requested.withDataset(sql.dataset(requested.datasetId()));
         int pageSize = Math.max(10, Math.min(size, 200));
         int pageIndex = Math.max(0, page);
         String sortExpression = SORTABLE.getOrDefault(sort == null ? "" : sort, "s.submitted_at");
         String direction = "desc".equalsIgnoreCase(dir) ? "DESC" : "ASC";
 
-        Scope scope = scope(filters, "");
+        EmployerSql.Scope scope = sql.scope(filters, "");
         long total = jdbc.queryForObject("SELECT count(*)" + scope.from(), scope.params(), Long.class);
         MapSqlParameterSource params = new MapSqlParameterSource(scope.params().getValues())
                 .addValue("limit", pageSize)
@@ -152,54 +152,6 @@ public class EmployerDashboardService {
                         exact(rs.getObject("competence_average")),
                         (int) rs.getShort("valuations_full_agreement")));
         return new EmployerResponsePageDto(total, pageIndex, pageSize, rows);
-    }
-
-    // ---------------------------------------------------------------- alcance y filtros
-
-    /** Filtros de una consulta: dataset y listas de tipo y tamaño (vacías = sin filtro). */
-    private record Filters(UUID datasetId, List<String> types, List<String> sizes) {
-        Filters {
-            types = types == null ? List.of() : List.copyOf(types);
-            sizes = sizes == null ? List.of() : List.copyOf(sizes);
-        }
-    }
-
-    /** Cláusula FROM/WHERE con los parámetros ya ligados. */
-    private record Scope(String from, MapSqlParameterSource params) { }
-
-    /**
-     * Respuestas válidas de un dataset con los filtros aplicados. {@code extraJoin} añade uniones
-     * (competencias, valoraciones, casillas) entre la tabla de respuestas y el WHERE.
-     */
-    private Scope scope(Filters filters, String extraJoin) {
-        MapSqlParameterSource params = new MapSqlParameterSource("datasetId", filters.datasetId());
-        StringBuilder from = new StringBuilder(" FROM survey_response s JOIN employer_response e ON e.response_id = s.id ")
-                .append(extraJoin)
-                .append(" WHERE s.dataset_id = :datasetId AND s.response_status = 'VALIDA'");
-        if (!filters.types().isEmpty()) {
-            from.append(" AND e.organization_type IN (:types)");
-            params.addValue("types", filters.types());
-        }
-        if (!filters.sizes().isEmpty()) {
-            from.append(" AND e.organization_size IN (:sizes)");
-            params.addValue("sizes", filters.sizes());
-        }
-        return new Scope(from.toString(), params);
-    }
-
-    private UUID employerDataset(UUID datasetId) {
-        if (datasetId == null) {
-            List<UUID> latest = jdbc.getJdbcOperations().queryForList(
-                    "SELECT id FROM dataset_import WHERE survey_type = 'EMPLEADORES' ORDER BY imported_at DESC LIMIT 1",
-                    UUID.class);
-            if (latest.isEmpty()) throw new NoSuchElementException("No existe un dataset de empleadores importado");
-            return latest.get(0);
-        }
-        List<String> type = jdbc.getJdbcOperations().queryForList(
-                "SELECT survey_type FROM dataset_import WHERE id = ?", String.class, datasetId);
-        if (type.isEmpty()) throw new NoSuchElementException("El dataset solicitado no existe o fue eliminado");
-        if (!"EMPLEADORES".equals(type.get(0))) throw new IllegalArgumentException("El dataset no corresponde a empleadores");
-        return datasetId;
     }
 
     // ---------------------------------------------------------------- periodos y KPI
@@ -235,9 +187,9 @@ public class EmployerDashboardService {
     /** total del filtro; «cur» = últimos 7 días del dataset; «prev» = los 7 días anteriores. */
     private record Windows(Stats total, Stats cur, Stats prev) { }
 
-    private Windows windows(Filters filters, OffsetDateTime last) {
+    private Windows windows(EmployerFilters filters, OffsetDateTime last) {
         if (last == null) return new Windows(Stats.EMPTY, Stats.EMPTY, Stats.EMPTY);
-        Scope scope = scope(filters, "");
+        EmployerSql.Scope scope = sql.scope(filters, "");
         MapSqlParameterSource params = new MapSqlParameterSource(scope.params().getValues())
                 .addValue("curStart", last.minusDays(7))
                 .addValue("prevStart", last.minusDays(14))
@@ -297,8 +249,8 @@ public class EmployerDashboardService {
         return ChronoUnit.DAYS.between(span.first(), span.last()) > WEEKLY_SERIES_DAYS ? "week" : "day";
     }
 
-    private List<TimePointDto> timeline(Filters filters, String granularity) {
-        Scope scope = scope(filters, "");
+    private List<TimePointDto> timeline(EmployerFilters filters, String granularity) {
+        EmployerSql.Scope scope = sql.scope(filters, "");
         MapSqlParameterSource params = new MapSqlParameterSource(scope.params().getValues())
                 .addValue("granularity", granularity)
                 .addValue("zone", ZONE);
@@ -319,8 +271,8 @@ public class EmployerDashboardService {
     // ---------------------------------------------------------------- distribuciones
 
     /** Distribución de una pregunta de opción única. Los porcentajes usan como base a quienes respondieron. */
-    private DistributionDto distribution(Filters filters, String key, String expression) {
-        Scope scope = scope(filters, "");
+    private DistributionDto distribution(EmployerFilters filters, String key, String expression) {
+        EmployerSql.Scope scope = sql.scope(filters, "");
         Map<String, Long> counts = new LinkedHashMap<>();
         jdbc.query("SELECT COALESCE(" + expression + ", '" + NO_ANSWER + "') AS label, count(*) AS n"
                         + scope.from() + " GROUP BY 1",
@@ -343,22 +295,22 @@ public class EmployerDashboardService {
     }
 
     /** Casillas: una persona puede marcar varios cargos. El porcentaje usa como base a quienes respondieron. */
-    private DistributionDto positions(Filters filters, long filtered) {
-        Scope scope = scope(filters, "CROSS JOIN LATERAL unnest(string_to_array(e.positions, '; ')) AS t(label)");
+    private DistributionDto positions(EmployerFilters filters, long filtered) {
+        EmployerSql.Scope scope = sql.scope(filters, "CROSS JOIN LATERAL unnest(string_to_array(e.positions, '; ')) AS t(label)");
         Map<String, Long> counts = new LinkedHashMap<>();
         jdbc.query("SELECT trim(t.label) AS label, count(*) AS n" + scope.from() + " GROUP BY 1",
                 scope.params(),
                 rs -> {
                     counts.merge(rs.getString("label"), rs.getLong("n"), Long::sum);
                 });
-        Scope answered = scope(filters, "");
+        EmployerSql.Scope answered = sql.scope(filters, "");
         long answeredCount = jdbc.queryForObject("SELECT count(*)" + answered.from() + " AND e.positions IS NOT NULL",
                 answered.params(), Long.class);
         return new DistributionDto("positions", answeredCount, filtered - answeredCount, items(counts, answeredCount));
     }
 
-    private List<HiringMatrixCellDto> hiringByProbability(Filters filters) {
-        Scope scope = scope(filters, "");
+    private List<HiringMatrixCellDto> hiringByProbability(EmployerFilters filters) {
+        EmployerSql.Scope scope = sql.scope(filters, "");
         List<HiringMatrixCellDto> cells = new ArrayList<>();
         jdbc.query("SELECT CASE WHEN e.hired_graduates_last_five_years IS NULL THEN '" + NO_ANSWER
                         + "' WHEN e.hired_graduates_last_five_years THEN 'Sí' ELSE 'No' END AS hired, "
@@ -385,8 +337,8 @@ public class EmployerDashboardService {
     private static final int DISAGREE = 2;
     private static final int NO_KNOW = 3;
 
-    private List<ValuationCount> valuationCounts(Filters filters) {
-        Scope scope = scope(filters, "CROSS JOIN LATERAL unnest(e.valuations) WITH ORDINALITY AS v(code, pos)");
+    private List<ValuationCount> valuationCounts(EmployerFilters filters) {
+        EmployerSql.Scope scope = sql.scope(filters, "CROSS JOIN LATERAL unnest(e.valuations) WITH ORDINALITY AS v(code, pos)");
         List<ValuationCount> rows = new ArrayList<>();
         jdbc.query("SELECT v.pos AS pos, e.hired_graduates_last_five_years AS hired, v.code AS code, count(*) AS n"
                         + scope.from() + " GROUP BY 1, 2, 3",
@@ -399,7 +351,7 @@ public class EmployerDashboardService {
         return rows;
     }
 
-    private List<ValuationDto> valuations(Filters filters) {
+    private List<ValuationDto> valuations(EmployerFilters filters) {
         long[][] totals = new long[VALUATION_KEYS.size()][4];
         for (ValuationCount row : valuationCounts(filters)) {
             int slot = codeSlot(row.code());
@@ -419,7 +371,7 @@ public class EmployerDashboardService {
     }
 
     /** Índice neto por grupo de afirmaciones (formación / relación) y por contratación de la organización. */
-    private List<GroupBalanceDto> balanceByHiring(Filters filters) {
+    private List<GroupBalanceDto> balanceByHiring(EmployerFilters filters) {
         Map<String, long[]> byGroup = new LinkedHashMap<>();
         for (ValuationCount row : valuationCounts(filters)) {
             int slot = codeSlot(row.code());
@@ -460,8 +412,8 @@ public class EmployerDashboardService {
 
     // ---------------------------------------------------------------- competencias
 
-    private List<CompetenceDto> competences(Filters filters) {
-        Scope scope = scope(filters, COMPETENCE_JOIN);
+    private List<CompetenceDto> competences(EmployerFilters filters) {
+        EmployerSql.Scope scope = sql.scope(filters, COMPETENCE_JOIN);
         List<CompetenceDto> result = new ArrayList<>();
         jdbc.query("SELECT c.code, c.name, c.competence_group, "
                         + "count(*) FILTER (WHERE " + OBSERVED + ") AS answered, "
@@ -487,8 +439,8 @@ public class EmployerDashboardService {
         return result;
     }
 
-    private List<SizeCompetenceDto> sizeCompetence(Filters filters) {
-        Scope scope = scope(filters, COMPETENCE_JOIN);
+    private List<SizeCompetenceDto> sizeCompetence(EmployerFilters filters) {
+        EmployerSql.Scope scope = sql.scope(filters, COMPETENCE_JOIN);
         List<SizeCompetenceDto> cells = new ArrayList<>();
         jdbc.query("SELECT COALESCE(e.organization_size, '" + NO_ANSWER + "') AS size, c.code, c.name, "
                         + "count(*) FILTER (WHERE " + OBSERVED + ") AS answered, "
@@ -500,65 +452,6 @@ public class EmployerDashboardService {
                             rs.getLong("answered"), exact(rs.getObject("average"))));
                 });
         return cells;
-    }
-
-    // ---------------------------------------------------------------- cruces
-
-    /** Variables cruzables de empleadores: todas de opción única o escala, con su columna tipada. */
-    static final Map<String, String> CROSS_FIELDS = Map.of(
-            "tipo_organizacion", "e.organization_type",
-            "tamano_organizacion", "e.organization_size",
-            "rubro_organizacion", "e.organization_sector",
-            "departamento_organizacion", "e.organization_department",
-            "presencia_sedes", "e.branch_presence",
-            "contrato_titulados_ultimos_5_anios", "CASE WHEN e.hired_graduates_last_five_years IS NULL THEN NULL WHEN e.hired_graduates_last_five_years THEN 'Sí' ELSE 'No' END",
-            "posibilidad_incorporacion", "e.hiring_probability",
-            "nivel_formacion_demandado", "e.demanded_training_level",
-            "medio_convocatoria", "e.channel");
-
-    /**
-     * Tabla de contingencia de dos variables, con el porcentaje por fila. Solo cuentan las respuestas que
-     * tienen ambas variables, como en el cruce anterior.
-     */
-    @Transactional(readOnly = true)
-    public CrossTabulationDto cross(UUID datasetId, String rowField, String columnField,
-                                    List<String> types, List<String> sizes) {
-        String rowExpression = CROSS_FIELDS.get(rowField);
-        String columnExpression = CROSS_FIELDS.get(columnField);
-        if (rowExpression == null || columnExpression == null) {
-            throw new IllegalArgumentException("Variable no disponible para empleadores: " + rowField + " / " + columnField);
-        }
-        Filters filters = new Filters(employerDataset(datasetId), types, sizes);
-        Scope scope = scope(filters, "");
-        Map<String, Map<String, Long>> counts = new LinkedHashMap<>();
-        jdbc.query("SELECT " + rowExpression + " AS row_label, " + columnExpression + " AS column_label, count(*) AS n"
-                        + scope.from() + " AND " + rowExpression + " IS NOT NULL AND " + columnExpression + " IS NOT NULL"
-                        + " GROUP BY 1, 2",
-                scope.params(),
-                rs -> {
-                    counts.computeIfAbsent(rs.getString("row_label"), k -> new LinkedHashMap<>())
-                            .merge(rs.getString("column_label"), rs.getLong("n"), Long::sum);
-                });
-        List<String> rowCategories = counts.keySet().stream().sorted().toList();
-        List<String> columnCategories = counts.values().stream().flatMap(m -> m.keySet().stream()).distinct().sorted().toList();
-        Map<String, Map<String, Long>> filled = new LinkedHashMap<>();
-        Map<String, Map<String, Double>> percentages = new LinkedHashMap<>();
-        long total = 0;
-        for (String row : rowCategories) {
-            Map<String, Long> rowCounts = new LinkedHashMap<>();
-            Map<String, Double> rowPercentages = new LinkedHashMap<>();
-            long rowTotal = counts.get(row).values().stream().mapToLong(Long::longValue).sum();
-            total += rowTotal;
-            for (String column : columnCategories) {
-                long count = counts.get(row).getOrDefault(column, 0L);
-                rowCounts.put(column, count);
-                rowPercentages.put(column, rowTotal == 0 ? 0 : round(count * 100.0 / rowTotal));
-            }
-            filled.put(row, rowCounts);
-            percentages.put(row, rowPercentages);
-        }
-        return new CrossTabulationDto(filters.datasetId(), rowField, columnField, total, rowCategories, columnCategories,
-                filled, percentages, total < SMALL_SAMPLE);
     }
 
     // ---------------------------------------------------------------- utilidades

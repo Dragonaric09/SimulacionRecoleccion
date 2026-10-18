@@ -18,12 +18,3 @@ export function EmpleadoresPage({ route }: { route: NavigationItem }) {
       return null
   }
 }
-
-export function EmpleadoresPrintBundle() {
-  return (
-    <>
-      <section className="print-page"><EmpleadoresValoracionPage /></section>
-      <section className="print-page"><EmpleadoresBrechasPage /></section>
-    </>
-  )
-}

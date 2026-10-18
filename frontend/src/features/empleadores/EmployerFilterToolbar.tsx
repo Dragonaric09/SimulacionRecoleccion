@@ -2,20 +2,19 @@ import { useState } from 'react'
 import { RotateCcw, SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FilterMenu } from '@/components/analytics/FilterToolbar'
-import { ORGANIZATION_SIZE_ORDER, ORGANIZATION_TYPE_OPTIONS } from './instrumento'
-import type { EmployerFilters } from './employerData'
+import { EMPLOYER_FILTERS, type EmployerFilterKey, type EmployerFilters } from './employerData'
 
-/** Barra de filtros única de la sección Empleadores: tipo y tamaño de la organización. */
+/** Barra de filtros única de la sección Empleadores: perfil de la organización y situación de contratación. */
 export function EmployerFilterToolbar({ filters, onToggle, onClear, active, validCount, totalCount }: {
   filters: EmployerFilters
-  onToggle: (key: keyof EmployerFilters, value: string) => void
-  onClear: (key?: keyof EmployerFilters) => void
+  onToggle: (key: EmployerFilterKey, value: string) => void
+  onClear: (key?: EmployerFilterKey) => void
   active: boolean
   validCount?: number
   totalCount?: number
 }) {
   const [open, setOpen] = useState<string | null>(null)
-  const selectionLabel = (values: string[]) => (values.length === 0 ? 'Todos' : `${values.length} seleccionados`)
+  const selectionLabel = (values: string[]) => (values.length === 0 ? 'Todos' : values.length === 1 ? values[0] : `${values.length} seleccionados`)
   const reduced = validCount !== undefined && totalCount !== undefined && validCount < totalCount
 
   return (
@@ -24,26 +23,19 @@ export function EmployerFilterToolbar({ filters, onToggle, onClear, active, vali
         <SlidersHorizontal className="h-4 w-4 text-empleadores" />
         Filtros
       </div>
-      <FilterMenu
-        label="Tipo de organización"
-        value={selectionLabel(filters.organizationTypes)}
-        open={open === 'type'}
-        onOpen={() => setOpen(open === 'type' ? null : 'type')}
-        options={[...ORGANIZATION_TYPE_OPTIONS]}
-        selected={filters.organizationTypes}
-        onToggle={(value) => onToggle('organizationTypes', value)}
-        onClear={() => onClear('organizationTypes')}
-      />
-      <FilterMenu
-        label="Tamaño de la organización"
-        value={selectionLabel(filters.organizationSizes)}
-        open={open === 'size'}
-        onOpen={() => setOpen(open === 'size' ? null : 'size')}
-        options={[...ORGANIZATION_SIZE_ORDER]}
-        selected={filters.organizationSizes}
-        onToggle={(value) => onToggle('organizationSizes', value)}
-        onClear={() => onClear('organizationSizes')}
-      />
+      {EMPLOYER_FILTERS.map(({ key, label, options }) => (
+        <FilterMenu
+          key={key}
+          label={label}
+          value={selectionLabel(filters[key])}
+          open={open === key}
+          onOpen={() => setOpen(open === key ? null : key)}
+          options={options}
+          selected={filters[key]}
+          onToggle={(value) => onToggle(key, value)}
+          onClear={() => onClear(key)}
+        />
+      ))}
       <div className="min-w-0 flex-1" />
       {totalCount !== undefined && (
         <span className={`shrink-0 whitespace-nowrap text-xs ${reduced ? 'font-semibold text-empleadores' : 'text-ink-600'}`}>

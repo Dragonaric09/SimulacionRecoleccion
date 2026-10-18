@@ -217,7 +217,21 @@ public class AnalyticsService {
                 && !filter.sectors().stream().anyMatch(sector -> sectorMatches(value(row, "sector_trabajo"), sector))) return false;
         if (!filter.genders().isEmpty()
                 && filter.genders().stream().noneMatch(gender -> genderMatches(value(row, "genero"), gender))) return false;
+        if (!filter.ageRanges().isEmpty()) {
+            String age = value(row, "edad_rango");
+            String category = age == null ? "Sin respuesta" : canonicalAgeRange(age);
+            if (filter.ageRanges().stream().noneMatch(range -> normalize(range).equals(normalize(category)))) return false;
+        }
+        if (!filter.postgraduateInterest().isEmpty()
+                && filter.postgraduateInterest().stream().noneMatch(answer -> answer.equals(interestCategory(row)))) return false;
         return true;
+    }
+
+    /** Interés en posgrado como Sí / No / Sin respuesta (la pregunta es de opción única y obligatoria en el formulario). */
+    private String interestCategory(SurveyResponseEntity row) {
+        String raw = value(row, "interes_posgrado");
+        if (raw == null || raw.isBlank()) return "Sin respuesta";
+        return affirmative(raw) ? "Sí" : "No";
     }
 
     private boolean genderMatches(String actual, String requested) {

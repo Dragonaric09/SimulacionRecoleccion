@@ -13,6 +13,11 @@ function today() {
 }
 
 export async function printAnalyticsPdf(domain: PrintDomain, kind: "completo" | "cruce" | "simulacion" = "completo") {
+  if (domain === "EMPLEADORES" && kind === "completo") {
+    // Empleadores tiene un informe propio (EmployerReportHost) que se monta, carga sus datos e imprime.
+    window.dispatchEvent(new CustomEvent("simulacionem:employer-report"));
+    return;
+  }
   const previousTitle = document.title;
   const prefix = domain === "TITULADOS" ? "titulados" : "empleadores";
   document.title = `${prefix}_${kind}_${today()}`;

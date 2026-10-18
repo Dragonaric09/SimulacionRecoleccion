@@ -1,101 +1,193 @@
-import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { ChartCard, SmallSampleNotice } from '@/components/analytics/ChartCard'
-import { AgreementBars, type AgreementRowData } from '@/components/analytics/AgreementBars'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDatasets } from '@/features/analitica/shared/AnalyticsPrimitives'
-import { AGREEMENT_SCALE, NO_KNOW_LABEL, VALUATION_GROUP_LABELS, VALUATION_ITEMS, type ValuationGroup } from './instrumento'
+import { VALUATION_ITEMS } from './instrumento'
 import { EmployerFilterToolbar } from './EmployerFilterToolbar'
 import { EmployerPageHeader, NoEmployerDataPanel } from './EmployerPageHeader'
 import { downloadCsv, useEmployerFilters } from './employerData'
 import { useEmployerApi } from './useEmployerApi'
-import type { EmployerDashboard } from './dashboard/dashboardTypes'
+import { formatCount, formatDecimal, formatPercent } from './dashboard/dashboardFormat'
+import type { EmployerValuation } from './valuation/valuationTypes'
+import {
+  AgreementLegend,
+  CorrelationMatrix,
+  DimensionScorecards,
+  KnowledgeMatrixView,
+  ScoreLegend,
+  SegmentHeatmap,
+  StatementRanking,
+} from './valuation/ValuationVisuals'
+import { scoreColor, valuationUrl } from './valuation/valuationFormat'
 
 /**
- * Valoración por afirmación. Usa los conteos del dashboard (una sola agregación en la base de datos),
- * así que funciona igual con 20 respuestas que con 50 000.
+ * Valoración de la Carrera agrupada en seis dimensiones: cuánto confían los empleadores en la formación, cómo ven
+ * el desempeño, si conocen el perfil, si la Carrera los escucha, si participan y si recurren a ella para contratar.
  */
 export function EmpleadoresValoracionPage() {
   const { datasetId } = useDatasets('EMPLEADORES')
   const filters = useEmployerFilters(datasetId)
-  const [group, setGroup] = useState<ValuationGroup>('formacion')
-  const url = datasetId
-    ? `/analytics/employers/dashboard?datasetId=${encodeURIComponent(datasetId)}${filters.query}`
-    : null
-  const { data, loading, error } = useEmployerApi<EmployerDashboard>(url)
+  const { data, loading, error } = useEmployerApi<EmployerValuation>(datasetId ? valuationUrl(datasetId, filters.query) : null)
 
+  const header = (
+    <EmployerPageHeader
+      title="Valoración de la Carrera"
+      description="18 afirmaciones agrupadas en 6 dimensiones, con su comparación entre tipos de organización y la relación entre dimensiones."
+    />
+  )
   if (!datasetId) {
     return (
       <div className="mx-auto w-full max-w-6xl space-y-6">
-        <EmployerPageHeader title="Valoración de la Carrera" description="Distribución de las respuestas de empleadores por afirmación." />
+        {header}
         <NoEmployerDataPanel />
       </div>
     )
   }
 
-  const respondents = data?.filteredResponses ?? 0
-  const rowsFor = (valuationGroup: ValuationGroup): AgreementRowData[] =>
-    VALUATION_ITEMS.filter((item) => item.group === valuationGroup).map((item) => {
-      const stat = data?.valuations.find((valuation) => valuation.key === item.key)
-      return {
-        key: item.key,
-        label: item.statement,
-        counts: {
-          [AGREEMENT_SCALE[0].value]: stat?.disagree ?? 0,
-          [AGREEMENT_SCALE[1].value]: stat?.partly ?? 0,
-          [AGREEMENT_SCALE[2].value]: stat?.agree ?? 0,
-          [NO_KNOW_LABEL]: stat?.noKnow ?? 0,
-        },
-        validCount: stat?.answered ?? 0,
-      }
-    })
-
-  const exportGroup = (valuationGroup: ValuationGroup) => {
-    const rows = rowsFor(valuationGroup)
-    const categories = [...AGREEMENT_SCALE.map((level) => level.value), NO_KNOW_LABEL]
-    downloadCsv(`empleadores-valoracion-${valuationGroup}.csv`, [
-      ['Afirmación', 'n', ...categories],
-      ...rows.map((row) => [row.label, row.validCount, ...categories.map((category) => row.counts[category] ?? 0)]),
-    ])
-  }
-
+  const respondents = data?.summary.respondents ?? 0
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
-      <EmployerPageHeader title="Valoración de la Carrera" description="Distribución de las respuestas de empleadores por afirmación, en escala de acuerdo." />
+      {header}
       <EmployerFilterToolbar
         filters={filters.filters}
         onToggle={filters.toggle}
         onClear={filters.clear}
         active={filters.active}
-        validCount={data?.filteredResponses}
-        totalCount={data?.totalResponses}
+        validCount={data?.summary.respondents}
+        totalCount={data?.summary.totalResponses}
       />
       {error && <StatusPanel kind="warning" title="No se pudo cargar la pantalla" description={error} />}
       {loading && !data && <StatusPanel kind="loading" title="Cargando datos" description="Consultando el dataset seleccionado." />}
       {data && respondents > 0 && respondents < 5 && <SmallSampleNotice count={respondents} />}
       {data && respondents === 0 && <StatusPanel kind="info" title="Ningún registro coincide" description="Cambia o limpia los filtros para ver resultados." />}
+      {data && respondents > 0 && <ValuationContent data={data} />}
+    </div>
+  )
+}
 
-      {data && respondents > 0 && (
-        <Tabs value={group} onValueChange={(value) => setGroup(value as ValuationGroup)}>
-          <TabsList className="w-full justify-start">
-            {(Object.keys(VALUATION_GROUP_LABELS) as ValuationGroup[]).map((key) => (
-              <TabsTrigger key={key} value={key}>{VALUATION_GROUP_LABELS[key]}</TabsTrigger>
-            ))}
-          </TabsList>
-          {(Object.keys(VALUATION_GROUP_LABELS) as ValuationGroup[]).map((key) => (
-            <TabsContent key={key} value={key} className="mt-4">
-              <ChartCard
-                title={`Afirmaciones: ${VALUATION_GROUP_LABELS[key].toLowerCase()}`}
-                n={respondents}
-                help="Por afirmación, la distribución de la escala de acuerdo. «No sabe» se muestra aparte y no forma parte de la escala."
-                onExportCsv={() => exportGroup(key)}
-              >
-                <AgreementBars rows={rowsFor(key)} />
-              </ChartCard>
-            </TabsContent>
-          ))}
-        </Tabs>
-      )}
+/** Contenido de la pantalla; el reporte PDF lo reutiliza tal cual. */
+export function ValuationContent({ data, print = false }: { data: EmployerValuation; print?: boolean }) {
+  const { summary, dimensions } = data
+  const byKey = new Map(dimensions.map((d) => [d.key, d]))
+  const strongest = summary.strongestDimension ? byKey.get(summary.strongestDimension) : undefined
+  const weakest = summary.weakestDimension ? byKey.get(summary.weakestDimension) : undefined
+  const n = summary.respondents
+
+  const exportItems = () => {
+    const statements = new Map(VALUATION_ITEMS.map((item) => [item.key, item.statement]))
+    const dimensionLabel = new Map(dimensions.map((d) => [d.key, d.label]))
+    downloadCsv('empleadores-valoracion-afirmaciones.csv', [
+      ['Afirmación', 'Dimensión', 'Totalmente de acuerdo', 'Parcialmente de acuerdo', 'Totalmente desacuerdo', 'No sabe', 'Sin respuesta', 'Puntaje 0-100', 'Índice neto'],
+      ...data.items.map((item) => [
+        statements.get(item.key) ?? item.label, dimensionLabel.get(item.dimension) ?? '', item.full, item.partial, item.disagreement,
+        item.unknown, item.missing, item.score ?? '', item.netIndex ?? '',
+      ]),
+    ])
+  }
+  const exportSegments = () => {
+    downloadCsv('empleadores-valoracion-segmentos.csv', [
+      ['Variable', 'Grupo', 'n', 'Puntaje global', ...dimensions.map((d) => d.label), 'Prueba', 'p-valor', 'Efecto'],
+      ...data.segments.flatMap((segment) => segment.groups.map((group) => [
+        segment.label, group.category, group.n, group.score ?? '', ...dimensions.map((d) => group.dimensions[d.key] ?? ''),
+        segment.test?.nombrePrueba ?? '', segment.test?.pValor ?? '', segment.test?.efecto ?? '',
+      ])),
+    ])
+  }
+
+  return (
+    <div className="valuation-content space-y-6">
+      <div className="valuation-kpis grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatTile label="Puntaje global de valoración" value={summary.score === null ? '—' : formatDecimal(summary.score, 0)} suffix="/ 100" score={summary.score}>
+          Acuerdo total {formatPercent(summary.fullAgreementShare, 0)} · Desacuerdo {formatPercent(summary.disagreementShare, 0)}
+        </StatTile>
+        <StatTile label="Dimensión mejor valorada" value={strongest?.label ?? '—'} score={strongest?.score ?? null} compact>
+          {strongest ? `Puntaje ${formatDecimal(strongest.score ?? 0, 0)} · n = ${formatCount(strongest.respondents)}` : 'Requiere al menos dos dimensiones con respuestas'}
+        </StatTile>
+        <StatTile label="Dimensión peor valorada" value={weakest?.label ?? '—'} score={weakest?.score ?? null} compact>
+          {weakest ? `Puntaje ${formatDecimal(weakest.score ?? 0, 0)} · n = ${formatCount(weakest.respondents)}` : 'Requiere al menos dos dimensiones con respuestas'}
+        </StatTile>
+        <StatTile label="Respuestas «No sabe»" value={formatPercent(summary.unknownShare, 1)}>
+          {formatCount(summary.uniformResponses)} de {formatCount(n)} organizaciones marcaron la misma opción en las 18 afirmaciones
+        </StatTile>
+      </div>
+
+      <ChartCard
+        title="Puntaje por dimensión"
+        n={n}
+        help="Cada dimensión agrupa afirmaciones del formulario que miden lo mismo. Puntaje 0–100: Totalmente de acuerdo = 100, Parcialmente = 50, Totalmente desacuerdo = 0. «No sabe» no entra en el puntaje."
+      >
+        <div className="space-y-4">
+          <DimensionScorecards dimensions={dimensions} />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <AgreementLegend withUnknown={false} />
+            <ScoreLegend />
+          </div>
+        </div>
+      </ChartCard>
+
+      <ChartCard
+        title="Afirmaciones ordenadas por puntaje"
+        n={n}
+        help="Porcentajes sobre las organizaciones que eligieron una opción de la escala. «No sabe» se informa en su columna, sobre todas las que respondieron la afirmación. Pase el cursor por una fila para leer el enunciado completo."
+        onExportCsv={print ? undefined : exportItems}
+      >
+        <div className="space-y-3">
+          <StatementRanking items={data.items} dimensions={dimensions} />
+          <AgreementLegend withUnknown={false} />
+        </div>
+      </ChartCard>
+
+      <ChartCard
+        title="Puntaje por tipo de organización y situación de contratación"
+        n={n}
+        help="Puntaje promedio de cada dimensión por grupo. La prueba compara el puntaje global entre grupos y se elige por el tipo de variable: Mann–Whitney para 2 grupos, Kruskal–Wallis para 3 o más, Spearman si los grupos tienen orden. * Grupo con menos de 5 organizaciones."
+        onExportCsv={print ? undefined : exportSegments}
+      >
+        <div className="space-y-3">
+          <SegmentHeatmap segments={data.segments} dimensions={dimensions} />
+          <ScoreLegend />
+        </div>
+      </ChartCard>
+
+      <div className="valuation-pair grid gap-6">
+        <ChartCard
+          title="Conocimiento del perfil de egreso frente a su coherencia con el desempeño"
+          n={data.knowledge.counts.flat().reduce((sum, value) => sum + value, 0)}
+          help="Filas: «Conozco el perfil profesional y las competencias de egreso». Columnas: «El perfil declarado es coherente con el desempeño demostrado». Ambas son ordinales: se usa ρ de Spearman."
+        >
+          <KnowledgeMatrixView knowledge={data.knowledge} />
+        </ChartCard>
+        <ChartCard
+          title="Relación entre dimensiones"
+          n={n}
+          help="ρ de Spearman entre los puntajes de dimensión de cada organización (solo organizaciones con ambas dimensiones respondidas). Pase el cursor por una celda para ver n y p."
+        >
+          <CorrelationMatrix correlations={data.correlations} />
+        </ChartCard>
+      </div>
+    </div>
+  )
+}
+
+function StatTile({ label, value, suffix, score, compact = false, children }: {
+  label: string
+  value: string
+  suffix?: string
+  score?: number | null
+  compact?: boolean
+  children: ReactNode
+}) {
+  return (
+    <div className="stat-tile flex h-full flex-col gap-2 rounded-lg border border-border-line bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <p className="caption-bold text-ink-600">{label}</p>
+        {score !== undefined && score !== null && <span className="mt-0.5 size-3 shrink-0 rounded-full" style={{ background: scoreColor(score) }} />}
+      </div>
+      <p className={compact ? 'text-lg font-semibold leading-6 text-ink-900' : 'display-kpi tabular-nums text-ink-900'}>
+        {value}
+        {suffix && <span className="ml-1 text-sm font-medium text-ink-500">{suffix}</span>}
+      </p>
+      <p className="caption-meta mt-auto text-ink-500">{children}</p>
     </div>
   )
 }

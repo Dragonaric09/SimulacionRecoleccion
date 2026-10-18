@@ -52,7 +52,10 @@
   --color-titulados: var(--titulados);
   --color-empleadores: var(--empleadores);
   --color-ink-900: var(--ink-900);
+  --color-ink-700: var(--ink-700);
   --color-ink-600: var(--ink-600);
+  --color-ink-500: var(--ink-500);
+  --color-ink-400: var(--ink-400);
   --color-border-line: var(--border-line);
   --color-status-warning: var(--status-warning);
   --color-status-success: var(--status-success);
@@ -104,7 +107,10 @@
   --titulados: #1f6fb5;
   --empleadores: #14a39a;
   --ink-900: #0f172a;
+  --ink-700: #334155;
   --ink-600: #475569;
+  --ink-500: #64748b;
+  --ink-400: #94a3b8;
   --border-line: #cbd5e1;
   --status-warning: #e0a100;
   --status-success: #2e9e5b;
@@ -224,6 +230,7 @@
 
 .print-only { display: none; }
 .print-bundle { display: none; }
+.employer-report { display: none; }
 .cohort-fixed-chart { display: none; }
 .employment-donut-fixed { display: none; }
 .radar-fixed-chart { display: none; }
@@ -341,4 +348,82 @@
   .overflow-auto, .overflow-x-auto, .overflow-y-auto { overflow: visible !important; }
   .print-page [class*="truncate"] { white-space: normal !important; overflow-wrap: anywhere; text-overflow: clip !important; }
   .status-panel { break-inside: avoid; }
+
+  /* ---------------------------------------------------------------- Informe de empleadores */
+  html.printing-employer-report main > *:not(.employer-report) { display: none !important; }
+  html.printing-employer-report main > .employer-report { display: block !important; max-width: none !important; width: 100%; margin: 0 !important; }
+  .employer-report { color: #0f172a; font-size: 10.5px; line-height: 14px; }
+  .employer-report h3 { font-size: 11.5px; line-height: 15px; font-weight: 600; margin: 0; }
+  .employer-report .text-left { text-align: left; }
+  .employer-report .font-medium { font-weight: 500; }
+  .employer-report .font-semibold { font-weight: 600; }
+
+  .report-cover { min-height: 170mm; display: flex; flex-direction: column; gap: 10px; padding: 20mm 10mm 0; border-top: 6px solid #14a39a; break-after: page; }
+  .report-kicker { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #14a39a; }
+  .report-title { font-size: 30px; line-height: 36px; font-weight: 600; letter-spacing: -0.02em; }
+  .report-subtitle { font-size: 13px; color: #475569; }
+  .report-meta { margin-top: 10mm; display: grid; gap: 6px; max-width: 190mm; }
+  .report-meta-row { display: grid; grid-template-columns: 45mm 1fr; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+  .report-meta-row dt { color: #64748b; }
+  .report-meta-row dd { font-weight: 500; }
+  .report-filter-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+  .report-toc { margin-top: 8mm; padding-left: 18px; list-style: decimal; color: #334155; font-size: 11px; display: grid; gap: 3px; }
+  .report-warning { margin-top: 6mm; padding: 8px 12px; border: 1px solid #f2a33a; background: #fef3c7; color: #78350f; border-radius: 6px; max-width: 190mm; }
+
+  .report-section { break-before: page; display: grid; gap: 10px; }
+  .report-section-header { display: flex; align-items: baseline; gap: 10px; padding-bottom: 6px; border-bottom: 2px solid #14a39a; break-after: avoid; }
+  .report-section-header h2 { font-size: 17px; line-height: 22px; font-weight: 600; }
+  .report-section-number { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; border-radius: 6px; background: #e1f4f2; color: #0f766e; font-weight: 700; font-size: 11px; }
+  .report-section-n { margin-left: auto; color: #64748b; font-size: 10px; }
+
+  .report-card { border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; background: white; break-inside: avoid; display: grid; gap: 6px; align-content: start; }
+  .report-card-header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .report-card-header span { color: #64748b; font-size: 9.5px; white-space: nowrap; }
+  .report-muted { color: #64748b; font-size: 9.5px; line-height: 12px; }
+  .report-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .report-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .report-kpi { border: 1px solid #cbd5e1; border-left: 4px solid #14a39a; border-radius: 6px; padding: 8px 10px; break-inside: avoid; }
+  .report-kpi-label { font-size: 9.5px; font-weight: 600; color: #475569; }
+  .report-kpi-value { font-size: 20px; line-height: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .report-kpi-note { font-size: 9px; color: #64748b; }
+
+  .report-bars { display: grid; gap: 3px; }
+  .report-bar-row { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 66px; align-items: center; gap: 6px; font-size: 9.5px; }
+  .report-bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .report-bar-track { height: 8px; background: #f1f5f9; border-radius: 2px; overflow: hidden; display: block; }
+  .report-bar-track > span { display: block; height: 100%; }
+  .report-bar-value { text-align: right; font-variant-numeric: tabular-nums; color: #334155; }
+
+  .report-table { width: 100% !important; border-collapse: collapse; font-size: 9.5px !important; }
+  .report-table th { font-weight: 600; color: #475569; padding: 3px 4px; border-bottom: 1px solid #cbd5e1; text-align: center; }
+  .report-table td { padding: 3px 4px; border-bottom: 1px solid #f1f5f9; text-align: center; font-variant-numeric: tabular-nums; }
+  .report-table-text td { vertical-align: top; }
+  .report-table-text ol { margin: 0; padding-left: 14px; list-style: decimal; display: grid; gap: 2px; }
+  .report-heat { font-weight: 600; }
+  .report-mean-col { width: 150px; }
+  .report-mean-track { position: relative; display: block; height: 10px; margin: 0 6px; background: linear-gradient(90deg, #e4572e, #f4a98a, #f1f5f9, #8db8e0, #1f6fb5); border-radius: 5px; }
+  .report-mean-dot { position: absolute; top: -2px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; border: 2px solid #0f172a; }
+
+  .report-methodology { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .report-methodology ul { margin: 0; padding-left: 14px; list-style: disc; display: grid; gap: 3px; }
+  .report-span-2 { grid-column: 1 / -1; }
+
+  /* Pantalla de valoración reutilizada dentro del informe: rejillas fijas y sin anchos mínimos. */
+  .employer-report .valuation-content { display: grid; gap: 10px; }
+  .employer-report .valuation-content > * { margin: 0 !important; }
+  .employer-report .valuation-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 8px !important; }
+  .employer-report .valuation-kpis .display-kpi { font-size: 22px; line-height: 28px; }
+  .employer-report .dimension-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
+  .employer-report .valuation-pair { grid-template-columns: minmax(0, 1fr) !important; gap: 8px !important; }
+  .employer-report table { min-width: 0 !important; }
+  .employer-report [data-slot="card"] { border-radius: 6px; }
+  .employer-report [data-slot="card-header"] { padding: 8px 10px 0 !important; }
+  .employer-report [data-slot="card-content"] { padding: 8px 10px 10px !important; }
+  .employer-report .title-card { font-size: 12.5px; line-height: 16px; }
+  .employer-report .stat-tile { padding: 8px 10px; box-shadow: none; }
+  .employer-report .statement-row { font-size: 9.5px; }
+  .employer-report .dimension-card { padding: 8px 10px; gap: 6px; }
+  .employer-report .dimension-card .text-lg { font-size: 15px; }
+  .employer-report .dimension-card > div:first-child > span { height: 32px; }
+  .employer-report .segment-heatmap td, .employer-report .correlation-matrix td, .employer-report .knowledge-matrix td { height: auto !important; padding: 3px 2px; }
 }

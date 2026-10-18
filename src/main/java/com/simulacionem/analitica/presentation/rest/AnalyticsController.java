@@ -7,6 +7,7 @@ import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
 import com.simulacionem.analitica.application.service.AnalyticsService;
 import com.simulacionem.analitica.application.service.TituladosFilter;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +21,6 @@ import java.util.NoSuchElementException;
 import java.util.Map;
 import java.util.Random;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.stream.IntStream;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,108 +36,77 @@ public class AnalyticsController {
     @GetMapping("/titulados/summary")
     public AnalyticsSummaryDto tituladosSummary(@RequestParam(required = false) UUID datasetId,
                                                 @RequestParam(required = false) String fields,
-                                                @RequestParam(required = false) Integer yearFrom,
-                                                @RequestParam(required = false) Integer yearTo,
-                                                @RequestParam(required = false) List<String> laborStatus,
-                                                @RequestParam(required = false) List<String> sector,
-                                                @RequestParam(required = false) List<String> gender) {
-        return analytics.summary(datasetId, "TITULADOS", split(fields), filter(yearFrom, yearTo, laborStatus, sector, gender));
+                                                @ModelAttribute TituladosQuery query) {
+        return analytics.summary(datasetId, "TITULADOS", split(fields), query.toFilter());
     }
 
     @GetMapping("/titulados/employment")
     public AnalyticsSummaryDto tituladosEmployment(@RequestParam(required = false) UUID datasetId,
-                                                   @RequestParam(required = false) Integer yearFrom,
-                                                   @RequestParam(required = false) Integer yearTo,
-                                                   @RequestParam(required = false) List<String> laborStatus,
-                                                   @RequestParam(required = false) List<String> sector) {
+                                                   @ModelAttribute TituladosQuery query) {
         return analytics.summary(datasetId, "TITULADOS", List.of(
                 "anio_titulacion", "anios_vida_profesional", "anios_desempleo",
                 "situacion_laboral_actual", "sector_trabajo", "sector_trabajo_actual", "es_primer_empleo", "primera_experiencia_laboral",
                 "razon_no_trabaja", "experiencia_laboral_previa", "tiempo_primer_empleo", "cantidad_empleos",
                 "edad_rango", "genero", "rubro_trabajo_actual", "remuneracion_rango",
-                "area_trabajo", "pertinencia_trabajo_formacion"), filter(yearFrom, yearTo, laborStatus, sector));
+                "area_trabajo", "pertinencia_trabajo_formacion"), query.toFilter());
     }
 
     @GetMapping("/titulados/employment/unemployment")
     public AnalyticsSummaryDto tituladosUnemployment(@RequestParam(required = false) UUID datasetId,
-                                                     @RequestParam(required = false) Integer yearFrom,
-                                                     @RequestParam(required = false) Integer yearTo,
-                                                     @RequestParam(required = false) List<String> laborStatus,
-                                                     @RequestParam(required = false) List<String> sector) {
-        return analytics.unemploymentSummary(datasetId, filter(yearFrom, yearTo, laborStatus, sector));
+                                                     @ModelAttribute TituladosQuery query) {
+        return analytics.unemploymentSummary(datasetId, query.toFilter());
     }
 
     @GetMapping("/titulados/employment/first-employment")
     public AnalyticsSummaryDto tituladosFirstEmployment(@RequestParam(required = false) UUID datasetId,
-                                                        @RequestParam(required = false) Integer yearFrom,
-                                                        @RequestParam(required = false) Integer yearTo,
-                                                        @RequestParam(required = false) List<String> laborStatus,
-                                                        @RequestParam(required = false) List<String> sector) {
-        return analytics.firstEmploymentSummary(datasetId, filter(yearFrom, yearTo, laborStatus, sector));
+                                                        @ModelAttribute TituladosQuery query) {
+        return analytics.firstEmploymentSummary(datasetId, query.toFilter());
     }
 
     @GetMapping("/titulados/employment/entrepreneurship")
     public AnalyticsSummaryDto tituladosEntrepreneurship(@RequestParam(required = false) UUID datasetId,
-                                                         @RequestParam(required = false) Integer yearFrom,
-                                                         @RequestParam(required = false) Integer yearTo,
-                                                         @RequestParam(required = false) List<String> laborStatus,
-                                                         @RequestParam(required = false) List<String> sector) {
-        return analytics.entrepreneurshipSummary(datasetId, filter(yearFrom, yearTo, laborStatus, sector));
+                                                         @ModelAttribute TituladosQuery query) {
+        return analytics.entrepreneurshipSummary(datasetId, query.toFilter());
     }
 
     @GetMapping("/titulados/employment/profile")
     public EmploymentProfileDto tituladosEmploymentProfile(@RequestParam(required = false) UUID datasetId,
-                                                           @RequestParam(required = false) Integer yearFrom,
-                                                           @RequestParam(required = false) Integer yearTo,
-                                                           @RequestParam(required = false) List<String> laborStatus,
-                                                           @RequestParam(required = false) List<String> sector) {
-        return analytics.employmentProfile(datasetId, filter(yearFrom, yearTo, laborStatus, sector));
+                                                           @ModelAttribute TituladosQuery query) {
+        return analytics.employmentProfile(datasetId, query.toFilter());
     }
 
     @GetMapping("/titulados/education")
     public AnalyticsSummaryDto tituladosEducation(@RequestParam(required = false) UUID datasetId,
-                                                  @RequestParam(required = false) Integer yearFrom,
-                                                  @RequestParam(required = false) Integer yearTo,
-                                                  @RequestParam(required = false) List<String> laborStatus,
-                                                  @RequestParam(required = false) List<String> sector) {
+                                                  @ModelAttribute TituladosQuery query) {
         return analytics.summary(datasetId, "TITULADOS", List.of(
                 "tiene_formacion_complementaria", "formacion_complementaria_nivel",
                 "institucion_formacion_complementaria", "financiamiento_posgrado_cursado",
                 "interes_posgrado", "nivel_posgrado_interes", "area_posgrado_interes",
                 "modalidad_posgrado", "institucion_posgrado_interes", "financiamiento_posgrado_estimado",
-                "valoracion_formacion_1"), filter(yearFrom, yearTo, laborStatus, sector));
+                "valoracion_formacion_1"), query.toFilter());
     }
 
     @GetMapping("/titulados/satisfaction")
     public AnalyticsSummaryDto tituladosSatisfaction(@RequestParam(required = false) UUID datasetId,
-                                                     @RequestParam(required = false) Integer yearFrom,
-                                                     @RequestParam(required = false) Integer yearTo,
-                                                     @RequestParam(required = false) List<String> laborStatus,
-                                                     @RequestParam(required = false) List<String> sector) {
+                                                     @ModelAttribute TituladosQuery query) {
         return analytics.summary(datasetId, "TITULADOS", List.of(
                 "satisfaccion_formacion", "concordancia_formacion_requerimientos",
                 "pertinencia_trabajo_formacion", "satisfaccion_emprendimiento",
-                "importancia_formacion_emprendimiento"), filter(yearFrom, yearTo, laborStatus, sector));
+                "importancia_formacion_emprendimiento"), query.toFilter());
     }
 
     @GetMapping("/titulados/curriculum")
     public AnalyticsSummaryDto tituladosCurriculum(@RequestParam(required = false) UUID datasetId,
-                                                   @RequestParam(required = false) Integer yearFrom,
-                                                   @RequestParam(required = false) Integer yearTo,
-                                                   @RequestParam(required = false) List<String> laborStatus,
-                                                   @RequestParam(required = false) List<String> sector) {
+                                                   @ModelAttribute TituladosQuery query) {
         return analytics.summary(datasetId, "TITULADOS", List.of(
-                "aspectos_utiles", "aspectos_mejorables", "asignaturas_ventaja", "asignaturas_poco_utiles"), filter(yearFrom, yearTo, laborStatus, sector));
+                "aspectos_utiles", "aspectos_mejorables", "asignaturas_ventaja", "asignaturas_poco_utiles"), query.toFilter());
     }
 
     @GetMapping("/titulados/financing")
     public AnalyticsSummaryDto tituladosFinancing(@RequestParam(required = false) UUID datasetId,
-                                                  @RequestParam(required = false) Integer yearFrom,
-                                                  @RequestParam(required = false) Integer yearTo,
-                                                  @RequestParam(required = false) List<String> laborStatus,
-                                                  @RequestParam(required = false) List<String> sector) {
+                                                  @ModelAttribute TituladosQuery query) {
         return analytics.summary(datasetId, "TITULADOS", List.of(
-                "financiamiento_posgrado_estimado", "nivel_posgrado_interes"), filter(yearFrom, yearTo, laborStatus, sector));
+                "financiamiento_posgrado_estimado", "nivel_posgrado_interes"), query.toFilter());
     }
 
     @GetMapping("/employers/summary")
@@ -162,28 +131,16 @@ public class AnalyticsController {
 
     @GetMapping("/competencies/gaps")
     public List<CompetenceAverageDto> competenceGaps(@RequestParam UUID datasetId,
-                                                     @RequestParam(required = false) Integer yearFrom,
-                                                     @RequestParam(required = false) Integer yearTo,
-                                                     @RequestParam(required = false) List<String> laborStatus,
-                                                     @RequestParam(required = false) List<String> sector,
-                                                     @RequestParam(required = false) List<String> organizationType,
-                                                     @RequestParam(required = false) List<String> organizationSize) {
-        return analytics.competenceGaps(datasetId,
-                filter(yearFrom, yearTo, laborStatus, sector, organizationType, organizationSize));
+                                                     @ModelAttribute TituladosQuery query) {
+        return analytics.competenceGaps(datasetId, query.toFilter());
     }
 
     @GetMapping("/crosses")
     public CrossTabulationDto crosses(@RequestParam UUID datasetId,
                                       @RequestParam String rowField,
                                       @RequestParam String columnField,
-                                      @RequestParam(required = false) Integer yearFrom,
-                                      @RequestParam(required = false) Integer yearTo,
-                                      @RequestParam(required = false) List<String> laborStatus,
-                                      @RequestParam(required = false) List<String> sector,
-                                      @RequestParam(required = false) List<String> organizationType,
-                                      @RequestParam(required = false) List<String> organizationSize) {
-        return analytics.cross(datasetId, rowField, columnField,
-                filter(yearFrom, yearTo, laborStatus, sector, organizationType, organizationSize));
+                                      @ModelAttribute TituladosQuery query) {
+        return analytics.cross(datasetId, rowField, columnField, query.toFilter());
     }
 
     @PostMapping("/simulation/multinomial")
@@ -286,27 +243,5 @@ public class AnalyticsController {
 
     private List<String> split(String fields) {
         return fields == null || fields.isBlank() ? List.of() : Arrays.stream(fields.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
-    }
-
-    private TituladosFilter filter(Integer yearFrom, Integer yearTo, List<String> laborStatus, List<String> sector) {
-        return filter(yearFrom, yearTo, laborStatus, sector, null, null);
-    }
-
-    private TituladosFilter filter(Integer yearFrom, Integer yearTo, List<String> laborStatus, List<String> sector, List<String> gender) {
-        return new TituladosFilter(yearFrom, yearTo,
-                laborStatus == null ? Collections.emptyList() : laborStatus,
-                sector == null ? Collections.emptyList() : sector,
-                gender == null ? Collections.emptyList() : gender,
-                Collections.emptyList(), Collections.emptyList());
-    }
-
-    private TituladosFilter filter(Integer yearFrom, Integer yearTo, List<String> laborStatus, List<String> sector,
-                                   List<String> organizationType, List<String> organizationSize) {
-        return new TituladosFilter(yearFrom, yearTo,
-                laborStatus == null ? Collections.emptyList() : laborStatus,
-                sector == null ? Collections.emptyList() : sector,
-                Collections.emptyList(),
-                organizationType == null ? Collections.emptyList() : organizationType,
-                organizationSize == null ? Collections.emptyList() : organizationSize);
     }
 }

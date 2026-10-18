@@ -5,17 +5,33 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { AnalyticsSummary } from "@/features/analitica/api";
 
-export const LABOR_STATUS_OPTIONS = ["Trabaja en una organización", "Emprendimiento propio", "Actualmente no trabaja", "Sin respuesta"];
-export const SECTOR_OPTIONS = ["Público", "Privado", "Independiente", "ONG", "No trabaja"];
+/* Opciones con las etiquetas del formulario de titulados (form/form_export_titulados00.json). */
+const LABOR_STATUS_OPTIONS = ["Trabaja en una organización", "Emprendimiento propio", "Actualmente no trabaja", "Sin respuesta"];
+const SECTOR_OPTIONS = ["Público", "Privado", "Independiente", "ONG", "No trabaja"];
+const GENDER_OPTIONS = ["Hombre", "Mujer"];
+const AGE_RANGE_OPTIONS = ["15 - 18 años", "19 - 22 años", "23 - 26 años", "27 - 30 años", "31 - 34 años", "35 años o más", "Sin respuesta"];
+const POSTGRADUATE_INTEREST_OPTIONS = ["Sí", "No", "Sin respuesta"];
 
-export type TituladosFilterState = { yearFrom?: number; yearTo?: number; laborStatuses: string[]; sectors: string[] };
+/** Filtros de selección múltiple de titulados: clave del estado → parámetro de la URL y opciones. */
+const MULTI_FILTERS = [
+  { key: "laborStatuses", param: "laborStatus", label: "Estado laboral", options: LABOR_STATUS_OPTIONS },
+  { key: "sectors", param: "sector", label: "Sector", options: SECTOR_OPTIONS },
+  { key: "genders", param: "gender", label: "Género", options: GENDER_OPTIONS },
+  { key: "ageRanges", param: "ageRange", label: "Rango de edad", options: AGE_RANGE_OPTIONS },
+  { key: "postgraduateInterest", param: "postgraduateInterest", label: "Interés en posgrado", options: POSTGRADUATE_INTEREST_OPTIONS },
+] as const;
 
-export function tituladosFilterQuery(filters: TituladosFilterState) {
+type MultiKey = (typeof MULTI_FILTERS)[number]["key"];
+
+export type TituladosFilterState = { yearFrom?: number; yearTo?: number } & Record<MultiKey, string[]>;
+
+const EMPTY_MULTI = Object.fromEntries(MULTI_FILTERS.map((filter) => [filter.key, []])) as unknown as Record<MultiKey, string[]>;
+
+function tituladosFilterQuery(filters: TituladosFilterState) {
   const params = new URLSearchParams();
   if (filters.yearFrom !== undefined) params.set("yearFrom", String(filters.yearFrom));
   if (filters.yearTo !== undefined) params.set("yearTo", String(filters.yearTo));
-  filters.laborStatuses.forEach((value) => params.append("laborStatus", value));
-  filters.sectors.forEach((value) => params.append("sector", value));
+  MULTI_FILTERS.forEach((filter) => filters[filter.key].forEach((value) => params.append(filter.param, value)));
   const query = params.toString();
   return query ? `&${query}` : "";
 }
@@ -26,22 +42,23 @@ export function FilterToolbar({ summary, onQueryChange, count, onReset }: { summ
 }
 
 function TituladosFilterToolbar({ summary, onQueryChange }: { summary: AnalyticsSummary; onQueryChange?: (query: string) => void }) {
-  const [filters, setFilters] = useState<TituladosFilterState>({ laborStatuses: [], sectors: [] });
+  const [filters, setFilters] = useState<TituladosFilterState>({ ...EMPTY_MULTI });
   const [initialized, setInitialized] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const minYear = summary.yearMin ?? undefined;
   const maxYear = summary.yearMax ?? undefined;
   useEffect(() => {
-    const saved = localStorage.getItem(`simulacionem.tituladosFilters.${summary.datasetId}`);
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(`simulacionem.tituladosFilters.${summary.datasetId}`);
+    } catch {
+      saved = null;
+    }
     const params = saved ? new URLSearchParams(saved.replace(/^&/, "")) : null;
     const savedFrom = params?.get("yearFrom");
     const savedTo = params?.get("yearTo");
-    setFilters({
-      yearFrom: savedFrom ? Number(savedFrom) : minYear,
-      yearTo: savedTo ? Number(savedTo) : maxYear,
-      laborStatuses: params?.getAll("laborStatus") ?? [],
-      sectors: params?.getAll("sector") ?? [],
-    });
+    const multi = Object.fromEntries(MULTI_FILTERS.map((filter) => [filter.key, params?.getAll(filter.param) ?? []])) as unknown as Record<MultiKey, string[]>;
+    setFilters({ yearFrom: savedFrom ? Number(savedFrom) : minYear, yearTo: savedTo ? Number(savedTo) : maxYear, ...multi });
     setInitialized(true);
   }, [summary.datasetId, minYear, maxYear]);
   const query = useMemo(() => tituladosFilterQuery({ ...filters,
@@ -51,17 +68,21 @@ function TituladosFilterToolbar({ summary, onQueryChange }: { summary: Analytics
   useEffect(() => {
     if (!initialized) return;
     onQueryChange?.(query);
-    localStorage.setItem(`simulacionem.tituladosFilters.${summary.datasetId}`, query);
+    try {
+      localStorage.setItem(`simulacionem.tituladosFilters.${summary.datasetId}`, query);
+    } catch {
+      /* sin almacenamiento: los filtros solo viven en la pantalla */
+    }
   }, [initialized, query, onQueryChange, summary.datasetId]);
   const update = (next: TituladosFilterState) => setFilters(next);
-  const toggle = (key: "laborStatuses" | "sectors", value: string) => update({ ...filters, [key]: filters[key].includes(value) ? filters[key].filter((item) => item !== value) : [...filters[key], value] });
-  const reset = () => update({ yearFrom: minYear, yearTo: maxYear, laborStatuses: [], sectors: [] });
+  const toggle = (key: MultiKey, value: string) => update({ ...filters, [key]: filters[key].includes(value) ? filters[key].filter((item) => item !== value) : [...filters[key], value] });
+  const reset = () => update({ yearFrom: minYear, yearTo: maxYear, ...EMPTY_MULTI });
   const yearReady = minYear !== undefined && maxYear !== undefined;
   const rangeLabel = yearReady && filters.yearFrom !== undefined && filters.yearTo !== undefined ? `${filters.yearFrom} – ${filters.yearTo}` : "Todos los años";
-  const selectionLabel = (values: string[]) => values.length === 0 ? "Todos" : `${values.length} seleccionados`;
-  const hasActiveFilters = (yearReady && (filters.yearFrom !== minYear || filters.yearTo !== maxYear)) || filters.laborStatuses.length > 0 || filters.sectors.length > 0;
+  const selectionLabel = (values: string[]) => values.length === 0 ? "Todos" : values.length === 1 ? values[0] : `${values.length} seleccionados`;
+  const hasActiveFilters = (yearReady && (filters.yearFrom !== minYear || filters.yearTo !== maxYear)) || MULTI_FILTERS.some((filter) => filters[filter.key].length > 0);
   const countIsReduced = summary.validResponses < summary.totalResponses;
-  return <div className="filter-toolbar mx-auto flex w-full max-w-[1440px] flex-wrap items-end gap-x-2 gap-y-2 p-3 min-[1100px]:flex-nowrap">
+  return <div className="filter-toolbar mx-auto flex w-full max-w-[1440px] flex-wrap items-end gap-x-2 gap-y-2 p-3">
     <div className="flex h-10 w-[64px] shrink-0 items-center gap-1.5 text-sm font-medium text-ink-900"><SlidersHorizontal className="h-4 w-4 text-primary" />Filtros</div>
     <div className="grid h-14 w-[220px] shrink-0 gap-1">
       <div className="flex h-4 items-center justify-between text-xs text-ink-600"><span>Año de titulación</span><strong className="font-semibold text-ink-900">{rangeLabel}</strong></div>
@@ -70,8 +91,19 @@ function TituladosFilterToolbar({ summary, onQueryChange }: { summary: Analytics
         {yearReady && <div className="pointer-events-none absolute inset-x-1 bottom-0 flex justify-between text-[10px] leading-none text-ink-500"><span>{minYear}</span><span>{maxYear}</span></div>}
       </div>
     </div>
-    <FilterMenu label="Estado laboral" value={selectionLabel(filters.laborStatuses)} open={open === "labor"} onOpen={() => setOpen(open === "labor" ? null : "labor")} options={LABOR_STATUS_OPTIONS} selected={filters.laborStatuses} onToggle={(value) => toggle("laborStatuses", value)} onClear={() => update({ ...filters, laborStatuses: [] })} />
-    <FilterMenu label="Sector" value={selectionLabel(filters.sectors)} open={open === "sector"} onOpen={() => setOpen(open === "sector" ? null : "sector")} options={SECTOR_OPTIONS} selected={filters.sectors} onToggle={(value) => toggle("sectors", value)} onClear={() => update({ ...filters, sectors: [] })} />
+    {MULTI_FILTERS.map((filter) => (
+      <FilterMenu
+        key={filter.key}
+        label={filter.label}
+        value={selectionLabel(filters[filter.key])}
+        open={open === filter.key}
+        onOpen={() => setOpen(open === filter.key ? null : filter.key)}
+        options={[...filter.options]}
+        selected={filters[filter.key]}
+        onToggle={(value) => toggle(filter.key, value)}
+        onClear={() => update({ ...filters, [filter.key]: [] })}
+      />
+    ))}
     <div className="min-w-0 flex-1" />
     <span className={`shrink-0 whitespace-nowrap text-[11px] ${countIsReduced ? "font-semibold text-primary" : "text-ink-600"}`}>Mostrando <strong>{summary.validResponses}</strong> de {summary.totalResponses} respuestas</span>
     <Button type="button" variant="ghost" size="sm" disabled={!hasActiveFilters} onClick={reset} className={`shrink-0 whitespace-nowrap px-0 text-xs ${hasActiveFilters ? "text-primary hover:text-primary" : "text-ink-400"}`}><RotateCcw className="mr-1 h-3.5 w-3.5" />Limpiar filtros</Button>
@@ -79,7 +111,7 @@ function TituladosFilterToolbar({ summary, onQueryChange }: { summary: Analytics
 }
 
 export function FilterMenu({ label, value, open, onOpen, options, selected, onToggle, onClear }: { label: string; value: string; open: boolean; onOpen: () => void; options: string[]; selected: string[]; onToggle: (value: string) => void; onClear: () => void }) {
-  return <div className="relative w-[170px] shrink-0"><button type="button" className="grid h-14 w-full gap-1 text-left" onClick={onOpen} aria-expanded={open}><span className="h-4 text-xs text-ink-600">{label}</span><span className="flex h-10 items-center rounded-md border border-surface-container-high bg-white px-3 text-sm text-ink-900">{value}</span></button>
-    {open && <div className="absolute z-20 mt-1 w-64 rounded-md border border-surface-container-high bg-white p-3 shadow-lg"><div className="grid gap-2">{options.map((option) => <label key={option} className="flex items-center gap-2 text-sm"><Checkbox checked={selected.includes(option)} onCheckedChange={() => onToggle(option)} />{option}</label>)}</div><Button type="button" variant="ghost" size="sm" className="mt-2 px-0" onClick={onClear}>Limpiar</Button></div>}
+  return <div className="relative w-[170px] shrink-0"><button type="button" className="grid h-14 w-full gap-1 text-left" onClick={onOpen} aria-expanded={open}><span className="h-4 text-xs text-ink-600">{label}</span><span className="flex h-10 min-w-0 items-center rounded-md border border-surface-container-high bg-white px-3 text-sm text-ink-900" title={value}><span className="truncate">{value}</span></span></button>
+    {open && <div className="absolute z-20 mt-1 max-h-80 w-72 overflow-y-auto rounded-md border border-surface-container-high bg-white p-3 shadow-lg"><div className="grid gap-2">{options.map((option) => <label key={option} className="flex items-center gap-2 text-sm"><Checkbox checked={selected.includes(option)} onCheckedChange={() => onToggle(option)} />{option}</label>)}</div><Button type="button" variant="ghost" size="sm" className="mt-2 px-0" onClick={onClear}>Limpiar</Button></div>}
   </div>;
 }

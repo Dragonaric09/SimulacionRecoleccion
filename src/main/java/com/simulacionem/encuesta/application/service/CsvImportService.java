@@ -291,7 +291,35 @@ public class CsvImportService {
                 fullAgreement,
                 valuations,
                 stringValue(values.get("medio_convocatoria")),
-                stringValue(values.get("cargos_titulados")));
+                stringValue(values.get("cargos_titulados")),
+                foundedYear(values.get("anio_inicio_operaciones")),
+                topPositionRank(stringValue(values.get("cargos_titulados"))));
+    }
+
+    /** Año de inicio de operaciones si es un año plausible (entre 1800 y el año actual); si no, null. */
+    private static Short foundedYear(Object value) {
+        if (value == null) return null;
+        try {
+            int year = (int) Math.round(Double.parseDouble(String.valueOf(value)));
+            return year >= 1800 && year <= java.time.Year.now().getValue() ? (short) year : null;
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    /** Jerarquía de los cargos de la pregunta de casillas (en el orden del formulario); consultoría queda fuera. */
+    private static final List<String> POSITION_HIERARCHY = List.of(
+            "de apoyo / asistencia tecnologica", "tecnico (", "analista (", "especialista (",
+            "supervisor / coordinador", "jefatura o gerencial");
+
+    /** Cargo de mayor nivel marcado (1 Apoyo … 6 Jefatura o gerencia), o null si solo marcó consultoría u otro. */
+    private static Short topPositionRank(String positions) {
+        if (positions == null) return null;
+        String normalized = FieldMappingSupport.matchable(positions);
+        for (int rank = POSITION_HIERARCHY.size(); rank >= 1; rank--) {
+            if (normalized.contains(POSITION_HIERARCHY.get(rank - 1))) return (short) rank;
+        }
+        return null;
     }
 
     /** 1 = Totalmente de acuerdo, 2 = Parcialmente de acuerdo, 3 = Totalmente desacuerdo, 4 = No sabe; null si no es una de ellas. */

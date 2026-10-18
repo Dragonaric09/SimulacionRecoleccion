@@ -29,8 +29,9 @@ public class SurveyResponseBatchWriter {
             INSERT INTO employer_response (response_id, organization_type, organization_size, organization_sector,
                                            hired_graduates_last_five_years, hiring_probability, demanded_training_level,
                                            organization_department, branch_presence, competence_average,
-                                           valuations_full_agreement, valuations, channel, positions)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                           valuations_full_agreement, valuations, channel, positions,
+                                           founded_year, top_position_rank)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
     private static final String INSERT_COMPETENCE = """
             INSERT INTO competence_rating (response_id, competence_id, numeric_value, not_observed, original_label)
@@ -90,6 +91,10 @@ public class SurveyResponseBatchWriter {
                 ps.setArray(12, ps.getConnection().createArrayOf("smallint", e.valuations()));
                 ps.setString(13, fit(e.channel(), 150));
                 ps.setString(14, e.positions());
+                if (e.foundedYear() == null) ps.setNull(15, Types.SMALLINT);
+                else ps.setShort(15, e.foundedYear());
+                if (e.topPositionRank() == null) ps.setNull(16, Types.SMALLINT);
+                else ps.setShort(16, e.topPositionRank());
             });
         }
         List<CompetenceRow> competences = valid.stream()
@@ -144,7 +149,8 @@ public class SurveyResponseBatchWriter {
     public record EmployerFields(String organizationType, String organizationSize, String organizationSector,
                                  Boolean hired, String hiringProbability, String demandedLevel,
                                  String department, String branch, BigDecimal competenceAverage, short fullAgreement,
-                                 Short[] valuations, String channel, String positions) { }
+                                 Short[] valuations, String channel, String positions,
+                                 Short foundedYear, Short topPositionRank) { }
 
     public record CompetenceValue(long competenceId, Short numericValue, boolean notObserved, String originalLabel) { }
 

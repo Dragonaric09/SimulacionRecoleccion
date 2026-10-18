@@ -16,8 +16,9 @@ import { DatasetSelect, PageHeading, labelFor, useDatasets } from "../shared/Ana
 import { crossMetricLabel, exportCrossCsv, exportCrossExcel, exportCrossPng } from "../shared/crossExportUtils";
 import { printAnalyticsPdf } from "@/components/analytics/PrintButton";
 import { EmployerFilterToolbar } from "@/features/empleadores/EmployerFilterToolbar";
-import { useEmployerFilters } from "@/features/empleadores/employerData";
-import { CROSS_FIELD_OPTIONS } from "@/features/empleadores/instrumento";
+import { describeEmployerFilters, useEmployerFilters } from "@/features/empleadores/employerData";
+import { AssociationTestCard } from "@/features/empleadores/valuation/AssociationTest";
+import { LEVEL_LABELS, LEVEL_SHORT, type EmployerCross, type EmployerVariable } from "@/features/empleadores/valuation/valuationTypes";
 import { ChiSquareCard, CrossBars, CrossTable } from "./CrossVisualizations";
 
 export function CrossExportPage({ domain }: { domain: Domain }) {
@@ -36,6 +37,8 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
   );
   const [cross, setCross] = useState<Cross | null>(null);
   const [chi, setChi] = useState<ResultadoPruebaAsociacion | null>(null);
+  const [employerCatalog, setEmployerCatalog] = useState<EmployerVariable[]>([]);
+  const [employerCross, setEmployerCross] = useState<EmployerCross | null>(null);
   const [filterSummary, setFilterSummary] = useState<AnalyticsSummary | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
   const employerFilters = useEmployerFilters(datasetId);
@@ -45,7 +48,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<"table" | "bars">("table");
-  const fields =
+  const fields: { key: string; label: string; group: string; level?: EmployerVariable["level"] }[] =
     domain === "TITULADOS"
       ? [
           { key: "edad_rango", label: "Rango de edad", group: "Perfil" },
@@ -112,7 +115,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
             group: "Trabajo",
           },
         ]
-      : CROSS_FIELD_OPTIONS.map((field) => ({ key: field.key, label: field.label, group: field.group }));
+      : employerCatalog.map((variable) => ({ key: variable.key, label: variable.label, group: variable.group, level: variable.level }));
   const fieldGroups = Array.from(
     new Set(fields.map((field) => field.group)),
   ).map((group) => ({
@@ -125,8 +128,17 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     setError(null);
     setChi(null);
     try {
+      if (domain === "EMPLEADORES") {
+        // La prueba se elige en el backend según el nivel de medición de cada variable.
+        const result = await apiRequest<EmployerCross>(
+          `/analytics/employers/cross?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
+        );
+        setEmployerCross(result);
+        setCross(result.cross);
+        return;
+      }
       const nextCross = await apiRequest<Cross>(
-          `${domain === "EMPLEADORES" ? "/analytics/employers/cross" : "/analytics/crosses"}?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
+          `/analytics/crosses?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
       );
       setCross(nextCross);
       try {
@@ -145,6 +157,12 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     if (domain === "EMPLEADORES") setFilterQuery(employerFilters.query);
   }, [domain, employerFilters.query]);
   useEffect(() => {
+    if (domain !== "EMPLEADORES") return;
+    apiRequest<EmployerVariable[]>("/analytics/employers/catalog")
+      .then(setEmployerCatalog)
+      .catch(() => setEmployerCatalog([]));
+  }, [domain]);
+  useEffect(() => {
     void loadCross();
   }, [datasetId, rowField, columnField, filterQuery, domain]);
   useEffect(() => {
@@ -153,8 +171,12 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
       .then(setFilterSummary)
       .catch(() => setFilterSummary(null));
   }, [datasetId, domain, filterQuery]);
-  const rowLabel = labelFor(rowField);
-  const columnLabel = labelFor(columnField);
+  const catalogLabel = (key: string) => employerCatalog.find((variable) => variable.key === key)?.label ?? labelFor(key);
+  const rowLabel = domain === "EMPLEADORES" ? catalogLabel(rowField) : labelFor(rowField);
+  const columnLabel = domain === "EMPLEADORES" ? catalogLabel(columnField) : labelFor(columnField);
+  const filterDescription = domain === "EMPLEADORES"
+    ? describeEmployerFilters(employerFilters.filters).map(({ label, values }) => `${label}: ${values.join(", ")}`).join(" · ") || "Sin filtros"
+    : filterQuery ? "Filtros aplicados" : "Sin filtros";
   return (
     <div className="cross-screen-page mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -233,6 +255,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                             className="data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45"
                           >
                             {field.label}
+                            {field.level && <span className="ml-2 text-[10px] font-semibold uppercase text-ink-500">{LEVEL_SHORT[field.level]}</span>}
                           </SelectItem>
                         ))}
                       </SelectGroup>
@@ -263,6 +286,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                             className="data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45"
                           >
                             {field.label}
+                            {field.level && <span className="ml-2 text-[10px] font-semibold uppercase text-ink-500">{LEVEL_SHORT[field.level]}</span>}
                           </SelectItem>
                         ))}
                       </SelectGroup>
@@ -368,7 +392,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
             activeView === "bars" ? (
               <CrossBars
                 cross={cross}
-                action={cross && <CrossDownloadMenu cross={cross} metric={metric} includeTotals={includeTotals} colorHeatmap={colorHeatmap} activeView={activeView} rowLabel={rowLabel} columnLabel={columnLabel} domain={domain} datasetName={datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado"} filters={filterQuery ? "Filtros aplicados" : "Sin filtros"} />}
+                action={cross && <CrossDownloadMenu cross={cross} metric={metric} includeTotals={includeTotals} colorHeatmap={colorHeatmap} activeView={activeView} rowLabel={rowLabel} columnLabel={columnLabel} domain={domain} datasetName={datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado"} filters={filterDescription} />}
                 metric={metric}
                 totalResponses={
                   datasets.find((dataset) => dataset.id === datasetId)
@@ -387,7 +411,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                 metric={metric}
                 rowLabel={rowLabel}
                 columnLabel={columnLabel}
-                action={cross && <CrossDownloadMenu cross={cross} metric={metric} includeTotals={includeTotals} colorHeatmap={colorHeatmap} activeView={activeView} rowLabel={rowLabel} columnLabel={columnLabel} domain={domain} datasetName={datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado"} filters={filterQuery ? "Filtros aplicados" : "Sin filtros"} />}
+                action={cross && <CrossDownloadMenu cross={cross} metric={metric} includeTotals={includeTotals} colorHeatmap={colorHeatmap} activeView={activeView} rowLabel={rowLabel} columnLabel={columnLabel} domain={domain} datasetName={datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId ?? "No especificado"} filters={filterDescription} />}
               />
             )
           ) : (
@@ -397,7 +421,13 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
               description="Selecciona las variables de filas y columnas para mostrar la tabla bivariada."
             />
           )}
-          {cross && (
+          {cross && domain === "EMPLEADORES" && employerCross && (
+            <div className="print-hide space-y-3">
+              <EmployerCrossMeta result={employerCross} />
+              <AssociationTestCard result={employerCross.test} rowLabel={`Filas: ${rowLabel}`} columnLabel={`Columnas: ${columnLabel}`} />
+            </div>
+          )}
+          {cross && domain !== "EMPLEADORES" && (
             <div className="print-hide">
               <ChiSquareCard result={chi} cross={cross} />
             </div>
@@ -407,16 +437,40 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
               <h2 className="title-card">{labelFor(rowField)} × {labelFor(columnField)}</h2>
               <p className="text-sm text-ink-600">{crossMetricLabel(metric)} · n = {cross.validCount} de {datasets.find((dataset) => dataset.id === datasetId)?.rowsValid ?? cross.validCount}</p>
               <p className="text-xs text-ink-600">Dataset: {datasets.find((dataset) => dataset.id === datasetId)?.displayName ?? datasetId} · Generado: {new Intl.DateTimeFormat("es-BO", { timeZone: "America/La_Paz", dateStyle: "short" }).format(new Date())}</p>
-              <p className="text-xs text-ink-600">Filtros: {filterQuery ? "Filtros aplicados" : "Sin filtros"}</p>
+              <p className="text-xs text-ink-600">Filtros: {filterDescription}</p>
               <CrossTable cross={cross} totalResponses={datasets.find((dataset) => dataset.id === datasetId)?.rowsValid} includeTotals={includeTotals} colorHeatmap={colorHeatmap} metric={metric} rowLabel={rowLabel} columnLabel={columnLabel} />
               <div className="print-card"><CrossBars cross={cross} metric={metric} totalResponses={datasets.find((dataset) => dataset.id === datasetId)?.rowsValid} /></div>
-              <ChiSquareCard result={chi} cross={cross} />
+              {domain === "EMPLEADORES" && employerCross
+                ? <AssociationTestCard result={employerCross.test} rowLabel={`Filas: ${rowLabel}`} columnLabel={`Columnas: ${columnLabel}`} />
+                : <ChiSquareCard result={chi} cross={cross} />}
               <div className="cross-pdf-footer border-t border-surface-container-high pt-2 text-xs text-ink-600">
                 <p>Base del cruce: n = {cross.validCount} respuestas válidas de {datasets.find((dataset) => dataset.id === datasetId)?.rowsValid ?? cross.validCount} registros.</p>
               </div>
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Nivel de medición de cada variable, gráfico recomendado y respuestas que quedaron fuera del cruce. */
+function EmployerCrossMeta({ result }: { result: EmployerCross }) {
+  return (
+    <div className="grid gap-3 rounded-lg border border-border-line bg-white p-4 text-sm shadow-sm sm:grid-cols-3">
+      {[result.row, result.column].map((variable, index) => (
+        <div key={variable.key} className="min-w-0">
+          <p className="caption-meta text-ink-500">{index === 0 ? "Filas" : "Columnas"} · {LEVEL_LABELS[variable.level]}</p>
+          <p className="font-medium text-ink-900">{variable.label}</p>
+          <p className="caption-meta text-ink-600">{variable.description}</p>
+        </div>
+      ))}
+      <div className="min-w-0">
+        <p className="caption-meta text-ink-500">Gráfico recomendado</p>
+        <p className="font-medium text-ink-900">{result.chart}</p>
+        <p className="caption-meta text-ink-600">
+          {result.excluded > 0 ? `${result.excluded.toLocaleString("es-BO")} respuestas fuera del cruce (sin respuesta, «No sabe» o «No observado»).` : "Todas las respuestas del filtro entran en el cruce."}
+        </p>
       </div>
     </div>
   );

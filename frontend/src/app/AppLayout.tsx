@@ -6,7 +6,7 @@ import { DatasetProvider, useDatasetContext, type DatasetDomain } from './Datase
 import { isDomainSection, navigation, navigate, sectionLabels, type NavigationItem } from './navigation'
 import { PlaceholderPage } from './PlaceholderPage'
 import { PrintButton } from '@/components/analytics/PrintButton'
-import { EmpleadoresPrintBundle } from '@/features/empleadores/EmpleadoresPages'
+import { EmployerReportHost } from '@/features/empleadores/report/EmployerReportHost'
 import { TituladosPrintBundle } from '@/features/titulados/TituladosPages'
 
 type Props = { route: NavigationItem }
@@ -134,7 +134,7 @@ function AppLayoutContent({ route }: Props) {
             )}
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
-            {domainSection && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
+            {route.section === 'titulados' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
               <section className="print-only print-cover mb-6" aria-label="Portada del informe">
                 <p className="caption-bold uppercase tracking-wider text-ink-600">SIMULACIONEM · INFORME ANALÍTICO</p>
                 <h1 className="headline-page">{route.section === 'titulados' ? 'Titulados' : 'Empleadores'}</h1>
@@ -149,11 +149,12 @@ function AppLayoutContent({ route }: Props) {
               </section>
             )}
             <div className={route.path.includes('cruces-exportacion') ? 'cross-screen-root' : route.path.includes('simulacion-escenarios') ? 'simulation-screen-root' : 'screen-content'}><PlaceholderPage route={route} /></div>
-            {domainSection && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
+            {route.section === 'titulados' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
               <div className="print-bundle" aria-label="Informe completo para impresión">
-                {route.section === 'titulados' ? <TituladosPrintBundle /> : <EmpleadoresPrintBundle />}
+                <TituladosPrintBundle />
               </div>
             )}
+            {route.section === 'empleadores' && <EmployerReportHost />}
           </main>
         </div>
       </div>

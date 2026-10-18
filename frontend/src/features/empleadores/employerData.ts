@@ -1,24 +1,84 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  DEPARTMENT_OPTIONS,
+  HIRED_OPTIONS,
+  HIRING_PROBABILITY_ORDER,
+  ORGANIZATION_SIZE_ORDER,
+  ORGANIZATION_TYPE_OPTIONS,
+  SECTOR_OPTIONS,
+} from './instrumento'
 
-/** Filtros globales de la sección Empleadores: tipo y tamaño de la organización. */
-export type EmployerFilters = { organizationTypes: string[]; organizationSizes: string[] }
+export const NO_ANSWER = 'Sin respuesta'
 
-export const NO_EMPLOYER_FILTERS: EmployerFilters = { organizationTypes: [], organizationSizes: [] }
+/** Filtros globales de la sección Empleadores. Cada lista vacía significa «todos». */
+export type EmployerFilters = {
+  organizationTypes: string[]
+  organizationSizes: string[]
+  sectors: string[]
+  departments: string[]
+  hired: string[]
+  hiringProbabilities: string[]
+}
+
+export type EmployerFilterKey = keyof EmployerFilters
+
+/** Definición de cada filtro: parámetro de la API, etiqueta y opciones en el orden del formulario. */
+export const EMPLOYER_FILTERS: { key: EmployerFilterKey; param: string; label: string; options: string[] }[] = [
+  { key: 'organizationTypes', param: 'organizationType', label: 'Tipo de organización', options: [...ORGANIZATION_TYPE_OPTIONS] },
+  { key: 'organizationSizes', param: 'organizationSize', label: 'Tamaño', options: [...ORGANIZATION_SIZE_ORDER] },
+  { key: 'sectors', param: 'sector', label: 'Rubro', options: [...SECTOR_OPTIONS, NO_ANSWER] },
+  { key: 'departments', param: 'department', label: 'Departamento', options: [...DEPARTMENT_OPTIONS, NO_ANSWER] },
+  { key: 'hired', param: 'hired', label: 'Contrató en los últimos 5 años', options: [...HIRED_OPTIONS, NO_ANSWER] },
+  { key: 'hiringProbabilities', param: 'hiringProbability', label: 'Posibilidad de contratar', options: [...HIRING_PROBABILITY_ORDER, NO_ANSWER] },
+]
+
+export const NO_EMPLOYER_FILTERS: EmployerFilters = {
+  organizationTypes: [],
+  organizationSizes: [],
+  sectors: [],
+  departments: [],
+  hired: [],
+  hiringProbabilities: [],
+}
 
 export function employerFilterQuery(filters: EmployerFilters) {
   const params = new URLSearchParams()
-  filters.organizationTypes.forEach((value) => params.append('organizationType', value))
-  filters.organizationSizes.forEach((value) => params.append('organizationSize', value))
+  EMPLOYER_FILTERS.forEach(({ key, param }) => filters[key].forEach((value) => params.append(param, value)))
   const query = params.toString()
   return query ? `&${query}` : ''
 }
 
 export function hasEmployerFilters(filters: EmployerFilters) {
-  return filters.organizationTypes.length > 0 || filters.organizationSizes.length > 0
+  return EMPLOYER_FILTERS.some(({ key }) => filters[key].length > 0)
+}
+
+/** Descripción legible de los filtros activos, para encabezados de reportes y exportaciones. */
+export function describeEmployerFilters(filters: EmployerFilters) {
+  return EMPLOYER_FILTERS.filter(({ key }) => filters[key].length > 0).map(({ key, label }) => ({ label, values: filters[key] }))
 }
 
 function storageKey(datasetId: string) {
   return `simulacionem.empleadoresFilters.${datasetId}`
+}
+
+function restore(saved: Partial<EmployerFilters> | null): EmployerFilters {
+  if (!saved) return NO_EMPLOYER_FILTERS
+  const result = { ...NO_EMPLOYER_FILTERS }
+  EMPLOYER_FILTERS.forEach(({ key, options }) => {
+    const values = saved[key]
+    result[key] = Array.isArray(values) ? values.filter((value) => options.includes(value)) : []
+  })
+  return result
+}
+
+/** Filtros guardados del dataset, leídos de forma síncrona (el reporte PDF los necesita en el primer render). */
+export function loadEmployerFilters(datasetId?: string): EmployerFilters {
+  if (!datasetId) return NO_EMPLOYER_FILTERS
+  try {
+    return restore(JSON.parse(localStorage.getItem(storageKey(datasetId)) ?? 'null') as Partial<EmployerFilters> | null)
+  } catch {
+    return NO_EMPLOYER_FILTERS
+  }
 }
 
 /** Estado de filtros por dataset. La persistencia local es solo una comodidad: si falla, la pantalla sigue funcionando. */
@@ -31,8 +91,7 @@ export function useEmployerFilters(datasetId?: string) {
       return
     }
     try {
-      const saved = JSON.parse(localStorage.getItem(storageKey(datasetId)) ?? 'null') as Partial<EmployerFilters> | null
-      setFilters(saved ? { organizationTypes: saved.organizationTypes ?? [], organizationSizes: saved.organizationSizes ?? [] } : NO_EMPLOYER_FILTERS)
+      setFilters(restore(JSON.parse(localStorage.getItem(storageKey(datasetId)) ?? 'null') as Partial<EmployerFilters> | null))
     } catch {
       setFilters(NO_EMPLOYER_FILTERS)
     }
@@ -49,7 +108,7 @@ export function useEmployerFilters(datasetId?: string) {
     }
   }, [datasetId])
 
-  const toggle = useCallback((key: keyof EmployerFilters, value: string) => {
+  const toggle = useCallback((key: EmployerFilterKey, value: string) => {
     const current = filters
     commit({
       ...current,
@@ -57,7 +116,7 @@ export function useEmployerFilters(datasetId?: string) {
     })
   }, [filters, commit])
 
-  const clear = useCallback((key?: keyof EmployerFilters) => {
+  const clear = useCallback((key?: EmployerFilterKey) => {
     commit(key ? { ...filters, [key]: [] } : NO_EMPLOYER_FILTERS)
   }, [filters, commit])
 

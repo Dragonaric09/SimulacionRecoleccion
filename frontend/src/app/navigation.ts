@@ -95,7 +95,7 @@ export const navigation: NavigationItem[] = [
   {
     path: '/empleadores/valoracion-carrera',
     label: 'Valoración de la Carrera',
-    description: 'Distribución de respuestas por afirmación',
+    description: 'Valoración por dimensiones, segmentos y relaciones',
     icon: Scale,
     section: 'empleadores',
   },
