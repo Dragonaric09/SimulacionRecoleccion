@@ -10,6 +10,7 @@ import com.simulacionem.encuesta.infrastructure.persistence.jdbc.SurveyResponseB
 import com.simulacionem.encuesta.infrastructure.persistence.jdbc.SurveyResponseBatchWriter.EmployerFields;
 import com.simulacionem.encuesta.infrastructure.persistence.jdbc.SurveyResponseBatchWriter.IssueRow;
 import com.simulacionem.encuesta.infrastructure.persistence.jdbc.SurveyResponseBatchWriter.ResponseRow;
+import com.simulacionem.encuesta.infrastructure.persistence.jdbc.SurveyResponseBatchWriter.TitledFields;
 import com.simulacionem.encuesta.infrastructure.persistence.repository.CompetenceCatalogRepository;
 import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetColumnMappingRepository;
 import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetImportRepository;
@@ -247,9 +248,21 @@ public class CsvImportService {
         Map<String, Object> values = row.values();
         List<CompetenceValue> competences = valid ? competenceValues(values, competenceIds) : List.of();
         Short graduationYear = "TITULADOS".equals(type) ? numberAsShort(values.get("anio_titulacion")) : null;
+        TitledFields titled = valid && "TITULADOS".equals(type) ? titledFields(values, graduationYear) : null;
         EmployerFields employer = valid && "EMPLEADORES".equals(type) ? employerFields(values, competences) : null;
         return new ResponseRow(UUID.randomUUID(), row.rowNumber(), row.submittedAt(), valid ? "VALIDA" : "RECHAZADA",
-                row.raw(), values, graduationYear, employer, competences);
+                row.raw(), values, graduationYear, titled, employer, competences);
+    }
+
+    private TitledFields titledFields(Map<String, Object> values, Short graduationYear) {
+        return new TitledFields(
+                stringValue(values.get("edad_rango")), stringValue(values.get("genero")), graduationYear,
+                stringValue(values.get("sector_trabajo")), booleanValue(values.get("tiene_formacion_complementaria")),
+                booleanValue(values.get("interes_posgrado")), decimalValue(values.get("anios_vida_profesional")),
+                decimalValue(values.get("anios_desempleo")), stringValue(values.get("situacion_laboral_actual")),
+                stringValue(values.get("sector_trabajo_actual")), stringValue(values.get("departamento_trabajo")),
+                booleanValue(values.get("es_primer_empleo") != null ? values.get("es_primer_empleo") : values.get("primera_experiencia_laboral")),
+                stringValue(values.get("tiempo_primer_empleo")), integerValue(values.get("cantidad_empleos")));
     }
 
     private List<CompetenceValue> competenceValues(Map<String, Object> values, Map<String, Long> competenceIds) {
@@ -604,6 +617,30 @@ public class CsvImportService {
     private Short numberAsShort(Object value) {
         try {
             return value == null ? null : (short) Double.parseDouble(String.valueOf(value));
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private Boolean booleanValue(Object value) {
+        if (value == null) return null;
+        String normalized = slug(String.valueOf(value));
+        if (normalized.equals("si") || normalized.equals("true") || normalized.equals("1")) return true;
+        if (normalized.equals("no") || normalized.equals("false") || normalized.equals("0")) return false;
+        return null;
+    }
+
+    private BigDecimal decimalValue(Object value) {
+        try {
+            return value == null ? null : new BigDecimal(String.valueOf(value).replace(',', '.'));
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private Integer integerValue(Object value) {
+        try {
+            return value == null ? null : (int) Double.parseDouble(String.valueOf(value).replace(',', '.'));
         } catch (NumberFormatException ex) {
             return null;
         }

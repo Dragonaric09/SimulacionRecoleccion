@@ -10,4 +10,6 @@ public interface CompetenceRatingRepository extends JpaRepository<CompetenceRati
 
     List<CompetenceRatingEntity> findByResponse_Dataset_IdAndResponse_ResponseStatus(UUID datasetId,
                                                                                        String responseStatus);
+
+    List<CompetenceRatingEntity> findByResponse_IdIn(List<UUID> responseIds);
 }

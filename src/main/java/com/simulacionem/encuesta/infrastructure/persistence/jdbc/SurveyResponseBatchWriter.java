@@ -24,7 +24,13 @@ public class SurveyResponseBatchWriter {
                                          response_status, raw_payload, normalized_payload)
             VALUES (?, ?, ?, ?, ?, ?, CAST(? AS jsonb), CAST(? AS jsonb))
             """;
-    private static final String INSERT_TITLED = "INSERT INTO titled_response (response_id, graduation_year) VALUES (?, ?)";
+    private static final String INSERT_TITLED = """
+            INSERT INTO titled_response (response_id, age_range, gender, graduation_year, employment_sector,
+                                         supplementary_education, postgraduate_interest, professional_years,
+                                         unemployment_years, current_employment_status, current_work_sector,
+                                         current_department, first_employment, first_employment_wait, employment_count)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
     private static final String INSERT_EMPLOYER = """
             INSERT INTO employer_response (response_id, organization_type, organization_size, organization_sector,
                                            hired_graduates_last_five_years, hiring_probability, demanded_training_level,
@@ -67,9 +73,22 @@ public class SurveyResponseBatchWriter {
         List<ResponseRow> valid = rows.stream().filter(row -> "VALIDA".equals(row.status())).toList();
         if ("TITULADOS".equals(surveyType)) {
             jdbc.batchUpdate(INSERT_TITLED, valid, valid.size(), (ps, row) -> {
+                TitledFields t = row.titled();
                 ps.setObject(1, row.id());
-                if (row.graduationYear() == null) ps.setNull(2, Types.SMALLINT);
-                else ps.setShort(2, row.graduationYear());
+                ps.setString(2, fit(t.ageRange(), 80));
+                ps.setString(3, fit(t.gender(), 80));
+                if (t.graduationYear() == null) ps.setNull(4, Types.SMALLINT); else ps.setShort(4, t.graduationYear());
+                ps.setString(5, fit(t.employmentSector(), 100));
+                if (t.supplementaryEducation() == null) ps.setNull(6, Types.BOOLEAN); else ps.setBoolean(6, t.supplementaryEducation());
+                if (t.postgraduateInterest() == null) ps.setNull(7, Types.BOOLEAN); else ps.setBoolean(7, t.postgraduateInterest());
+                if (t.professionalYears() == null) ps.setNull(8, Types.NUMERIC); else ps.setBigDecimal(8, t.professionalYears());
+                if (t.unemploymentYears() == null) ps.setNull(9, Types.NUMERIC); else ps.setBigDecimal(9, t.unemploymentYears());
+                ps.setString(10, fit(t.currentEmploymentStatus(), 150));
+                ps.setString(11, fit(t.currentWorkSector(), 100));
+                ps.setString(12, fit(t.currentDepartment(), 100));
+                if (t.firstEmployment() == null) ps.setNull(13, Types.BOOLEAN); else ps.setBoolean(13, t.firstEmployment());
+                ps.setString(14, fit(t.firstEmploymentWait(), 100));
+                if (t.employmentCount() == null) ps.setNull(15, Types.INTEGER); else ps.setInt(15, t.employmentCount());
             });
         } else if ("EMPLEADORES".equals(surveyType)) {
             List<ResponseRow> employers = valid.stream().filter(row -> row.employer() != null).toList();
@@ -143,7 +162,14 @@ public class SurveyResponseBatchWriter {
     /** Una respuesta lista para escribir. */
     public record ResponseRow(UUID id, int rowNumber, OffsetDateTime submittedAt, String status,
                               Map<String, Object> raw, Map<String, Object> normalized,
-                              Short graduationYear, EmployerFields employer, List<CompetenceValue> competences) { }
+                              Short graduationYear, TitledFields titled, EmployerFields employer,
+                              List<CompetenceValue> competences) { }
+
+    public record TitledFields(String ageRange, String gender, Short graduationYear, String employmentSector,
+                               Boolean supplementaryEducation, Boolean postgraduateInterest,
+                               BigDecimal professionalYears, BigDecimal unemploymentYears,
+                               String currentEmploymentStatus, String currentWorkSector, String currentDepartment,
+                               Boolean firstEmployment, String firstEmploymentWait, Integer employmentCount) { }
 
     /** Campos tipados de la organización y agregados por respuesta (tabla employer_response). */
     public record EmployerFields(String organizationType, String organizationSize, String organizationSector,

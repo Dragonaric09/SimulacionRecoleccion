@@ -13,6 +13,7 @@ import com.simulacionem.encuesta.infrastructure.persistence.repository.DatasetIm
 import com.simulacionem.encuesta.infrastructure.persistence.repository.SurveyResponseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,6 +49,7 @@ public class AnalyticsService {
     private final DatasetImportRepository datasets;
     private final SurveyResponseRepository responses;
     private final CompetenceRatingRepository ratings;
+    private final TituladosSql tituladosSql;
 
     /**
      * Las pantallas de analítica consultan varios indicadores del mismo dataset en paralelo.
@@ -65,9 +67,16 @@ public class AnalyticsService {
 
     public AnalyticsService(DatasetImportRepository datasets, SurveyResponseRepository responses,
             CompetenceRatingRepository ratings) {
+        this(datasets, responses, ratings, null);
+    }
+
+    @Autowired
+    public AnalyticsService(DatasetImportRepository datasets, SurveyResponseRepository responses,
+            CompetenceRatingRepository ratings, TituladosSql tituladosSql) {
         this.datasets = datasets;
         this.responses = responses;
         this.ratings = ratings;
+        this.tituladosSql = tituladosSql;
     }
 
     @Transactional(readOnly = true)
@@ -79,10 +88,10 @@ public class AnalyticsService {
     public AnalyticsSummaryDto summary(UUID datasetId, String surveyType, List<String> fields, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, surveyType);
         List<SurveyResponseEntity> allRows = validRows(dataset.getId());
-        List<SurveyResponseEntity> rows = applyFilter(allRows, filter);
+        List<SurveyResponseEntity> rows = filteredRows(dataset.getId(), allRows, filter);
         if (fields == null || fields.isEmpty())
             fields = defaultFields(dataset.getSurveyType());
-        return summarize(dataset, rows, fields, allRows.size(), yearBounds(allRows));
+        return summarize(dataset, rows, fields, allRows.size(), yearBounds(allRows), true);
     }
 
     @Transactional(readOnly = true)
@@ -92,7 +101,7 @@ public class AnalyticsService {
     public AnalyticsSummaryDto unemploymentSummary(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
         List<SurveyResponseEntity> allRows = validRows(dataset.getId());
-        List<SurveyResponseEntity> rows = applyFilter(allRows, filter)
+        List<SurveyResponseEntity> rows = filteredRows(dataset.getId(), allRows, filter)
                 .stream()
                 .filter(this::isUnemployed)
                 .toList();
@@ -107,7 +116,7 @@ public class AnalyticsService {
     public AnalyticsSummaryDto firstEmploymentSummary(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
         List<SurveyResponseEntity> allRows = validRows(dataset.getId());
-        List<SurveyResponseEntity> rows = applyFilter(allRows, filter).stream()
+        List<SurveyResponseEntity> rows = filteredRows(dataset.getId(), allRows, filter).stream()
                 .filter(this::isFirstEmploymentBranch)
                 .toList();
         return summarize(dataset, rows, List.of("tiempo_primer_empleo"));
@@ -120,7 +129,7 @@ public class AnalyticsService {
     public AnalyticsSummaryDto entrepreneurshipSummary(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
         List<SurveyResponseEntity> allRows = validRows(dataset.getId());
-        List<SurveyResponseEntity> rows = applyFilter(allRows, filter)
+        List<SurveyResponseEntity> rows = filteredRows(dataset.getId(), allRows, filter)
                 .stream()
                 .filter(this::isEntrepreneur)
                 .toList();
@@ -132,15 +141,34 @@ public class AnalyticsService {
 
     private AnalyticsSummaryDto summarize(DatasetImportEntity dataset, List<SurveyResponseEntity> rows,
             List<String> fields) {
-        return summarize(dataset, rows, fields, rows.size(), yearBounds(rows));
+        return summarize(dataset, rows, fields, rows.size(), yearBounds(rows), false);
     }
     private AnalyticsSummaryDto summarize(DatasetImportEntity dataset, List<SurveyResponseEntity> rows,
-            List<String> fields, long totalResponses, Integer[] yearBounds) {
+            List<String> fields, long totalResponses, Integer[] yearBounds, boolean allowSql) {
         Map<String, CategoryDistributionDto> distributions = new LinkedHashMap<>();
         Map<String, Double> averages = new LinkedHashMap<>();
         Map<String, Double> medians = new LinkedHashMap<>();
         Map<String, Double> standardDeviations = new LinkedHashMap<>();
         for (String field : fields) {
+            if (allowSql && "TITULADOS".equals(dataset.getSurveyType())
+                    && tituladosSql != null && sqlSummaryField(field)) {
+                List<UUID> responseIds = rows.size() == totalResponses ? null
+                        : rows.stream().map(SurveyResponseEntity::getId).toList();
+                TituladosSql.FieldSummary aggregate = tituladosSql.summaryField(dataset.getId(), field,
+                        numericField(field), responseIds);
+                if (aggregate.numeric()) {
+                    if (aggregate.validCount() > 0) {
+                        averages.put(field, round(aggregate.average()));
+                        medians.put(field, round(aggregate.median()));
+                        standardDeviations.put(field, aggregate.deviation() == null ? null : round(aggregate.deviation()));
+                    }
+                } else if (aggregate.validCount() > 0) {
+                    Map<String, Double> percentages = new LinkedHashMap<>();
+                    aggregate.counts().forEach((key, count) -> percentages.put(key, round(count * 100.0 / aggregate.validCount())));
+                    distributions.put(field, new CategoryDistributionDto(aggregate.validCount(), aggregate.counts(), percentages));
+                }
+                continue;
+            }
             boolean keepNonAnswers = "EMPLEADORES".equals(dataset.getSurveyType()) && field.startsWith("valoracion_");
             List<String> values = rowsForField(rows, field).stream().map(r -> value(r, field))
                     .filter(v -> keepNonAnswers ? v != null && !v.isBlank() : isAnalyticValue(v)).toList();
@@ -158,6 +186,15 @@ public class AnalyticsService {
         return new AnalyticsSummaryDto(dataset.getId(), dataset.getSurveyType(), totalResponses, rows.size(),
                 distributions, averages, medians, standardDeviations,
                 rows.size() < MINIMUM_SAMPLE_SIZE, yearBounds[0], yearBounds[1]);
+    }
+
+    private boolean sqlSummaryField(String field) {
+        if (multiCategoryField(field) || organizationWorkField(field)) return false;
+        if (field.equals("edad_rango") || field.equals("sector_trabajo") || field.equals("es_primer_empleo")) return false;
+        if (List.of("formacion_complementaria_nivel", "institucion_formacion_complementaria",
+                "financiamiento_posgrado_cursado", "nivel_posgrado_interes", "area_posgrado_interes",
+                "modalidad_posgrado", "institucion_posgrado_interes", "financiamiento_posgrado_estimado").contains(field)) return false;
+        return true;
     }
 
     private List<SurveyResponseEntity> rowsForField(List<SurveyResponseEntity> rows, String field) {
@@ -342,8 +379,10 @@ public class AnalyticsService {
     }
     public EmploymentProfileDto employmentProfile(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
-        List<SurveyResponseEntity> validRows = applyFilter(
-                validRows(dataset.getId()), filter);
+        if ((filter == null || !filter.active()) && tituladosSql != null) {
+            return tituladosSql.employmentProfile(dataset.getId());
+        }
+        List<SurveyResponseEntity> validRows = filteredRows(dataset.getId(), validRows(dataset.getId()), filter);
         List<EmploymentProfileDto.CohortPointDto> points = validRows
                 .stream()
                 .map(response -> {
@@ -367,9 +406,20 @@ public class AnalyticsService {
     @Transactional(readOnly = true)
     public List<CompetenceAverageDto> competenceGaps(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, null);
-        Map<String, List<CompetenceRatingEntity>> grouped = ratings
-                .findByResponse_Dataset_IdAndResponse_ResponseStatus(dataset.getId(), "VALIDA").stream()
-                .filter(r -> !filter.active() || matchesFilter(r.getResponse(), filter))
+        if ((filter == null || !filter.active()) && tituladosSql != null) {
+            return tituladosSql.competenceGaps(dataset.getId());
+        }
+        List<CompetenceRatingEntity> ratingRows;
+        if (filter != null && filter.active() && tituladosSql != null) {
+            List<UUID> matchingIds = tituladosSql.matchingIds(dataset.getId(), filter);
+            if (matchingIds.isEmpty()) return List.of();
+            ratingRows = ratings.findByResponse_IdIn(matchingIds);
+        } else {
+            ratingRows = ratings.findByResponse_Dataset_IdAndResponse_ResponseStatus(dataset.getId(), "VALIDA");
+        }
+        Map<String, List<CompetenceRatingEntity>> grouped = ratingRows.stream()
+                .filter(r -> r.getResponse() == null || "VALIDA".equals(r.getResponse().getResponseStatus()))
+                .filter(r -> filter == null || !filter.active() || matchesFilter(r.getResponse(), filter))
                 .collect(Collectors.groupingBy(r -> r.getCompetence().getCode(), LinkedHashMap::new,
                         Collectors.toList()));
         List<CompetenceAverageDto> result = new ArrayList<>();
@@ -406,7 +456,12 @@ public class AnalyticsService {
                 && (!EMPLOYER_CROSS_FIELDS.contains(rowField) || !EMPLOYER_CROSS_FIELDS.contains(columnField))) {
             throw new IllegalArgumentException("Variable no disponible para empleadores: " + rowField + " / " + columnField);
         }
-        List<SurveyResponseEntity> valid = applyFilter(validRows(dataset.getId()), filter);
+        if ("TITULADOS".equals(dataset.getSurveyType()) && (filter == null || !filter.active())
+                && tituladosSql != null && !multiCategoryField(rowField) && !multiCategoryField(columnField)
+                && !rowField.equals("segmento_titulacion") && !columnField.equals("segmento_titulacion")) {
+            return tituladosSql.cross(dataset.getId(), rowField, columnField);
+        }
+        List<SurveyResponseEntity> valid = filteredRows(dataset.getId(), validRows(dataset.getId()), filter);
         List<SurveyResponseEntity> usable = valid.stream()
                 .filter(r -> crossFieldBranchAllows(r, rowField) && crossFieldBranchAllows(r, columnField))
                 .filter(r -> value(r, rowField) != null && value(r, columnField) != null).toList();
@@ -462,6 +517,16 @@ public class AnalyticsService {
             validRowsCache.put(datasetId, loaded);
             return loaded;
         }
+    }
+
+    private List<SurveyResponseEntity> filteredRows(UUID datasetId, List<SurveyResponseEntity> allRows,
+                                                    TituladosFilter filter) {
+        if (filter == null || !filter.active() || tituladosSql == null) {
+            return applyFilter(allRows, filter);
+        }
+        List<UUID> ids = tituladosSql.matchingIds(datasetId, filter);
+        if (ids.isEmpty()) return List.of();
+        return applyFilter(responses.findAllById(ids), filter);
     }
 
     private String value(SurveyResponseEntity response, String field) {
