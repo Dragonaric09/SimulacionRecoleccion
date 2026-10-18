@@ -234,9 +234,14 @@
 .cohort-fixed-chart { display: none; }
 .employment-donut-fixed { display: none; }
 .radar-fixed-chart { display: none; }
-.radar-responsive-chart { display: block; width: 100%; min-width: 0; }
+.radar-responsive-chart { display: flex; width: 100%; min-width: 0; justify-content: center; }
 .cohort-print-values { display: none; }
 .competence-kpi-grid > div > [data-slot="card"] { height: 100%; }
+.chart-variant-root { min-width: 0; width: 100%; }
+.chart-variant-stage { display: flex; width: 100%; min-width: 0; justify-content: center; align-items: flex-start; overflow: visible; }
+.chart-variant-stage > * { min-width: 0; max-width: 100%; }
+.chart-variant-stage-full > * { width: 100%; }
+.chart-variant-stage .recharts-responsive-container { min-width: 0; max-width: 100%; }
 
 @media print {
   @page {
@@ -348,6 +353,8 @@
   .overflow-auto, .overflow-x-auto, .overflow-y-auto { overflow: visible !important; }
   .print-page [class*="truncate"] { white-space: normal !important; overflow-wrap: anywhere; text-overflow: clip !important; }
   .status-panel { break-inside: avoid; }
+  .chart-variant-root > label { display: none !important; }
+  .chart-variant-stage { overflow: visible !important; }
 
   /* ---------------------------------------------------------------- Informe de empleadores */
   html.printing-employer-report main > *:not(.employer-report) { display: none !important; }
