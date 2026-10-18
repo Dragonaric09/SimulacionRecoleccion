@@ -88,6 +88,7 @@ public class EmployerDashboardService {
         Windows windows = windows(filters, span.last());
         long filtered = windows.total().n();
         String granularity = granularity(span);
+        List<ValuationCount> valuationCounts = valuationCounts(filters);
 
         return new EmployerDashboardDto(
                 filters.datasetId(),
@@ -111,8 +112,8 @@ public class EmployerDashboardService {
                 distribution(filters, "hiring_probability", "e.hiring_probability"),
                 positions(filters, filtered),
                 hiringByProbability(filters),
-                valuations(filters),
-                balanceByHiring(filters),
+                valuations(valuationCounts),
+                balanceByHiring(valuationCounts),
                 competences(filters),
                 sizeCompetence(filters));
     }
@@ -351,9 +352,9 @@ public class EmployerDashboardService {
         return rows;
     }
 
-    private List<ValuationDto> valuations(EmployerFilters filters) {
+    private List<ValuationDto> valuations(List<ValuationCount> valuationCounts) {
         long[][] totals = new long[VALUATION_KEYS.size()][4];
-        for (ValuationCount row : valuationCounts(filters)) {
+        for (ValuationCount row : valuationCounts) {
             int slot = codeSlot(row.code());
             if (slot >= 0 && row.position() >= 1 && row.position() <= VALUATION_KEYS.size()) {
                 totals[row.position() - 1][slot] += row.n();
@@ -371,9 +372,9 @@ public class EmployerDashboardService {
     }
 
     /** Índice neto por grupo de afirmaciones (formación / relación) y por contratación de la organización. */
-    private List<GroupBalanceDto> balanceByHiring(EmployerFilters filters) {
+    private List<GroupBalanceDto> balanceByHiring(List<ValuationCount> valuationCounts) {
         Map<String, long[]> byGroup = new LinkedHashMap<>();
-        for (ValuationCount row : valuationCounts(filters)) {
+        for (ValuationCount row : valuationCounts) {
             int slot = codeSlot(row.code());
             if (slot < 0 || slot == NO_KNOW || row.position() < 1 || row.position() > VALUATION_KEYS.size()) continue;
             String group = group(VALUATION_KEYS.get(row.position() - 1));

@@ -7,4 +7,7 @@ import java.util.UUID;
 
 public interface CompetenceRatingRepository extends JpaRepository<CompetenceRatingEntity, Long> {
     List<CompetenceRatingEntity> findByResponse_Dataset_Id(UUID datasetId);
+
+    List<CompetenceRatingEntity> findByResponse_Dataset_IdAndResponse_ResponseStatus(UUID datasetId,
+                                                                                       String responseStatus);
 }

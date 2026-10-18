@@ -352,7 +352,8 @@ public class AnalyticsService {
     @Transactional(readOnly = true)
     public List<CompetenceAverageDto> competenceGaps(UUID datasetId, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, null);
-        Map<String, List<CompetenceRatingEntity>> grouped = ratings.findByResponse_Dataset_Id(dataset.getId()).stream()
+        Map<String, List<CompetenceRatingEntity>> grouped = ratings
+                .findByResponse_Dataset_IdAndResponse_ResponseStatus(dataset.getId(), "VALIDA").stream()
                 .filter(r -> !filter.active() || matchesFilter(r.getResponse(), filter))
                 .collect(Collectors.groupingBy(r -> r.getCompetence().getCode(), LinkedHashMap::new,
                         Collectors.toList()));

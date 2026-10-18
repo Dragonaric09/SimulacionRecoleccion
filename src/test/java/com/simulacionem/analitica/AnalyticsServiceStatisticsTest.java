@@ -76,7 +76,8 @@ class AnalyticsServiceStatisticsTest {
         SurveyResponseRepository responses = mock(SurveyResponseRepository.class);
         CompetenceRatingRepository ratings = mock(CompetenceRatingRepository.class);
         when(datasets.findById(datasetId)).thenReturn(Optional.of(dataset));
-        when(ratings.findByResponse_Dataset_Id(datasetId)).thenReturn(List.of(observed, notObserved));
+        when(ratings.findByResponse_Dataset_IdAndResponse_ResponseStatus(datasetId, "VALIDA"))
+                .thenReturn(List.of(observed, notObserved));
 
         List<CompetenceAverageDto> result = new AnalyticsService(datasets, responses, ratings).competenceGaps(datasetId);
 
