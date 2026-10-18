@@ -9,12 +9,30 @@ import { EmployerPageHeader, NoEmployerDataPanel } from './EmployerPageHeader'
 import { useEmployerFilters } from './employerData'
 import { useEmployerApi } from './useEmployerApi'
 import { DEMANDED_LEVEL_ORDER, ORGANIZATION_SIZE_ORDER } from './instrumento'
-import { BalanceBars, DonutChart, EmptyChart, GroupBalanceBars, HiringMatrixBars, RankedBars, TimelineChart } from './dashboard/DashboardCharts'
-import { CompetenceLevelBars, CompetenceMeanBars, LevelLegend, SizeCompetenceHeatmap } from './dashboard/CompetenceVisuals'
+import {
+  BalanceQuestionChart,
+  GroupBalanceQuestionChart,
+  HiringQuestionChart,
+  TimelineQuestionChart,
+} from './dashboard/DashboardCharts'
+import {
+  CompetenceLevelQuestionChart,
+  CompetenceMeanQuestionChart,
+  SizeCompetenceQuestionChart,
+} from './dashboard/CompetenceVisuals'
 import { ResponsesTable, type SortKey, type SortState } from './dashboard/ResponsesTable'
 import { formatCount, formatDecimal, formatPercent } from './dashboard/dashboardFormat'
+import { CategoricalQuestionChart } from '@/components/analytics/charts'
 import { probabilityLabel, SIZE_SHORT_LABEL, valuationLabel } from './dashboard/labels'
-import type { CountItem, DashboardKpi, Distribution, EmployerDashboard, ResponsePage, ValuationStat } from './dashboard/dashboardTypes'
+import type {
+  CountItem,
+  DashboardKpi,
+  Distribution,
+  EmployerDashboard,
+  ResponsePage,
+  ValuationStat,
+} from './dashboard/dashboardTypes'
+import { CATEGORY_COLORS, EMPLOYER } from './dashboard/chartTheme'
 
 /** Orden de las probabilidades de contratar, de mayor a menor. */
 const PROBABILITY_ORDER = [
@@ -25,7 +43,11 @@ const PROBABILITY_ORDER = [
 ]
 
 /** Items de una distribución en un orden fijo (escala). Las categorías sin respuesta aparecen con 0. */
-function inOrder(distribution: Distribution, order: readonly string[], labelOf: (value: string) => string = (v) => v) {
+function inOrder(
+  distribution: Distribution,
+  order: readonly string[],
+  labelOf: (value: string) => string = (v) => v,
+) {
   return order.map((value) => {
     const item = distribution.items.find((candidate) => candidate.label === value)
     return { label: labelOf(value), count: item?.count ?? 0, percent: item?.percent ?? 0 }
@@ -33,7 +55,11 @@ function inOrder(distribution: Distribution, order: readonly string[], labelOf: 
 }
 
 function ranked(items: CountItem[], labelOf: (value: string) => string = (v) => v) {
-  return items.map((item) => ({ label: labelOf(item.label), count: item.count, percent: item.percent }))
+  return items.map((item) => ({
+    label: labelOf(item.label),
+    count: item.count,
+    percent: item.percent,
+  }))
 }
 
 function kpiChange(kpi: DashboardKpi): MetricChange | null {
@@ -72,16 +98,21 @@ export function EmpleadoresDashboardPage() {
   if (!datasetId) {
     return (
       <div className="mx-auto w-full max-w-7xl space-y-6">
-        <EmployerPageHeader title="Resumen y contratación" description="Panel de las organizaciones encuestadas: demanda, contratación, valoración de la Carrera y competencias." />
+        <EmployerPageHeader
+          title="Resumen y contratación"
+          description="Panel de las organizaciones encuestadas: demanda, contratación, valoración de la Carrera y competencias."
+        />
         <NoEmployerDataPanel />
       </div>
     )
   }
 
   const onSort = (key: SortKey) => {
-    setSort((current) => (current.key === key
-      ? { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
-      : { key, dir: key === 'fecha' ? 'desc' : 'asc' }))
+    setSort((current) =>
+      current.key === key
+        ? { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+        : { key, dir: key === 'fecha' ? 'desc' : 'asc' },
+    )
     setPage(0)
   }
 
@@ -100,21 +131,34 @@ export function EmpleadoresDashboardPage() {
 
   const hiringRows = (() => {
     const cells = data?.hiringByProbability ?? []
-    const labels = [...PROBABILITY_ORDER, ...Array.from(new Set(cells.map((c) => c.probability))).filter((p) => !PROBABILITY_ORDER.includes(p))]
+    const labels = [
+      ...PROBABILITY_ORDER,
+      ...Array.from(new Set(cells.map((c) => c.probability))).filter(
+        (p) => !PROBABILITY_ORDER.includes(p),
+      ),
+    ]
     return labels
       .map((probability) => ({
         label: probabilityLabel(probability),
         yes: cells.find((c) => c.probability === probability && c.hired === 'Sí')?.count ?? 0,
         no: cells.find((c) => c.probability === probability && c.hired === 'No')?.count ?? 0,
-        unknown: cells.find((c) => c.probability === probability && c.hired === 'Sin respuesta')?.count ?? 0,
+        unknown:
+          cells.find((c) => c.probability === probability && c.hired === 'Sin respuesta')?.count ??
+          0,
       }))
       .filter((row) => row.yes + row.no + row.unknown > 0)
   })()
 
   const groupRows = (['formacion', 'relacion'] as const).map((group) => {
-    const yes = data?.balanceByHiring.find((g) => g.group === group && g.hired === 'Sí')?.netIndex ?? null
-    const no = data?.balanceByHiring.find((g) => g.group === group && g.hired === 'No')?.netIndex ?? null
-    return { group: group === 'formacion' ? 'Formación y perfil' : 'Relación con la Carrera', yes, no }
+    const yes =
+      data?.balanceByHiring.find((g) => g.group === group && g.hired === 'Sí')?.netIndex ?? null
+    const no =
+      data?.balanceByHiring.find((g) => g.group === group && g.hired === 'No')?.netIndex ?? null
+    return {
+      group: group === 'formacion' ? 'Formación y perfil' : 'Relación con la Carrera',
+      yes,
+      no,
+    }
   })
 
   const kpis = data?.kpis ?? []
@@ -135,14 +179,35 @@ export function EmpleadoresDashboardPage() {
         validCount={data?.filteredResponses}
         totalCount={data?.totalResponses}
       />
-      {dashboard.error && <StatusPanel kind="warning" title="No se pudo cargar el panel" description={dashboard.error} />}
-      {dashboard.loading && !data && <StatusPanel kind="loading" title="Cargando el panel" description="Calculando los indicadores sobre todas las respuestas del dataset." />}
-      {data && respondents === 0 && <StatusPanel kind="info" title="Ningún registro coincide" description="Cambia o limpia los filtros para ver resultados." />}
+      {dashboard.error && (
+        <StatusPanel
+          kind="warning"
+          title="No se pudo cargar el panel"
+          description={dashboard.error}
+        />
+      )}
+      {dashboard.loading && !data && (
+        <StatusPanel
+          kind="loading"
+          title="Cargando el panel"
+          description="Calculando los indicadores sobre todas las respuestas del dataset."
+        />
+      )}
+      {data && respondents === 0 && (
+        <StatusPanel
+          kind="info"
+          title="Ningún registro coincide"
+          description="Cambia o limpia los filtros para ver resultados."
+        />
+      )}
       {data && respondents > 0 && respondents < 5 && <SmallSampleNotice count={respondents} />}
 
       {data && respondents > 0 && (
         <>
-          <section aria-label="Indicadores principales" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <section
+            aria-label="Indicadores principales"
+            className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          >
             {kpiByKey('respuestas') && (
               <MetricCard
                 label="Organizaciones encuestadas"
@@ -189,98 +254,261 @@ export function EmpleadoresDashboardPage() {
           <section aria-label="Gráficos" className="grid gap-6 lg:grid-cols-3">
             <Panel span={2}>
               <ChartCard
-                title={data.timelineGranularity === 'week' ? 'Respuestas por semana' : 'Respuestas por día'}
+                title={
+                  data.timelineGranularity === 'week'
+                    ? 'Respuestas por semana'
+                    : 'Respuestas por día'
+                }
                 n={respondents}
                 help="Número de respuestas en cada intervalo (barras) y acumulado de respuestas (línea), según la fecha de envío."
               >
-                <TimelineChart points={data.timeline} granularity={data.timelineGranularity} />
+                <TimelineQuestionChart
+                  points={data.timeline}
+                  granularity={data.timelineGranularity}
+                  storageKey="simulacionem.chartVariant.empleadores.timeline"
+                />
               </ChartCard>
             </Panel>
             <Panel>
-              <ChartCard title="Tipo de organización" n={data.organizationType.answered} help="Organizaciones públicas o privadas, sobre quienes respondieron la pregunta.">
-                <DonutChart items={data.organizationType.items} total={data.organizationType.answered} />
+              <ChartCard
+                title="Tipo de organización"
+                n={data.organizationType.answered}
+                help="Organizaciones públicas o privadas, sobre quienes respondieron la pregunta."
+              >
+                <CategoricalQuestionChart
+                  items={data.organizationType.items}
+                  total={data.organizationType.answered}
+                  defaultVariant="donut"
+                  color={EMPLOYER}
+                  categoryColors={CATEGORY_COLORS}
+                  storageKey="simulacionem.chartVariant.empleadores.organizationType"
+                />
               </ChartCard>
             </Panel>
 
             <Panel>
-              <ChartCard title="Tamaño de la organización" n={data.organizationSize.answered} help="Número de funcionarios, en el orden de la escala de Micro a Grande.">
-                <RankedBars items={inOrder(data.organizationSize, ORGANIZATION_SIZE_ORDER, (value) => SIZE_SHORT_LABEL[value] ?? value)} color="#1F6FB5" maxItems={4} labelWidth={130} />
+              <ChartCard
+                title="Tamaño de la organización"
+                n={data.organizationSize.answered}
+                help="Número de funcionarios, en el orden de la escala de Micro a Grande."
+              >
+                <CategoricalQuestionChart
+                  items={inOrder(
+                    data.organizationSize,
+                    ORGANIZATION_SIZE_ORDER,
+                    (value) => SIZE_SHORT_LABEL[value] ?? value,
+                  )}
+                  total={data.organizationSize.answered}
+                  defaultVariant="ranked"
+                  color={EMPLOYER}
+                  categoryColors={CATEGORY_COLORS}
+                  maxItems={4}
+                  labelWidth={130}
+                  storageKey="simulacionem.chartVariant.empleadores.organizationSize"
+                />
               </ChartCard>
             </Panel>
             <Panel>
-              <ChartCard title="Nivel de formación que demanda" n={data.demandedLevel.answered} help="Nivel académico o de actualización que la organización exige para contratar, de menor a mayor.">
-                <RankedBars items={inOrder(data.demandedLevel, DEMANDED_LEVEL_ORDER)} maxItems={6} labelWidth={130} />
+              <ChartCard
+                title="Nivel de formación que demanda"
+                n={data.demandedLevel.answered}
+                help="Nivel académico o de actualización que la organización exige para contratar, de menor a mayor."
+              >
+                <CategoricalQuestionChart
+                  items={inOrder(data.demandedLevel, DEMANDED_LEVEL_ORDER)}
+                  total={data.demandedLevel.answered}
+                  defaultVariant="ranked"
+                  color={EMPLOYER}
+                  categoryColors={CATEGORY_COLORS}
+                  maxItems={6}
+                  labelWidth={130}
+                  storageKey="simulacionem.chartVariant.empleadores.demandedLevel"
+                />
               </ChartCard>
             </Panel>
             <Panel>
-              <ChartCard title="Medio de convocatoria" n={data.channel.answered} help="Medio por el que la organización convoca a profesionales. Base: quienes respondieron la pregunta.">
-                <RankedBars items={ranked(data.channel.items)} maxItems={6} labelWidth={170} />
+              <ChartCard
+                title="Medio de convocatoria"
+                n={data.channel.answered}
+                help="Medio por el que la organización convoca a profesionales. Base: quienes respondieron la pregunta."
+              >
+                <CategoricalQuestionChart
+                  items={ranked(data.channel.items)}
+                  total={data.channel.answered}
+                  defaultVariant="ranked"
+                  color={EMPLOYER}
+                  categoryColors={CATEGORY_COLORS}
+                  maxItems={6}
+                  labelWidth={170}
+                  storageKey="simulacionem.chartVariant.empleadores.channel"
+                />
               </ChartCard>
             </Panel>
 
             <Panel span={2}>
               <ChartCard
                 title="Balance de acuerdo por afirmación"
-                n={Math.max(0, ...(data.valuations.map((v) => v.agree + v.partly + v.disagree)))}
+                n={Math.max(0, ...data.valuations.map((v) => v.agree + v.partly + v.disagree))}
                 help="Porcentaje de acuerdo (derecha) y desacuerdo (izquierda) sobre quienes contestaron la escala. «No sabe» no entra. El índice neto es acuerdo menos desacuerdo, de -100 a 100."
               >
-                <BalanceBars rows={balanceRows} />
+                <BalanceQuestionChart
+                  rows={balanceRows}
+                  storageKey="simulacionem.chartVariant.empleadores.balance"
+                />
               </ChartCard>
             </Panel>
             <Panel>
-              <ChartCard title="Contratación según probabilidad de contratar" n={data.hiringProbability.answered} help="Cada barra es una respuesta sobre la probabilidad de contratar; el color indica si la organización contrató en los últimos 5 años.">
-                <HiringMatrixBars rows={hiringRows} />
+              <ChartCard
+                title="Contratación según probabilidad de contratar"
+                n={data.hiringProbability.answered}
+                help="Cada barra es una respuesta sobre la probabilidad de contratar; el color indica si la organización contrató en los últimos 5 años."
+              >
+                <HiringQuestionChart
+                  rows={hiringRows}
+                  storageKey="simulacionem.chartVariant.empleadores.hiringProbability"
+                />
               </ChartCard>
             </Panel>
 
             <Panel>
-              <ChartCard title="Índice neto de acuerdo según contratación" help="Acuerdo menos desacuerdo (sobre la escala, sin «No sabe») por grupo de afirmaciones y según si la organización contrató.">
-                <GroupBalanceBars rows={groupRows} />
+              <ChartCard
+                title="Índice neto de acuerdo según contratación"
+                help="Acuerdo menos desacuerdo (sobre la escala, sin «No sabe») por grupo de afirmaciones y según si la organización contrató."
+              >
+                <GroupBalanceQuestionChart
+                  rows={groupRows}
+                  storageKey="simulacionem.chartVariant.empleadores.groupBalance"
+                />
               </ChartCard>
             </Panel>
             <Panel span={2}>
-              <ChartCard title="Niveles de suficiencia por competencia" help="Porcentaje de respuestas en cada nivel de la escala 1 (muy insuficiente) a 5 (muy suficiente). «No observado» no entra.">
-                <CompetenceLevelBars competences={data.competences} />
-                <LevelLegend />
+              <ChartCard
+                title="Niveles de suficiencia por competencia"
+                help="Porcentaje de respuestas en cada nivel de la escala 1 (muy insuficiente) a 5 (muy suficiente). «No observado» no entra."
+              >
+                <CompetenceLevelQuestionChart
+                  competences={data.competences}
+                  storageKey="simulacionem.chartVariant.empleadores.competenceLevels"
+                />
               </ChartCard>
             </Panel>
 
             <Panel>
-              <ChartCard title="Media por competencia" help="Media de la escala 1 a 5 por competencia, de mayor a menor. No incluye «No observado».">
-                <CompetenceMeanBars competences={data.competences} />
+              <ChartCard
+                title="Media por competencia"
+                help="Media de la escala 1 a 5 por competencia, de mayor a menor. No incluye «No observado»."
+              >
+                <CompetenceMeanQuestionChart
+                  competences={data.competences}
+                  storageKey="simulacionem.chartVariant.empleadores.competenceMeans"
+                />
               </ChartCard>
             </Panel>
             <Panel span={2}>
-              <ChartCard title="Media por tamaño y competencia" help="Cada celda es la media de la escala 1 a 5 de las organizaciones de ese tamaño para esa competencia.">
-                <SizeCompetenceHeatmap cells={data.sizeCompetence} sizes={[...ORGANIZATION_SIZE_ORDER]} competences={data.competences} sizeLabel={(size) => SIZE_SHORT_LABEL[size] ?? size} />
+              <ChartCard
+                title="Media por tamaño y competencia"
+                help="Cada celda es la media de la escala 1 a 5 de las organizaciones de ese tamaño para esa competencia."
+              >
+                <SizeCompetenceQuestionChart
+                  cells={data.sizeCompetence}
+                  sizes={[...ORGANIZATION_SIZE_ORDER]}
+                  competences={data.competences}
+                  sizeLabel={(size) => SIZE_SHORT_LABEL[size] ?? size}
+                  storageKey="simulacionem.chartVariant.empleadores.sizeCompetence"
+                />
               </ChartCard>
             </Panel>
 
             <Panel span={2}>
-              <ChartCard title="Rubro o sector principal" n={data.sector.answered} help="Rubro principal de la organización donde trabajan titulados. Base: quienes respondieron la pregunta.">
-                <RankedBars items={ranked(data.sector.items)} maxItems={15} labelWidth={260} />
+              <ChartCard
+                title="Rubro o sector principal"
+                n={data.sector.answered}
+                help="Rubro principal de la organización donde trabajan titulados. Base: quienes respondieron la pregunta."
+              >
+                <CategoricalQuestionChart
+                  items={ranked(data.sector.items)}
+                  total={data.sector.answered}
+                  defaultVariant="ranked"
+                  color={EMPLOYER}
+                  categoryColors={CATEGORY_COLORS}
+                  maxItems={15}
+                  labelWidth={260}
+                  storageKey="simulacionem.chartVariant.empleadores.sector"
+                />
               </ChartCard>
             </Panel>
             <Panel>
-              <ChartCard title="Cargos que ocupan los titulados" n={data.positions.answered} help="Cargos marcados por la organización. Una organización puede marcar varios: el porcentaje usa como base a quienes respondieron.">
-                {data.positions.items.length === 0 ? <EmptyChart /> : <RankedBars items={ranked(data.positions.items)} maxItems={7} labelWidth={150} />}
+              <ChartCard
+                title="Cargos que ocupan los titulados"
+                n={data.positions.answered}
+                help="Cargos marcados por la organización. Una organización puede marcar varios: el porcentaje usa como base a quienes respondieron."
+              >
+                <CategoricalQuestionChart
+                  items={ranked(data.positions.items)}
+                  total={data.positions.answered}
+                  defaultVariant="ranked"
+                  color={EMPLOYER}
+                  categoryColors={CATEGORY_COLORS}
+                  maxItems={7}
+                  labelWidth={150}
+                  storageKey="simulacionem.chartVariant.empleadores.positions"
+                />
                 <p className="caption-meta mt-3 text-ink-600">Varias respuestas posibles.</p>
               </ChartCard>
             </Panel>
 
             <Panel>
-              <ChartCard title="Departamento" n={data.department.answered} help="Departamento donde se ubica la organización. Base: quienes respondieron la pregunta.">
-                <RankedBars items={ranked(data.department.items)} maxItems={9} labelWidth={120} />
+              <ChartCard
+                title="Departamento"
+                n={data.department.answered}
+                help="Departamento donde se ubica la organización. Base: quienes respondieron la pregunta."
+              >
+                <CategoricalQuestionChart
+                  items={ranked(data.department.items)}
+                  total={data.department.answered}
+                  defaultVariant="ranked"
+                  color={EMPLOYER}
+                  categoryColors={CATEGORY_COLORS}
+                  maxItems={9}
+                  labelWidth={120}
+                  storageKey="simulacionem.chartVariant.empleadores.department"
+                />
               </ChartCard>
             </Panel>
             <Panel>
-              <ChartCard title="Presencia de sedes" n={data.branch.answered} help="Alcance territorial de la organización según sus sedes.">
-                <RankedBars items={ranked(data.branch.items)} maxItems={6} labelWidth={170} />
+              <ChartCard
+                title="Presencia de sedes"
+                n={data.branch.answered}
+                help="Alcance territorial de la organización según sus sedes."
+              >
+                <CategoricalQuestionChart
+                  items={ranked(data.branch.items)}
+                  total={data.branch.answered}
+                  defaultVariant="ranked"
+                  color={EMPLOYER}
+                  categoryColors={CATEGORY_COLORS}
+                  maxItems={6}
+                  labelWidth={170}
+                  storageKey="simulacionem.chartVariant.empleadores.branch"
+                />
               </ChartCard>
             </Panel>
             <Panel>
-              <ChartCard title="Contratación en los últimos 5 años" n={data.hiring.answered} help="Si la organización contrató ingenieros de la Carrera en los últimos 5 años.">
-                <RankedBars items={ranked(data.hiring.items)} maxItems={2} labelWidth={80} />
+              <ChartCard
+                title="Contratación en los últimos 5 años"
+                n={data.hiring.answered}
+                help="Si la organización contrató ingenieros de la Carrera en los últimos 5 años."
+              >
+                <CategoricalQuestionChart
+                  items={ranked(data.hiring.items)}
+                  total={data.hiring.answered}
+                  defaultVariant="ranked"
+                  color={EMPLOYER}
+                  categoryColors={CATEGORY_COLORS}
+                  maxItems={2}
+                  labelWidth={80}
+                  storageKey="simulacionem.chartVariant.empleadores.hiring"
+                />
               </ChartCard>
             </Panel>
           </section>
@@ -300,7 +528,9 @@ export function EmpleadoresDashboardPage() {
           setPage(0)
         }}
       />
-      {table.error && <StatusPanel kind="warning" title="No se pudo cargar la tabla" description={table.error} />}
+      {table.error && (
+        <StatusPanel kind="warning" title="No se pudo cargar la tabla" description={table.error} />
+      )}
     </div>
   )
 }

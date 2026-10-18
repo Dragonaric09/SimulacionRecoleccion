@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ChartVariantSelector, useChartVariant } from '@/components/analytics/charts'
 import { ChartCard, SmallSampleNotice } from '@/components/analytics/ChartCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { useDatasets } from '@/features/analitica/shared/AnalyticsPrimitives'
@@ -27,7 +28,9 @@ import { scoreColor, valuationUrl } from './valuation/valuationFormat'
 export function EmpleadoresValoracionPage() {
   const { datasetId } = useDatasets('EMPLEADORES')
   const filters = useEmployerFilters(datasetId)
-  const { data, loading, error } = useEmployerApi<EmployerValuation>(datasetId ? valuationUrl(datasetId, filters.query) : null)
+  const { data, loading, error } = useEmployerApi<EmployerValuation>(
+    datasetId ? valuationUrl(datasetId, filters.query) : null,
+  )
 
   const header = (
     <EmployerPageHeader
@@ -56,58 +59,138 @@ export function EmpleadoresValoracionPage() {
         validCount={data?.summary.respondents}
         totalCount={data?.summary.totalResponses}
       />
-      {error && <StatusPanel kind="warning" title="No se pudo cargar la pantalla" description={error} />}
-      {loading && !data && <StatusPanel kind="loading" title="Cargando datos" description="Consultando el dataset seleccionado." />}
+      {error && (
+        <StatusPanel kind="warning" title="No se pudo cargar la pantalla" description={error} />
+      )}
+      {loading && !data && (
+        <StatusPanel
+          kind="loading"
+          title="Cargando datos"
+          description="Consultando el dataset seleccionado."
+        />
+      )}
       {data && respondents > 0 && respondents < 5 && <SmallSampleNotice count={respondents} />}
-      {data && respondents === 0 && <StatusPanel kind="info" title="Ningún registro coincide" description="Cambia o limpia los filtros para ver resultados." />}
+      {data && respondents === 0 && (
+        <StatusPanel
+          kind="info"
+          title="Ningún registro coincide"
+          description="Cambia o limpia los filtros para ver resultados."
+        />
+      )}
       {data && respondents > 0 && <ValuationContent data={data} />}
     </div>
   )
 }
 
 /** Contenido de la pantalla; el reporte PDF lo reutiliza tal cual. */
-export function ValuationContent({ data, print = false }: { data: EmployerValuation; print?: boolean }) {
+export function ValuationContent({
+  data,
+  print = false,
+}: {
+  data: EmployerValuation
+  print?: boolean
+}) {
   const { summary, dimensions } = data
   const byKey = new Map(dimensions.map((d) => [d.key, d]))
   const strongest = summary.strongestDimension ? byKey.get(summary.strongestDimension) : undefined
   const weakest = summary.weakestDimension ? byKey.get(summary.weakestDimension) : undefined
   const n = summary.respondents
+  const [statementVariant, setStatementVariant] = useChartVariant(
+    'empleadores-valoracion-statements',
+    'bars',
+    ['bars', 'table'] as const,
+  )
 
   const exportItems = () => {
     const statements = new Map(VALUATION_ITEMS.map((item) => [item.key, item.statement]))
     const dimensionLabel = new Map(dimensions.map((d) => [d.key, d.label]))
     downloadCsv('empleadores-valoracion-afirmaciones.csv', [
-      ['Afirmación', 'Dimensión', 'Totalmente de acuerdo', 'Parcialmente de acuerdo', 'Totalmente desacuerdo', 'No sabe', 'Sin respuesta', 'Puntaje 0-100', 'Índice neto'],
+      [
+        'Afirmación',
+        'Dimensión',
+        'Totalmente de acuerdo',
+        'Parcialmente de acuerdo',
+        'Totalmente desacuerdo',
+        'No sabe',
+        'Sin respuesta',
+        'Puntaje 0-100',
+        'Índice neto',
+      ],
       ...data.items.map((item) => [
-        statements.get(item.key) ?? item.label, dimensionLabel.get(item.dimension) ?? '', item.full, item.partial, item.disagreement,
-        item.unknown, item.missing, item.score ?? '', item.netIndex ?? '',
+        statements.get(item.key) ?? item.label,
+        dimensionLabel.get(item.dimension) ?? '',
+        item.full,
+        item.partial,
+        item.disagreement,
+        item.unknown,
+        item.missing,
+        item.score ?? '',
+        item.netIndex ?? '',
       ]),
     ])
   }
   const exportSegments = () => {
     downloadCsv('empleadores-valoracion-segmentos.csv', [
-      ['Variable', 'Grupo', 'n', 'Puntaje global', ...dimensions.map((d) => d.label), 'Prueba', 'p-valor', 'Efecto'],
-      ...data.segments.flatMap((segment) => segment.groups.map((group) => [
-        segment.label, group.category, group.n, group.score ?? '', ...dimensions.map((d) => group.dimensions[d.key] ?? ''),
-        segment.test?.nombrePrueba ?? '', segment.test?.pValor ?? '', segment.test?.efecto ?? '',
-      ])),
+      [
+        'Variable',
+        'Grupo',
+        'n',
+        'Puntaje global',
+        ...dimensions.map((d) => d.label),
+        'Prueba',
+        'p-valor',
+        'Efecto',
+      ],
+      ...data.segments.flatMap((segment) =>
+        segment.groups.map((group) => [
+          segment.label,
+          group.category,
+          group.n,
+          group.score ?? '',
+          ...dimensions.map((d) => group.dimensions[d.key] ?? ''),
+          segment.test?.nombrePrueba ?? '',
+          segment.test?.pValor ?? '',
+          segment.test?.efecto ?? '',
+        ]),
+      ),
     ])
   }
 
   return (
     <div className="valuation-content space-y-6">
       <div className="valuation-kpis grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Puntaje global de valoración" value={summary.score === null ? '—' : formatDecimal(summary.score, 0)} suffix="/ 100" score={summary.score}>
-          Acuerdo total {formatPercent(summary.fullAgreementShare, 0)} · Desacuerdo {formatPercent(summary.disagreementShare, 0)}
+        <StatTile
+          label="Puntaje global de valoración"
+          value={summary.score === null ? '—' : formatDecimal(summary.score, 0)}
+          suffix="/ 100"
+          score={summary.score}
+        >
+          Acuerdo total {formatPercent(summary.fullAgreementShare, 0)} · Desacuerdo{' '}
+          {formatPercent(summary.disagreementShare, 0)}
         </StatTile>
-        <StatTile label="Dimensión mejor valorada" value={strongest?.label ?? '—'} score={strongest?.score ?? null} compact>
-          {strongest ? `Puntaje ${formatDecimal(strongest.score ?? 0, 0)} · n = ${formatCount(strongest.respondents)}` : 'Requiere al menos dos dimensiones con respuestas'}
+        <StatTile
+          label="Dimensión mejor valorada"
+          value={strongest?.label ?? '—'}
+          score={strongest?.score ?? null}
+          compact
+        >
+          {strongest
+            ? `Puntaje ${formatDecimal(strongest.score ?? 0, 0)} · n = ${formatCount(strongest.respondents)}`
+            : 'Requiere al menos dos dimensiones con respuestas'}
         </StatTile>
-        <StatTile label="Dimensión peor valorada" value={weakest?.label ?? '—'} score={weakest?.score ?? null} compact>
-          {weakest ? `Puntaje ${formatDecimal(weakest.score ?? 0, 0)} · n = ${formatCount(weakest.respondents)}` : 'Requiere al menos dos dimensiones con respuestas'}
+        <StatTile
+          label="Dimensión peor valorada"
+          value={weakest?.label ?? '—'}
+          score={weakest?.score ?? null}
+          compact
+        >
+          {weakest
+            ? `Puntaje ${formatDecimal(weakest.score ?? 0, 0)} · n = ${formatCount(weakest.respondents)}`
+            : 'Requiere al menos dos dimensiones con respuestas'}
         </StatTile>
         <StatTile label="Respuestas «No sabe»" value={formatPercent(summary.unknownShare, 1)}>
-          {formatCount(summary.uniformResponses)} de {formatCount(n)} organizaciones marcaron la misma opción en las 18 afirmaciones
+          {formatCount(summary.uniformResponses)} de {formatCount(n)} organizaciones marcaron la
+          misma opción en las 18 afirmaciones
         </StatTile>
       </div>
 
@@ -130,9 +213,23 @@ export function ValuationContent({ data, print = false }: { data: EmployerValuat
         n={n}
         help="Porcentajes sobre las organizaciones que eligieron una opción de la escala. «No sabe» se informa en su columna, sobre todas las que respondieron la afirmación. Pase el cursor por una fila para leer el enunciado completo."
         onExportCsv={print ? undefined : exportItems}
+        headerActions={
+          !print && (
+            <ChartVariantSelector
+              value={statementVariant}
+              options={['bars', 'table'] as const}
+              labels={{ bars: 'Barras divergentes', table: 'Tabla' }}
+              onChange={setStatementVariant}
+            />
+          )
+        }
       >
         <div className="space-y-3">
-          <StatementRanking items={data.items} dimensions={dimensions} />
+          <StatementRanking
+            items={data.items}
+            dimensions={dimensions}
+            variant={print ? 'bars' : statementVariant}
+          />
           <AgreementLegend withUnknown={false} />
         </div>
       </ChartCard>
@@ -169,7 +266,14 @@ export function ValuationContent({ data, print = false }: { data: EmployerValuat
   )
 }
 
-function StatTile({ label, value, suffix, score, compact = false, children }: {
+function StatTile({
+  label,
+  value,
+  suffix,
+  score,
+  compact = false,
+  children,
+}: {
   label: string
   value: string
   suffix?: string
@@ -181,9 +285,20 @@ function StatTile({ label, value, suffix, score, compact = false, children }: {
     <div className="stat-tile flex h-full flex-col gap-2 rounded-lg border border-border-line bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <p className="caption-bold text-ink-600">{label}</p>
-        {score !== undefined && score !== null && <span className="mt-0.5 size-3 shrink-0 rounded-full" style={{ background: scoreColor(score) }} />}
+        {score !== undefined && score !== null && (
+          <span
+            className="mt-0.5 size-3 shrink-0 rounded-full"
+            style={{ background: scoreColor(score) }}
+          />
+        )}
       </div>
-      <p className={compact ? 'text-lg font-semibold leading-6 text-ink-900' : 'display-kpi tabular-nums text-ink-900'}>
+      <p
+        className={
+          compact
+            ? 'text-lg font-semibold leading-6 text-ink-900'
+            : 'display-kpi tabular-nums text-ink-900'
+        }
+      >
         {value}
         {suffix && <span className="ml-1 text-sm font-medium text-ink-500">{suffix}</span>}
       </p>
