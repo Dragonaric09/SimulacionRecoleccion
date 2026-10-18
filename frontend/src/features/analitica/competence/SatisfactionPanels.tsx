@@ -178,10 +178,26 @@ function orderedScaleEntries(distribution: CategoryDistribution | undefined, sca
     ? ["Insatisfecho", "Algo satisfecho", "Satisfecho"]
     : ["Totalmente en desacuerdo", "En desacuerdo", "De acuerdo", "Totalmente de acuerdo"];
   const existing = Object.keys(distribution?.counts ?? {});
+  const used = new Set<string>();
   return labels.map((label) => {
-    const actual = existing.find((candidate) => normalizeScaleLabel(candidate) === normalizeScaleLabel(label));
+    const expectedLevel = scale === "satisfaction"
+      ? satisfactionLevel(label)
+      : likertLevel(label);
+    const actual = existing.find((candidate) => !used.has(candidate) && (
+      normalizeScaleLabel(candidate) === normalizeScaleLabel(label)
+      || (expectedLevel > 0 && likertLevel(candidate) === expectedLevel)
+    ));
+    if (actual) used.add(actual);
     return [actual ?? label, actual ? distribution?.counts[actual] ?? 0 : 0] as [string, number];
   });
+}
+
+function satisfactionLevel(label: string) {
+  const normalized = normalizeScaleLabel(label);
+  if (normalized.includes("insatisfecho")) return 1;
+  if (normalized.includes("algo satisfecho")) return 2;
+  if (normalized === "satisfecho" || normalized.includes("satisfecho")) return 3;
+  return 0;
 }
 
 function normalizeScaleLabel(label: string) {
