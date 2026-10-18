@@ -28,13 +28,13 @@ public class PruebaAsociacionService {
 
     static final int PERMUTACIONES = 10_000;
     /** Por debajo de este n, Spearman usa permutación en vez de la aproximación t. */
-    static final int N_ASINTOTICO_SPEARMAN = 30;
+    static final int N_ASINTOTICO_SPEARMAN = AnalysisRules.MINIMUM_ASSOCIATION_SAMPLE;
     /** Por debajo de este tamaño de grupo, Mann–Whitney usa permutación. */
-    static final int N_GRUPO_MANN_WHITNEY = 10;
+    static final int N_GRUPO_MANN_WHITNEY = AnalysisRules.MINIMUM_GROUP_FOR_ASYMPTOTIC_MANN_WHITNEY;
     /** Por debajo de este tamaño de grupo, Kruskal–Wallis usa permutación. */
-    static final int N_GRUPO_KRUSKAL = 5;
+    static final int N_GRUPO_KRUSKAL = AnalysisRules.MINIMUM_GROUP_FOR_ASYMPTOTIC_KRUSKAL;
     /** La permutación recorre todas las observaciones en cada réplica: por encima de este n se usa la aproximación. */
-    static final int N_MAXIMO_PERMUTACION = 2_000;
+    static final int N_MAXIMO_PERMUTACION = AnalysisRules.MAXIMUM_PERMUTATION_SAMPLE;
     private static final long SEMILLA = 20_260_101L;
     private static final NormalDistribution NORMAL = new NormalDistribution(null, 0, 1);
 
@@ -420,8 +420,7 @@ public class PruebaAsociacionService {
     }
 
     private static double redondear(double valor, int decimales) {
-        double factor = Math.pow(10, decimales);
-        return Math.round(valor * factor) / factor;
+        return DescriptiveStatistics.round(valor, decimales);
     }
 
     /**

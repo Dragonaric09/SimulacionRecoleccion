@@ -41,7 +41,7 @@ class CsvImportServiceTest {
     @Test
     void validaEImportaLosDosCsvRealesSinGuardarDatosPersonales() throws IOException {
         Path data = Path.of("data");
-        ImportReportDto titulados = importFile(data.resolve("ENCUESTA DE OPINIÓN A TITULADOS DE INGENIERÍA EN SISTEMAS  (respuestas) - Respuestas de formulario 1.csv"));
+        ImportReportDto titulados = importFile(data.resolve("ENCUESTA DE OPINIÓN A TITULADOS DE INGENIERÍA EN SISTEMAS  (respuestas) - Respuestas de formulario 1 (1).csv"));
         ImportReportDto empleadores = importFile(data.resolve("Empleadores - Respuestas de formulario.csv"));
 
         assertThat(titulados.surveyType()).isEqualTo("TITULADOS");
@@ -54,8 +54,8 @@ class CsvImportServiceTest {
         assertThat(summary.totalResponses()).isEqualTo(8);
         assertThat(summary.distributions().get("sector_trabajo").validCount()).isEqualTo(8);
         assertThat(empleadores.surveyType()).isEqualTo("EMPLEADORES");
-        assertThat(empleadores.rowsRead()).isEqualTo(3);
-        assertThat(empleadores.rowsValid()).isEqualTo(3);
+        assertThat(empleadores.rowsRead()).isEqualTo(2);
+        assertThat(empleadores.rowsValid()).isEqualTo(2);
         AnalyticsSummaryDto valuation = analytics.summary(empleadores.datasetId(), "EMPLEADORES", java.util.List.of("valoracion_formacion_1", "valoracion_formacion_5", "valoracion_relacion_3"));
         assertThat(valuation.distributions()).containsKey("valoracion_formacion_1");
         assertThat(valuation.distributions().get("valoracion_formacion_1").counts()).containsKeys("Parcialmente de acuerdo", "Totalmente de acuerdo");

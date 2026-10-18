@@ -31,7 +31,8 @@ import java.text.Normalizer;
 
 @Service
 public class AnalyticsService {
-    public static final int MINIMUM_SAMPLE_SIZE = 5;
+    /** Se conserva el alias público para no romper consumidores existentes. */
+    public static final int MINIMUM_SAMPLE_SIZE = AnalysisRules.MINIMUM_DESCRIPTIVE_SAMPLE;
     private static final int SEGMENT_REFERENCE_YEAR = 2024;
     /** Variables de empleadores que admiten cruces: todas de opción única o escala. */
     static final List<String> EMPLOYER_CROSS_FIELDS = List.of("tipo_organizacion", "tamano_organizacion",
@@ -164,7 +165,7 @@ public class AnalyticsService {
                     }
                 } else if (aggregate.validCount() > 0) {
                     Map<String, Double> percentages = new LinkedHashMap<>();
-                    aggregate.counts().forEach((key, count) -> percentages.put(key, round(count * 100.0 / aggregate.validCount())));
+                    percentages.putAll(DescriptiveStatistics.percentages(aggregate.counts(), aggregate.validCount(), 2));
                     distributions.put(field, new CategoryDistributionDto(aggregate.validCount(), aggregate.counts(), percentages));
                 }
                 continue;
@@ -175,9 +176,10 @@ public class AnalyticsService {
             if (numericField(field)) {
                 List<Double> numbers = values.stream().map(this::number).filter(java.util.Objects::nonNull).toList();
                 if (!numbers.isEmpty()) {
-                    averages.put(field, round(numbers.stream().mapToDouble(Double::doubleValue).average().orElse(0)));
-                    medians.put(field, median(numbers));
-                    standardDeviations.put(field, sampleStandardDeviation(numbers));
+                    DescriptiveStatistics.Summary summary = DescriptiveStatistics.summarize(numbers, 2);
+                    averages.put(field, summary.mean());
+                    medians.put(field, summary.median());
+                    standardDeviations.put(field, summary.sampleStandardDeviation());
                 }
             } else {
                 distributions.put(field, multiCategoryField(field) ? multiDistribution(field, values) : distribution(values));
@@ -320,11 +322,7 @@ public class AnalyticsService {
     }
 
     private boolean isAnalyticValue(String value) {
-        String normalized = normalize(value);
-        return !normalized.isBlank()
-                && !normalized.equals("no sabe")
-                && !normalized.equals("no observado")
-                && !normalized.equals("no observada");
+        return AnalysisRules.isAnalyticValue(value);
     }
 
     private Integer validYear(String raw) {
@@ -438,9 +436,10 @@ public class AnalyticsService {
             int modalLevel = levelCounts.entrySet().stream()
                     .max(Map.Entry.<Integer, Long>comparingByValue().thenComparing(Map.Entry.comparingByKey()))
                     .map(Map.Entry::getKey).orElse(0);
+            DescriptiveStatistics.Summary summary = DescriptiveStatistics.summarize(numbers, 2);
             result.add(new CompetenceAverageDto(code, competence.getName(), competence.getCompetenceGroup(),
-                    observed.size(), round(average), sampleStandardDeviation(numbers),
-                    numbers.isEmpty() ? null : median(numbers), modalLevel, levelCounts, notObserved));
+                    observed.size(), DescriptiveStatistics.round(average, 2),
+                    summary.sampleStandardDeviation(), summary.median(), modalLevel, levelCounts, notObserved));
         });
         return result;
     }
@@ -492,7 +491,7 @@ public class AnalyticsService {
                         .filter(r -> column.equals(canonicalizeCategoryValue(columnField, value(r, columnField))))
                         .count();
                 rowCounts.put(column, count);
-                rowPercentages.put(column, round(count * 100.0 / rowTotal));
+                rowPercentages.put(column, DescriptiveStatistics.percentageOrZero(count, rowTotal, 2));
             }
             counts.put(row, rowCounts);
             percentages.put(row, rowPercentages);
@@ -623,8 +622,7 @@ public class AnalyticsService {
     private CategoryDistributionDto distribution(List<String> values) {
         Map<String, Long> counts = values.stream()
                 .collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
-        Map<String, Double> percentages = new LinkedHashMap<>();
-        counts.forEach((key, count) -> percentages.put(key, round(count * 100.0 / values.size())));
+        Map<String, Double> percentages = DescriptiveStatistics.percentages(counts, values.size(), 2);
         return new CategoryDistributionDto(values.size(), counts, percentages);
     }
 
@@ -636,8 +634,7 @@ public class AnalyticsService {
                 .collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
         List<String> catalog = multiOptionCatalog(field);
         catalog.forEach(option -> counts.putIfAbsent(option, 0L));
-        Map<String, Double> percentages = new LinkedHashMap<>();
-        counts.forEach((key, count) -> percentages.put(key, round(count * 100.0 / values.size())));
+        Map<String, Double> percentages = DescriptiveStatistics.percentages(counts, values.size(), 2);
         return new CategoryDistributionDto(values.size(), counts, percentages);
     }
 
@@ -728,22 +725,6 @@ public class AnalyticsService {
         } catch (NumberFormatException ex) {
             return null;
         }
-    }
-
-    private Double sampleStandardDeviation(List<Double> values) {
-        if (values.size() < 2)
-            return null;
-        double average = values.stream().mapToDouble(Double::doubleValue).average().orElse(0);
-        double variance = values.stream().mapToDouble(value -> Math.pow(value - average, 2)).sum()
-                / (values.size() - 1);
-        return round(Math.sqrt(variance));
-    }
-
-    private Double median(List<Double> values) {
-        List<Double> sorted = values.stream().sorted().toList();
-        int middle = sorted.size() / 2;
-        double result = sorted.size() % 2 == 0 ? (sorted.get(middle - 1) + sorted.get(middle)) / 2 : sorted.get(middle);
-        return round(result);
     }
 
     private double round(double value) {

@@ -253,7 +253,6 @@ public class ComparacionCompetenciasService {
     }
 
     private static double redondear(double valor, int decimales) {
-        double factor = Math.pow(10, decimales);
-        return Math.round(valor * factor) / factor;
+        return DescriptiveStatistics.round(valor, decimales);
     }
 }

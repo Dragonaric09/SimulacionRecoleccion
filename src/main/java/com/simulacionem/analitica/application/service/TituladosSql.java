@@ -128,6 +128,7 @@ public class TituladosSql {
             return jdbc.queryForObject(sql, params, (rs, row) -> new FieldSummary(field, true, rs.getLong("valid_count"),
                     Map.of(), number(rs.getObject("average")), number(rs.getObject("median")), number(rs.getObject("deviation"))));
         }
+        String excludedLabels = AnalysisRules.excludedLabelsSql();
         String sql = """
                 SELECT value, count(*) AS n
                 FROM (
@@ -136,7 +137,8 @@ public class TituladosSql {
                     WHERE s.dataset_id = :datasetId AND s.response_status = 'VALIDA'""" + responseScope + """
                 ) values
                 WHERE value IS NOT NULL
-                  AND lower(value) NOT IN ('no sabe', 'no observado', 'no observada')
+                  AND lower(value) NOT IN (""" + excludedLabels + """
+)
                 GROUP BY value ORDER BY value
                 """;
         Map<String, Long> counts = new LinkedHashMap<>();
@@ -196,7 +198,8 @@ public class TituladosSql {
             total += rowTotal;
             Map<String, Double> rowPercentages = new LinkedHashMap<>();
             for (String column : columns) {
-                rowPercentages.put(column, rowTotal == 0 ? 0 : Math.round(counts.getOrDefault(column, 0L) * 10_000.0 / rowTotal) / 100.0);
+                rowPercentages.put(column,
+                        DescriptiveStatistics.percentageOrZero(counts.getOrDefault(column, 0L), rowTotal, 2));
             }
             percentages.put(row, rowPercentages);
         }
