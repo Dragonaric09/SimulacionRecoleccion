@@ -54,6 +54,6 @@ export type EmploymentProfile = {
 
 export type CohortChartPoint = {
   graduationYear: number;
+  yearsSinceGraduation: number;
   professionalYears: number;
-  isOutlier: boolean;
 };

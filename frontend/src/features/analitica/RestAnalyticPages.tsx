@@ -102,11 +102,11 @@ function CohortTooltip({
         datum={{
           kind: 'scatter',
           label: 'Titulado',
-          xLabel: 'Año de titulación',
-          xValue: point.graduationYear,
-          yLabel: 'Años de vida profesional',
+          xLabel: 'Años desde titulación',
+          xValue: point.yearsSinceGraduation,
+          yLabel: 'Años de experiencia profesional',
           yValue: point.professionalYears,
-          note: point.isOutlier ? 'Valor atípico' : undefined,
+          note: `Año de titulación: ${point.graduationYear}`,
         }}
       />
     </div>
@@ -584,44 +584,34 @@ function CohortScatterCard({
   summary: AnalyticsSummary
   className?: string
 }) {
-  const years = points.map((point) => point.graduationYear)
-  const values = points.map((point) => point.professionalYears)
-  const mean = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0
-  const sorted = [...values].sort((a, b) => a - b)
-  const median = sorted.length
-    ? sorted.length % 2
-      ? sorted[(sorted.length - 1) / 2]
-      : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
-    : 0
-  const standardDeviation =
-    values.length > 1
-      ? Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1))
-      : 0
-  const yearMin = years.length ? Math.min(...years) : 0
-  const yearMax = years.length ? Math.max(...years) : 1
-  // No mostramos un tick por año cuando la cohorte abarca muchos años:
-  // evita que las etiquetas se encimen en el contenedor web y en el PDF.
-  const yearSpan = Math.max(1, yearMax - yearMin + 1)
-  const yearTickStep = Math.max(1, Math.ceil(yearSpan / 8))
-  const yearTicks = Array.from(
-    { length: Math.floor((yearMax - yearMin) / yearTickStep) + 1 },
-    (_, index) => yearMin + index * yearTickStep,
+  const currentYear = new Date().getFullYear()
+  const chartData: CohortChartPoint[] = points
+    .map((point) => ({
+      graduationYear: point.graduationYear,
+      yearsSinceGraduation: Math.max(0, currentYear - point.graduationYear),
+      professionalYears: point.professionalYears,
+    }))
+    .filter(
+      (point) =>
+        Number.isFinite(point.yearsSinceGraduation) && Number.isFinite(point.professionalYears),
+    )
+  const elapsedYears = chartData.map((point) => point.yearsSinceGraduation)
+  const values = chartData.map((point) => point.professionalYears)
+  const axisMax = Math.max(1, Math.ceil(Math.max(...elapsedYears, ...values, 0)))
+  // Limitamos las marcas para que sigan siendo legibles tanto en el tablero como en el PDF.
+  const tickStep = Math.max(1, Math.ceil(axisMax / 8))
+  const elapsedTicks = Array.from(
+    { length: Math.floor(axisMax / tickStep) + 1 },
+    (_, index) => index * tickStep,
   )
-  if (yearTicks[yearTicks.length - 1] !== yearMax) yearTicks.push(yearMax)
-  const sameReferenceValue = Math.abs(mean - median) < 0.0001
-  const chartData: CohortChartPoint[] = points.map((point) => ({
-    graduationYear: point.graduationYear,
-    professionalYears: point.professionalYears,
-    isOutlier: point.professionalYears > mean + standardDeviation,
-  }))
-  const outlierPoints = chartData.filter((point) => point.isOutlier)
+  if (elapsedTicks[elapsedTicks.length - 1] !== axisMax) elapsedTicks.push(axisMax)
   const [variant, setVariant] = useChartVariant('titulados-employment-cohort', 'scatter', [
     'scatter',
     'table',
   ] as const)
   const chartConfig = {
     professionalYears: {
-      label: 'Años de vida profesional',
+      label: 'Años de experiencia profesional',
       color: '#1f6fb5',
     },
   }
@@ -633,15 +623,15 @@ function CohortScatterCard({
       <CartesianGrid stroke="#dbe4ee" strokeDasharray="2 4" />
       <XAxis
         type="number"
-        dataKey="graduationYear"
-        domain={[yearMin - 0.5, yearMax + 0.5]}
-        ticks={yearTicks}
+        dataKey="yearsSinceGraduation"
+        domain={[0, axisMax]}
+        ticks={elapsedTicks}
         interval={0}
         tick={{ fill: '#0f172a', fontSize: 11 }}
         tickMargin={8}
         allowDecimals={false}
         label={{
-          value: 'Año de titulación',
+          value: 'Años desde titulación',
           position: 'insideBottom',
           offset: -18,
           fill: '#475569',
@@ -651,68 +641,44 @@ function CohortScatterCard({
       <YAxis
         type="number"
         dataKey="professionalYears"
-        domain={[0, Math.max(1, Math.ceil(Math.max(...values, 0)))]}
+        domain={[0, axisMax]}
         tick={{ fill: '#64748b', fontSize: 10 }}
         width={fixed ? 44 : 28}
         allowDecimals={false}
         label={{
-          value: 'Años de vida profesional',
+          value: 'Años de experiencia profesional',
           angle: -90,
           position: 'insideLeft',
           fill: '#475569',
           fontSize: 11,
         }}
       />
-      {sameReferenceValue ? (
-        <ReferenceLine
-          y={mean}
-          stroke="#7c3aed"
-          strokeDasharray="5 4"
-          label={{
-            value: `Media = mediana: ${formatDecimal(mean, 1)} años`,
-            fill: '#6d28d9',
-            fontSize: 11,
-            position: 'insideTopLeft',
-          }}
-        />
-      ) : (
-        <>
-          <ReferenceLine
-            y={mean}
-            stroke="#ef4444"
-            strokeDasharray="5 4"
-            label={{
-              value: `Media ${formatDecimal(mean, 1)} años`,
-              fill: '#ef4444',
-              fontSize: 11,
-              position: 'insideTopLeft',
-            }}
-          />
-          <ReferenceLine
-            y={median}
-            stroke="#14a39a"
-            strokeDasharray="3 4"
-            label={{
-              value: `Mediana ${formatDecimal(median, 1)} años`,
-              fill: '#0f766e',
-              fontSize: 11,
-              position: 'insideBottomRight',
-            }}
-          />
-        </>
-      )}
+      <ReferenceLine
+        segment={[
+          { x: 0, y: 0 },
+          { x: axisMax, y: axisMax },
+        ]}
+        stroke="#64748b"
+        strokeDasharray="5 4"
+        label={{
+          value: 'Experiencia = antigüedad',
+          fill: '#475569',
+          fontSize: 10,
+          position: 'insideTopLeft',
+        }}
+      />
       <Scatter
         name="Titulado individual"
         data={chartData}
         dataKey="professionalYears"
         fill="#1f6fb5"
         line={false}
-        shape={(props: { cx?: number; cy?: number; payload?: { isOutlier?: boolean } }) => (
+        shape={(props: { cx?: number; cy?: number }) => (
           <circle
             cx={props.cx}
             cy={props.cy}
-            r={props.payload?.isOutlier ? 4.5 : 4}
-            fill={props.payload?.isOutlier ? '#dc2626' : '#1f6fb5'}
+            r={4}
+            fill="#1f6fb5"
             stroke="#ffffff"
             strokeWidth={1.5}
           />
@@ -727,9 +693,12 @@ function CohortScatterCard({
       <CardHeader className="cohort-card-header">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle className="title-card">Años de vida profesional por cohorte</CardTitle>
+            <CardTitle className="title-card">
+              Experiencia profesional frente a antigüedad desde titulación
+            </CardTitle>
             <CardDescription>
-              Experiencia profesional según año de titulación · n = {points.length}
+              Compara años declarados de experiencia con el tiempo transcurrido desde el egreso · n
+              = {chartData.length}
             </CardDescription>
           </div>
           <div className="flex shrink-0 items-center gap-1">
@@ -740,16 +709,16 @@ function CohortScatterCard({
               onChange={setVariant}
             />
             <ChartCardActions
-              title="Años de vida profesional por cohorte"
-              help="Cada punto representa un titulado: su posición horizontal es el año de titulación y la vertical, los años de vida profesional. Las líneas marcan media y mediana; los puntos rojos superan una desviación estándar sobre la media."
+              title="Experiencia profesional frente a antigüedad desde titulación"
+              help="Cada punto representa a una persona titulada. El eje horizontal indica los años transcurridos desde su titulación y el vertical, los años de experiencia profesional declarada. La diagonal gris es una referencia de igualdad entre ambas medidas: los puntos por debajo muestran menos años declarados que los transcurridos; no identifica la causa ni clasifica valores atípicos."
               onExportCsv={() =>
                 downloadAnalyticsCsv(
-                  'vida-profesional-por-cohorte',
-                  ['Año de titulación', 'Años de vida profesional', 'Valor atípico'],
+                  'experiencia-frente-a-antiguedad-desde-titulacion',
+                  ['Año de titulación', 'Años desde titulación', 'Años de experiencia profesional'],
                   chartData.map((point) => [
                     point.graduationYear,
+                    point.yearsSinceGraduation,
                     point.professionalYears,
-                    point.isOutlier ? 'Sí' : 'No',
                   ]),
                 )
               }
@@ -760,9 +729,9 @@ function CohortScatterCard({
       <CardContent>
         <div className="mb-4 grid grid-cols-3 divide-x divide-border-line rounded-lg border border-border-line bg-slate-50 py-3">
           {[
-            ['Media', summary.numericAverages.anios_vida_profesional],
-            ['Mediana', summary.numericMedians.anios_vida_profesional],
-            ['Desviación estándar', summary.numericStandardDeviations.anios_vida_profesional],
+            ['Media declarada', summary.numericAverages.anios_vida_profesional],
+            ['Mediana declarada', summary.numericMedians.anios_vida_profesional],
+            ['Dispersión declarada', summary.numericStandardDeviations.anios_vida_profesional],
           ].map(([label, value]) => (
             <div key={label} className="px-3 text-center">
               <p className="text-xs text-ink-600">{label}</p>
@@ -773,7 +742,7 @@ function CohortScatterCard({
             </div>
           ))}
         </div>
-        {points.length ? (
+        {chartData.length ? (
           <>
             {variant === 'table' ? (
               <div className="overflow-x-auto rounded-lg border border-border-line bg-slate-50 p-2">
@@ -781,8 +750,8 @@ function CohortScatterCard({
                   <thead>
                     <tr className="border-b border-border-line text-left text-xs text-ink-600">
                       <th className="p-2">Año de titulación</th>
-                      <th className="p-2 text-right">Años de vida profesional</th>
-                      <th className="p-2">Clasificación</th>
+                      <th className="p-2 text-right">Años desde titulación</th>
+                      <th className="p-2 text-right">Experiencia profesional</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -793,9 +762,11 @@ function CohortScatterCard({
                       >
                         <td className="p-2 tabular-nums">{point.graduationYear}</td>
                         <td className="p-2 text-right tabular-nums">
+                          {formatDecimal(point.yearsSinceGraduation, 1)} años
+                        </td>
+                        <td className="p-2 text-right tabular-nums">
                           {formatDecimal(point.professionalYears, 1)} años
                         </td>
-                        <td className="p-2">{point.isOutlier ? 'Valor atípico' : 'Observación'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -823,37 +794,19 @@ function CohortScatterCard({
                   <i className="mr-1 inline-block size-2 rounded-full bg-titulados" />
                   Titulado individual
                 </span>
-                {outlierPoints.length > 0 && (
-                  <span>
-                    <i className="mr-1 inline-block size-2 rounded-full bg-red-600" />
-                    Valor atípico
-                  </span>
-                )}
-                {sameReferenceValue ? (
-                  <span>
-                    <i className="mr-1 inline-block w-4 border-t-2 border-dashed border-violet-600" />
-                    Media = mediana: {formatDecimal(mean, 1)} años
-                  </span>
-                ) : (
-                  <>
-                    <span>
-                      <i className="mr-1 inline-block w-4 border-t-2 border-dashed border-red-500" />
-                      Media
-                    </span>
-                    <span>
-                      <i className="mr-1 inline-block w-4 border-t-2 border-dashed border-teal-600" />
-                      Mediana
-                    </span>
-                  </>
-                )}
+                <span>
+                  <i className="mr-1 inline-block w-4 border-t-2 border-dashed border-slate-500" />
+                  Experiencia igual a antigüedad desde titulación
+                </span>
               </div>
             )}
             {variant === 'scatter' && (
               <div className="cohort-print-values" aria-label="Valores del gráfico por titulado">
-                {points.map((point, index) => (
+                {chartData.map((point, index) => (
                   <span key={`${point.graduationYear}-${point.professionalYears}-${index}`}>
-                    {point.graduationYear}: {point.professionalYears} años
-                    {chartData[index]?.isOutlier ? ' · atípico' : ''}
+                    Titulación {point.graduationYear}:{' '}
+                    {formatDecimal(point.yearsSinceGraduation, 1)} desde titulación ·{' '}
+                    {formatDecimal(point.professionalYears, 1)} de experiencia
                   </span>
                 ))}
               </div>
@@ -883,15 +836,15 @@ function SenioritySegmentationCard({
   return (
     <Card className={`h-fit rounded-xl border border-border-line shadow-sm ${className}`}>
       <CardHeader>
-        <CardTitle className="title-card">Segmentación de titulados por antigüedad</CardTitle>
+        <CardTitle className="title-card">Segmentación por experiencia declarada</CardTitle>
         <CardDescription>
-          Clasificación según años de ejercicio profesional posterior al egreso
+          Clasificación según los años de experiencia profesional declarados
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="print-hide rounded-lg border border-border-line bg-slate-50 p-3">
           <div className="flex items-center justify-between text-sm font-semibold">
-            <span>Umbral de corte experiencia</span>
+            <span>Umbral de experiencia</span>
             <span className="rounded bg-white px-2 py-1 text-titulados">{threshold} años</span>
           </div>
           <Slider
