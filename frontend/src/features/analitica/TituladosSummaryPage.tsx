@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/analytics/Badge'
 import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { KpiCard } from '@/components/analytics/KpiCard'
-import { VisualizationDataTooltip } from '@/components/analytics/ChartCard'
+import { ChartCardActions, VisualizationDataTooltip } from '@/components/analytics/ChartCard'
 import { formatDistributionTooltip } from '@/components/analytics/visualizationTooltip'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { Empty, EmptyTitle } from '@/components/ui/empty'
@@ -428,7 +428,13 @@ function EmploymentSummaryCard({
             <CardTitle className="title-card">Situación laboral</CardTitle>
             <CardDescription>Distribución de la muestra · n = {total}</CardDescription>
           </div>
-          <SummaryDetailLink href="/titulados/perfil-empleabilidad" />
+          <div className="flex shrink-0 items-center gap-1">
+            <SummaryDetailLink href="/titulados/perfil-empleabilidad" />
+            <ChartCardActions
+              title="Situación laboral"
+              help="Distribución de titulados entre organización, emprendimiento y situación sin empleo."
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -488,7 +494,13 @@ function SenioritySummaryCard({ points }: { points: EmploymentProfile['cohortPoi
             <CardTitle className="title-card">Titulados por antigüedad</CardTitle>
             <CardDescription>Tramos desde la titulación · n = {base}</CardDescription>
           </div>
-          <SummaryDetailLink href="/titulados/perfil-empleabilidad" />
+          <div className="flex shrink-0 items-center gap-1">
+            <SummaryDetailLink href="/titulados/perfil-empleabilidad" />
+            <ChartCardActions
+              title="Titulados por antigüedad"
+              help="Cantidad de titulados agrupada por el tiempo transcurrido desde su titulación."
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -541,7 +553,13 @@ function CompetenceSummaryCard({ items }: { items: Competence[] }) {
               Menor promedio observado · n = {rows[0]?.validCount ?? 0}
             </CardDescription>
           </div>
-          <SummaryDetailLink href="/titulados/brechas-competencias" />
+          <div className="flex shrink-0 items-center gap-1">
+            <SummaryDetailLink href="/titulados/brechas-competencias" />
+            <ChartCardActions
+              title="Competencias con mayor brecha"
+              help="Tres competencias con las medias observadas más bajas en la escala de 1 a 5."
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -595,7 +613,13 @@ function SatisfactionSummaryCard({ distribution }: { distribution?: CategoryDist
             <CardTitle className="title-card">Satisfacción con la formación</CardTitle>
             <CardDescription>Escala de satisfacción (3 niveles) · n = {total}</CardDescription>
           </div>
-          <SummaryDetailLink href="/titulados/brechas-competencias" />
+          <div className="flex shrink-0 items-center gap-1">
+            <SummaryDetailLink href="/titulados/brechas-competencias" />
+            <ChartCardActions
+              title="Satisfacción con la formación"
+              help="Distribución de la satisfacción declarada con la formación recibida."
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -665,7 +689,13 @@ function PostgraduateCard({ distribution }: { distribution?: CategoryDistributio
               {distribution?.validCount ?? 0}
             </CardDescription>
           </div>
-          <Badge tone="neutral">Multirrespuesta</Badge>
+          <div className="flex shrink-0 items-center gap-1">
+            <Badge tone="neutral">Multirrespuesta</Badge>
+            <ChartCardActions
+              title="Áreas de posgrado de interés"
+              help="Áreas de especialización seleccionadas por titulados interesados en formación posterior. Una persona puede seleccionar varias áreas."
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>

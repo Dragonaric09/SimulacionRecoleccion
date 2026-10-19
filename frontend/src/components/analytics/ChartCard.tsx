@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type MouseEvent, type ReactNode } from 'react'
 import { Download, ImageDown, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,6 +10,7 @@ import {
   formatTooltipPercent,
   type VisualizationTooltipDatum,
 } from './visualizationTooltip'
+import { chartDownloadFormat, downloadChartPng } from './chartDownload'
 
 /**
  * Tarjeta de gráfico: título descriptivo, «n = X» (personas que respondieron esa pregunta),
@@ -76,49 +77,90 @@ export function ChartCardActions({
   onExportCsv?: () => void
   onExportChart?: () => void
 }) {
+  const [downloading, setDownloading] = useState(false)
   if (!help && !onExportCsv && !onExportChart) return null
+  const handlePrimaryDownload = async (event: MouseEvent<HTMLButtonElement>) => {
+    if (chartDownloadFormat === 'csv') {
+      onExportCsv?.()
+      return
+    }
+
+    if (onExportChart) {
+      onExportChart()
+      return
+    }
+
+    const card = event.currentTarget.closest<HTMLElement>('[data-slot="card"]')
+    if (!card) return
+    setDownloading(true)
+    try {
+      await downloadChartPng(card, title)
+    } catch (cause) {
+      console.error(`No se pudo descargar el PNG de «${title}».`, cause)
+      window.alert('No se pudo preparar el PNG. Revise la consola del navegador para más detalles.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+  const hasPrimaryDownload =
+    chartDownloadFormat === 'csv'
+      ? Boolean(onExportCsv)
+      : Boolean(help || onExportCsv || onExportChart)
   return (
     <TooltipProvider>
-      {help && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label={`Cómo interpretar: ${title}`}>
-              <Info />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs text-left">{help}</TooltipContent>
-        </Tooltip>
-      )}
-      {onExportCsv && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Descargar datos CSV: ${title}`}
-              onClick={onExportCsv}
-            >
-              <Download />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Descargar los datos de esta visualización (CSV)</TooltipContent>
-        </Tooltip>
-      )}
-      {onExportChart && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Descargar visualización actual: ${title}`}
-              onClick={onExportChart}
-            >
-              <ImageDown />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Descargar la visualización actual (PNG)</TooltipContent>
-        </Tooltip>
-      )}
+      <div className="flex shrink-0 items-center gap-0.5" data-chart-export-exclude>
+        {help && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Cómo interpretar: ${title}`}
+              >
+                <Info />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-left">{help}</TooltipContent>
+          </Tooltip>
+        )}
+        {hasPrimaryDownload && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Descargar ${
+                  chartDownloadFormat === 'png' ? 'visualización PNG' : 'datos CSV'
+                }: ${title}`}
+                onClick={(event) => void handlePrimaryDownload(event)}
+                disabled={downloading}
+              >
+                <Download />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {chartDownloadFormat === 'png'
+                ? 'Descargar la visualización actual (PNG)'
+                : 'Descargar los datos de esta visualización (CSV)'}
+            </TooltipContent>
+          </Tooltip>
+        )}
+        {onExportChart && chartDownloadFormat === 'csv' && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Descargar visualización actual: ${title}`}
+                onClick={onExportChart}
+              >
+                <ImageDown />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Descargar la visualización actual (PNG)</TooltipContent>
+          </Tooltip>
+        )}
+      </div>
     </TooltipProvider>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '@/api/client'
 import { AssociationMatrix } from '@/components/analytics/charts'
+import { ChartCardActions } from '@/components/analytics/ChartCard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AssociationBadge } from '@/features/empleadores/valuation/AssociationTest'
 import type {
@@ -8,6 +9,7 @@ import type {
   EmployerVariable,
 } from '@/features/empleadores/valuation/valuationTypes'
 import type { Cross } from './analyticsTypes'
+import { downloadAnalyticsCsv } from './analyticsExport'
 
 type TituladosCross = {
   cross: Cross
@@ -58,8 +60,19 @@ export function TituladosCrossMatrix({
   return (
     <Card className="rounded-xl border border-border-line shadow-sm">
       <CardHeader>
-        <CardTitle className="title-card">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <CardTitle className="title-card">{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+          {result && (
+            <ChartCardActions
+              title={title}
+              help={description}
+              onExportCsv={() => exportCrossMatrixCsv(title, result)}
+            />
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {result ? (
@@ -84,6 +97,26 @@ export function TituladosCrossMatrix({
         )}
       </CardContent>
     </Card>
+  )
+}
+
+function exportCrossMatrixCsv(title: string, result: TituladosCross) {
+  const { cross } = result
+  downloadAnalyticsCsv(
+    title,
+    [result.row.label, ...cross.columnCategories, 'Total fila'],
+    cross.rowCategories.map((row) => {
+      const total = rowTotal(cross, row)
+      return [
+        row,
+        ...cross.columnCategories.map((column) => {
+          const count = cross.counts[row]?.[column] ?? 0
+          const percent = total ? (count * 100) / total : 0
+          return `${count} (${percent.toFixed(1).replace('.', ',')} %)`
+        }),
+        total,
+      ]
+    }),
   )
 }
 

@@ -96,7 +96,12 @@ function FormulaPopover() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label="Ver fórmulas estadísticas">
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label="Ver fórmulas estadísticas"
+          data-chart-export-exclude
+        >
           Σ Ver fórmulas estadísticas
         </Button>
       </PopoverTrigger>

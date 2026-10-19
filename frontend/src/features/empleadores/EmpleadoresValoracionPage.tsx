@@ -155,6 +155,55 @@ export function ValuationContent({
       ),
     ])
   }
+  const exportDimensions = () => {
+    downloadCsv('empleadores-valoracion-dimensiones.csv', [
+      [
+        'Dimensión',
+        'Afirmaciones',
+        'Respuestas válidas',
+        'Puntaje 0-100',
+        'Totalmente de acuerdo (%)',
+        'Parcialmente de acuerdo (%)',
+        'Totalmente desacuerdo (%)',
+        'No sabe (%)',
+      ],
+      ...dimensions.map((dimension) => [
+        dimension.label,
+        dimension.itemKeys.length,
+        dimension.respondents,
+        dimension.score ?? '',
+        dimension.fullAgreementShare ?? '',
+        dimension.partialShare ?? '',
+        dimension.disagreementShare ?? '',
+        dimension.unknownShare ?? '',
+      ]),
+    ])
+  }
+  const exportKnowledge = () => {
+    const { categories, counts } = data.knowledge
+    downloadCsv('empleadores-valoracion-perfil-y-desempeno.csv', [
+      ['Conoce el perfil / Perfil coherente', ...categories, 'Total'],
+      ...categories.map((category, rowIndex) => {
+        const values = counts[rowIndex] ?? []
+        return [category, ...values, values.reduce((sum, value) => sum + value, 0)]
+      }),
+    ])
+  }
+  const exportCorrelations = () => {
+    const { labels, rho, pValues, n: sampleSizes } = data.correlations
+    downloadCsv('empleadores-valoracion-correlaciones.csv', [
+      ['Dimensión', 'Dimensión comparada', 'ρ de Spearman', 'p-valor', 'n'],
+      ...labels.flatMap((rowLabel, rowIndex) =>
+        labels.slice(0, rowIndex).map((columnLabel, columnIndex) => [
+          rowLabel,
+          columnLabel,
+          rho[rowIndex]?.[columnIndex] ?? '',
+          pValues[rowIndex]?.[columnIndex] ?? '',
+          sampleSizes[rowIndex]?.[columnIndex] ?? '',
+        ]),
+      ),
+    ])
+  }
 
   return (
     <div className="valuation-content space-y-6">
@@ -198,6 +247,7 @@ export function ValuationContent({
         title="Puntaje por dimensión"
         n={n}
         help="Cada dimensión agrupa afirmaciones del formulario que miden lo mismo. Puntaje 0–100: Totalmente de acuerdo = 100, Parcialmente = 50, Totalmente desacuerdo = 0. «No sabe» no entra en el puntaje."
+        onExportCsv={print ? undefined : exportDimensions}
       >
         <div className="space-y-4">
           <DimensionScorecards dimensions={dimensions} />
@@ -251,6 +301,7 @@ export function ValuationContent({
           title="Conocimiento del perfil de egreso frente a su coherencia con el desempeño"
           n={data.knowledge.counts.flat().reduce((sum, value) => sum + value, 0)}
           help="Filas: «Conozco el perfil profesional y las competencias de egreso». Columnas: «El perfil declarado es coherente con el desempeño demostrado». Ambas son ordinales: se usa ρ de Spearman."
+          onExportCsv={print ? undefined : exportKnowledge}
         >
           <KnowledgeMatrixView knowledge={data.knowledge} />
         </ChartCard>
@@ -258,6 +309,7 @@ export function ValuationContent({
           title="Relación entre dimensiones"
           n={n}
           help="ρ de Spearman entre los puntajes de dimensión de cada organización (solo organizaciones con ambas dimensiones respondidas). Pase el cursor por una celda para ver n y p."
+          onExportCsv={print ? undefined : exportCorrelations}
         >
           <CorrelationMatrix correlations={data.correlations} />
         </ChartCard>

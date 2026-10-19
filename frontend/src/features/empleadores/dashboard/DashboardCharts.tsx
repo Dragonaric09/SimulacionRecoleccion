@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import {
   ChartContainer,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -243,7 +244,7 @@ export function BalanceBars({
   const config = {
     partly: { label: 'Parcialmente de acuerdo', color: AGREEMENT.partly },
     agree: { label: 'Totalmente de acuerdo', color: AGREEMENT.agree },
-    disagree: { label: 'Totalmente desacuerdo', color: AGREEMENT.disagree },
+    disagree: { label: 'Totalmente en desacuerdo', color: AGREEMENT.disagree },
   } satisfies ChartConfig
   return (
     <ChartContainer config={config} className="w-full" style={{ height: rows.length * 34 + 56 }}>
@@ -286,8 +287,7 @@ export function BalanceBars({
         <Legend
           verticalAlign="top"
           height={32}
-          iconType="square"
-          formatter={(value) => <span className="text-xs text-ink-600">{String(value)}</span>}
+          content={<ChartLegendContent />}
         />
         <Bar dataKey="partly" stackId="balance" fill={AGREEMENT.partly} barSize={16} />
         <Bar
@@ -418,8 +418,7 @@ export function HiringMatrixBars({
         <Legend
           verticalAlign="top"
           height={32}
-          iconType="square"
-          formatter={(value) => <span className="text-xs text-ink-600">{String(value)}</span>}
+          content={<ChartLegendContent />}
         />
         <Bar dataKey="yes" stackId="hiring" fill={EMPLOYER} barSize={20} />
         <Bar dataKey="no" stackId="hiring" fill={AGREEMENT.partly} barSize={20} />
@@ -517,8 +516,7 @@ export function GroupBalanceBars({
         <Legend
           verticalAlign="top"
           height={28}
-          iconType="square"
-          formatter={(value) => <span className="text-xs text-ink-600">{String(value)}</span>}
+          content={<ChartLegendContent />}
         />
         <Bar dataKey="yes" fill={EMPLOYER} radius={[4, 4, 0, 0]} maxBarSize={48} />
         <Bar dataKey="no" fill={NEUTRAL} radius={[4, 4, 0, 0]} maxBarSize={48} />

@@ -3,6 +3,7 @@ import type { Competence, Tone } from '../shared/analyticsTypes'
 import { formatDecimal } from '../shared/analyticsFormatters'
 import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
+import { ChartCardActions } from '@/components/analytics/ChartCard'
 import { AssociationMatrix } from '@/components/analytics/charts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BarChart3, ListChecks, TrendingDown, TrendingUp } from 'lucide-react'
@@ -57,13 +58,21 @@ function CurriculumAnalysis({ summary }: { summary: AnalyticsSummary }) {
       </div>
       <Card className="rounded-xl border border-border-line shadow-sm">
         <CardHeader>
-          <CardTitle className="title-card">
-            Asignaturas: ventaja competitiva y actualización
-          </CardTitle>
-          <CardDescription>
-            La matriz reemplaza dos listados de barras: permite contrastar cada asignatura en ambas
-            preguntas sin interpretar las selecciones como categorías excluyentes.
-          </CardDescription>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle className="title-card">
+                Asignaturas: ventaja competitiva y actualización
+              </CardTitle>
+              <CardDescription>
+                La matriz reemplaza dos listados de barras: permite contrastar cada asignatura en ambas
+                preguntas sin interpretar las selecciones como categorías excluyentes.
+              </CardDescription>
+            </div>
+            <ChartCardActions
+              title="Asignaturas: ventaja competitiva y actualización"
+              help="Cada fila es una asignatura. Las dos columnas muestran el porcentaje de titulados que la marcó como ventaja competitiva o como poco útil/desactualizada; como son preguntas multirrespuesta, los porcentajes se calculan por separado y no suman 100 %."
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <AssociationMatrix
@@ -147,10 +156,18 @@ function CurriculumSignal({
   return (
     <Card className="rounded-xl border border-border-line shadow-sm">
       <CardHeader className="pb-3">
-        <CardTitle className="title-card">{title}</CardTitle>
-        <CardDescription>
-          Top 3 menciones · opción múltiple · n = {distribution?.validCount ?? 0}
-        </CardDescription>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <CardTitle className="title-card">{title}</CardTitle>
+            <CardDescription>
+              Top 3 menciones · opción múltiple · n = {distribution?.validCount ?? 0}
+            </CardDescription>
+          </div>
+          <ChartCardActions
+            title={title}
+            help="Tres opciones más mencionadas. Es una pregunta multirrespuesta: cada porcentaje se calcula sobre las respuestas válidas y las opciones no son excluyentes."
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <ol className="space-y-3">

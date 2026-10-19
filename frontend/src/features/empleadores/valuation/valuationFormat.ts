@@ -17,4 +17,4 @@ export function scoreColor(score: number | null) {
   return score === null ? '#F8FAFC' : likertColor(1 + score / 25)
 }
 
-export const AGREEMENT_SHORT = { disagree: 'Totalmente desacuerdo', partial: 'Parcialmente de acuerdo', full: 'Totalmente de acuerdo' }
+export const AGREEMENT_SHORT = { disagree: 'Totalmente en desacuerdo', partial: 'Parcialmente de acuerdo', full: 'Totalmente de acuerdo' }
