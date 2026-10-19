@@ -1539,6 +1539,7 @@ export function CompetencePage({
                 items={visibleItems}
                 group={groupLabel(activeGroup)}
                 storageKey={`simulacionem.chartVariant.titulados.competence.${activeGroup}`}
+                layout="dashboard"
                 help="Cada celda muestra el número de respuestas de una competencia en un nivel de suficiencia. Una tonalidad más intensa indica una frecuencia mayor en esa celda."
                 onExportCsv={() =>
                   downloadAnalyticsCsv(

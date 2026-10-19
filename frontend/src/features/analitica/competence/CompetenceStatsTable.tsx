@@ -17,11 +17,13 @@ export function CompetenceStatsTable({
   items,
   group,
   actions,
+  className = '',
   theme = 'titulados',
 }: {
   items: Competence[]
   group: string
   actions?: ReactNode
+  className?: string
   theme?: 'titulados' | 'empleadores'
 }) {
   const globalAverage = items.length
@@ -30,6 +32,7 @@ export function CompetenceStatsTable({
   const averageClass = theme === 'empleadores' ? 'text-[#14A39A]' : 'text-titulados'
   return (
     <AnalyticsTableCard
+      className={className}
       title={`Estadísticos por competencia ${groupLabel(group).toLowerCase()}`}
       description={`Ordenados descendentemente por media · ${groupLabel(group)} · n = ${items[0]?.validCount ?? 0}`}
       actions={

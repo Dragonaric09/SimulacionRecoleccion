@@ -12,6 +12,7 @@ export function CompetenceQuestionChart({
   group,
   storageKey,
   showSelector = true,
+  layout = 'switcher',
   theme = 'titulados',
   variants: allowedVariants,
   onExportCsv,
@@ -21,6 +22,7 @@ export function CompetenceQuestionChart({
   group: string
   storageKey?: string
   showSelector?: boolean
+  layout?: 'switcher' | 'dashboard'
   theme?: 'titulados' | 'empleadores'
   variants?: CompetenceChartVariant[]
   onExportCsv?: () => void
@@ -50,6 +52,50 @@ export function CompetenceQuestionChart({
       <ChartCardActions title={`Competencias: ${group}`} help={help} onExportCsv={onExportCsv} />
     </div>
   )
+  if (layout === 'dashboard') {
+    return (
+      <div className="space-y-6">
+        <CompetenceMatrix
+          items={items}
+          className="w-full"
+          actions={
+            <ChartCardActions
+              title={`Competencias: ${group}`}
+              help={help}
+              onExportCsv={onExportCsv}
+            />
+          }
+          theme={theme}
+          showNotObserved={theme === 'empleadores'}
+        />
+        <div className="grid items-start gap-6 lg:grid-cols-12">
+          <CompetenceStatsTable
+            items={items}
+            group={group}
+            className="lg:col-span-7"
+            theme={theme}
+            actions={
+              <ChartCardActions
+                title={`Estadísticos por competencia: ${group}`}
+                help="La tabla presenta la media, mediana y dispersión de cada competencia sobre las respuestas válidas. Sirve para contrastar valores exactos que el radar resume visualmente."
+              />
+            }
+          />
+          <CompetenceRadar
+            items={items}
+            className="lg:col-span-5"
+            actions={
+              <ChartCardActions
+                title={`Perfil de medias: ${group}`}
+                help="Cada eje representa una competencia y su distancia al centro indica la media observada en la escala de 1 a 5. El radar permite comparar el perfil relativo entre competencias; no representa frecuencias ni una prueba estadística."
+              />
+            }
+            color={theme === 'empleadores' ? '#14A39A' : '#1f6fb5'}
+          />
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="chart-variant-root">
       <div className="chart-variant-stage chart-variant-stage-full">

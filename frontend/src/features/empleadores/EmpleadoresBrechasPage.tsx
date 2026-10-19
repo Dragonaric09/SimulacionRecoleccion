@@ -175,6 +175,7 @@ export function EmpleadoresBrechasPage() {
                   group={group.label}
                   storageKey={`simulacionem.chartVariant.empleadores.competence.${group.key}`}
                   theme="empleadores"
+                  layout="dashboard"
                   variants={['heatmap', 'radar', 'table']}
                   onExportCsv={() => exportHeatmap(group.key, rows)}
                   help="Muestra la distribución de suficiencia, el perfil de medias o los estadísticos por competencia. La opción «No observado» se cuenta aparte y no entra en los cálculos de media."
