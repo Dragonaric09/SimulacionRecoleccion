@@ -10,7 +10,7 @@ import { sentenceCaseLabel } from '../shared/analyticsFormatters'
 import { downloadDistributionCsv } from '../shared/analyticsExport'
 import { ChartCardActions, VisualizationDataTooltip } from '@/components/analytics/ChartCard'
 
-type EmploymentDistributionVariant = 'bars' | 'donut' | 'table'
+type EmploymentDistributionVariant = 'bars' | 'columns' | 'donut' | 'table'
 
 function distributionItems(distribution?: CategoryDistribution, order?: string[]) {
   const counts = distribution?.counts ?? {}
@@ -62,15 +62,12 @@ export function EmploymentDistributionVariant({
             <ChartVariantSelector
               value={variant}
               options={variants}
-              labels={{ bars: 'Barras', donut: 'Donut', table: 'Tabla' }}
+              labels={{ bars: 'Barras', columns: 'Columnas', donut: 'Donut', table: 'Tabla' }}
               onChange={setVariant}
             />
             <ChartCardActions
               title={exportTitle ?? (typeof title === 'string' ? title : 'Distribución')}
-              help={
-                help ??
-                'Cada barra corresponde a una categoría y su longitud representa el porcentaje de respuestas válidas (n). El conteo y el porcentaje de esa categoría aparecen al pasar el cursor.'
-              }
+              help={help ?? distributionHelp(variant)}
               onExportCsv={() =>
                 downloadDistributionCsv(
                   exportTitle ?? (typeof title === 'string' ? title : 'distribucion'),
@@ -151,6 +148,7 @@ export function MiniDistribution({
   order,
   storageKey,
   variants = ['bars', 'table'],
+  defaultVariant = 'bars',
   help,
 }: {
   title: string
@@ -160,6 +158,7 @@ export function MiniDistribution({
   order?: string[]
   storageKey?: string
   variants?: EmploymentDistributionVariant[]
+  defaultVariant?: EmploymentDistributionVariant
   help?: string
 }) {
   const accentColor = { blue: '#1f6fb5', teal: '#14a39a', purple: '#8e5bd0', amber: '#f2a33a' }[
@@ -176,6 +175,7 @@ export function MiniDistribution({
         order={order}
         accent={accentColor}
         variants={variants}
+        defaultVariant={defaultVariant}
         storageKey={storageKey}
         help={help}
         exportTitle={title}
@@ -191,6 +191,16 @@ function normalizeLabel(value: string) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function distributionHelp(variant: EmploymentDistributionVariant) {
+  if (variant === 'columns')
+    return 'Cada columna representa una categoría; su altura es el número de respuestas válidas en ella.'
+  if (variant === 'donut')
+    return 'Cada arco representa una categoría; su amplitud es el porcentaje que aporta sobre n.'
+  if (variant === 'table')
+    return 'Cada fila muestra una categoría con su conteo y porcentaje calculado sobre las respuestas válidas (n).'
+  return 'Cada barra corresponde a una categoría y su longitud representa el porcentaje sobre las respuestas válidas (n). El conteo y el porcentaje se muestran junto a la barra.'
 }
 
 export function StackedRelevanceCard({
@@ -235,7 +245,7 @@ export function StackedRelevanceCard({
           />
           <ChartCardActions
             title="Pertinencia de formación para el cargo"
-            help="Cada color representa un nivel de acuerdo y su ancho es el porcentaje sobre n; los cuatro segmentos suman el 100 %. La tabla muestra esas mismas frecuencias por separado."
+            help="Cada color representa un nivel de acuerdo; el ancho del segmento es su porcentaje sobre n y los cuatro segmentos suman el 100 %."
             onExportCsv={() => downloadDistributionCsv('pertinencia-formacion-cargo', items, total)}
           />
         </div>

@@ -16,6 +16,7 @@ export function AssociationMatrix({
   excludedDescription = 'por «No sabe» o sin respuesta',
   unitLabel = 'organizaciones',
   test,
+  footer,
   cellColor = (percent) => `rgba(20, 163, 154, ${0.08 + (percent / 100) * 0.8})`,
 }: {
   rowHeader: ReactNode
@@ -27,7 +28,9 @@ export function AssociationMatrix({
   excludedDescription?: string
   unitLabel?: string
   test?: ReactNode
-  cellColor?: (percent: number) => string
+  /** Reemplaza la nota estándar cuando la matriz no es una contingencia (p. ej. preguntas multirrespuesta). */
+  footer?: ReactNode
+  cellColor?: (percent: number, columnIndex: number) => string
 }) {
   return (
     <div className="space-y-3">
@@ -55,7 +58,7 @@ export function AssociationMatrix({
                     key={`${row.label}-${index}`}
                     className="h-12 rounded-sm text-center tabular-nums"
                     style={{
-                      background: cellColor(cell.percent),
+                      background: cellColor(cell.percent, index),
                       color: cell.percent > 55 ? '#FFFFFF' : '#0F172A',
                     }}
                   >
@@ -71,10 +74,12 @@ export function AssociationMatrix({
           </tbody>
         </table>
       </div>
-      <p className="caption-meta text-ink-500">
-        Porcentaje por fila. n = {total} {unitLabel} con ambas respuestas
-        {excluded !== undefined ? `; ${excluded} ${excludedLabel} ${excludedDescription}.` : '.'}
-      </p>
+      {footer ?? (
+        <p className="caption-meta text-ink-500">
+          Porcentaje por fila. n = {total} {unitLabel} con ambas respuestas
+          {excluded !== undefined ? `; ${excluded} ${excludedLabel} ${excludedDescription}.` : '.'}
+        </p>
+      )}
       {test}
     </div>
   )

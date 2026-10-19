@@ -2,6 +2,7 @@ export { DistributionBars } from './DistributionBars'
 export { RankedBars } from './RankedBars'
 export { MeanBars } from './MeanBars'
 export { DonutChart } from './DonutChart'
+export { OrdinalColumns } from './OrdinalColumns'
 export { LikertStackedBars, type LikertRow, type LikertSegment } from './LikertStackedBars'
 export {
   AgreementLegend,

@@ -137,6 +137,64 @@ class AnalyticsServiceStatisticsTest {
     }
 
     @Test
+    void agrupaVariantesDeAreasDeTrabajoAntesDeContarlas() {
+        UUID datasetId = UUID.randomUUID();
+        DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getId()).thenReturn(datasetId);
+        List<SurveyResponseEntity> rows = List.of(
+                new SurveyResponseEntity(dataset, "TITULADOS", 1, "VALIDA",
+                        Map.of("situacion_laboral_actual", "Trabaja en una organización", "area_trabajo", "TI, Desarrollo")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 2, "VALIDA",
+                        Map.of("situacion_laboral_actual", "Trabaja en una organización", "area_trabajo", "Tecnología, Desarrollo de software")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 3, "VALIDA",
+                        Map.of("situacion_laboral_actual", "Trabaja en una organización", "area_trabajo", "BI, Seguridad informática")));
+        DatasetImportRepository datasets = mock(DatasetImportRepository.class);
+        SurveyResponseRepository responses = mock(SurveyResponseRepository.class);
+        CompetenceRatingRepository ratings = mock(CompetenceRatingRepository.class);
+        when(datasets.findById(datasetId)).thenReturn(Optional.of(dataset));
+        when(responses.findByDataset_IdAndResponseStatus(datasetId, "VALIDA")).thenReturn(rows);
+
+        CategoryDistributionDto distribution = new AnalyticsService(datasets, responses, ratings)
+                .summary(datasetId, "TITULADOS", List.of("area_trabajo"))
+                .distributions().get("area_trabajo");
+
+        assertThat(distribution.counts()).containsEntry("Tecnologías de la información", 2L)
+                .containsEntry("Desarrollo de software", 2L)
+                .containsEntry("Datos y analítica", 1L)
+                .containsEntry("Infraestructura y seguridad", 1L);
+    }
+
+    @Test
+    void interpretaLaValoracionGlobalComoEscalaDeAcuerdoOrdenada() {
+        UUID datasetId = UUID.randomUUID();
+        DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getId()).thenReturn(datasetId);
+        List<SurveyResponseEntity> rows = List.of(
+                new SurveyResponseEntity(dataset, "TITULADOS", 1, "VALIDA",
+                        Map.of("satisfaccion_formacion", "TOTALMENTE EN DESACUERDO")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 2, "VALIDA",
+                        Map.of("satisfaccion_formacion", "En desacuerdo")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 3, "VALIDA",
+                        Map.of("satisfaccion_formacion", "DE ACUERDO")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 4, "VALIDA",
+                        Map.of("satisfaccion_formacion", "Totalmente de acuerdo")));
+        DatasetImportRepository datasets = mock(DatasetImportRepository.class);
+        SurveyResponseRepository responses = mock(SurveyResponseRepository.class);
+        CompetenceRatingRepository ratings = mock(CompetenceRatingRepository.class);
+        when(datasets.findById(datasetId)).thenReturn(Optional.of(dataset));
+        when(responses.findByDataset_IdAndResponseStatus(datasetId, "VALIDA")).thenReturn(rows);
+
+        CategoryDistributionDto distribution = new AnalyticsService(datasets, responses, ratings)
+                .summary(datasetId, "TITULADOS", List.of("satisfaccion_formacion"))
+                .distributions().get("satisfaccion_formacion");
+
+        assertThat(distribution.counts()).containsEntry("Totalmente en desacuerdo", 1L)
+                .containsEntry("En desacuerdo", 1L)
+                .containsEntry("De acuerdo", 1L)
+                .containsEntry("Totalmente de acuerdo", 1L);
+    }
+
+    @Test
     void filtroTodosConservaLasDoceRespuestasValidas() {
         UUID datasetId = UUID.randomUUID();
         DatasetImportEntity dataset = mock(DatasetImportEntity.class);

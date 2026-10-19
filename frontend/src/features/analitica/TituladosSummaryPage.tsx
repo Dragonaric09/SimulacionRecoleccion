@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ArrowRight, BriefcaseBusiness, Clock3, GraduationCap, Target, Users } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/analytics/Badge'
@@ -94,9 +94,12 @@ export function TituladosSummaryPage({ printAll = false }: { printAll?: boolean 
       <div className="flex flex-col justify-between gap-4 pt-1 md:flex-row md:items-end">
         <div className="space-y-2">
           <div className="flex items-center gap-2"></div>
-          <h1 className="headline-page tracking-tight">Resumen general</h1>
+          <p className="caption-bold uppercase tracking-wider text-titulados">
+            Dashboard analítico
+          </p>
+          <h1 className="headline-page tracking-tight">Titulados</h1>
           <p className="max-w-2xl text-sm text-ink-600">
-            Indicadores de inserción laboral, formación e interés de posgrado.
+            Indicadores clave para seguir inserción laboral, trayectoria, formación y competencias.
           </p>
         </div>
       </div>
@@ -127,73 +130,86 @@ export function TituladosSummaryPage({ printAll = false }: { printAll?: boolean 
               description={`Los resultados corresponden a ${summary.validResponses} respuestas válidas y deben leerse junto con sus conteos.`}
             />
           )}
-          <div className="summary-kpi-grid grid items-stretch gap-4 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-6">
-            <KpiCard
-              label="Titulados"
-              value={String(summary.validResponses)}
-              detail={`Titulación ${yearRange.min ?? '—'}–${yearRange.max ?? '—'}`}
-              icon={Users}
-              tone="titulados"
-            />
-            <KpiCard
-              label="Con empleo"
-              value={`${occupied} de ${summary.validResponses}`}
-              detail={formatPercent(occupied, summary.validResponses)}
-              icon={BriefcaseBusiness}
-              tone="titulados"
-            />
-            <KpiCard
-              label="Mediana desde titulación"
-              value={yearsSince === null ? '—' : `${formatDecimal(yearsSince, 1)} años`}
-              detail={
-                medianYear == null
-                  ? 'No disponible'
-                  : `La mitad se tituló antes de ${Math.ceil(medianYear)}`
-              }
-              icon={Clock3}
-              tone="titulados"
-            />
-            <KpiCard
-              label="Siguen en su primer empleo"
-              value={firstEmploymentYes == null ? '—' : `${firstEmploymentYes} de ${occupied}`}
-              detail={
-                firstEmploymentYes == null
-                  ? 'Sin respuestas'
-                  : `${formatPercent(firstEmploymentYes, occupied)} · base: ${occupied} con empleo`
-              }
-              icon={BriefcaseBusiness}
-              tone="titulados"
-            />
-            <KpiCard
-              label="Interesados en posgrado"
-              value={formatCount(workValue(interes), summary.validResponses)}
-              detail={formatPercent(workValue(interes), summary.validResponses)}
-              icon={GraduationCap}
-              tone="titulados"
-            />
-            <KpiCard
-              label="Mayor brecha"
-              value={weakest ? formatDecimal(weakest.average) : '—'}
-              detail={weakest?.name ?? 'Sin datos'}
-              icon={Target}
-              tone="titulados"
-            />
-          </div>
+          <DashboardSection
+            title="Indicadores clave"
+            description="La primera fila permite reconocer tamaño de muestra, inserción, trayectoria y señales de atención."
+          >
+            <div className="summary-kpi-grid grid items-stretch gap-4 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-6">
+              <KpiCard
+                label="Titulados"
+                value={String(summary.validResponses)}
+                detail={`Titulación ${yearRange.min ?? '—'}–${yearRange.max ?? '—'}`}
+                icon={Users}
+                tone="titulados"
+              />
+              <KpiCard
+                label="Con empleo"
+                value={`${occupied} de ${summary.validResponses}`}
+                detail={formatPercent(occupied, summary.validResponses)}
+                icon={BriefcaseBusiness}
+                tone="titulados"
+              />
+              <KpiCard
+                label="Mediana desde titulación"
+                value={yearsSince === null ? '—' : `${formatDecimal(yearsSince, 1)} años`}
+                detail={
+                  medianYear == null
+                    ? 'No disponible'
+                    : `La mitad se tituló antes de ${Math.ceil(medianYear)}`
+                }
+                icon={Clock3}
+                tone="titulados"
+              />
+              <KpiCard
+                label="Siguen en su primer empleo"
+                value={firstEmploymentYes == null ? '—' : `${firstEmploymentYes} de ${occupied}`}
+                detail={
+                  firstEmploymentYes == null
+                    ? 'Sin respuestas'
+                    : `${formatPercent(firstEmploymentYes, occupied)} · base: ${occupied} con empleo`
+                }
+                icon={BriefcaseBusiness}
+                tone="titulados"
+              />
+              <KpiCard
+                label="Interesados en posgrado"
+                value={formatCount(workValue(interes), summary.validResponses)}
+                detail={formatPercent(workValue(interes), summary.validResponses)}
+                icon={GraduationCap}
+                tone="titulados"
+              />
+              <KpiCard
+                label="Mayor brecha"
+                value={weakest ? formatDecimal(weakest.average) : '—'}
+                detail={weakest?.name ?? 'Sin datos'}
+                icon={Target}
+                tone="titulados"
+              />
+            </div>
+          </DashboardSection>
 
-          <div className="summary-context-grid grid items-stretch gap-4 lg:grid-cols-2">
-            <EmploymentSummaryCard distribution={laboral} total={summary.validResponses} />
-            <SenioritySummaryCard
-              points={profile?.cohortPoints ?? []}
-              total={summary.validResponses}
-            />
-          </div>
-          <div className="summary-results-grid grid items-stretch gap-4 lg:grid-cols-3">
-            <CompetenceSummaryCard items={competences} />
-            <SatisfactionSummaryCard
-              distribution={satisfaction?.distributions.satisfaccion_formacion}
-            />
-            <PostgraduateCard distribution={areasPosgrado} />
-          </div>
+          <DashboardSection
+            title="Inserción y trayectoria"
+            description="Composición laboral y distribución de las cohortes según tiempo transcurrido desde la titulación."
+          >
+            <div className="summary-context-grid grid items-stretch gap-4 lg:grid-cols-2">
+              <EmploymentSummaryCard distribution={laboral} total={summary.validResponses} />
+              <SenioritySummaryCard points={profile?.cohortPoints ?? []} />
+            </div>
+          </DashboardSection>
+
+          <DashboardSection
+            title="Calidad percibida y proyección"
+            description="Señales para priorizar mejora curricular y planificación de formación posterior."
+          >
+            <div className="summary-results-grid grid items-stretch gap-4 lg:grid-cols-3">
+              <CompetenceSummaryCard items={competences} />
+              <SatisfactionSummaryCard
+                distribution={satisfaction?.distributions.satisfaccion_formacion}
+              />
+              <PostgraduateCard distribution={areasPosgrado} />
+            </div>
+          </DashboardSection>
         </>
       )}
     </div>
@@ -363,6 +379,26 @@ function SummaryDetailLink({
   )
 }
 
+function DashboardSection({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description: string
+  children: ReactNode
+}) {
+  return (
+    <section className="space-y-3" aria-label={title}>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border-line pb-2">
+        <h2 className="title-card">{title}</h2>
+        <p className="text-xs text-ink-600">{description}</p>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 function EmploymentSummaryCard({
   distribution,
   total,
@@ -428,13 +464,7 @@ function EmploymentSummaryCard({
   )
 }
 
-function SenioritySummaryCard({
-  points,
-  total,
-}: {
-  points: EmploymentProfile['cohortPoints']
-  total: number
-}) {
+function SenioritySummaryCard({ points }: { points: EmploymentProfile['cohortPoints'] }) {
   const rows = ['0–2 años', '3–5 años', '6+ años'].map((label) => ({ label, count: 0 }))
   points.forEach((point) => {
     const age = new Date().getFullYear() - point.graduationYear
@@ -442,33 +472,51 @@ function SenioritySummaryCard({
     target.count += 1
   })
   const maximum = Math.max(1, ...rows.map((row) => row.count))
+  const base = points.length
   return (
     <Card className="h-full rounded-xl border border-border-line shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle className="title-card">Titulados por antigüedad</CardTitle>
-            <CardDescription>Tramos desde la titulación · n = {total}</CardDescription>
+            <CardDescription>Tramos desde la titulación · n = {base}</CardDescription>
           </div>
           <SummaryDetailLink href="/titulados/perfil-empleabilidad" />
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {rows.map((row) => (
-          <div
-            key={row.label}
-            className="grid grid-cols-[5rem_1fr_2.5rem] items-center gap-2 text-xs"
-          >
-            <span className="text-ink-700">{row.label}</span>
-            <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
-              <div
-                className="h-full rounded-full bg-titulados"
-                style={{ width: `${(row.count * 100) / maximum}%` }}
-              />
+      <CardContent>
+        {base ? (
+          <>
+            <div className="grid h-36 grid-cols-3 items-end gap-5 border-b border-border-line px-3 pb-0">
+              {rows.map((row) => (
+                <VisualizationDataTooltip
+                  key={row.label}
+                  datum={{ kind: 'column', label: row.label, count: row.count, total: base }}
+                >
+                  <div className="flex h-full min-w-0 flex-col justify-end gap-1 text-center">
+                    <span className="text-xs font-semibold tabular-nums text-ink-800">
+                      {row.count}
+                    </span>
+                    <div
+                      className="mx-auto w-full max-w-14 rounded-t bg-titulados"
+                      style={{
+                        height: `${Math.max(row.count ? 12 : 3, (row.count * 88) / maximum)}px`,
+                      }}
+                    />
+                    <span className="h-8 text-[11px] leading-tight text-ink-600">{row.label}</span>
+                  </div>
+                </VisualizationDataTooltip>
+              ))}
             </div>
-            <span className="text-right tabular-nums font-medium">{row.count}</span>
-          </div>
-        ))}
+            <p className="mt-3 text-xs text-ink-600">
+              La altura de cada columna representa el número de titulados de ese tramo.
+            </p>
+          </>
+        ) : (
+          <Empty className="py-7">
+            <EmptyTitle>Sin datos de cohorte</EmptyTitle>
+          </Empty>
+        )}
       </CardContent>
     </Card>
   )
@@ -489,17 +537,33 @@ function CompetenceSummaryCard({ items }: { items: Competence[] }) {
           <SummaryDetailLink href="/titulados/brechas-competencias" />
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         {rows.length ? (
           rows.map((row) => (
-            <div
-              key={row.code}
-              className="flex items-center justify-between gap-3 border-b border-border-line pb-2 last:border-0"
-            >
-              <span className="min-w-0 break-words text-sm text-ink-800">{row.name}</span>
-              <strong className="shrink-0 tabular-nums text-ink-900">
-                {formatDecimal(row.average)} / 5
-              </strong>
+            <div key={row.code} className="space-y-1.5">
+              <div className="flex items-start justify-between gap-3 text-sm">
+                <span className="min-w-0 break-words text-ink-800">{row.name}</span>
+                <strong className="shrink-0 tabular-nums text-ink-900">
+                  {formatDecimal(row.average)} / 5
+                </strong>
+              </div>
+              <div className="relative h-2 rounded-full bg-gradient-to-r from-[#e4572e] via-slate-100 to-titulados">
+                <VisualizationDataTooltip
+                  datum={{
+                    kind: 'mean',
+                    label: row.name,
+                    value: row.average,
+                    sampleSize: row.validCount,
+                  }}
+                >
+                  <span
+                    className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-ink-900 shadow-sm"
+                    style={{
+                      left: `${Math.min(100, Math.max(0, ((row.average - 1) / 4) * 100))}%`,
+                    }}
+                  />
+                </VisualizationDataTooltip>
+              </div>
             </div>
           ))
         ) : (
@@ -531,20 +595,30 @@ function SatisfactionSummaryCard({ distribution }: { distribution?: CategoryDist
         {entries.length ? (
           <>
             <div className="flex h-7 overflow-hidden rounded-md">
-              {entries.map(([label], index) => (
-                <div
+              {entries.map(([label, count], index) => (
+                <VisualizationDataTooltip
                   key={label}
-                  className="flex min-w-0 items-center justify-center text-[11px] font-semibold"
-                  style={{
-                    width: `${distribution?.percentages[label] ?? 0}%`,
-                    backgroundColor: colors[index],
-                    color: index === 1 ? '#1f2937' : 'white',
+                  datum={{
+                    kind: 'stacked',
+                    label,
+                    count,
+                    total,
+                    percent: distribution?.percentages[label],
                   }}
                 >
-                  {(distribution?.percentages[label] ?? 0) >= 10
-                    ? `${formatPercentValue(distribution?.percentages[label] ?? 0)} %`
-                    : ''}
-                </div>
+                  <div
+                    className="flex min-w-0 items-center justify-center text-[11px] font-semibold"
+                    style={{
+                      width: `${distribution?.percentages[label] ?? 0}%`,
+                      backgroundColor: colors[index],
+                      color: index === 1 ? '#1f2937' : 'white',
+                    }}
+                  >
+                    {(distribution?.percentages[label] ?? 0) >= 10
+                      ? `${formatPercentValue(distribution?.percentages[label] ?? 0)} %`
+                      : ''}
+                  </div>
+                </VisualizationDataTooltip>
               ))}
             </div>
             <div className="space-y-1 text-xs text-ink-700">
@@ -604,13 +678,23 @@ function PostgraduateCard({ distribution }: { distribution?: CategoryDistributio
                     </span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-surface-container-high">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${percent}%`,
-                        backgroundColor: '#1f6fb5',
+                    <VisualizationDataTooltip
+                      datum={{
+                        kind: 'bar',
+                        label,
+                        count,
+                        total: distribution?.validCount ?? 0,
+                        percent,
                       }}
-                    />
+                    >
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${percent}%`,
+                          backgroundColor: '#1f6fb5',
+                        }}
+                      />
+                    </VisualizationDataTooltip>
                   </div>
                 </div>
               )

@@ -121,7 +121,7 @@ export function FormationActiveCard({
       title={title}
       description={`${formatPercentage(yes, total)} de la muestra total · n = ${total}`}
       actions={variantAction(variant, variants, labels, setVariant)}
-      help="La barra azul representa la proporción que respondió Sí y la gris, No; sus anchos suman el 100 % de n. En la dona, cada arco representa esa misma proporción."
+      help="La barra azul representa la proporción que respondió Sí y la gris, No; sus anchos suman el 100 % de n."
       onExportCsv={() =>
         downloadDistributionCsv(
           title,
@@ -249,7 +249,7 @@ export function OrdinalColumnsCard({
       title={title}
       description={description}
       actions={variantAction(variant, variants, labels, setVariant)}
-      help="Cada columna representa un nivel en el orden mostrado; su altura es el conteo de respuestas de ese nivel. La variante de barras expresa el mismo conteo como porcentaje de n."
+      help="Cada columna representa un nivel en el orden mostrado; su altura es el conteo de respuestas en ese nivel."
       onExportCsv={() => downloadDistributionCsv(title, items, distribution?.validCount ?? 0)}
     >
       {variant === 'ranked' ? (
@@ -331,7 +331,11 @@ export function NominalListCard({
       title={title}
       description={`${description} · n = ${distribution?.validCount ?? 0}`}
       actions={variantAction(variant, variants, labels, setVariant)}
-      help="Cada barra corresponde a una categoría y su longitud representa el porcentaje sobre n; el conteo aparece junto a la etiqueta. La lista y la tabla representan exactamente las mismas frecuencias."
+      help={
+        showBars
+          ? 'Cada barra corresponde a una categoría y su longitud representa el porcentaje sobre n; el conteo aparece junto a la etiqueta.'
+          : 'Cada fila presenta una categoría con su conteo exacto sobre las respuestas válidas (n).'
+      }
       onExportCsv={() => downloadDistributionCsv(title, items, distribution?.validCount ?? 0)}
     >
       {variant === 'bars' ? (
@@ -400,7 +404,7 @@ export function StackedFundingCard({
       title={title}
       description={`${description} · n = ${total}`}
       actions={variantAction(variant, variants, labels, setVariant)}
-      help="Cada segmento de color representa una fuente de financiamiento; su ancho es su porcentaje sobre n y todos los segmentos suman el 100 %. En barras, cada fuente se muestra por separado."
+      help="Cada segmento de color representa una fuente de financiamiento; su ancho es su porcentaje sobre n y todos los segmentos suman el 100 %."
       onExportCsv={() => downloadDistributionCsv(title, items, total)}
     >
       {variant === 'bars' ? (

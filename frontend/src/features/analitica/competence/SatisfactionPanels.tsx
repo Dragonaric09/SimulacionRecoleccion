@@ -11,6 +11,7 @@ type Scale = 'agreement' | 'satisfaction'
 export function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | null }) {
   const satisfaction = summary?.distributions.satisfaccion_formacion
   const concordance = summary?.distributions.concordancia_formacion_requerimientos
+  const relevance = summary?.distributions.pertinencia_trabajo_formacion
   if (!summary) {
     return (
       <StatusPanel
@@ -22,18 +23,25 @@ export function SatisfactionPanel({ summary }: { summary: AnalyticsSummary | nul
   }
   return (
     <div className="space-y-4">
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-3">
         <LikertStatement
           number="1."
-          title="Satisfacción global con la formación recibida en la carrera"
+          title="Valoración global de la formación recibida en la carrera"
           distribution={satisfaction}
           showSummary={false}
-          scale="satisfaction"
+          scale="agreement"
         />
         <LikertStatement
           number="2."
           title="Concordancia entre la formación académica y los requerimientos del mercado laboral"
           distribution={concordance}
+          showSummary={false}
+          scale="agreement"
+        />
+        <LikertStatement
+          number="3."
+          title="Pertinencia del trabajo actual respecto a la formación recibida"
+          distribution={relevance}
           showSummary={false}
           scale="agreement"
         />

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { AnalyticsSummary, CategoryDistribution } from '../api'
 import { DatasetSelect, useDatasets } from '../shared/AnalyticsPrimitives'
+import { TituladosAssociationCard } from '../shared/TituladosAssociationCard'
 import {
   DivergingAgreementCard,
   FormationActiveCard,
@@ -83,7 +84,11 @@ export function EducationProfilePage({ printAll = false }: { printAll?: boolean 
               </section>
               <section className="print-tab-section">
                 <h2 className="title-card mb-3">Interés en posgrado</h2>
-                <EducationInterestPanel summary={summary} />
+                <EducationInterestPanel
+                  summary={summary}
+                  datasetId={datasetId}
+                  filterQuery={filterQuery}
+                />
               </section>
               <section className="print-tab-section">
                 <h2 className="title-card mb-3">Opinión sobre el posgrado</h2>
@@ -93,7 +98,13 @@ export function EducationProfilePage({ printAll = false }: { printAll?: boolean 
           ) : (
             <>
               {activeTab === 'cursado' && <EducationCompletedPanel summary={summary} />}
-              {activeTab === 'interes' && <EducationInterestPanel summary={summary} />}
+              {activeTab === 'interes' && (
+                <EducationInterestPanel
+                  summary={summary}
+                  datasetId={datasetId}
+                  filterQuery={filterQuery}
+                />
+              )}
               {activeTab === 'opinion' && <EducationOpinionPanel summary={summary} />}
             </>
           )}
@@ -131,7 +142,15 @@ function EducationCompletedPanel({ summary }: { summary: AnalyticsSummary }) {
   )
 }
 
-function EducationInterestPanel({ summary }: { summary: AnalyticsSummary }) {
+function EducationInterestPanel({
+  summary,
+  datasetId,
+  filterQuery,
+}: {
+  summary: AnalyticsSummary
+  datasetId?: string
+  filterQuery: string
+}) {
   const interest = summary.distributions.interes_posgrado
   const interested = interest ? booleanCount(interest, true) : 0
   const level = summary.distributions.nivel_posgrado_interes
@@ -139,39 +158,68 @@ function EducationInterestPanel({ summary }: { summary: AnalyticsSummary }) {
   const modality = summary.distributions.modalidad_posgrado
   const institution = summary.distributions.institucion_posgrado_interes
   return (
-    <div className="grid items-stretch gap-4 lg:grid-cols-2">
-      <FormationActiveCard
-        yes={interested}
-        total={summary.validResponses}
-        title="Interés en posgrado"
-      />
-      <OrdinalColumnsCard
-        title="Nivel de posgrado de interés"
-        description={`Orden natural · n = ${level?.validCount ?? 0}`}
-        distribution={level}
-        levels={['Diplomado', 'Especialidad', 'Maestría', 'Doctorado', 'Posdoctorado']}
-      />
-      <NominalListCard
-        title="Áreas de interés"
-        description="Varias respuestas posibles"
-        distribution={area}
-        forceBars
-      />
-      <StackedFundingCard
-        title="Fuente de financiamiento estimada"
-        description="Financiamiento previsto"
-        distribution={summary.distributions.financiamiento_posgrado_estimado}
-      />
-      <NominalListCard
-        title="Modalidad preferida"
-        description="Preferencias de cursado"
-        distribution={modality}
-      />
-      <NominalListCard
-        title="Organización preferida"
-        description="Institución donde realizaría el posgrado"
-        distribution={institution}
-      />
+    <div className="space-y-6">
+      <div className="grid items-stretch gap-4 lg:grid-cols-2">
+        <FormationActiveCard
+          yes={interested}
+          total={summary.validResponses}
+          title="Interés en posgrado"
+        />
+        <OrdinalColumnsCard
+          title="Nivel de posgrado de interés"
+          description={`Orden natural · n = ${level?.validCount ?? 0}`}
+          distribution={level}
+          levels={['Diplomado', 'Especialidad', 'Maestría', 'Doctorado', 'Posdoctorado']}
+        />
+        <NominalListCard
+          title="Áreas de interés"
+          description="Varias respuestas posibles"
+          distribution={area}
+          forceBars
+        />
+        <StackedFundingCard
+          title="Fuente de financiamiento estimada"
+          description="Financiamiento previsto"
+          distribution={summary.distributions.financiamiento_posgrado_estimado}
+        />
+        <NominalListCard
+          title="Modalidad preferida"
+          description="Preferencias de cursado"
+          distribution={modality}
+        />
+        <NominalListCard
+          title="Organización preferida"
+          description="Institución donde realizaría el posgrado"
+          distribution={institution}
+        />
+      </div>
+      <section className="space-y-3" aria-label="Análisis de formación continua">
+        <div>
+          <h2 className="title-card">Análisis de demanda de posgrado</h2>
+          <p className="text-sm text-ink-600">
+            Relaciones inferenciales aplicables a intención y nivel de posgrado; las áreas
+            multirrespuesta se mantienen como lectura descriptiva.
+          </p>
+        </div>
+        <div className="grid gap-5 xl:grid-cols-2">
+          <TituladosAssociationCard
+            datasetId={datasetId}
+            filterQuery={filterQuery}
+            rowField="edad_rango"
+            columnField="nivel_posgrado_interes"
+            title="Edad y nivel de posgrado"
+            description="Evalúa si los rangos de edad y el nivel académico deseado tienden a subir o bajar conjuntamente."
+          />
+          <TituladosAssociationCard
+            datasetId={datasetId}
+            filterQuery={filterQuery}
+            rowField="tiene_formacion_complementaria"
+            columnField="interes_posgrado"
+            title="Formación complementaria e interés en posgrado"
+            description="Evalúa si ambas decisiones están asociadas, sin imponer un orden entre sus categorías."
+          />
+        </div>
+      </section>
     </div>
   )
 }

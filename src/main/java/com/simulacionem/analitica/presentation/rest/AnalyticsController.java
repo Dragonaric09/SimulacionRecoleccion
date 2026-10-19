@@ -3,9 +3,12 @@ package com.simulacionem.analitica.presentation.rest;
 import com.simulacionem.analitica.application.dto.AnalyticsSummaryDto;
 import com.simulacionem.analitica.application.dto.CompetenceAverageDto;
 import com.simulacionem.analitica.application.dto.CrossTabulationDto;
+import com.simulacionem.analitica.application.dto.EmployerCrossDto;
 import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
+import com.simulacionem.analitica.application.dto.TituladosCrossDto;
 import com.simulacionem.analitica.application.service.AnalyticsService;
 import com.simulacionem.analitica.application.service.TituladosFilter;
+import com.simulacionem.analitica.application.service.TituladosCrossService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,8 +33,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @RequestMapping("/api/analytics")
 public class AnalyticsController {
     private final AnalyticsService analytics;
+    private final TituladosCrossService tituladosCrosses;
 
-    public AnalyticsController(AnalyticsService analytics) { this.analytics = analytics; }
+    public AnalyticsController(AnalyticsService analytics, TituladosCrossService tituladosCrosses) {
+        this.analytics = analytics;
+        this.tituladosCrosses = tituladosCrosses;
+    }
 
     @GetMapping("/titulados/summary")
     public AnalyticsSummaryDto tituladosSummary(@RequestParam(required = false) UUID datasetId,
@@ -141,6 +148,21 @@ public class AnalyticsController {
                                       @RequestParam String columnField,
                                       @ModelAttribute TituladosQuery query) {
         return analytics.cross(datasetId, rowField, columnField, query.toFilter());
+    }
+
+    /** Variables de titulados aptas para una prueba bivariada, con nivel de medición y orden de la escala. */
+    @GetMapping("/titulados/catalog")
+    public List<EmployerCrossDto.VariableDto> tituladosCatalog() {
+        return tituladosCrosses.catalog();
+    }
+
+    /** Cruce de titulados con la prueba elegida por el nivel de medición de las dos variables. */
+    @GetMapping("/titulados/cross")
+    public TituladosCrossDto tituladosCross(@RequestParam UUID datasetId,
+                                            @RequestParam String rowField,
+                                            @RequestParam String columnField,
+                                            @ModelAttribute TituladosQuery query) {
+        return tituladosCrosses.cross(datasetId, query.toFilter(), rowField, columnField);
     }
 
     @PostMapping("/simulation/multinomial")

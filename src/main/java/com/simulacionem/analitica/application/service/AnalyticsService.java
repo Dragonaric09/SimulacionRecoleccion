@@ -463,6 +463,25 @@ public class AnalyticsService {
                 && !rowField.equals("segmento_titulacion") && !columnField.equals("segmento_titulacion")) {
             return tituladosSql.cross(dataset.getId(), rowField, columnField);
         }
+        return crossFromRows(dataset, rowField, columnField, filter);
+    }
+
+    /**
+     * Cruce de titulados preparado para inferencia. A diferencia del atajo SQL descriptivo, normaliza las
+     * categorías y aplica las ramas del cuestionario antes de construir la tabla. Así los niveles ordinales
+     * conservan una escala coherente para Spearman, Mann–Whitney y Kruskal–Wallis.
+     */
+    @Transactional(readOnly = true)
+    public CrossTabulationDto crossForAnalysis(UUID datasetId, String rowField, String columnField, TituladosFilter filter) {
+        DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
+        if (rowField == null || rowField.isBlank() || columnField == null || columnField.isBlank()) {
+            throw new IllegalArgumentException("rowField y columnField son obligatorios");
+        }
+        return crossFromRows(dataset, rowField, columnField, filter);
+    }
+
+    private CrossTabulationDto crossFromRows(DatasetImportEntity dataset, String rowField, String columnField,
+                                             TituladosFilter filter) {
         List<SurveyResponseEntity> valid = filteredRows(dataset.getId(), validRows(dataset.getId()), filter);
         List<SurveyResponseEntity> usable = valid.stream()
                 .filter(r -> crossFieldBranchAllows(r, rowField) && crossFieldBranchAllows(r, columnField))
@@ -547,6 +566,12 @@ public class AnalyticsService {
         if ("formacion_complementaria_nivel".equals(field)) return canonicalEducationLevel(text);
         if ("edad_rango".equals(field)) return canonicalAgeRange(text);
         if ("sector_trabajo".equals(field) && normalize(text).matches("no trabaja|no trabajo")) return "Sin clasificar";
+        if (List.of("tiene_formacion_complementaria", "interes_posgrado", "experiencia_laboral_previa",
+                "es_primer_empleo", "primera_experiencia_laboral").contains(field)) {
+            String normalized = normalize(text);
+            if (normalized.equals("true") || normalized.equals("si") || normalized.equals("1")) return "Sí";
+            if (normalized.equals("false") || normalized.equals("no") || normalized.equals("0")) return "No";
+        }
         if ("contrato_titulados_ultimos_5_anios".equals(field)) {
             return "true".equals(text) ? "Sí" : "false".equals(text) ? "No" : text;
         }
@@ -590,9 +615,35 @@ public class AnalyticsService {
                 case "especialidad" -> "Especialidad";
                 case "maestria", "maestría" -> "Maestría";
                 case "doctorado" -> "Doctorado";
+                case "pos doctorado", "posdoctorado", "pos doctor" -> "Posdoctorado";
                 default -> text;
             };
         }
+        if ("remuneracion_rango".equals(field)) return canonicalSalaryRange(text, normalized);
+        if (List.of("satisfaccion_formacion", "concordancia_formacion_requerimientos", "pertinencia_trabajo_formacion").contains(field)) {
+            if (normalized.contains("totalmente") && normalized.contains("desacuerdo")) return "Totalmente en desacuerdo";
+            if (normalized.contains("desacuerdo")) return "En desacuerdo";
+            if (normalized.contains("totalmente") && normalized.contains("acuerdo")) return "Totalmente de acuerdo";
+            if (normalized.contains("acuerdo")) return "De acuerdo";
+        }
+        if ("satisfaccion_emprendimiento".equals(field)) {
+            if (normalized.contains("insatisfecho")) return "Insatisfecho";
+            if (normalized.contains("algo") && normalized.contains("satisfecho")) return "Algo satisfecho";
+            if (normalized.contains("satisfecho")) return "Satisfecho";
+        }
+        return text;
+    }
+
+    private String canonicalSalaryRange(String text, String normalized) {
+        if (normalized.contains("menor") || normalized.contains("menos")) return "Menos de Bs. 2.500";
+        if (normalized.contains("mas") || normalized.contains("más")) {
+            return "Más de Bs. " + (normalized.contains("10.000") || normalized.contains("10000") ? "10.000" : "8.000");
+        }
+        String digits = normalized.replaceAll("[^0-9]", " ").trim().replaceAll("\\s+", " ");
+        if (digits.startsWith("2500 3500")) return "Bs. 2.500 - 3.500";
+        if (digits.startsWith("3501 5000")) return "Bs. 3.501 - 5.000";
+        if (digits.startsWith("5001 7000")) return "Bs. 5.001 - 7.000";
+        if (digits.startsWith("7001 10000")) return "Bs. 7.001 - 10.000";
         return text;
     }
 
@@ -629,13 +680,39 @@ public class AnalyticsService {
     private CategoryDistributionDto multiDistribution(String field, List<String> values) {
         List<String> options = values.stream()
                 .flatMap(value -> splitMultiValue(value).stream())
-                .map(String::trim).filter(value -> !value.isBlank()).toList();
+                .map(option -> canonicalMultiOption(field, option))
+                .filter(value -> !value.isBlank()).toList();
         Map<String, Long> counts = options.stream()
                 .collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
         List<String> catalog = multiOptionCatalog(field);
         catalog.forEach(option -> counts.putIfAbsent(option, 0L));
         Map<String, Double> percentages = DescriptiveStatistics.percentages(counts, values.size(), 2);
         return new CategoryDistributionDto(values.size(), counts, percentages);
+    }
+
+    /**
+     * Las preguntas de selección múltiple llegan de CSV con variaciones de mayúsculas, acentos y abreviaturas.
+     * Consolidarlas evita que «TI», «Tecnología» e «Informática» se muestren como falsas áreas distintas.
+     */
+    private String canonicalMultiOption(String field, String option) {
+        String text = option == null ? "" : option.trim();
+        if (text.isBlank()) return "";
+        if (!"area_trabajo".equals(field)) return text;
+        String normalized = normalize(text);
+        if (normalized.matches("sistemas?")) return "Sistemas";
+        if (normalized.contains("desarrollo") || normalized.contains("software")) return "Desarrollo de software";
+        if (normalized.contains("seguridad") || normalized.contains("redes") || normalized.contains("infraestructura"))
+            return "Infraestructura y seguridad";
+        if (normalized.equals("ti") || normalized.contains("tecnolog") || normalized.contains("informat")
+                || normalized.equals("computo")) return "Tecnologías de la información";
+        if (normalized.equals("qa") || normalized.contains("calidad") || normalized.contains("prueba")) return "Calidad y pruebas";
+        if (normalized.contains("inteligencia de negocios") || normalized.equals("bi") || normalized.contains("dato")
+                || normalized.contains("analisis de informacion")) return "Datos y analítica";
+        if (normalized.contains("planificacion") || normalized.contains("gestion de proyecto")) return "Gestión de proyectos";
+        if (normalized.contains("administracion") || normalized.contains("gerencia") || normalized.contains("rrhh"))
+            return "Gestión y administración";
+        if (normalized.contains("consultor")) return "Consultoría";
+        return text;
     }
 
     private List<String> multiOptionCatalog(String field) {

@@ -8,10 +8,19 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DonutChart } from './DonutChart'
+import { OrdinalColumns } from './OrdinalColumns'
 import { RankedBars } from './RankedBars'
 import type { DistributionChartItem } from './chartTypes'
 
-export type CategoricalChartVariant = 'ranked' | 'donut' | 'table'
+export type CategoricalChartVariant = 'ranked' | 'columns' | 'donut' | 'table'
+
+/**
+ * El selector permite al equipo contrastar representaciones durante el desarrollo. No es una
+ * decisión que deba trasladarse al usuario final: la aplicación publica siempre la vista elegida
+ * por el análisis. Para habilitarlo localmente se debe declarar VITE_ANALYTICS_VARIANT_LAB=true.
+ */
+const chartVariantLabEnabled =
+  import.meta.env.DEV && import.meta.env.VITE_ANALYTICS_VARIANT_LAB === 'true'
 
 export function useChartVariant<T extends string>(
   storageKey: string | undefined,
@@ -20,11 +29,12 @@ export function useChartVariant<T extends string>(
 ) {
   const [variant, setVariant] = useState<T>(defaultVariant)
   useEffect(() => {
-    if (!storageKey) return
+    if (!chartVariantLabEnabled || !storageKey) return
     const stored = window.localStorage.getItem(storageKey) as T | null
     if (stored && variants.includes(stored)) setVariant(stored)
   }, [storageKey, variants])
   const changeVariant = (next: T) => {
+    if (!chartVariantLabEnabled) return
     setVariant(next)
     if (storageKey) window.localStorage.setItem(storageKey, next)
   }
@@ -42,20 +52,24 @@ export function ChartVariantSelector<T extends string>({
   labels: Record<T, string>
   onChange: (value: T) => void
 }) {
-  if (options.length < 2) return null
+  if (!chartVariantLabEnabled || options.length < 2) return null
   return (
     <div className="flex items-center justify-center gap-2 text-center text-xs text-ink-600">
       <span>Ver como:</span>
       <Select value={value} onValueChange={(next) => onChange(next as T)}>
-        <SelectTrigger size="sm" aria-label="Tipo de visualización" className="bg-white text-xs text-ink-800">
+        <SelectTrigger
+          size="sm"
+          aria-label="Tipo de visualización"
+          className="bg-white text-xs text-ink-800"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option} value={option}>
-            {labels[option]}
-          </SelectItem>
-        ))}
+          {options.map((option) => (
+            <SelectItem key={option} value={option}>
+              {labels[option]}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
@@ -106,6 +120,7 @@ export function CategoricalQuestionChart({
   }
   const labels: Record<CategoricalChartVariant, string> = {
     ranked: 'Barras',
+    columns: 'Columnas',
     donut: 'Donut',
     table: 'Tabla',
   }
@@ -124,6 +139,8 @@ export function CategoricalQuestionChart({
           <DonutChart items={items} total={total} colors={categoryColors} />
         ) : variant === 'table' ? (
           <CategoricalTable items={items} total={total} />
+        ) : variant === 'columns' ? (
+          <OrdinalColumns items={items} color={color} />
         ) : (
           <RankedBars items={items} color={color} maxItems={maxItems} labelWidth={labelWidth} />
         )}

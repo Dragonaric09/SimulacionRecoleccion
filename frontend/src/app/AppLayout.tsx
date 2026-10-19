@@ -1,18 +1,35 @@
 import { useState } from 'react'
 import { Database, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { DatasetProvider, useDatasetContext, type DatasetDomain } from './DatasetContext'
-import { isDomainSection, navigation, navigate, sectionLabels, type NavigationItem } from './navigation'
+import {
+  isDomainSection,
+  navigation,
+  navigate,
+  sectionLabels,
+  type NavigationItem,
+} from './navigation'
 import { PlaceholderPage } from './PlaceholderPage'
 import { PrintButton } from '@/components/analytics/PrintButton'
 import { EmployerReportHost } from '@/features/empleadores/report/EmployerReportHost'
 import { TituladosPrintBundle } from '@/features/titulados/TituladosPages'
+import { TituladosReportHost } from '@/features/titulados/report/TituladosReportHost'
 
 type Props = { route: NavigationItem }
 
 export function AppLayout(props: Props) {
-  return <DatasetProvider><AppLayoutContent {...props} /></DatasetProvider>
+  return (
+    <DatasetProvider>
+      <AppLayoutContent {...props} />
+    </DatasetProvider>
+  )
 }
 
 function AppLayoutContent({ route }: Props) {
@@ -36,7 +53,7 @@ function AppLayoutContent({ route }: Props) {
           />
         )}
         <aside
-            className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col overflow-hidden border-r border-primary-container bg-primary-container text-on-primary transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:self-start ${
+          className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col overflow-hidden border-r border-primary-container bg-primary-container text-on-primary transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:self-start ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           } ${sidebarOpen ? '' : 'lg:w-[76px]'}`}
         >
@@ -47,11 +64,16 @@ function AppLayoutContent({ route }: Props) {
             {sidebarOpen && (
               <div className="min-w-0">
                 <p className="truncate text-lg font-semibold leading-tight">Analizador</p>
-                <p className="truncate text-xs text-on-primary-container">Analizador de encuestas</p>
+                <p className="truncate text-xs text-on-primary-container">
+                  Analizador de encuestas
+                </p>
               </div>
             )}
           </div>
-          <nav className="scrollbar-sidebar flex-1 space-y-5 overflow-y-auto px-2 py-3" aria-label="Navegación principal">
+          <nav
+            className="scrollbar-sidebar flex-1 space-y-5 overflow-y-auto px-2 py-3"
+            aria-label="Navegación principal"
+          >
             {(['general', 'titulados', 'empleadores', 'comparacion'] as const).map((section) => {
               const items = navigation.filter((item) => item.section === section)
               return (
@@ -122,8 +144,15 @@ function AppLayoutContent({ route }: Props) {
             </div>
             {domainSection && (
               <div className="print-hide flex min-w-0 flex-wrap items-center justify-end gap-2">
-                <GlobalDatasetSelector domain={route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'} />
-                {!route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && <PrintButton domain={route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'} />}
+                <GlobalDatasetSelector
+                  domain={route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'}
+                />
+                {!route.path.includes('cruces-exportacion') &&
+                  !route.path.includes('simulacion-escenarios') && (
+                    <PrintButton
+                      domain={route.section === 'titulados' ? 'TITULADOS' : 'EMPLEADORES'}
+                    />
+                  )}
               </div>
             )}
             {route.section === 'comparacion' && (
@@ -134,27 +163,62 @@ function AppLayoutContent({ route }: Props) {
             )}
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
-            {route.section === 'titulados' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
-              <section className="print-only print-cover mb-6" aria-label="Portada del informe">
-                <p className="caption-bold uppercase tracking-wider text-ink-600">SIMULACIONEM · INFORME ANALÍTICO</p>
-                <h1 className="headline-page">{route.section === 'titulados' ? 'Titulados' : 'Empleadores'}</h1>
-                <p>Informe completo de análisis</p>
-                <p>Fecha de generación: {new Intl.DateTimeFormat('es-BO', { dateStyle: 'long', timeZone: 'America/La_Paz' }).format(new Date())}</p>
-                <p>{route.section === 'titulados'
-                  ? 'Filtros activos: Año: Todos · Estado laboral: Todos · Sector: Todos'
-                  : 'Filtros activos: Tipo y tamaño de organización, según cada pantalla'}</p>
-                <p>Dataset: {activeReportDataset ? `${datasetDisplayName(activeReportDataset, reportDomain)} · ${activeReportDataset.rowsValid} válidas` : 'No seleccionado'}</p>
-                <p>Mostrando las respuestas válidas del dataset seleccionado.</p>
-                <p className="mt-4 text-xs text-ink-600">Los porcentajes excluyen “No sabe” y “No observado”. Con menos de 5 respuestas, las gráficas son solo referenciales.</p>
-              </section>
-            )}
-            <div className={route.path.includes('cruces-exportacion') ? 'cross-screen-root' : route.path.includes('simulacion-escenarios') ? 'simulation-screen-root' : 'screen-content'}><PlaceholderPage route={route} /></div>
-            {route.section === 'titulados' && !route.path.includes('cruces-exportacion') && !route.path.includes('simulacion-escenarios') && (
-              <div className="print-bundle" aria-label="Informe completo para impresión">
-                <TituladosPrintBundle />
-              </div>
-            )}
+            {route.section === 'titulados' &&
+              !route.path.includes('cruces-exportacion') &&
+              !route.path.includes('simulacion-escenarios') && (
+                <section className="print-only print-cover mb-6" aria-label="Portada del informe">
+                  <p className="caption-bold uppercase tracking-wider text-ink-600">
+                    SIMULACIONEM · INFORME ANALÍTICO
+                  </p>
+                  <h1 className="headline-page">
+                    {route.section === 'titulados' ? 'Titulados' : 'Empleadores'}
+                  </h1>
+                  <p>Informe completo de análisis</p>
+                  <p>
+                    Fecha de generación:{' '}
+                    {new Intl.DateTimeFormat('es-BO', {
+                      dateStyle: 'long',
+                      timeZone: 'America/La_Paz',
+                    }).format(new Date())}
+                  </p>
+                  <p>
+                    {route.section === 'titulados'
+                      ? 'Filtros activos: Año: Todos · Estado laboral: Todos · Sector: Todos'
+                      : 'Filtros activos: Tipo y tamaño de organización, según cada pantalla'}
+                  </p>
+                  <p>
+                    Dataset:{' '}
+                    {activeReportDataset
+                      ? `${datasetDisplayName(activeReportDataset, reportDomain)} · ${activeReportDataset.rowsValid} válidas`
+                      : 'No seleccionado'}
+                  </p>
+                  <p>Mostrando las respuestas válidas del dataset seleccionado.</p>
+                  <p className="mt-4 text-xs text-ink-600">
+                    Los porcentajes excluyen “No sabe” y “No observado”. Con menos de 5 respuestas,
+                    las gráficas son solo referenciales.
+                  </p>
+                </section>
+              )}
+            <div
+              className={
+                route.path.includes('cruces-exportacion')
+                  ? 'cross-screen-root'
+                  : route.path.includes('simulacion-escenarios')
+                    ? 'simulation-screen-root'
+                    : 'screen-content'
+              }
+            >
+              <PlaceholderPage route={route} />
+            </div>
+            {route.section === 'titulados' &&
+              !route.path.includes('cruces-exportacion') &&
+              !route.path.includes('simulacion-escenarios') && (
+                <div className="print-bundle" aria-label="Informe completo para impresión">
+                  <TituladosPrintBundle />
+                </div>
+              )}
             {route.section === 'empleadores' && <EmployerReportHost />}
+            {route.section === 'titulados' && <TituladosReportHost />}
           </main>
         </div>
       </div>
@@ -168,16 +232,26 @@ function GlobalDatasetSelector({ domain }: { domain: DatasetDomain }) {
   const active = available.find((dataset) => dataset.id === activeIds[domain])
   if (!available.length) return null
   if (available.length === 1) {
-    return <span className="max-w-[260px] truncate rounded-md border border-border-line bg-white px-3 py-2 text-xs text-ink-600">Datos: {active ? `${datasetDisplayName(active, domain)} · ${active.rowsValid} válidas` : 'Sin dataset'}</span>
+    return (
+      <span className="max-w-[260px] truncate rounded-md border border-border-line bg-white px-3 py-2 text-xs text-ink-600">
+        Datos:{' '}
+        {active
+          ? `${datasetDisplayName(active, domain)} · ${active.rowsValid} válidas`
+          : 'Sin dataset'}
+      </span>
+    )
   }
   return (
-    <Select value={active?.id ?? ''} onValueChange={(value) => {
-      if (value === '__new__') {
-        navigate('/cargar-datos')
-        return
-      }
-      setActiveDataset(domain, value)
-    }}>
+    <Select
+      value={active?.id ?? ''}
+      onValueChange={(value) => {
+        if (value === '__new__') {
+          navigate('/cargar-datos')
+          return
+        }
+        setActiveDataset(domain, value)
+      }}
+    >
       <SelectTrigger className="h-9 w-[280px] min-w-0 text-xs" aria-label="Dataset activo">
         <span className="shrink-0 text-ink-600">Datos:</span>
         <SelectValue placeholder="Seleccionar dataset" />
@@ -185,7 +259,11 @@ function GlobalDatasetSelector({ domain }: { domain: DatasetDomain }) {
       <SelectContent>
         {available.map((dataset) => (
           <SelectItem key={dataset.id} value={dataset.id}>
-            {datasetDisplayName(dataset, domain)} · {dataset.importedAt ? new Intl.DateTimeFormat('es-BO').format(new Date(dataset.importedAt)) : 'sin fecha'} · {dataset.rowsValid} válidas
+            {datasetDisplayName(dataset, domain)} ·{' '}
+            {dataset.importedAt
+              ? new Intl.DateTimeFormat('es-BO').format(new Date(dataset.importedAt))
+              : 'sin fecha'}{' '}
+            · {dataset.rowsValid} válidas
           </SelectItem>
         ))}
         <SelectItem value="__new__">Cargar nuevo archivo…</SelectItem>
@@ -194,8 +272,12 @@ function GlobalDatasetSelector({ domain }: { domain: DatasetDomain }) {
   )
 }
 
-function datasetDisplayName(dataset: { sourceFileName: string; displayName?: string; period: number | null }, domain: DatasetDomain) {
+function datasetDisplayName(
+  dataset: { sourceFileName: string; displayName?: string; period: number | null },
+  domain: DatasetDomain,
+) {
   if (dataset.displayName) return dataset.displayName
-  if (dataset.period) return `${domain === 'TITULADOS' ? 'Encuesta titulados' : 'Encuesta empleadores'} ${dataset.period}`
+  if (dataset.period)
+    return `${domain === 'TITULADOS' ? 'Encuesta titulados' : 'Encuesta empleadores'} ${dataset.period}`
   return dataset.sourceFileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ')
 }

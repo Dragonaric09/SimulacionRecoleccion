@@ -50,13 +50,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { AnalyticsSummary, CategoryDistribution } from './api'
 import type { CohortChartPoint, Domain, EmploymentProfile, Tone } from './shared/analyticsTypes'
 import { DatasetSelect, PageHeading } from './shared/AnalyticsPrimitives'
+import { TituladosCrossMatrix } from './shared/TituladosCrossMatrix'
 import { formatDecimal, formatPercentValue } from './shared/analyticsFormatters'
 import { downloadAnalyticsCsv, downloadDistributionCsv } from './shared/analyticsExport'
-import {
-  EmploymentDistributionVariant,
-  MiniDistribution,
-  StackedRelevanceCard,
-} from './employment/EmploymentCharts'
+import { EmploymentDistributionVariant, StackedRelevanceCard } from './employment/EmploymentCharts'
 import { MetricPanel } from './employment/EmploymentDistributionComponents'
 import {
   booleanCount,
@@ -70,6 +67,7 @@ import {
 import { useCompetencePage } from './competence/useCompetencePage'
 import { CompetenceQuestionChart } from './competence/CompetenceQuestionChart'
 import { SatisfactionPanel as SatisfactionPanelView } from './competence/SatisfactionPanels'
+import { SatisfactionAnalyticsPanel } from './competence/SatisfactionAnalyticsPanel'
 import { groupDisplayName, groupLabel } from './competence/competenceHelpers'
 import { CompetencePrintGroup, CurriculumPanel } from './competence/CompetencePrintSections'
 import {
@@ -125,6 +123,8 @@ export function EmploymentTabContent({
   unemploymentSummary,
   firstEmploymentSummary,
   entrepreneurshipSummary,
+  datasetId,
+  filterQuery,
 }: {
   tab: string
   summary: AnalyticsSummary
@@ -135,9 +135,19 @@ export function EmploymentTabContent({
   unemploymentSummary: AnalyticsSummary | null
   firstEmploymentSummary: AnalyticsSummary | null
   entrepreneurshipSummary: AnalyticsSummary | null
+  datasetId?: string
+  filterQuery?: string
 }) {
   if (tab === 'emprendimiento') return <EntrepreneurshipPanel summary={entrepreneurshipSummary} />
-  if (tab === 'trabajo') return <CurrentWorkPanel summary={summary} sectors={sectors} />
+  if (tab === 'trabajo')
+    return (
+      <CurrentWorkPanel
+        summary={summary}
+        sectors={sectors}
+        datasetId={datasetId}
+        filterQuery={filterQuery}
+      />
+    )
   if (tab === 'desempleo')
     return <UnemploymentPanel unemployed={unemployed} unemploymentSummary={unemploymentSummary} />
   if (tab === 'primer-empleo')
@@ -257,6 +267,7 @@ function EntrepreneurshipDistribution({
   color?: string
 }) {
   const total = distribution?.validCount ?? 0
+  const ordinal = label.includes('satisfacción') || label.includes('Importancia')
   return (
     <div className="entrepreneurship-distribution py-1.5">
       <EmploymentDistributionVariant
@@ -274,8 +285,13 @@ function EntrepreneurshipDistribution({
               : undefined
         }
         accent={color}
-        variants={['bars', 'table']}
-        help="Cada barra representa una categoría de la pregunta y su longitud es el porcentaje sobre las respuestas válidas (n). Al pasar el cursor se muestran conteo y porcentaje."
+        variants={ordinal ? ['columns', 'table'] : ['bars', 'table']}
+        defaultVariant={ordinal ? 'columns' : 'bars'}
+        help={
+          ordinal
+            ? 'Las columnas siguen el orden natural de la escala; su altura representa el número de respuestas en cada nivel.'
+            : 'Cada barra representa una categoría de la pregunta y su longitud es el porcentaje sobre las respuestas válidas (n). Al pasar el cursor se muestran conteo y porcentaje.'
+        }
         exportTitle={label}
       />
     </div>
@@ -355,9 +371,10 @@ function FirstEmploymentPanel({
             }
             distribution={timing}
             order={timingLabels}
-            variants={['bars', 'table']}
+            defaultVariant="columns"
+            variants={['columns', 'table']}
             storageKey="titulados-employment-first-job-timing"
-            help="Cada barra representa un intervalo temporal, en el orden de la escala; su longitud es el porcentaje de titulados dentro de la base n."
+            help="Las columnas siguen la secuencia temporal desde antes de titularse hasta más de 12 meses; su altura representa el número de titulados en cada intervalo."
             exportTitle="tiempo-hasta-primer-empleo"
           />
         </div>
@@ -462,9 +479,13 @@ function UnemploymentPanel({
 function CurrentWorkPanel({
   summary,
   sectors,
+  datasetId,
+  filterQuery,
 }: {
   summary: AnalyticsSummary
   sectors?: CategoryDistribution
+  datasetId?: string
+  filterQuery?: string
 }) {
   const rubro = summary.distributions.rubro_trabajo_actual
   const remuneration = summary.distributions.remuneracion_rango
@@ -488,29 +509,67 @@ function CurrentWorkPanel({
         </div>
       </CardHeader>
       <CardContent className="work-current-grid grid gap-x-6 gap-y-8 border-t border-surface-container-high pt-5 lg:grid-cols-2">
-        <MiniDistribution
-          title="Rubro de la empresa"
-          distribution={rubro}
-          storageKey="titulados-employment-current-sector"
-        />
-        <MiniDistribution
-          title="Remuneración mensual líquida"
-          distribution={remuneration}
-          accent="amber"
-          storageKey="titulados-employment-remuneration"
-        />
-        <MiniDistribution
-          title="Áreas dentro de la organización"
-          distribution={areas}
-          accent="purple"
-          note="Varias respuestas posibles"
-          storageKey="titulados-employment-areas"
-          variants={['bars', 'table']}
-        />
+        <div className="lg:col-span-2">
+          <TituladosCrossMatrix
+            datasetId={datasetId}
+            filterQuery={filterQuery}
+            rowField="rubro_trabajo_actual"
+            columnField="remuneracion_rango"
+            title="Remuneración por rubro de organización"
+            description="Matriz de rangos salariales por rubro; conserva el orden salarial y aplica la prueba no paramétrica adecuada."
+          />
+        </div>
+        <WorkAreaPriorityTable distribution={areas} />
         <StackedRelevanceCard
           distribution={relevance}
           storageKey="titulados-employment-relevance"
         />
+      </CardContent>
+    </Card>
+  )
+}
+
+/** Lectura compacta de una pregunta multirrespuesta: muestra prioridades, no decenas de barras redundantes. */
+function WorkAreaPriorityTable({ distribution }: { distribution?: CategoryDistribution }) {
+  const entries = Object.entries(distribution?.counts ?? {}).sort(
+    ([, left], [, right]) => right - left,
+  )
+  const primary = entries.slice(0, 6)
+  const remaining = entries.slice(6)
+  const total = distribution?.validCount ?? 0
+  const row = ([label, count]: [string, number], rank?: number) => (
+    <tr key={label} className="border-b border-surface-container-high last:border-0">
+      <td className="w-7 py-2 text-xs font-semibold text-titulados">{rank ? `${rank}.` : '·'}</td>
+      <td className="py-2 text-sm font-medium text-ink-900">{label}</td>
+      <td className="py-2 text-right text-xs tabular-nums text-ink-600">
+        {count} de {total} ({formatPercentValue(distribution?.percentages[label] ?? 0)})
+      </td>
+    </tr>
+  )
+  return (
+    <Card className="rounded-xl border border-border-line bg-white shadow-none">
+      <CardHeader className="pb-2">
+        <CardTitle className="title-card">Áreas dentro de la organización</CardTitle>
+        <CardDescription>Prioridades declaradas · selección múltiple · n = {total}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {primary.length ? (
+          <table className="w-full">
+            <tbody>{primary.map((entry, index) => row(entry, index + 1))}</tbody>
+          </table>
+        ) : (
+          <p className="text-sm text-ink-600">Sin respuestas disponibles.</p>
+        )}
+        {remaining.length > 0 && (
+          <details className="mt-3 border-t border-border-line pt-3">
+            <summary className="cursor-pointer text-xs font-semibold text-titulados">
+              Ver {remaining.length} áreas con menor frecuencia
+            </summary>
+            <table className="mt-2 w-full">
+              <tbody>{remaining.map((entry) => row(entry))}</tbody>
+            </table>
+          </details>
+        )}
       </CardContent>
     </Card>
   )
@@ -956,7 +1015,7 @@ function EmploymentDonutCard({
   const chartConfig = Object.fromEntries(
     entries.map(([label]) => [label, { label, color: laborColor(label) }]),
   )
-  const [variant, setVariant] = useChartVariant('titulados-employment-status', 'ranked', [
+  const [variant, setVariant] = useChartVariant('titulados-employment-status', 'donut', [
     'ranked',
     'donut',
     'table',
@@ -984,7 +1043,7 @@ function EmploymentDonutCard({
             />
             <ChartCardActions
               title="Estado laboral"
-              help="En barras, cada situación laboral ocupa una fila y su longitud es el porcentaje sobre n. En la dona, cada arco representa ese mismo porcentaje; el centro muestra la tasa agrupada de ocupación."
+              help="Cada arco representa una situación laboral y su amplitud es el porcentaje sobre n. El centro muestra la tasa agrupada de ocupación."
               onExportCsv={() => downloadDistributionCsv('estado-laboral', chartItems, total)}
             />
           </div>
@@ -1125,9 +1184,10 @@ function AgeDistributionCard({ distribution }: { distribution?: CategoryDistribu
             '31 - 34 años',
             '35 años o más',
           ]}
-          variants={['bars', 'table']}
+          defaultVariant="columns"
+          variants={['columns', 'table']}
           storageKey="titulados-employment-age"
-          help="Cada barra representa un rango de edad en orden cronológico; su longitud es el porcentaje sobre las respuestas válidas y el tooltip muestra conteo y n."
+          help="Las columnas respetan el orden cronológico de los rangos de edad; su altura representa el número de respuestas válidas en cada rango."
           exportTitle="distribucion-por-edad"
         />
       </CardContent>
@@ -1177,7 +1237,7 @@ function GenderDistributionCard({ distribution }: { distribution?: CategoryDistr
             />
             <ChartCardActions
               title="Género"
-              help="Cada arco de la dona representa el porcentaje de respuestas de un género sobre n. La leyenda muestra el conteo y el porcentaje; las barras representan la misma distribución en longitud."
+              help="Cada arco representa el porcentaje de respuestas de un género sobre n. La leyenda muestra el conteo y el porcentaje exactos."
               onExportCsv={() => downloadDistributionCsv('genero', chartItems, total)}
             />
           </div>
@@ -1302,6 +1362,7 @@ export function CompetencePage({
     datasetId,
     setDatasetId,
     loading: datasetsLoading,
+    filterQuery,
     setFilterQuery,
     activeGroup,
     setActiveGroup,
@@ -1343,7 +1404,11 @@ export function CompetencePage({
         })}
         <section className="print-tab-section">
           <h2 className="title-card mb-3">Satisfacción y pertinencia</h2>
-          <SatisfactionPanelView summary={satisfaction} />
+          <SatisfactionAnalyticsPanel
+            summary={satisfaction}
+            datasetId={datasetId}
+            filterQuery={filterQuery}
+          />
         </section>
         <section className="print-tab-section">
           <h2 className="title-card mb-3">Malla y asignaturas</h2>
@@ -1391,7 +1456,15 @@ export function CompetencePage({
           </TabsList>
         </Tabs>
         {activeTab === 'satisfaccion' ? (
-          <SatisfactionPanelView summary={satisfaction} />
+          domain === 'TITULADOS' ? (
+            <SatisfactionAnalyticsPanel
+              summary={satisfaction}
+              datasetId={datasetId}
+              filterQuery={filterQuery}
+            />
+          ) : (
+            <SatisfactionPanelView summary={satisfaction} />
+          )
         ) : (
           <CurriculumPanel summary={curriculum} />
         )}
@@ -1513,7 +1586,7 @@ export function CompetencePage({
                 items={visibleItems}
                 group={groupLabel(activeGroup)}
                 storageKey={`simulacionem.chartVariant.titulados.competence.${activeGroup}`}
-                help="En el mapa de calor, cada celda muestra el número de respuestas de una competencia en ese nivel; una tonalidad más intensa significa más respuestas dentro de esa misma columna. El radar ubica la media de cada competencia en una escala de 1 a 5."
+                help="Cada celda muestra el número de respuestas de una competencia en un nivel de suficiencia. Una tonalidad más intensa indica una frecuencia mayor en esa celda."
                 onExportCsv={() =>
                   downloadAnalyticsCsv(
                     `competencias-${groupLabel(activeGroup)}`,

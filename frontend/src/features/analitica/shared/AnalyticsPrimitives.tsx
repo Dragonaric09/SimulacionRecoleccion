@@ -86,6 +86,7 @@ export function DistributionCard({
   )
   const labels: Record<CategoricalChartVariant, string> = {
     ranked: 'Barras',
+    columns: 'Columnas',
     donut: 'Donut',
     table: 'Tabla',
   }
@@ -114,7 +115,7 @@ export function DistributionCard({
             )}
             <ChartCardActions
               title={title}
-              help="Las barras horizontales permiten comparar categorías con precisión. La tabla conserva conteos y porcentajes exactos."
+              help="Cada barra horizontal representa una categoría. Su longitud corresponde al porcentaje sobre las respuestas válidas (n) y el extremo muestra el conteo exacto."
               onExportCsv={() => downloadDistributionCsv(title, items, distribution.validCount)}
             />
           </div>
