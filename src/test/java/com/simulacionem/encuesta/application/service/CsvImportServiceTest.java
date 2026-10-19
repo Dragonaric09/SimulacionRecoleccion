@@ -54,8 +54,8 @@ class CsvImportServiceTest {
         assertThat(summary.totalResponses()).isEqualTo(8);
         assertThat(summary.distributions().get("sector_trabajo").validCount()).isEqualTo(8);
         assertThat(empleadores.surveyType()).isEqualTo("EMPLEADORES");
-        assertThat(empleadores.rowsRead()).isEqualTo(2);
-        assertThat(empleadores.rowsValid()).isEqualTo(2);
+        assertThat(empleadores.rowsRead()).isEqualTo(3);
+        assertThat(empleadores.rowsValid()).isEqualTo(3);
         AnalyticsSummaryDto valuation = analytics.summary(empleadores.datasetId(), "EMPLEADORES", java.util.List.of("valoracion_formacion_1", "valoracion_formacion_5", "valoracion_relacion_3"));
         assertThat(valuation.distributions()).containsKey("valoracion_formacion_1");
         assertThat(valuation.distributions().get("valoracion_formacion_1").counts()).containsKeys("Parcialmente de acuerdo", "Totalmente de acuerdo");
@@ -71,6 +71,14 @@ class CsvImportServiceTest {
         ImportReportDto report = service.validate(new MockMultipartFile("file", "datos.txt", "text/plain", "a,b,c".getBytes()));
         assertThat(report.status()).isEqualTo("CON_ERRORES");
         assertThat(report.issues()).anyMatch(issue -> issue.code().equals("EXTENSION_INVALIDA"));
+    }
+
+    @Test
+    void reparaTextoMojibakeSinAlterarUtf8Valido() {
+        assertThat(CsvImportService.repairMojibake("ProgramaciÃ³n y diseÃ±o"))
+                .isEqualTo("Programación y diseño");
+        assertThat(CsvImportService.repairMojibake("Programación y diseño"))
+                .isEqualTo("Programación y diseño");
     }
 
     private ImportReportDto importFile(Path path) throws IOException {

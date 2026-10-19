@@ -668,8 +668,19 @@ public class CsvImportService {
 
     private String clean(String value) {
         if (value == null) return null;
-        String result = value.trim();
+        String result = repairMojibake(value).trim();
         return result.isEmpty() ? null : result;
+    }
+
+    /** Recupera textos UTF-8 que llegaron previamente decodificados como ISO-8859-1. */
+    static String repairMojibake(String value) {
+        if (!value.contains("Ã") && !value.contains("Â") && !value.contains("â")) return value;
+        try {
+            String repaired = new String(value.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+            return repaired.indexOf('\uFFFD') >= 0 ? value : repaired;
+        } catch (RuntimeException ex) {
+            return value;
+        }
     }
 
     private String safeName(String name) { return name == null || name.isBlank() ? "archivo.csv" : name; }
