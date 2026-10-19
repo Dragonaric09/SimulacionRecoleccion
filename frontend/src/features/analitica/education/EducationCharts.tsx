@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartCardActions } from '@/components/analytics/ChartCard'
 import { Empty, EmptyTitle } from '@/components/ui/empty'
 import type { CategoryDistribution } from '../api'
 import { sentenceCaseLabel } from '../shared/analyticsFormatters'
@@ -8,16 +9,21 @@ import {
   ChartVariantSelector,
   useChartVariant,
 } from '@/components/analytics/charts'
+import { downloadDistributionCsv } from '../shared/analyticsExport'
 
 export function SummaryCardShell({
   title,
   description,
   actions,
+  help,
+  onExportCsv,
   children,
 }: {
   title: string
   description: string
   actions?: ReactNode
+  help?: string
+  onExportCsv?: () => void
   children: ReactNode
 }) {
   return (
@@ -28,7 +34,10 @@ export function SummaryCardShell({
             <CardTitle className="title-card">{title}</CardTitle>
             <CardDescription>{description}</CardDescription>
           </div>
-          {actions}
+          <div className="flex shrink-0 items-center gap-1">
+            {actions}
+            <ChartCardActions title={title} help={help} onExportCsv={onExportCsv} />
+          </div>
         </div>
       </CardHeader>
       <CardContent>{children}</CardContent>
@@ -112,6 +121,8 @@ export function FormationActiveCard({
       title={title}
       description={`${formatPercentage(yes, total)} de la muestra total · n = ${total}`}
       actions={variantAction(variant, variants, labels, setVariant)}
+      help="Variable binaria: la barra apilada compara Sí y No sobre la misma base. La dona se ofrece solo como resumen de composición; la tabla conserva los valores exactos."
+      onExportCsv={() => downloadDistributionCsv(title, entries.map(([label, count]) => ({ label, count })), total)}
     >
       <div className="space-y-3">
         {variant === 'donut' ? (
@@ -224,6 +235,8 @@ export function OrdinalColumnsCard({
       title={title}
       description={description}
       actions={variantAction(variant, variants, labels, setVariant)}
+      help="Escala ordinal: las columnas respetan el orden natural de los niveles. Las barras facilitan la comparación de magnitudes y la tabla muestra los valores exactos."
+      onExportCsv={() => downloadDistributionCsv(title, items, distribution?.validCount ?? 0)}
     >
       {variant === 'ranked' ? (
         <CategoricalQuestionChart
@@ -296,6 +309,8 @@ export function NominalListCard({
       title={title}
       description={`${description} · n = ${distribution?.validCount ?? 0}`}
       actions={variantAction(variant, variants, labels, setVariant)}
+      help="Variable nominal: las barras horizontales permiten comparar categorías, incluso cuando los nombres son largos. La tabla ofrece el detalle exacto; no se usa dona porque puede haber muchas categorías."
+      onExportCsv={() => downloadDistributionCsv(title, items, distribution?.validCount ?? 0)}
     >
       {variant === 'bars' ? (
         <CategoricalQuestionChart
@@ -363,6 +378,8 @@ export function StackedFundingCard({
       title={title}
       description={`${description} · n = ${total}`}
       actions={variantAction(variant, variants, labels, setVariant)}
+      help="La barra apilada muestra cómo se compone el total entre fuentes de financiamiento. Use barras para comparar categorías individuales y la tabla para los valores exactos."
+      onExportCsv={() => downloadDistributionCsv(title, items, total)}
     >
       {variant === 'bars' ? (
         <CategoricalQuestionChart

@@ -14,6 +14,8 @@ import {
   StackedFundingCard,
 } from './EducationCharts'
 import { ChartVariantSelector, useChartVariant } from '@/components/analytics/charts'
+import { ChartCardActions } from '@/components/analytics/ChartCard'
+import { downloadDistributionCsv } from '../shared/analyticsExport'
 
 export function EducationProfilePage({ printAll = false }: { printAll?: boolean } = {}) {
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets('TITULADOS')
@@ -197,12 +199,29 @@ function EducationOpinionPanel({ summary }: { summary: AnalyticsSummary }) {
               Sistemas?”
             </CardDescription>
           </div>
-          <ChartVariantSelector
-            value={variant}
-            options={variants}
-            labels={labels}
-            onChange={setVariant}
-          />
+          <div className="flex shrink-0 items-center gap-1">
+            <ChartVariantSelector
+              value={variant}
+              options={variants}
+              labels={labels}
+              onChange={setVariant}
+            />
+            <ChartCardActions
+              title="Opinión sobre el posgrado de la FCyT"
+              help="Escala de acuerdo de cuatro niveles. La vista divergente separa desacuerdo y acuerdo para comparar su balance; la tabla conserva cada frecuencia exacta."
+              onExportCsv={() =>
+                downloadDistributionCsv(
+                  'opinion-posgrado-fcyt',
+                  Object.entries(opinion?.counts ?? {}).map(([label, count]) => ({
+                    label,
+                    count,
+                    percent: opinion?.percentages[label],
+                  })),
+                  opinion?.validCount ?? 0,
+                )
+              }
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>

@@ -45,42 +45,75 @@ export function ChartCard({
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {headerActions}
-          {showHelp && help && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" aria-label={`Qué mide: ${title}`}>
-                    <Info />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs text-left">{help}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          {showExportCsv && onExportCsv && (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Exportar CSV: ${title}`}
-              onClick={onExportCsv}
-            >
-              <Download />
-            </Button>
-          )}
-          {showExportChart && onExportChart && (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Descargar gráfica: ${title}`}
-              onClick={onExportChart}
-            >
-              <ImageDown />
-            </Button>
-          )}
+          <ChartCardActions
+            title={title}
+            help={showHelp ? help : undefined}
+            onExportCsv={showExportCsv ? onExportCsv : undefined}
+            onExportChart={showExportChart ? onExportChart : undefined}
+          />
         </div>
       </CardHeader>
       <CardContent className="px-5 pb-5 pt-4">{children}</CardContent>
     </Card>
+  )
+}
+
+/** Acciones consistentes: contexto metodológico y datos de la visualización. */
+export function ChartCardActions({
+  title,
+  help,
+  onExportCsv,
+  onExportChart,
+}: {
+  title: string
+  help?: string
+  onExportCsv?: () => void
+  onExportChart?: () => void
+}) {
+  if (!help && !onExportCsv && !onExportChart) return null
+  return (
+    <TooltipProvider>
+      {help && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label={`Cómo interpretar: ${title}`}>
+              <Info />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs text-left">{help}</TooltipContent>
+        </Tooltip>
+      )}
+      {onExportCsv && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Descargar datos CSV: ${title}`}
+              onClick={onExportCsv}
+            >
+              <Download />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Descargar los datos de esta visualización (CSV)</TooltipContent>
+        </Tooltip>
+      )}
+      {onExportChart && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Descargar visualización actual: ${title}`}
+              onClick={onExportChart}
+            >
+              <ImageDown />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Descargar la visualización actual (PNG)</TooltipContent>
+        </Tooltip>
+      )}
+    </TooltipProvider>
   )
 }
 

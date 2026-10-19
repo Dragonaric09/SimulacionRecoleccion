@@ -2,6 +2,7 @@ import { useDatasetContext } from '@/app/DatasetContext'
 import type { DatasetSummary } from '@/features/encuesta/api'
 import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { KpiCard } from '@/components/analytics/KpiCard'
+import { ChartCardActions } from '@/components/analytics/ChartCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { AnalyticsSummary, CategoryDistribution } from '../api'
@@ -9,6 +10,7 @@ import { apiRequest } from '@/api/client'
 import type { Domain, Tone } from './analyticsTypes'
 import { useEffect, useState } from 'react'
 import { sentenceCaseLabel } from './analyticsFormatters'
+import { downloadDistributionCsv } from './analyticsExport'
 import {
   CategoricalQuestionChart,
   ChartVariantSelector,
@@ -76,7 +78,7 @@ export function DistributionCard({
   tone: Tone
   showVariantSelector?: boolean
 }) {
-  const variants: readonly CategoricalChartVariant[] = ['ranked', 'donut', 'table']
+  const variants: readonly CategoricalChartVariant[] = ['ranked', 'table']
   const [variant, setVariant] = useChartVariant(
     `simulacionem.chartVariant.${tone}.distribution.${title}`,
     'ranked',
@@ -87,6 +89,12 @@ export function DistributionCard({
     donut: 'Donut',
     table: 'Tabla',
   }
+  const items = Object.entries(distribution.counts).map(([label, count]) => ({
+    label: sentenceCaseLabel(label),
+    count,
+    total: distribution.validCount,
+    percent: distribution.percentages[label] ?? 0,
+  }))
   return (
     <Card>
       <CardHeader>
@@ -95,24 +103,26 @@ export function DistributionCard({
             <CardTitle className="title-card">{title}</CardTitle>
             <CardDescription>Conteo y porcentaje · n = {distribution.validCount}</CardDescription>
           </div>
-          {showVariantSelector && (
-            <ChartVariantSelector
-              value={variant}
-              options={variants}
-              labels={labels}
-              onChange={setVariant}
+          <div className="flex shrink-0 items-center gap-1">
+            {showVariantSelector && (
+              <ChartVariantSelector
+                value={variant}
+                options={variants}
+                labels={labels}
+                onChange={setVariant}
+              />
+            )}
+            <ChartCardActions
+              title={title}
+              help="Las barras horizontales permiten comparar categorías con precisión. La tabla conserva conteos y porcentajes exactos."
+              onExportCsv={() => downloadDistributionCsv(title, items, distribution.validCount)}
             />
-          )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <CategoricalQuestionChart
-          items={Object.entries(distribution.counts).map(([label, count]) => ({
-            label: sentenceCaseLabel(label),
-            count,
-            total: distribution.validCount,
-            percent: distribution.percentages[label] ?? 0,
-          }))}
+          items={items}
           total={distribution.validCount}
           color={tone === 'titulados' ? '#1F6FB5' : '#14A39A'}
           defaultVariant="ranked"

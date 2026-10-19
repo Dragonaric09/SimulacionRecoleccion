@@ -1,5 +1,7 @@
 import type { AnalyticsSummary, CategoryDistribution } from "../api";
 import { contrastTextColor } from "@/lib/utils";
+import { ChartCardActions } from "@/components/analytics/ChartCard";
+import { downloadDistributionCsv } from "../shared/analyticsExport";
 import { StatusPanel } from "@/components/analytics/StatusPanel";
 import {
   Empty,
@@ -94,7 +96,14 @@ function LikertStatement({
         {(showSummary || number || title) && (
           <div className="flex flex-col justify-between gap-1 md:flex-row md:items-center">
             <span className="font-semibold text-ink-900">{number} {title}</span>
-            {showSummary && <span className="text-xs text-ink-600">{favorablePercentage(distribution)} % De acuerdo + Totalmente de acuerdo</span>}
+            <div className="flex items-center gap-1">
+              {showSummary && <span className="text-xs text-ink-600">{favorablePercentage(distribution)} % De acuerdo + Totalmente de acuerdo</span>}
+              <ChartCardActions
+                title={title}
+                help={scale === "satisfaction" ? "Escala ordinal de tres niveles. La barra apilada muestra la composición completa y los segmentos pequeños conservan su detalle en el CSV." : "Escala ordinal de acuerdo. Los colores separan desacuerdo y acuerdo; el CSV permite revisar cada frecuencia y porcentaje exactos."}
+                onExportCsv={() => downloadDistributionCsv(title, entries.map(([label, count]) => ({ label, count, percent: distribution?.percentages[label] })), total)}
+              />
+            </div>
           </div>
         )}
         <CardDescription>

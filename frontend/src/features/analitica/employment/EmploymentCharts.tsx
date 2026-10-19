@@ -1,4 +1,3 @@
-import { Info } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Empty, EmptyTitle } from '@/components/ui/empty'
 import {
@@ -8,6 +7,8 @@ import {
 } from '@/components/analytics/charts'
 import type { CategoryDistribution } from '../api'
 import { sentenceCaseLabel } from '../shared/analyticsFormatters'
+import { downloadDistributionCsv } from '../shared/analyticsExport'
+import { ChartCardActions } from '@/components/analytics/ChartCard'
 
 type EmploymentDistributionVariant = 'bars' | 'donut' | 'table'
 
@@ -37,6 +38,8 @@ export function EmploymentDistributionVariant({
   defaultVariant = 'bars',
   variants = ['bars', 'donut', 'table'],
   storageKey,
+  help,
+  exportTitle,
 }: {
   distribution?: CategoryDistribution
   title?: ReactNode
@@ -45,6 +48,8 @@ export function EmploymentDistributionVariant({
   defaultVariant?: EmploymentDistributionVariant
   variants?: EmploymentDistributionVariant[]
   storageKey?: string
+  help?: string
+  exportTitle?: string
 }) {
   const [variant, setVariant] = useChartVariant(storageKey, defaultVariant, variants)
   const items = distributionItems(distribution, order)
@@ -53,12 +58,25 @@ export function EmploymentDistributionVariant({
       {(title || variants.length > 1) && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           {title && <h3 className="text-sm font-semibold text-ink-900">{title}</h3>}
-          <ChartVariantSelector
-            value={variant}
-            options={variants}
-            labels={{ bars: 'Barras', donut: 'Donut', table: 'Tabla' }}
-            onChange={setVariant}
-          />
+          <div className="flex shrink-0 items-center gap-1">
+            <ChartVariantSelector
+              value={variant}
+              options={variants}
+              labels={{ bars: 'Barras', donut: 'Donut', table: 'Tabla' }}
+              onChange={setVariant}
+            />
+            <ChartCardActions
+              title={exportTitle ?? (typeof title === 'string' ? title : 'Distribución')}
+              help={help ?? 'Las barras horizontales facilitan comparar categorías; la tabla conserva los valores exactos.'}
+              onExportCsv={() =>
+                downloadDistributionCsv(
+                  exportTitle ?? (typeof title === 'string' ? title : 'distribucion'),
+                  items,
+                  distribution?.validCount ?? 0,
+                )
+              }
+            />
+          </div>
         </div>
       )}
       {variant === 'bars' ? (
@@ -120,6 +138,7 @@ export function MiniDistribution({
   order,
   storageKey,
   variants = ['bars', 'table'],
+  help,
 }: {
   title: string
   distribution?: CategoryDistribution
@@ -128,6 +147,7 @@ export function MiniDistribution({
   order?: string[]
   storageKey?: string
   variants?: EmploymentDistributionVariant[]
+  help?: string
 }) {
   const accentColor = { blue: '#1f6fb5', teal: '#14a39a', purple: '#8e5bd0', amber: '#f2a33a' }[
     accent
@@ -144,6 +164,8 @@ export function MiniDistribution({
         accent={accentColor}
         variants={variants}
         storageKey={storageKey}
+        help={help}
+        exportTitle={title}
       />
     </div>
   )
@@ -198,7 +220,11 @@ export function StackedRelevanceCard({
             labels={{ stacked: 'Apiladas', table: 'Tabla' }}
             onChange={setVariant}
           />
-          <Info className="size-4 text-ink-600" />
+          <ChartCardActions
+            title="Pertinencia de formación para el cargo"
+            help="Escala ordinal de acuerdo. La barra apilada resume la composición y la tabla muestra las frecuencias exactas por nivel."
+            onExportCsv={() => downloadDistributionCsv('pertinencia-formacion-cargo', items, total)}
+          />
         </div>
       </div>
       {variant === 'table' ? (

@@ -10,6 +10,7 @@ import {
   Users,
 } from 'lucide-react'
 import { Badge } from '@/components/analytics/Badge'
+import { ChartCardActions } from '@/components/analytics/ChartCard'
 import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
@@ -45,6 +46,7 @@ import type { AnalyticsSummary, CategoryDistribution } from './api'
 import type { CohortChartPoint, Domain, EmploymentProfile, Tone } from './shared/analyticsTypes'
 import { DatasetSelect, PageHeading } from './shared/AnalyticsPrimitives'
 import { formatDecimal, formatPercentValue } from './shared/analyticsFormatters'
+import { downloadAnalyticsCsv, downloadDistributionCsv } from './shared/analyticsExport'
 import {
   EmploymentDistributionVariant,
   MiniDistribution,
@@ -261,7 +263,9 @@ function EntrepreneurshipDistribution({
               : undefined
         }
         accent={color}
-        variants={['bars', 'donut', 'table']}
+        variants={['bars', 'table']}
+        help="Las barras horizontales facilitan comparar categorías de emprendimiento. La tabla conserva conteos y porcentajes exactos."
+        exportTitle={label}
       />
     </div>
   )
@@ -340,8 +344,10 @@ function FirstEmploymentPanel({
             }
             distribution={timing}
             order={timingLabels}
-            variants={['bars', 'donut', 'table']}
+            variants={['bars', 'table']}
             storageKey="titulados-employment-first-job-timing"
+            help="Variable ordinal: las barras respetan el orden temporal hasta el primer empleo; la tabla muestra la frecuencia exacta de cada intervalo."
+            exportTitle="tiempo-hasta-primer-empleo"
           />
         </div>
       </CardContent>
@@ -414,8 +420,10 @@ function UnemploymentPanel({
             }
             distribution={reasons}
             accent={unemploymentReasonColor()}
-            variants={['bars', 'donut', 'table']}
+            variants={['bars', 'table']}
             storageKey="titulados-employment-unemployment-reasons"
+            help="Las razones no tienen orden natural; las barras horizontales permiten comparar sus frecuencias y la tabla conserva el detalle exacto."
+            exportTitle="razones-por-las-que-no-trabaja"
           />
           <p className="mt-5 border-t border-surface-container-high pt-3 text-xs font-semibold text-ink-700">
             Tiempo en búsqueda activa
@@ -654,12 +662,29 @@ function CohortScatterCard({
               Experiencia profesional según año de titulación · n = {points.length}
             </CardDescription>
           </div>
-          <ChartVariantSelector
-            value={variant}
-            options={['scatter', 'table'] as const}
-            labels={{ scatter: 'Puntos', table: 'Tabla' }}
-            onChange={setVariant}
-          />
+          <div className="flex shrink-0 items-center gap-1">
+            <ChartVariantSelector
+              value={variant}
+              options={['scatter', 'table'] as const}
+              labels={{ scatter: 'Puntos', table: 'Tabla' }}
+              onChange={setVariant}
+            />
+            <ChartCardActions
+              title="Años de vida profesional por cohorte"
+              help="El diagrama de puntos muestra cada titulado según su año de titulación y años de experiencia; media y mediana ayudan a resumir la distribución. La tabla permite revisar los valores individuales."
+              onExportCsv={() =>
+                downloadAnalyticsCsv(
+                  'vida-profesional-por-cohorte',
+                  ['Año de titulación', 'Años de vida profesional', 'Valor atípico'],
+                  chartData.map((point) => [
+                    point.graduationYear,
+                    point.professionalYears,
+                    point.isOutlier ? 'Sí' : 'No',
+                  ]),
+                )
+              }
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -888,8 +913,10 @@ function ProfileDistributionCard({
       <CardContent>
         <EmploymentDistributionVariant
           distribution={distribution}
-          variants={['bars', 'donut', 'table']}
+          variants={['bars', 'table']}
           storageKey={`titulados-employment-profile-${title}`}
+          help="Variable nominal: las barras horizontales permiten comparar sectores incluso cuando las etiquetas son largas."
+          exportTitle={title}
         />
       </CardContent>
     </Card>
@@ -918,9 +945,9 @@ function EmploymentDonutCard({
   const chartConfig = Object.fromEntries(
     entries.map(([label]) => [label, { label, color: laborColor(label) }]),
   )
-  const [variant, setVariant] = useChartVariant('titulados-employment-status', 'donut', [
-    'donut',
+  const [variant, setVariant] = useChartVariant('titulados-employment-status', 'ranked', [
     'ranked',
+    'donut',
     'table',
   ] as const)
   const chartItems = entries.map(([label, count]) => ({
@@ -937,12 +964,19 @@ function EmploymentDonutCard({
             <CardTitle className="title-card">Estado laboral</CardTitle>
             <CardDescription>Situación ocupacional declarada · n = {total}</CardDescription>
           </div>
-          <ChartVariantSelector
-            value={variant}
-            options={['donut', 'ranked', 'table'] as const}
-            labels={{ donut: 'Donut', ranked: 'Barras', table: 'Tabla' }}
-            onChange={setVariant}
-          />
+          <div className="flex shrink-0 items-center gap-1">
+            <ChartVariantSelector
+              value={variant}
+              options={['ranked', 'donut', 'table'] as const}
+              labels={{ donut: 'Donut', ranked: 'Barras', table: 'Tabla' }}
+              onChange={setVariant}
+            />
+            <ChartCardActions
+              title="Estado laboral"
+              help="Las barras son la vista principal porque permiten comparar con precisión las situaciones laborales. La dona queda como resumen de composición para un número reducido de categorías."
+              onExportCsv={() => downloadDistributionCsv('estado-laboral', chartItems, total)}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-5 sm:flex-row">
@@ -1058,8 +1092,10 @@ function AgeDistributionCard({ distribution }: { distribution?: CategoryDistribu
             '31 - 34 años',
             '35 años o más',
           ]}
-          variants={['bars', 'donut', 'table']}
+          variants={['bars', 'table']}
           storageKey="titulados-employment-age"
+          help="Variable ordinal: las barras mantienen el orden cronológico de los rangos de edad; la tabla ofrece las cifras exactas."
+          exportTitle="distribucion-por-edad"
         />
       </CardContent>
       <CardContent className="flex justify-between border-t border-surface-container-high py-3 text-xs text-ink-600">
@@ -1099,12 +1135,19 @@ function GenderDistributionCard({ distribution }: { distribution?: CategoryDistr
             <CardTitle className="title-card">Género (n = {total})</CardTitle>
             <CardDescription>Composición declarada en encuesta</CardDescription>
           </div>
-          <ChartVariantSelector
-            value={variant}
-            options={['donut', 'ranked', 'table'] as const}
-            labels={{ donut: 'Donut', ranked: 'Barras', table: 'Tabla' }}
-            onChange={setVariant}
-          />
+          <div className="flex shrink-0 items-center gap-1">
+            <ChartVariantSelector
+              value={variant}
+              options={['donut', 'ranked', 'table'] as const}
+              labels={{ donut: 'Donut', ranked: 'Barras', table: 'Tabla' }}
+              onChange={setVariant}
+            />
+            <ChartCardActions
+              title="Género"
+              help="La dona es adecuada para esta composición de pocas categorías; use barras o la tabla cuando necesite comparar valores con mayor precisión."
+              onExportCsv={() => downloadDistributionCsv('genero', chartItems, total)}
+            />
+          </div>
         </div>
       </CardHeader>
       {variant !== 'donut' ? (
@@ -1429,7 +1472,21 @@ export function CompetencePage({
                 items={visibleItems}
                 group={groupLabel(activeGroup)}
                 storageKey={`simulacionem.chartVariant.titulados.competence.${activeGroup}`}
-                help="Permite consultar las competencias como mapa de calor, radar o tabla estadística. Las medias se calculan sobre las respuestas válidas."
+                help="El mapa de calor es la vista principal: permite comparar cada competencia y detectar niveles altos o bajos. El radar se reserva para una lectura global del perfil; la tabla muestra las estadísticas exactas. Las medias se calculan sobre respuestas válidas."
+                onExportCsv={() =>
+                  downloadAnalyticsCsv(
+                    `competencias-${groupLabel(activeGroup)}`,
+                    ['Código', 'Competencia', 'Media', 'Mediana', 'Desviación estándar', 'Respuestas válidas'],
+                    visibleItems.map((item) => [
+                      item.code,
+                      item.name,
+                      item.average,
+                      item.median,
+                      item.standardDeviation,
+                      item.validCount,
+                    ]),
+                  )
+                }
               />
             </>
           )}

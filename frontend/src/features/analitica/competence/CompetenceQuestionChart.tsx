@@ -1,8 +1,5 @@
 import { ChartVariantSelector, useChartVariant } from '@/components/analytics/charts'
-import { Download } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Info } from 'lucide-react'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { ChartCardActions } from '@/components/analytics/ChartCard'
 import type { Competence } from '../shared/analyticsTypes'
 import { CompetenceMatrix } from './CompetenceMatrix'
 import { CompetenceRadar } from './CompetenceRadar'
@@ -50,32 +47,7 @@ export function CompetenceQuestionChart({
           onChange={setVariant}
         />
       )}
-      {help && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Qué mide el perfil de competencias: ${group}`}
-              >
-                <Info />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs text-left">{help}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
-      {onExportCsv && (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`Exportar CSV: ${group}`}
-          onClick={onExportCsv}
-        >
-          <Download />
-        </Button>
-      )}
+      <ChartCardActions title={`Competencias: ${group}`} help={help} onExportCsv={onExportCsv} />
     </div>
   )
   return (

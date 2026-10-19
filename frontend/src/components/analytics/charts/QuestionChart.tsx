@@ -1,4 +1,12 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useState } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { DonutChart } from './DonutChart'
 import { RankedBars } from './RankedBars'
 import type { DistributionChartItem } from './chartTypes'
@@ -36,20 +44,21 @@ export function ChartVariantSelector<T extends string>({
 }) {
   if (options.length < 2) return null
   return (
-    <label className="flex items-center justify-center gap-2 text-center text-xs text-ink-600">
-      Ver como:
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value as T)}
-        className="rounded-md border border-border-line bg-white px-2 py-1 text-xs text-ink-800"
-      >
+    <div className="flex items-center justify-center gap-2 text-center text-xs text-ink-600">
+      <span>Ver como:</span>
+      <Select value={value} onValueChange={(next) => onChange(next as T)}>
+        <SelectTrigger size="sm" aria-label="Tipo de visualización" className="bg-white text-xs text-ink-800">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
         {options.map((option) => (
-          <option key={option} value={option}>
+          <SelectItem key={option} value={option}>
             {labels[option]}
-          </option>
+          </SelectItem>
         ))}
-      </select>
-    </label>
+        </SelectContent>
+      </Select>
+    </div>
   )
 }
 
