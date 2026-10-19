@@ -6,13 +6,13 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart'
 import { formatPercentValue } from '@/features/analitica/shared/analyticsFormatters'
+import { formatDistributionTooltip } from '@/components/analytics/visualizationTooltip'
 import type { DistributionChartItem } from './chartTypes'
 import { responsiveLabelWidth, useChartContainerWidth } from './useChartContainerSize'
 
 const AXIS_TICK = { fontSize: 12, fill: '#475569' }
 const EMPLOYER = '#14A39A'
 const GRID = '#E2E8F0'
-const formatCount = (value: number) => new Intl.NumberFormat('es-BO').format(value)
 const truncate = (text: string, max: number) =>
   text.length > max ? `${text.slice(0, max - 1)}…` : text
 
@@ -75,7 +75,11 @@ export function RankedBars({
                 hideIndicator
                 labelFormatter={(value) => String(value)}
                 formatter={(value, _name, item) =>
-                  `${formatCount(item.payload.count)} (${formatPercentValue(Number(value))})`
+                  formatDistributionTooltip(
+                    { count: item.payload.count, total: item.payload.total ?? 0 },
+                    Number(value),
+                    'bar',
+                  )
                 }
               />
             }

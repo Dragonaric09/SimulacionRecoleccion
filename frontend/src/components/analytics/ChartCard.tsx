@@ -4,6 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from 'cn'
+import {
+  formatDistributionTooltip,
+  formatMeanValue,
+  formatTooltipPercent,
+  type VisualizationTooltipDatum,
+} from './visualizationTooltip'
 
 /**
  * Tarjeta de gráfico: título descriptivo, «n = X» (personas que respondieron esa pregunta),
@@ -132,6 +138,84 @@ export function DataPointTooltip({
         <TooltipContent className="max-w-xs text-left">{content}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
+  )
+}
+
+/**
+ * Variante única para marcas interactivas. Cada tipo de gráfico declara qué dato
+ * codifica su marca y este componente presenta el detalle de forma consistente.
+ */
+export function VisualizationDataTooltip({
+  datum,
+  children,
+}: {
+  datum: VisualizationTooltipDatum
+  children: ReactNode
+}) {
+  return (
+    <DataPointTooltip content={<VisualizationTooltipContent datum={datum} />}>
+      {children}
+    </DataPointTooltip>
+  )
+}
+
+export function VisualizationTooltipContent({ datum }: { datum: VisualizationTooltipDatum }) {
+  if (datum.kind === 'heatmap') {
+    return (
+      <div className="grid gap-0.5">
+        <strong>{datum.row}</strong>
+        <span>
+          Nivel {datum.column}: {datum.count} de {datum.total} respuestas válidas
+        </span>
+        <span className="text-muted-foreground">
+          El color expresa la intensidad de esta frecuencia.
+        </span>
+      </div>
+    )
+  }
+  if (datum.kind === 'scatter') {
+    return (
+      <div className="grid gap-0.5">
+        <strong>{datum.label}</strong>
+        <span>
+          {datum.xLabel}: {datum.xValue}
+        </span>
+        <span>
+          {datum.yLabel}: {datum.yValue}
+        </span>
+        {datum.note && <span className="text-muted-foreground">{datum.note}</span>}
+      </div>
+    )
+  }
+  if (datum.kind === 'mean') {
+    return (
+      <div className="grid gap-0.5">
+        <strong>{datum.label}</strong>
+        <span>
+          Media: {formatMeanValue(datum.value)} de 5
+          {datum.sampleSize === undefined ? '' : ` · n = ${datum.sampleSize}`}
+        </span>
+        <span className="text-muted-foreground">
+          Longitud de la barra: valor medio en la escala de 1 a 5.
+        </span>
+      </div>
+    )
+  }
+  const percent = datum.percent ?? (datum.total ? (datum.count * 100) / datum.total : 0)
+  const representation = {
+    bar: 'Longitud de la barra',
+    column: 'Altura de la columna',
+    stacked: 'Ancho del segmento',
+    donut: 'Arco de la dona',
+  }[datum.kind]
+  return (
+    <div className="grid gap-0.5">
+      <strong>{datum.label}</strong>
+      <span>{formatDistributionTooltip(datum, percent)}</span>
+      <span className="text-muted-foreground">
+        {representation}: {formatTooltipPercent(percent)} de n.
+      </span>
+    </div>
   )
 }
 

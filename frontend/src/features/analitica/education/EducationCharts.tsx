@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ChartCardActions, DataPointTooltip } from '@/components/analytics/ChartCard'
+import { ChartCardActions, VisualizationDataTooltip } from '@/components/analytics/ChartCard'
 import { Empty, EmptyTitle } from '@/components/ui/empty'
 import type { CategoryDistribution } from '../api'
 import { sentenceCaseLabel } from '../shared/analyticsFormatters'
@@ -157,24 +157,24 @@ export function FormationActiveCard({
               aria-label={`${yes} respuestas Sí y ${no} respuestas No`}
             >
               {yes > 0 && (
-                <DataPointTooltip
-                  content={`Sí: ${yes} de ${total} (${formatPercentage(yes, total)})`}
+                <VisualizationDataTooltip
+                  datum={{ kind: 'stacked', label: 'Sí', count: yes, total }}
                 >
                   <div
                     className="bg-titulados"
                     style={{ width: `${total ? (yes * 100) / total : 0}%` }}
                   />
-                </DataPointTooltip>
+                </VisualizationDataTooltip>
               )}
               {no > 0 && (
-                <DataPointTooltip
-                  content={`No: ${no} de ${total} (${formatPercentage(no, total)})`}
+                <VisualizationDataTooltip
+                  datum={{ kind: 'stacked', label: 'No', count: no, total }}
                 >
                   <div
                     className="bg-slate-300"
                     style={{ width: `${total ? (no * 100) / total : 0}%` }}
                   />
-                </DataPointTooltip>
+                </VisualizationDataTooltip>
               )}
             </div>
             <div className="flex justify-between text-xs text-ink-600">
@@ -265,9 +265,15 @@ export function OrdinalColumnsCard({
       ) : (
         <div className="flex min-h-36 items-end justify-between gap-2 border-b border-border-line px-1 pb-1">
           {entries.map(([label, count]) => (
-            <DataPointTooltip
+            <VisualizationDataTooltip
               key={label}
-              content={`${label}: ${count} de ${distribution?.validCount ?? 0} (${formatPercentValue(distribution?.percentages[label] ?? 0)} %)`}
+              datum={{
+                kind: 'column',
+                label,
+                count,
+                total: distribution?.validCount ?? 0,
+                percent: distribution?.percentages[label],
+              }}
             >
               <div className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
                 <span className="text-xs font-semibold tabular-nums text-ink-800">{count}</span>
@@ -280,7 +286,7 @@ export function OrdinalColumnsCard({
                   {label}
                 </span>
               </div>
-            </DataPointTooltip>
+            </VisualizationDataTooltip>
           ))}
         </div>
       )}
@@ -412,9 +418,15 @@ export function StackedFundingCard({
         <>
           <div className="flex h-8 overflow-hidden rounded-md bg-surface-container-high">
             {entries.map(([label, count], index) => (
-              <DataPointTooltip
+              <VisualizationDataTooltip
                 key={label}
-                content={`${label}: ${count} de ${total} (${formatPercentValue(distribution?.percentages[label] ?? 0)} %)`}
+                datum={{
+                  kind: 'stacked',
+                  label,
+                  count,
+                  total,
+                  percent: distribution?.percentages[label],
+                }}
               >
                 <div
                   className="flex min-w-0 items-center justify-center text-[11px] font-semibold text-white"
@@ -425,7 +437,7 @@ export function StackedFundingCard({
                 >
                   {(count * 100) / Math.max(total, 1) >= 12 ? count : ''}
                 </div>
-              </DataPointTooltip>
+              </VisualizationDataTooltip>
             ))}
           </div>
           <div className="mt-3 space-y-1.5 text-xs text-ink-700">
@@ -487,10 +499,7 @@ export function DivergingAgreementCard({
       <div className="grid grid-cols-2 gap-1" aria-label="Escala divergente de acuerdo">
         <div className="flex h-9 overflow-hidden rounded-l-md bg-surface-container-high">
           {negative.map(([label, count]) => (
-            <DataPointTooltip
-              key={label}
-              content={`${label}: ${count} de ${total} (${formatPercentage(count, total)})`}
-            >
+            <VisualizationDataTooltip key={label} datum={{ kind: 'stacked', label, count, total }}>
               <div
                 className="flex items-center justify-center text-[11px] font-semibold text-white"
                 style={{
@@ -501,15 +510,12 @@ export function DivergingAgreementCard({
               >
                 {count || ''}
               </div>
-            </DataPointTooltip>
+            </VisualizationDataTooltip>
           ))}
         </div>
         <div className="flex h-9 overflow-hidden rounded-r-md bg-surface-container-high">
           {positive.map(([label, count]) => (
-            <DataPointTooltip
-              key={label}
-              content={`${label}: ${count} de ${total} (${formatPercentage(count, total)})`}
-            >
+            <VisualizationDataTooltip key={label} datum={{ kind: 'stacked', label, count, total }}>
               <div
                 className="flex items-center justify-center text-[11px] font-semibold text-white"
                 style={{
@@ -520,7 +526,7 @@ export function DivergingAgreementCard({
               >
                 {count || ''}
               </div>
-            </DataPointTooltip>
+            </VisualizationDataTooltip>
           ))}
         </div>
       </div>

@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/analytics/Badge'
 import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { KpiCard } from '@/components/analytics/KpiCard'
-import { DataPointTooltip } from '@/components/analytics/ChartCard'
+import { VisualizationDataTooltip } from '@/components/analytics/ChartCard'
+import { formatDistributionTooltip } from '@/components/analytics/visualizationTooltip'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { Empty, EmptyTitle } from '@/components/ui/empty'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
@@ -225,7 +226,11 @@ function EmploymentCard({ distribution }: { distribution?: CategoryDistribution 
                     <ChartTooltipContent
                       nameKey="label"
                       formatter={(value) =>
-                        `${value} respuestas (${formatPercent(Number(value), total)})`
+                        formatDistributionTooltip(
+                          { count: Number(value), total },
+                          undefined,
+                          'donut',
+                        )
                       }
                     />
                   }
@@ -390,9 +395,9 @@ function EmploymentSummaryCard({
         >
           {rows.map(([label, count], index) =>
             count > 0 ? (
-              <DataPointTooltip
+              <VisualizationDataTooltip
                 key={label}
-                content={`${label}: ${count} de ${total} (${formatPercent(count, total)})`}
+                datum={{ kind: 'stacked', label, count, total }}
               >
                 <div
                   className="flex min-w-0 items-center justify-center px-1 text-[11px] font-semibold"
@@ -404,7 +409,7 @@ function EmploymentSummaryCard({
                 >
                   {(count * 100) / Math.max(total, 1) >= 10 ? `${count}` : ''}
                 </div>
-              </DataPointTooltip>
+              </VisualizationDataTooltip>
             ) : null,
           )}
         </div>

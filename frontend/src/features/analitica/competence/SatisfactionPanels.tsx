@@ -1,6 +1,6 @@
 import type { AnalyticsSummary, CategoryDistribution } from '../api'
 import { contrastTextColor } from '@/lib/utils'
-import { ChartCardActions, DataPointTooltip } from '@/components/analytics/ChartCard'
+import { ChartCardActions, VisualizationDataTooltip } from '@/components/analytics/ChartCard'
 import { downloadDistributionCsv } from '../shared/analyticsExport'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { Empty, EmptyTitle } from '@/components/ui/empty'
@@ -153,9 +153,15 @@ function LikertStatement({
           <>
             <div className="flex h-11 overflow-hidden rounded-lg">
               {entries.map(([label, count], index) => (
-                <DataPointTooltip
+                <VisualizationDataTooltip
                   key={label}
-                  content={`${label}: ${count} de ${total} (${formatPercentValue(distribution?.percentages[label] ?? 0)})`}
+                  datum={{
+                    kind: 'stacked',
+                    label,
+                    count,
+                    total,
+                    percent: distribution?.percentages[label],
+                  }}
                 >
                   <div
                     className="flex min-w-0 items-center justify-center px-1 text-xs font-semibold"
@@ -169,7 +175,7 @@ function LikertStatement({
                       ? `${count} (${formatPercentValue(distribution?.percentages[label] ?? 0)})`
                       : ''}
                   </div>
-                </DataPointTooltip>
+                </VisualizationDataTooltip>
               ))}
             </div>
             {scale === 'satisfaction' ? (

@@ -10,7 +10,12 @@ import {
   Users,
 } from 'lucide-react'
 import { Badge } from '@/components/analytics/Badge'
-import { ChartCardActions, DataPointTooltip } from '@/components/analytics/ChartCard'
+import {
+  ChartCardActions,
+  VisualizationDataTooltip,
+  VisualizationTooltipContent,
+} from '@/components/analytics/ChartCard'
+import { formatDistributionTooltip } from '@/components/analytics/visualizationTooltip'
 import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
@@ -95,11 +100,17 @@ function CohortTooltip({
   if (!active || !point) return null
   return (
     <div className="grid min-w-[12rem] gap-1 rounded-lg border border-border-line bg-white px-3 py-2 text-xs shadow-xl">
-      <p className="font-medium text-ink-900">Año de titulación: {point.graduationYear}</p>
-      <p className="text-ink-600">
-        Años de vida profesional: {point.professionalYears}
-        {point.isOutlier ? ' · valor atípico' : ''}
-      </p>
+      <VisualizationTooltipContent
+        datum={{
+          kind: 'scatter',
+          label: 'Titulado',
+          xLabel: 'Año de titulación',
+          xValue: point.graduationYear,
+          yLabel: 'Años de vida profesional',
+          yValue: point.professionalYears,
+          note: point.isOutlier ? 'Valor atípico' : undefined,
+        }}
+      />
     </div>
   )
 }
@@ -1001,7 +1012,11 @@ function EmploymentDonutCard({
                       <ChartTooltipContent
                         nameKey="label"
                         formatter={(value) =>
-                          `${value} respuestas (${formatPercentValue(total ? (Number(value) * 100) / total : 0)})`
+                          formatDistributionTooltip(
+                            { count: Number(value), total },
+                            undefined,
+                            'donut',
+                          )
                         }
                       />
                     }
@@ -1053,9 +1068,15 @@ function EmploymentDonutCard({
         {variant === 'donut' && (
           <div className="min-w-0 w-full space-y-2">
             {entries.map(([label, count]) => (
-              <DataPointTooltip
+              <VisualizationDataTooltip
                 key={label}
-                content={`${displayLaborLabel(label)}: ${count} de ${total} (${formatPercentValue(distribution?.percentages[label] ?? 0)})`}
+                datum={{
+                  kind: 'donut',
+                  label: displayLaborLabel(label),
+                  count,
+                  total,
+                  percent: distribution?.percentages[label],
+                }}
               >
                 <div className="flex items-center justify-between gap-3 rounded-lg border border-border-line bg-surface-container-low px-3 py-2 text-sm">
                   <div className="flex min-w-0 items-center gap-2">
@@ -1072,7 +1093,7 @@ function EmploymentDonutCard({
                     </span>
                   </span>
                 </div>
-              </DataPointTooltip>
+              </VisualizationDataTooltip>
             ))}
           </div>
         )}
@@ -1188,9 +1209,15 @@ function GenderDistributionCard({ distribution }: { distribution?: CategoryDistr
           </div>
           <div className="min-w-0 space-y-2">
             {entries.map(([label, count]) => (
-              <DataPointTooltip
+              <VisualizationDataTooltip
                 key={label}
-                content={`${label}: ${count} de ${total} (${formatPercentValue(distribution?.percentages[label] ?? 0)})`}
+                datum={{
+                  kind: 'donut',
+                  label,
+                  count,
+                  total,
+                  percent: distribution?.percentages[label],
+                }}
               >
                 <div className="flex items-center gap-2 rounded border border-border-line bg-surface-container-low px-2.5 py-2 text-sm">
                   <span
@@ -1206,7 +1233,7 @@ function GenderDistributionCard({ distribution }: { distribution?: CategoryDistr
                     </span>
                   </span>
                 </div>
-              </DataPointTooltip>
+              </VisualizationDataTooltip>
             ))}
           </div>
         </CardContent>

@@ -6,6 +6,7 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart'
 import { formatDecimal } from '@/features/analitica/shared/analyticsFormatters'
+import { formatMeanTooltip } from '@/components/analytics/visualizationTooltip'
 import type { MeanChartItem } from './chartTypes'
 import { responsiveLabelWidth, useChartContainerWidth } from './useChartContainerSize'
 
@@ -74,7 +75,11 @@ export function MeanBars({
               <ChartTooltipContent
                 hideIndicator
                 formatter={(value, _name, item) =>
-                  `${formatDecimal(Number(value), 2)}${item.payload.sampleSize === undefined ? '' : ` · n = ${item.payload.sampleSize}`}`
+                  formatMeanTooltip({
+                    label: item.payload.label,
+                    value: Number(value),
+                    sampleSize: item.payload.sampleSize,
+                  })
                 }
               />
             }

@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/chart'
 import type { DistributionChartItem } from './chartTypes'
 import { useChartContainerWidth } from './useChartContainerSize'
+import { formatDistributionTooltip } from '@/components/analytics/visualizationTooltip'
 
 const COLORS = [
   '#1F6FB5',
@@ -68,7 +69,11 @@ export function DonutChart({
               <ChartTooltipContent
                 nameKey="label"
                 formatter={(value, _name, item) =>
-                  `${formatCount(Number(value))} (${formatPercent(Number(item.payload.percent))})`
+                  formatDistributionTooltip(
+                    { count: Number(value), total },
+                    Number(item.payload.percent),
+                    'donut',
+                  )
                 }
                 hideLabel
               />

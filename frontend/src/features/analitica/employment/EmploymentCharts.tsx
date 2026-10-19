@@ -8,7 +8,7 @@ import {
 import type { CategoryDistribution } from '../api'
 import { sentenceCaseLabel } from '../shared/analyticsFormatters'
 import { downloadDistributionCsv } from '../shared/analyticsExport'
-import { ChartCardActions, DataPointTooltip } from '@/components/analytics/ChartCard'
+import { ChartCardActions, VisualizationDataTooltip } from '@/components/analytics/ChartCard'
 
 type EmploymentDistributionVariant = 'bars' | 'donut' | 'table'
 
@@ -122,14 +122,20 @@ function DistributionBarsVariantItems({
             </span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
-            <DataPointTooltip
-              content={`${item.label}: ${item.count} de ${item.total ?? 0} (${formatPercent(item.percent)})`}
+            <VisualizationDataTooltip
+              datum={{
+                kind: 'bar',
+                label: item.label,
+                count: item.count,
+                total: item.total ?? 0,
+                percent: item.percent,
+              }}
             >
               <div
                 className="h-full rounded-full"
                 style={{ width: `${item.percent}%`, backgroundColor: accent }}
               />
-            </DataPointTooltip>
+            </VisualizationDataTooltip>
           </div>
         </div>
       ))}
@@ -248,9 +254,9 @@ export function StackedRelevanceCard({
             {entries.map(([label, count], index) => {
               const percentage = total ? (count / total) * 100 : 0
               return (
-                <DataPointTooltip
+                <VisualizationDataTooltip
                   key={label}
-                  content={`${label}: ${count} de ${total} (${formatPercent(percentage)})`}
+                  datum={{ kind: 'stacked', label, count, total, percent: percentage }}
                 >
                   <div
                     className="h-full"
@@ -259,7 +265,7 @@ export function StackedRelevanceCard({
                       backgroundColor: colors[index % colors.length],
                     }}
                   />
-                </DataPointTooltip>
+                </VisualizationDataTooltip>
               )
             })}
           </div>

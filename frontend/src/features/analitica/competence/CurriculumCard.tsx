@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Empty, EmptyTitle } from '@/components/ui/empty'
 import type { AnalyticsSummary } from '../api'
 import { sentenceCaseLabel } from '../shared/analyticsFormatters'
-import { ChartCardActions, DataPointTooltip } from '@/components/analytics/ChartCard'
+import { ChartCardActions, VisualizationDataTooltip } from '@/components/analytics/ChartCard'
 import { downloadDistributionCsv } from '../shared/analyticsExport'
 
 export function CurriculumCard({
@@ -58,8 +58,14 @@ export function CurriculumCard({
                 </span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
-                <DataPointTooltip
-                  content={`${sentenceCaseLabel(label)}: ${count} de ${total} (${formatPercent(distribution?.percentages[label] ?? 0)})`}
+                <VisualizationDataTooltip
+                  datum={{
+                    kind: 'bar',
+                    label: sentenceCaseLabel(label),
+                    count,
+                    total,
+                    percent: distribution?.percentages[label],
+                  }}
                 >
                   <div
                     className="h-full rounded-full"
@@ -68,7 +74,7 @@ export function CurriculumCard({
                       backgroundColor: colors[tone],
                     }}
                   />
-                </DataPointTooltip>
+                </VisualizationDataTooltip>
               </div>
             </div>
           ))
