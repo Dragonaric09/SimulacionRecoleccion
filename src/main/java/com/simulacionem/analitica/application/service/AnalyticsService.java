@@ -5,6 +5,7 @@ import com.simulacionem.analitica.application.dto.CategoryDistributionDto;
 import com.simulacionem.analitica.application.dto.CompetenceAverageDto;
 import com.simulacionem.analitica.application.dto.CrossTabulationDto;
 import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
+import com.simulacionem.analitica.application.dto.EmploymentDashboardDto;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.CompetenceRatingEntity;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.DatasetImportEntity;
 import com.simulacionem.encuesta.infrastructure.persistence.entity.SurveyResponseEntity;
@@ -93,6 +94,32 @@ public class AnalyticsService {
         if (fields == null || fields.isEmpty())
             fields = defaultFields(dataset.getSurveyType());
         return summarize(dataset, rows, fields, allRows.size(), yearBounds(allRows), true);
+    }
+
+    /** Carga la sección de empleabilidad con una sola evaluación del filtro. */
+    @Transactional(readOnly = true)
+    public EmploymentDashboardDto employmentDashboard(UUID datasetId, TituladosFilter filter) {
+        DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
+        List<SurveyResponseEntity> allRows = validRows(dataset.getId());
+        List<SurveyResponseEntity> rows = filteredRows(dataset.getId(), allRows, filter);
+        AnalyticsSummaryDto summary = summarize(dataset, rows, List.of(
+                "anio_titulacion", "anios_vida_profesional", "anios_desempleo",
+                "situacion_laboral_actual", "sector_trabajo", "sector_trabajo_actual", "es_primer_empleo", "primera_experiencia_laboral",
+                "razon_no_trabaja", "experiencia_laboral_previa", "tiempo_primer_empleo", "cantidad_empleos",
+                "edad_rango", "genero", "rubro_trabajo_actual", "remuneracion_rango",
+                "area_trabajo", "pertinencia_trabajo_formacion"), allRows.size(), yearBounds(allRows), false);
+        EmploymentProfileDto profile = employmentProfileFromRows(dataset, rows);
+        AnalyticsSummaryDto unemployment = summarize(dataset, rows.stream()
+                .filter(this::isUnemployed).toList(), List.of(
+                        "primera_experiencia_laboral", "razon_no_trabaja", "anios_desempleo"));
+        AnalyticsSummaryDto firstEmployment = summarize(dataset, rows.stream()
+                .filter(this::isFirstEmploymentBranch).toList(), List.of("tiempo_primer_empleo"));
+        AnalyticsSummaryDto entrepreneurship = summarize(dataset, rows.stream()
+                .filter(this::isEntrepreneur).toList(), List.of(
+                        "origen_emprendimiento", "entregable_emprendimiento",
+                        "financiamiento_emprendimiento", "satisfaccion_emprendimiento",
+                        "importancia_formacion_emprendimiento"));
+        return new EmploymentDashboardDto(summary, profile, unemployment, firstEmployment, entrepreneurship);
     }
 
     @Transactional(readOnly = true)
@@ -380,8 +407,11 @@ public class AnalyticsService {
         if ((filter == null || !filter.active()) && tituladosSql != null) {
             return tituladosSql.employmentProfile(dataset.getId());
         }
-        List<SurveyResponseEntity> validRows = filteredRows(dataset.getId(), validRows(dataset.getId()), filter);
-        List<EmploymentProfileDto.CohortPointDto> points = validRows
+        return employmentProfileFromRows(dataset, filteredRows(dataset.getId(), validRows(dataset.getId()), filter));
+    }
+
+    private EmploymentProfileDto employmentProfileFromRows(DatasetImportEntity dataset, List<SurveyResponseEntity> rows) {
+        List<EmploymentProfileDto.CohortPointDto> points = rows
                 .stream()
                 .map(response -> {
                     Double year = number(value(response, "anio_titulacion"));
@@ -392,7 +422,7 @@ public class AnalyticsService {
                 })
                 .filter(java.util.Objects::nonNull)
                 .toList();
-        return new EmploymentProfileDto(dataset.getId(), validRows.size(), points);
+        return new EmploymentProfileDto(dataset.getId(), rows.size(), points);
     }
 
     @Transactional(readOnly = true)
@@ -472,17 +502,23 @@ public class AnalyticsService {
      * conservan una escala coherente para Spearman, Mann–Whitney y Kruskal–Wallis.
      */
     @Transactional(readOnly = true)
-    public CrossTabulationDto crossForAnalysis(UUID datasetId, String rowField, String columnField, TituladosFilter filter) {
+    public CrossAnalysisScope crossForAnalysis(UUID datasetId, String rowField, String columnField, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
         if (rowField == null || rowField.isBlank() || columnField == null || columnField.isBlank()) {
             throw new IllegalArgumentException("rowField y columnField son obligatorios");
         }
-        return crossFromRows(dataset, rowField, columnField, filter);
+        List<SurveyResponseEntity> filtered = filteredRows(dataset.getId(), validRows(dataset.getId()), filter);
+        return new CrossAnalysisScope(crossFromRows(dataset, rowField, columnField, filtered), filtered.size());
     }
 
     private CrossTabulationDto crossFromRows(DatasetImportEntity dataset, String rowField, String columnField,
                                              TituladosFilter filter) {
-        List<SurveyResponseEntity> valid = filteredRows(dataset.getId(), validRows(dataset.getId()), filter);
+        return crossFromRows(dataset, rowField, columnField,
+                filteredRows(dataset.getId(), validRows(dataset.getId()), filter));
+    }
+
+    private CrossTabulationDto crossFromRows(DatasetImportEntity dataset, String rowField, String columnField,
+                                             List<SurveyResponseEntity> valid) {
         List<SurveyResponseEntity> usable = valid.stream()
                 .filter(r -> crossFieldBranchAllows(r, rowField) && crossFieldBranchAllows(r, columnField))
                 .filter(r -> value(r, rowField) != null && value(r, columnField) != null).toList();
@@ -519,6 +555,9 @@ public class AnalyticsService {
                 columnCategories, counts, percentages,
                 usable.size() < MINIMUM_SAMPLE_SIZE);
     }
+
+    /** Un cruce inferencial y el tamaño de la población ya filtrada que le dio origen. */
+    public record CrossAnalysisScope(CrossTabulationDto cross, long validResponses) { }
 
     private DatasetImportEntity resolveDataset(UUID id, String type) {
         if (id != null)

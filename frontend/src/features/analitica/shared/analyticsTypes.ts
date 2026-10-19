@@ -52,6 +52,14 @@ export type EmploymentProfile = {
   cohortPoints: { graduationYear: number; professionalYears: number }[];
 };
 
+export type EmploymentDashboard = {
+  summary: import("../api").AnalyticsSummary;
+  profile: EmploymentProfile;
+  unemploymentSummary: import("../api").AnalyticsSummary;
+  firstEmploymentSummary: import("../api").AnalyticsSummary;
+  entrepreneurshipSummary: import("../api").AnalyticsSummary;
+};
+
 export type CohortChartPoint = {
   graduationYear: number;
   yearsSinceGraduation: number;

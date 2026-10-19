@@ -19,7 +19,6 @@ import {
 import { PlaceholderPage } from './PlaceholderPage'
 import { PrintButton } from '@/components/analytics/PrintButton'
 import { EmployerReportHost } from '@/features/empleadores/report/EmployerReportHost'
-import { TituladosPrintBundle } from '@/features/titulados/TituladosPages'
 import { TituladosReportHost } from '@/features/titulados/report/TituladosReportHost'
 
 type Props = { route: NavigationItem }
@@ -210,13 +209,6 @@ function AppLayoutContent({ route }: Props) {
             >
               <PlaceholderPage route={route} />
             </div>
-            {route.section === 'titulados' &&
-              !route.path.includes('cruces-exportacion') &&
-              !route.path.includes('simulacion-escenarios') && (
-                <div className="print-bundle" aria-label="Informe completo para impresión">
-                  <TituladosPrintBundle />
-                </div>
-              )}
             {route.section === 'empleadores' && <EmployerReportHost />}
             {route.section === 'titulados' && <TituladosReportHost />}
           </main>

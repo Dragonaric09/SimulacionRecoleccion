@@ -1,6 +1,5 @@
 package com.simulacionem.analitica.application.service;
 
-import com.simulacionem.analitica.application.dto.AnalyticsSummaryDto;
 import com.simulacionem.analitica.application.dto.CrossTabulationDto;
 import com.simulacionem.analitica.application.dto.EmployerCrossDto.VariableDto;
 import com.simulacionem.analitica.application.dto.TituladosCrossDto;
@@ -38,10 +37,9 @@ public class TituladosCrossService {
         Variable column = variable(columnKey);
         if (row.key().equals(column.key())) throw new IllegalArgumentException("Elige dos variables distintas");
 
-        CrossTabulationDto source = analytics.crossForAnalysis(datasetId, row.key(), column.key(), filter);
-        CrossTabulationDto ordered = orderCategories(source, row, column);
+        AnalyticsService.CrossAnalysisScope scope = analytics.crossForAnalysis(datasetId, row.key(), column.key(), filter);
+        CrossTabulationDto ordered = orderCategories(scope.cross(), row, column);
         long[][] table = frequencies(ordered);
-        AnalyticsSummaryDto scope = analytics.summary(datasetId, "TITULADOS", List.of(), filter);
         long excluded = Math.max(0, scope.validResponses() - ordered.validCount());
         return new TituladosCrossDto(ordered, toDto(row), toDto(column), excluded,
                 chartFor(row.level(), column.level()), pruebas.analizar(table, row.level(), column.level(), ALFA));

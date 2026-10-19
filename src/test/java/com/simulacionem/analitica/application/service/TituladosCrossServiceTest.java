@@ -1,6 +1,5 @@
 package com.simulacionem.analitica.application.service;
 
-import com.simulacionem.analitica.application.dto.AnalyticsSummaryDto;
 import com.simulacionem.analitica.application.dto.CrossTabulationDto;
 import com.simulacionem.analitica.application.dto.TituladosCrossDto;
 import org.junit.jupiter.api.Test;
@@ -43,8 +42,8 @@ class TituladosCrossServiceTest {
     }
 
     private TituladosCrossDto analyze(String row, String column, CrossTabulationDto cross) {
-        when(analytics.crossForAnalysis(eq(datasetId), eq(row), eq(column), any())).thenReturn(cross);
-        when(analytics.summary(eq(datasetId), eq("TITULADOS"), eq(List.of()), any())).thenReturn(summary(cross.validCount() + 4));
+        when(analytics.crossForAnalysis(eq(datasetId), eq(row), eq(column), any()))
+                .thenReturn(new AnalyticsService.CrossAnalysisScope(cross, cross.validCount() + 4));
         return service.cross(datasetId, TituladosFilter.none(), row, column);
     }
 
@@ -94,7 +93,4 @@ class TituladosCrossServiceTest {
         return new CrossTabulationDto(datasetId, rowField, columnField, total, rows, columns, counts, percentages, false);
     }
 
-    private AnalyticsSummaryDto summary(long validResponses) {
-        return new AnalyticsSummaryDto(datasetId, "TITULADOS", validResponses, validResponses, Map.of(), Map.of(), Map.of(), Map.of(), false, null, null);
-    }
 }

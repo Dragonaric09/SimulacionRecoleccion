@@ -33,12 +33,19 @@ export function EducationProfilePage({ printAll = false }: { printAll?: boolean 
     }
     setLoading(true)
     setError(null)
+    const controller = new AbortController()
     apiRequest<AnalyticsSummary>(
-      `/analytics/titulados/education?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`,
-    )
-      .then(setSummary)
-      .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)))
-      .finally(() => setLoading(false))
+        `/analytics/titulados/education?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`,
+        { signal: controller.signal },
+      )
+        .then((next) => !controller.signal.aborted && setSummary(next))
+        .catch((cause) => {
+          if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : String(cause))
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setLoading(false)
+        })
+    return () => controller.abort()
   }, [datasetId, filterQuery])
 
   return (

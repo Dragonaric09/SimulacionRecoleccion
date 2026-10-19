@@ -42,13 +42,16 @@ export function TituladosCrossMatrix({
       return
     }
     let active = true
+    const controller = new AbortController()
     apiRequest<TituladosCross>(
       `/analytics/titulados/cross?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
+      { signal: controller.signal },
     )
       .then((next) => active && setResult(next))
       .catch(() => active && setResult(null))
     return () => {
       active = false
+      controller.abort()
     }
   }, [datasetId, filterQuery, rowField, columnField])
 

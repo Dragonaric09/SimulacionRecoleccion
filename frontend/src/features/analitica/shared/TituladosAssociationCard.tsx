@@ -42,15 +42,18 @@ export function TituladosAssociationCard({
       return
     }
     let active = true
+    const controller = new AbortController()
     setError(null)
     setResult(null)
     apiRequest<TituladosAssociation>(
       `/analytics/titulados/cross?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
+      { signal: controller.signal },
     )
       .then((next) => active && setResult(next))
       .catch((cause) => active && setError(cause instanceof Error ? cause.message : String(cause)))
     return () => {
       active = false
+      controller.abort()
     }
   }, [datasetId, filterQuery, rowField, columnField])
 

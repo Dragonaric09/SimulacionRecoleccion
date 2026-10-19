@@ -106,7 +106,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     group,
     fields: fields.filter((field) => field.group === group),
   }))
-  const loadCross = useCallback(async () => {
+  const loadCross = useCallback(async (signal: AbortSignal) => {
     if (!datasetId || rowField === columnField) return
     setLoading(true)
     setError(null)
@@ -117,46 +117,57 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
         // La prueba se elige en el backend según el nivel de medición de cada variable.
         const result = await apiRequest<EmployerCross>(
           `/analytics/employers/cross?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
+          { signal },
         )
+        if (signal.aborted) return
         setEmployerCross(result)
         setCross(result.cross)
         return
       }
       const result = await apiRequest<TituladosCross>(
         `/analytics/titulados/cross?datasetId=${encodeURIComponent(datasetId)}&rowField=${encodeURIComponent(rowField)}&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
+        { signal },
       )
+      if (signal.aborted) return
       setTituladosCross(result)
       setCross(result.cross)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause))
+      if (!signal.aborted) setError(cause instanceof Error ? cause.message : String(cause))
     } finally {
-      setLoading(false)
+      if (!signal.aborted) setLoading(false)
     }
   }, [datasetId, rowField, columnField, filterQuery, domain])
   useEffect(() => {
     if (domain === 'EMPLEADORES') setFilterQuery(employerFilters.query)
   }, [domain, employerFilters.query])
   useEffect(() => {
+    const controller = new AbortController()
     const endpoint =
       domain === 'EMPLEADORES' ? '/analytics/employers/catalog' : '/analytics/titulados/catalog'
     const setCatalog = domain === 'EMPLEADORES' ? setEmployerCatalog : setTituladosCatalog
-    apiRequest<EmployerVariable[]>(endpoint)
-      .then(setCatalog)
-      .catch(() => setCatalog([]))
+    apiRequest<EmployerVariable[]>(endpoint, { signal: controller.signal })
+      .then((next) => !controller.signal.aborted && setCatalog(next))
+      .catch(() => !controller.signal.aborted && setCatalog([]))
+    return () => controller.abort()
   }, [domain])
   useEffect(() => {
-    void loadCross()
+    const controller = new AbortController()
+    void loadCross(controller.signal)
+    return () => controller.abort()
   }, [loadCross])
   useEffect(() => {
     if (domain !== 'TITULADOS' || !datasetId) {
       setFilterSummary(null)
       return
     }
+    const controller = new AbortController()
     apiRequest<AnalyticsSummary>(
       `/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=anio_titulacion,situacion_laboral_actual,sector_trabajo${filterQuery}`,
+      { signal: controller.signal },
     )
-      .then(setFilterSummary)
-      .catch(() => setFilterSummary(null))
+      .then((next) => !controller.signal.aborted && setFilterSummary(next))
+      .catch(() => !controller.signal.aborted && setFilterSummary(null))
+    return () => controller.abort()
   }, [datasetId, domain, filterQuery])
   const catalog = domain === 'EMPLEADORES' ? employerCatalog : tituladosCatalog
   const catalogLabel = (key: string) =>

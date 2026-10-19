@@ -60,20 +60,29 @@ export function FinancingCompletePage({ printAll = false }: { printAll?: boolean
     }
     setLoading(true)
     setError(null)
+    const controller = new AbortController()
     Promise.all([
       apiRequest<AnalyticsSummary>(
         `/analytics/titulados/financing?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`,
+        { signal: controller.signal },
       ),
       apiRequest<TituladosCross>(
         `/analytics/titulados/cross?datasetId=${encodeURIComponent(datasetId)}&rowField=financiamiento_posgrado_estimado&columnField=${encodeURIComponent(columnField)}${filterQuery}`,
+        { signal: controller.signal },
       ),
     ])
       .then(([nextSummary, nextAnalysis]) => {
+        if (controller.signal.aborted) return
         setSummary(nextSummary)
         setAnalysis(nextAnalysis)
       })
-      .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)))
-      .finally(() => setLoading(false))
+      .catch((cause) => {
+        if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : String(cause))
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+    return () => controller.abort()
   }, [datasetId, columnField, filterQuery])
 
   const columnLabel =

@@ -40,22 +40,26 @@ export function TituladosSummaryPage({ printAll = false }: { printAll?: boolean 
     }
     setLoading(true)
     setError(null)
+    const controller = new AbortController()
     const query = `?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`
     Promise.all([
       apiRequest<AnalyticsSummary>(
         `/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=${encodeURIComponent(fields)}${filterQuery}`,
+        { signal: controller.signal },
       ),
-      apiRequest<AnalyticsSummary>(`/analytics/titulados/satisfaction${query}`),
-      apiRequest<EmploymentProfile>(`/analytics/titulados/employment/profile${query}`),
-      apiRequest<Competence[]>(`/analytics/competencies/gaps${query}`),
+      apiRequest<AnalyticsSummary>(`/analytics/titulados/satisfaction${query}`, { signal: controller.signal }),
+      apiRequest<EmploymentProfile>(`/analytics/titulados/employment/profile${query}`, { signal: controller.signal }),
+      apiRequest<Competence[]>(`/analytics/competencies/gaps${query}`, { signal: controller.signal }),
     ])
       .then(([nextSummary, nextSatisfaction, nextProfile, nextCompetences]) => {
+        if (controller.signal.aborted) return
         setSummary(nextSummary)
         setSatisfaction(nextSatisfaction)
         setProfile(nextProfile)
         setCompetences(nextCompetences)
       })
       .catch((cause) => {
+        if (controller.signal.aborted) return
         const message = cause instanceof Error ? cause.message : String(cause)
         if (message.includes('HTTP 404')) {
           localStorage.removeItem('simulacionem.activeDatasetId')
@@ -66,7 +70,10 @@ export function TituladosSummaryPage({ printAll = false }: { printAll?: boolean 
         }
         setError(message)
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+    return () => controller.abort()
   }, [datasetId, filterQuery, setActiveDataset])
 
   const laboral = summary?.distributions.situacion_laboral_actual

@@ -21,24 +21,31 @@ export function useCompetenceData(domain: Domain, datasetId?: string, filterQuer
     }
     setLoading(true);
     setError(null);
+    const controller = new AbortController();
     const satisfactionRequest = domain === "TITULADOS"
-      ? apiRequest<AnalyticsSummary>(`/analytics/titulados/satisfaction?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`)
+      ? apiRequest<AnalyticsSummary>(`/analytics/titulados/satisfaction?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`, { signal: controller.signal })
       : Promise.resolve(null);
     const curriculumRequest = domain === "TITULADOS"
-      ? apiRequest<AnalyticsSummary>(`/analytics/titulados/curriculum?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`)
+      ? apiRequest<AnalyticsSummary>(`/analytics/titulados/curriculum?datasetId=${encodeURIComponent(datasetId)}${filterQuery}`, { signal: controller.signal })
       : Promise.resolve(null);
     Promise.all([
-      apiRequest<Competence[]>(`/analytics/competencies/gaps?datasetId=${encodeURIComponent(datasetId)}${domain === "TITULADOS" ? filterQuery : ""}`),
+      apiRequest<Competence[]>(`/analytics/competencies/gaps?datasetId=${encodeURIComponent(datasetId)}${domain === "TITULADOS" ? filterQuery : ""}`, { signal: controller.signal }),
       satisfactionRequest,
       curriculumRequest,
     ])
       .then(([nextItems, nextSatisfaction, nextCurriculum]) => {
+        if (controller.signal.aborted) return;
         setItems(nextItems);
         setSatisfaction(nextSatisfaction);
         setCurriculum(nextCurriculum);
       })
-      .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)))
-      .finally(() => setLoading(false));
+      .catch((cause) => {
+        if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : String(cause));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [datasetId, domain, filterQuery]);
 
   return { items, satisfaction, curriculum, loading, error };

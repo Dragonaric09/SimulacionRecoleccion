@@ -165,16 +165,23 @@ export function DatasetAnalyticsPage({
       setLoading(false)
       return
     }
-    setLoading(true)
-    setError(null)
-    const suffix = fields ? `&fields=${encodeURIComponent(fields)}` : ''
-    apiRequest<AnalyticsSummary>(
-      `${endpoint}?datasetId=${encodeURIComponent(datasetId)}${suffix}${domain === 'TITULADOS' ? filterQuery : ''}`,
-    )
-      .then(setSummary)
-      .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)))
-      .finally(() => setLoading(false))
-  }, [datasetId, endpoint, fields, domain, filterQuery])
+      setLoading(true)
+      setError(null)
+      const controller = new AbortController()
+      const suffix = fields ? `&fields=${encodeURIComponent(fields)}` : ''
+      apiRequest<AnalyticsSummary>(
+        `${endpoint}?datasetId=${encodeURIComponent(datasetId)}${suffix}${domain === 'TITULADOS' ? filterQuery : ''}`,
+        { signal: controller.signal },
+      )
+        .then((next) => !controller.signal.aborted && setSummary(next))
+        .catch((cause) => {
+          if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : String(cause))
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setLoading(false)
+        })
+      return () => controller.abort()
+    }, [datasetId, endpoint, fields, domain, filterQuery])
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">

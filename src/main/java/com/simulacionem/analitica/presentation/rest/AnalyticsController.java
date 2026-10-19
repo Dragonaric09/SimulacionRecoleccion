@@ -5,6 +5,7 @@ import com.simulacionem.analitica.application.dto.CompetenceAverageDto;
 import com.simulacionem.analitica.application.dto.CrossTabulationDto;
 import com.simulacionem.analitica.application.dto.EmployerCrossDto;
 import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
+import com.simulacionem.analitica.application.dto.EmploymentDashboardDto;
 import com.simulacionem.analitica.application.dto.TituladosCrossDto;
 import com.simulacionem.analitica.application.service.AnalyticsService;
 import com.simulacionem.analitica.application.service.TituladosFilter;
@@ -56,6 +57,12 @@ public class AnalyticsController {
                 "razon_no_trabaja", "experiencia_laboral_previa", "tiempo_primer_empleo", "cantidad_empleos",
                 "edad_rango", "genero", "rubro_trabajo_actual", "remuneracion_rango",
                 "area_trabajo", "pertinencia_trabajo_formacion"), query.toFilter());
+    }
+
+    @GetMapping("/titulados/employment/dashboard")
+    public EmploymentDashboardDto tituladosEmploymentDashboard(@RequestParam(required = false) UUID datasetId,
+                                                                @ModelAttribute TituladosQuery query) {
+        return analytics.employmentDashboard(datasetId, query.toFilter());
     }
 
     @GetMapping("/titulados/employment/unemployment")
