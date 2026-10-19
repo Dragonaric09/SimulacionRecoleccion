@@ -208,7 +208,7 @@ function EducationOpinionPanel({ summary }: { summary: AnalyticsSummary }) {
             />
             <ChartCardActions
               title="Opinión sobre el posgrado de la FCyT"
-              help="Escala de acuerdo de cuatro niveles. La vista divergente separa desacuerdo y acuerdo para comparar su balance; la tabla conserva cada frecuencia exacta."
+              help="La mitad izquierda contiene las respuestas de desacuerdo y la derecha las de acuerdo. Dentro de cada mitad, el ancho de color es proporcional a su subtotal; los conteos y porcentajes se muestran al pasar el cursor."
               onExportCsv={() =>
                 downloadDistributionCsv(
                   'opinion-posgrado-fcyt',

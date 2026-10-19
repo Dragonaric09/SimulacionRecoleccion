@@ -67,7 +67,9 @@ export function DonutChart({
             content={
               <ChartTooltipContent
                 nameKey="label"
-                formatter={(value) => formatCount(Number(value))}
+                formatter={(value, _name, item) =>
+                  `${formatCount(Number(value))} (${formatPercent(Number(item.payload.percent))})`
+                }
                 hideLabel
               />
             }

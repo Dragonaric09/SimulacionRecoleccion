@@ -10,6 +10,7 @@ import {
 import type { Competence } from '../shared/analyticsTypes'
 import { contrastTextColor } from '@/lib/utils'
 import { formatDecimal } from '../shared/analyticsFormatters'
+import { DataPointTooltip } from '@/components/analytics/ChartCard'
 
 export function CompetenceMatrix({
   items,
@@ -87,7 +88,11 @@ export function CompetenceMatrix({
                       className="p-2 text-center font-semibold"
                       style={{ backgroundColor: background, color: contrastTextColor(background) }}
                     >
-                      {count}
+                      <DataPointTooltip
+                        content={`${item.name} · nivel ${level}: ${count} de ${item.validCount} respuestas válidas. La intensidad se compara con el mayor conteo de este mismo nivel entre competencias.`}
+                      >
+                        <span className="block cursor-help">{count}</span>
+                      </DataPointTooltip>
                     </TableCell>
                   )
                 })}

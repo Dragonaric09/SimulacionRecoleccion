@@ -10,7 +10,7 @@ import {
   Users,
 } from 'lucide-react'
 import { Badge } from '@/components/analytics/Badge'
-import { ChartCardActions } from '@/components/analytics/ChartCard'
+import { ChartCardActions, DataPointTooltip } from '@/components/analytics/ChartCard'
 import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
-import { ChartContainer, ChartTooltip } from '@/components/ui/chart'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import {
   CartesianGrid,
   Cell,
@@ -264,7 +264,7 @@ function EntrepreneurshipDistribution({
         }
         accent={color}
         variants={['bars', 'table']}
-        help="Las barras horizontales facilitan comparar categorías de emprendimiento. La tabla conserva conteos y porcentajes exactos."
+        help="Cada barra representa una categoría de la pregunta y su longitud es el porcentaje sobre las respuestas válidas (n). Al pasar el cursor se muestran conteo y porcentaje."
         exportTitle={label}
       />
     </div>
@@ -346,7 +346,7 @@ function FirstEmploymentPanel({
             order={timingLabels}
             variants={['bars', 'table']}
             storageKey="titulados-employment-first-job-timing"
-            help="Variable ordinal: las barras respetan el orden temporal hasta el primer empleo; la tabla muestra la frecuencia exacta de cada intervalo."
+            help="Cada barra representa un intervalo temporal, en el orden de la escala; su longitud es el porcentaje de titulados dentro de la base n."
             exportTitle="tiempo-hasta-primer-empleo"
           />
         </div>
@@ -422,7 +422,7 @@ function UnemploymentPanel({
             accent={unemploymentReasonColor()}
             variants={['bars', 'table']}
             storageKey="titulados-employment-unemployment-reasons"
-            help="Las razones no tienen orden natural; las barras horizontales permiten comparar sus frecuencias y la tabla conserva el detalle exacto."
+            help="Cada barra representa una razón y su longitud es el porcentaje sobre la base n de personas sin empleo; el tooltip muestra el conteo de esa razón."
             exportTitle="razones-por-las-que-no-trabaja"
           />
           <p className="mt-5 border-t border-surface-container-high pt-3 text-xs font-semibold text-ink-700">
@@ -671,7 +671,7 @@ function CohortScatterCard({
             />
             <ChartCardActions
               title="Años de vida profesional por cohorte"
-              help="El diagrama de puntos muestra cada titulado según su año de titulación y años de experiencia; media y mediana ayudan a resumir la distribución. La tabla permite revisar los valores individuales."
+              help="Cada punto representa un titulado: su posición horizontal es el año de titulación y la vertical, los años de vida profesional. Las líneas marcan media y mediana; los puntos rojos superan una desviación estándar sobre la media."
               onExportCsv={() =>
                 downloadAnalyticsCsv(
                   'vida-profesional-por-cohorte',
@@ -915,7 +915,7 @@ function ProfileDistributionCard({
           distribution={distribution}
           variants={['bars', 'table']}
           storageKey={`titulados-employment-profile-${title}`}
-          help="Variable nominal: las barras horizontales permiten comparar sectores incluso cuando las etiquetas son largas."
+          help="Cada barra representa un sector y su longitud es el porcentaje de personas ocupadas que lo declaró; el tooltip muestra también el conteo y la base n."
           exportTitle={title}
         />
       </CardContent>
@@ -973,7 +973,7 @@ function EmploymentDonutCard({
             />
             <ChartCardActions
               title="Estado laboral"
-              help="Las barras son la vista principal porque permiten comparar con precisión las situaciones laborales. La dona queda como resumen de composición para un número reducido de categorías."
+              help="En barras, cada situación laboral ocupa una fila y su longitud es el porcentaje sobre n. En la dona, cada arco representa ese mismo porcentaje; el centro muestra la tasa agrupada de ocupación."
               onExportCsv={() => downloadDistributionCsv('estado-laboral', chartItems, total)}
             />
           </div>
@@ -996,6 +996,16 @@ function EmploymentDonutCard({
             <div className="employment-donut-responsive absolute inset-0">
               <ChartContainer config={chartConfig} className="aspect-square">
                 <PieChart>
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        nameKey="label"
+                        formatter={(value) =>
+                          `${value} respuestas (${formatPercentValue(total ? (Number(value) * 100) / total : 0)})`
+                        }
+                      />
+                    }
+                  />
                   <Pie
                     data={chartData}
                     dataKey="value"
@@ -1043,24 +1053,26 @@ function EmploymentDonutCard({
         {variant === 'donut' && (
           <div className="min-w-0 w-full space-y-2">
             {entries.map(([label, count]) => (
-              <div
+              <DataPointTooltip
                 key={label}
-                className="flex items-center justify-between gap-3 rounded-lg border border-border-line bg-surface-container-low px-3 py-2 text-sm"
+                content={`${displayLaborLabel(label)}: ${count} de ${total} (${formatPercentValue(distribution?.percentages[label] ?? 0)})`}
               >
-                <div className="flex min-w-0 items-center gap-2">
-                  <span
-                    className="size-3 shrink-0 rounded-sm"
-                    style={{ backgroundColor: laborColor(label) }}
-                  />
-                  <span className="break-words">{displayLaborLabel(label)}</span>
-                </div>
-                <span className="tabular-nums whitespace-nowrap font-semibold">
-                  {count}{' '}
-                  <span className="caption-meta text-ink-600">
-                    ({formatPercentValue(distribution?.percentages[label] ?? 0)})
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border-line bg-surface-container-low px-3 py-2 text-sm">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span
+                      className="size-3 shrink-0 rounded-sm"
+                      style={{ backgroundColor: laborColor(label) }}
+                    />
+                    <span className="break-words">{displayLaborLabel(label)}</span>
+                  </div>
+                  <span className="tabular-nums whitespace-nowrap font-semibold">
+                    {count}{' '}
+                    <span className="caption-meta text-ink-600">
+                      ({formatPercentValue(distribution?.percentages[label] ?? 0)})
+                    </span>
                   </span>
-                </span>
-              </div>
+                </div>
+              </DataPointTooltip>
             ))}
           </div>
         )}
@@ -1094,7 +1106,7 @@ function AgeDistributionCard({ distribution }: { distribution?: CategoryDistribu
           ]}
           variants={['bars', 'table']}
           storageKey="titulados-employment-age"
-          help="Variable ordinal: las barras mantienen el orden cronológico de los rangos de edad; la tabla ofrece las cifras exactas."
+          help="Cada barra representa un rango de edad en orden cronológico; su longitud es el porcentaje sobre las respuestas válidas y el tooltip muestra conteo y n."
           exportTitle="distribucion-por-edad"
         />
       </CardContent>
@@ -1144,7 +1156,7 @@ function GenderDistributionCard({ distribution }: { distribution?: CategoryDistr
             />
             <ChartCardActions
               title="Género"
-              help="La dona es adecuada para esta composición de pocas categorías; use barras o la tabla cuando necesite comparar valores con mayor precisión."
+              help="Cada arco de la dona representa el porcentaje de respuestas de un género sobre n. La leyenda muestra el conteo y el porcentaje; las barras representan la misma distribución en longitud."
               onExportCsv={() => downloadDistributionCsv('genero', chartItems, total)}
             />
           </div>
@@ -1176,23 +1188,25 @@ function GenderDistributionCard({ distribution }: { distribution?: CategoryDistr
           </div>
           <div className="min-w-0 space-y-2">
             {entries.map(([label, count]) => (
-              <div
+              <DataPointTooltip
                 key={label}
-                className="flex items-center gap-2 rounded border border-border-line bg-surface-container-low px-2.5 py-2 text-sm"
+                content={`${label}: ${count} de ${total} (${formatPercentValue(distribution?.percentages[label] ?? 0)})`}
               >
-                <span
-                  className="size-2.5 shrink-0 rounded-full"
-                  style={{
-                    backgroundColor: label.toLowerCase().includes('muj') ? '#8b5bd1' : '#1f6fb5',
-                  }}
-                />
-                <span className="min-w-0 break-words">
-                  {label}: <strong>{count}</strong>{' '}
-                  <span className="text-xs">
-                    ({formatPercentValue(distribution?.percentages[label] ?? 0)})
+                <div className="flex items-center gap-2 rounded border border-border-line bg-surface-container-low px-2.5 py-2 text-sm">
+                  <span
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{
+                      backgroundColor: label.toLowerCase().includes('muj') ? '#8b5bd1' : '#1f6fb5',
+                    }}
+                  />
+                  <span className="min-w-0 break-words">
+                    {label}: <strong>{count}</strong>{' '}
+                    <span className="text-xs">
+                      ({formatPercentValue(distribution?.percentages[label] ?? 0)})
+                    </span>
                   </span>
-                </span>
-              </div>
+                </div>
+              </DataPointTooltip>
             ))}
           </div>
         </CardContent>
@@ -1472,11 +1486,18 @@ export function CompetencePage({
                 items={visibleItems}
                 group={groupLabel(activeGroup)}
                 storageKey={`simulacionem.chartVariant.titulados.competence.${activeGroup}`}
-                help="El mapa de calor es la vista principal: permite comparar cada competencia y detectar niveles altos o bajos. El radar se reserva para una lectura global del perfil; la tabla muestra las estadísticas exactas. Las medias se calculan sobre respuestas válidas."
+                help="En el mapa de calor, cada celda muestra el número de respuestas de una competencia en ese nivel; una tonalidad más intensa significa más respuestas dentro de esa misma columna. El radar ubica la media de cada competencia en una escala de 1 a 5."
                 onExportCsv={() =>
                   downloadAnalyticsCsv(
                     `competencias-${groupLabel(activeGroup)}`,
-                    ['Código', 'Competencia', 'Media', 'Mediana', 'Desviación estándar', 'Respuestas válidas'],
+                    [
+                      'Código',
+                      'Competencia',
+                      'Media',
+                      'Mediana',
+                      'Desviación estándar',
+                      'Respuestas válidas',
+                    ],
                     visibleItems.map((item) => [
                       item.code,
                       item.name,

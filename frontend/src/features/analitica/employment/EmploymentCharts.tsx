@@ -8,7 +8,7 @@ import {
 import type { CategoryDistribution } from '../api'
 import { sentenceCaseLabel } from '../shared/analyticsFormatters'
 import { downloadDistributionCsv } from '../shared/analyticsExport'
-import { ChartCardActions } from '@/components/analytics/ChartCard'
+import { ChartCardActions, DataPointTooltip } from '@/components/analytics/ChartCard'
 
 type EmploymentDistributionVariant = 'bars' | 'donut' | 'table'
 
@@ -67,7 +67,10 @@ export function EmploymentDistributionVariant({
             />
             <ChartCardActions
               title={exportTitle ?? (typeof title === 'string' ? title : 'Distribución')}
-              help={help ?? 'Las barras horizontales facilitan comparar categorías; la tabla conserva los valores exactos.'}
+              help={
+                help ??
+                'Cada barra corresponde a una categoría y su longitud representa el porcentaje de respuestas válidas (n). El conteo y el porcentaje de esa categoría aparecen al pasar el cursor.'
+              }
               onExportCsv={() =>
                 downloadDistributionCsv(
                   exportTitle ?? (typeof title === 'string' ? title : 'distribucion'),
@@ -119,10 +122,14 @@ function DistributionBarsVariantItems({
             </span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
-            <div
-              className="h-full rounded-full"
-              style={{ width: `${item.percent}%`, backgroundColor: accent }}
-            />
+            <DataPointTooltip
+              content={`${item.label}: ${item.count} de ${item.total ?? 0} (${formatPercent(item.percent)})`}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${item.percent}%`, backgroundColor: accent }}
+              />
+            </DataPointTooltip>
           </div>
         </div>
       ))}
@@ -222,7 +229,7 @@ export function StackedRelevanceCard({
           />
           <ChartCardActions
             title="Pertinencia de formación para el cargo"
-            help="Escala ordinal de acuerdo. La barra apilada resume la composición y la tabla muestra las frecuencias exactas por nivel."
+            help="Cada color representa un nivel de acuerdo y su ancho es el porcentaje sobre n; los cuatro segmentos suman el 100 %. La tabla muestra esas mismas frecuencias por separado."
             onExportCsv={() => downloadDistributionCsv('pertinencia-formacion-cargo', items, total)}
           />
         </div>
@@ -241,15 +248,18 @@ export function StackedRelevanceCard({
             {entries.map(([label, count], index) => {
               const percentage = total ? (count / total) * 100 : 0
               return (
-                <div
+                <DataPointTooltip
                   key={label}
-                  className="h-full"
-                  style={{
-                    width: `${percentage}%`,
-                    backgroundColor: colors[index % colors.length],
-                  }}
-                  title={`${label}: ${count} (${formatPercent(percentage)})`}
-                />
+                  content={`${label}: ${count} de ${total} (${formatPercent(percentage)})`}
+                >
+                  <div
+                    className="h-full"
+                    style={{
+                      width: `${percentage}%`,
+                      backgroundColor: colors[index % colors.length],
+                    }}
+                  />
+                </DataPointTooltip>
               )
             })}
           </div>

@@ -117,6 +117,24 @@ export function ChartCardActions({
   )
 }
 
+/** Tooltip para una marca concreta (barra, segmento o celda) de una visualización. */
+export function DataPointTooltip({
+  content,
+  children,
+}: {
+  content: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <TooltipProvider delayDuration={120}>
+      <Tooltip>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent className="max-w-xs text-left">{content}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
 /** Aviso ámbar para muestras pequeñas (menos de 5 registros). */
 export function SmallSampleNotice({ count }: { count: number }) {
   return (

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ChartCardActions } from '@/components/analytics/ChartCard'
+import { ChartCardActions, DataPointTooltip } from '@/components/analytics/ChartCard'
 import { Empty, EmptyTitle } from '@/components/ui/empty'
 import type { CategoryDistribution } from '../api'
 import { sentenceCaseLabel } from '../shared/analyticsFormatters'
@@ -121,8 +121,14 @@ export function FormationActiveCard({
       title={title}
       description={`${formatPercentage(yes, total)} de la muestra total · n = ${total}`}
       actions={variantAction(variant, variants, labels, setVariant)}
-      help="Variable binaria: la barra apilada compara Sí y No sobre la misma base. La dona se ofrece solo como resumen de composición; la tabla conserva los valores exactos."
-      onExportCsv={() => downloadDistributionCsv(title, entries.map(([label, count]) => ({ label, count })), total)}
+      help="La barra azul representa la proporción que respondió Sí y la gris, No; sus anchos suman el 100 % de n. En la dona, cada arco representa esa misma proporción."
+      onExportCsv={() =>
+        downloadDistributionCsv(
+          title,
+          entries.map(([label, count]) => ({ label, count })),
+          total,
+        )
+      }
     >
       <div className="space-y-3">
         {variant === 'donut' ? (
@@ -151,16 +157,24 @@ export function FormationActiveCard({
               aria-label={`${yes} respuestas Sí y ${no} respuestas No`}
             >
               {yes > 0 && (
-                <div
-                  className="bg-titulados"
-                  style={{ width: `${total ? (yes * 100) / total : 0}%` }}
-                />
+                <DataPointTooltip
+                  content={`Sí: ${yes} de ${total} (${formatPercentage(yes, total)})`}
+                >
+                  <div
+                    className="bg-titulados"
+                    style={{ width: `${total ? (yes * 100) / total : 0}%` }}
+                  />
+                </DataPointTooltip>
               )}
               {no > 0 && (
-                <div
-                  className="bg-slate-300"
-                  style={{ width: `${total ? (no * 100) / total : 0}%` }}
-                />
+                <DataPointTooltip
+                  content={`No: ${no} de ${total} (${formatPercentage(no, total)})`}
+                >
+                  <div
+                    className="bg-slate-300"
+                    style={{ width: `${total ? (no * 100) / total : 0}%` }}
+                  />
+                </DataPointTooltip>
               )}
             </div>
             <div className="flex justify-between text-xs text-ink-600">
@@ -235,7 +249,7 @@ export function OrdinalColumnsCard({
       title={title}
       description={description}
       actions={variantAction(variant, variants, labels, setVariant)}
-      help="Escala ordinal: las columnas respetan el orden natural de los niveles. Las barras facilitan la comparación de magnitudes y la tabla muestra los valores exactos."
+      help="Cada columna representa un nivel en el orden mostrado; su altura es el conteo de respuestas de ese nivel. La variante de barras expresa el mismo conteo como porcentaje de n."
       onExportCsv={() => downloadDistributionCsv(title, items, distribution?.validCount ?? 0)}
     >
       {variant === 'ranked' ? (
@@ -251,20 +265,22 @@ export function OrdinalColumnsCard({
       ) : (
         <div className="flex min-h-36 items-end justify-between gap-2 border-b border-border-line px-1 pb-1">
           {entries.map(([label, count]) => (
-            <div
+            <DataPointTooltip
               key={label}
-              className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1"
+              content={`${label}: ${count} de ${distribution?.validCount ?? 0} (${formatPercentValue(distribution?.percentages[label] ?? 0)} %)`}
             >
-              <span className="text-xs font-semibold tabular-nums text-ink-800">{count}</span>
-              <div
-                className="w-full max-w-12 rounded-t bg-titulados"
-                style={{ height: `${Math.max(count ? 10 : 2, (count * 78) / max)}px` }}
-                title={`${label}: ${count}`}
-              />
-              <span className="w-full text-center text-[10px] leading-tight text-ink-600">
-                {label}
-              </span>
-            </div>
+              <div className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
+                <span className="text-xs font-semibold tabular-nums text-ink-800">{count}</span>
+                <div
+                  className="w-full max-w-12 rounded-t bg-titulados"
+                  style={{ height: `${Math.max(count ? 10 : 2, (count * 78) / max)}px` }}
+                  title={`${label}: ${count}`}
+                />
+                <span className="w-full text-center text-[10px] leading-tight text-ink-600">
+                  {label}
+                </span>
+              </div>
+            </DataPointTooltip>
           ))}
         </div>
       )}
@@ -309,7 +325,7 @@ export function NominalListCard({
       title={title}
       description={`${description} · n = ${distribution?.validCount ?? 0}`}
       actions={variantAction(variant, variants, labels, setVariant)}
-      help="Variable nominal: las barras horizontales permiten comparar categorías, incluso cuando los nombres son largos. La tabla ofrece el detalle exacto; no se usa dona porque puede haber muchas categorías."
+      help="Cada barra corresponde a una categoría y su longitud representa el porcentaje sobre n; el conteo aparece junto a la etiqueta. La lista y la tabla representan exactamente las mismas frecuencias."
       onExportCsv={() => downloadDistributionCsv(title, items, distribution?.validCount ?? 0)}
     >
       {variant === 'bars' ? (
@@ -378,7 +394,7 @@ export function StackedFundingCard({
       title={title}
       description={`${description} · n = ${total}`}
       actions={variantAction(variant, variants, labels, setVariant)}
-      help="La barra apilada muestra cómo se compone el total entre fuentes de financiamiento. Use barras para comparar categorías individuales y la tabla para los valores exactos."
+      help="Cada segmento de color representa una fuente de financiamiento; su ancho es su porcentaje sobre n y todos los segmentos suman el 100 %. En barras, cada fuente se muestra por separado."
       onExportCsv={() => downloadDistributionCsv(title, items, total)}
     >
       {variant === 'bars' ? (
@@ -396,17 +412,20 @@ export function StackedFundingCard({
         <>
           <div className="flex h-8 overflow-hidden rounded-md bg-surface-container-high">
             {entries.map(([label, count], index) => (
-              <div
+              <DataPointTooltip
                 key={label}
-                className="flex min-w-0 items-center justify-center text-[11px] font-semibold text-white"
-                style={{
-                  width: `${total ? (count * 100) / total : 0}%`,
-                  backgroundColor: colors[index % colors.length],
-                }}
-                title={`${label}: ${count}`}
+                content={`${label}: ${count} de ${total} (${formatPercentValue(distribution?.percentages[label] ?? 0)} %)`}
               >
-                {(count * 100) / Math.max(total, 1) >= 12 ? count : ''}
-              </div>
+                <div
+                  className="flex min-w-0 items-center justify-center text-[11px] font-semibold text-white"
+                  style={{
+                    width: `${total ? (count * 100) / total : 0}%`,
+                    backgroundColor: colors[index % colors.length],
+                  }}
+                >
+                  {(count * 100) / Math.max(total, 1) >= 12 ? count : ''}
+                </div>
+              </DataPointTooltip>
             ))}
           </div>
           <div className="mt-3 space-y-1.5 text-xs text-ink-700">
@@ -468,32 +487,40 @@ export function DivergingAgreementCard({
       <div className="grid grid-cols-2 gap-1" aria-label="Escala divergente de acuerdo">
         <div className="flex h-9 overflow-hidden rounded-l-md bg-surface-container-high">
           {negative.map(([label, count]) => (
-            <div
+            <DataPointTooltip
               key={label}
-              className="flex items-center justify-center text-[11px] font-semibold text-white"
-              style={{
-                width: `${negativeTotal ? (count * 100) / negativeTotal : 0}%`,
-                backgroundColor: colors[entries.findIndex(([entryLabel]) => entryLabel === label)],
-              }}
-              title={`${label}: ${count}`}
+              content={`${label}: ${count} de ${total} (${formatPercentage(count, total)})`}
             >
-              {count || ''}
-            </div>
+              <div
+                className="flex items-center justify-center text-[11px] font-semibold text-white"
+                style={{
+                  width: `${negativeTotal ? (count * 100) / negativeTotal : 0}%`,
+                  backgroundColor:
+                    colors[entries.findIndex(([entryLabel]) => entryLabel === label)],
+                }}
+              >
+                {count || ''}
+              </div>
+            </DataPointTooltip>
           ))}
         </div>
         <div className="flex h-9 overflow-hidden rounded-r-md bg-surface-container-high">
           {positive.map(([label, count]) => (
-            <div
+            <DataPointTooltip
               key={label}
-              className="flex items-center justify-center text-[11px] font-semibold text-white"
-              style={{
-                width: `${positiveTotal ? (count * 100) / positiveTotal : 0}%`,
-                backgroundColor: colors[entries.findIndex(([entryLabel]) => entryLabel === label)],
-              }}
-              title={`${label}: ${count}`}
+              content={`${label}: ${count} de ${total} (${formatPercentage(count, total)})`}
             >
-              {count || ''}
-            </div>
+              <div
+                className="flex items-center justify-center text-[11px] font-semibold text-white"
+                style={{
+                  width: `${positiveTotal ? (count * 100) / positiveTotal : 0}%`,
+                  backgroundColor:
+                    colors[entries.findIndex(([entryLabel]) => entryLabel === label)],
+                }}
+              >
+                {count || ''}
+              </div>
+            </DataPointTooltip>
           ))}
         </div>
       </div>
