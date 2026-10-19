@@ -6,6 +6,7 @@ export const reportFieldLabels: Record<string, string> = {
   interes_posgrado: 'Interés en posgrado',
   anio_titulacion: 'Año de titulación',
   es_primer_empleo: 'Es el primer empleo',
+  satisfaccion_formacion: 'Satisfacción con la formación',
   tiene_formacion_complementaria: 'Formación complementaria',
   formacion_complementaria_nivel: 'Nivel de formación complementaria',
   nivel_posgrado_interes: 'Nivel de posgrado de interés',

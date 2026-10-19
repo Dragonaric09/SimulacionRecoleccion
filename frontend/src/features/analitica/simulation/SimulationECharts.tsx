@@ -4,6 +4,7 @@ import * as echarts from "echarts/core";
 import { BarChart, BoxplotChart, LineChart, PieChart } from "echarts/charts";
 import { GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TooltipComponent } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
+import { reportChartPalette } from "../shared/chartTheme";
 import type { Simulation } from "../shared/analyticsTypes";
 import { simulationCategoryLabel, simulationDelta, simulationPercent } from "./simulationUtils";
 
@@ -16,7 +17,7 @@ type Props = {
   onSelect: (category: string | null) => void;
 };
 
-const colors = ["#1f6fb5", "#8b5bd1", "#0f766e", "#d97706", "#64748b", "#be123c", "#65a30d", "#475569"];
+const colors = [...reportChartPalette];
 
 export function SimulationECharts({ result, variable, selectedCategory, onSelect }: Props) {
   const kind = kindFor(variable, result);

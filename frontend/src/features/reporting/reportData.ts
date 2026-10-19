@@ -1,19 +1,10 @@
 import { apiRequest } from '@/api/client'
-import type { ReportSummary } from '@/features/analitica/api'
+import type { ReportCompetence, ReportComparison, ReportSummary } from '@/features/analitica/api'
+import type { Simulation } from '@/features/analitica/shared/analyticsTypes'
 import type { DatasetDomain } from '@/app/DatasetContext'
 import type { ReportModuleDefinition } from './reportTypes'
-import type { ReportFilters } from './reportTypes'
-
-const fieldsByModule: Record<string, string[]> = {
-  'titulados.resumen.general': ['situacion_laboral_actual', 'sector_trabajo', 'interes_posgrado'],
-  'titulados.empleabilidad.perfil': ['situacion_laboral_actual', 'sector_trabajo', 'anio_titulacion', 'es_primer_empleo'],
-  'titulados.formacion.continua.perfil': ['tiene_formacion_complementaria', 'formacion_complementaria_nivel', 'interes_posgrado', 'nivel_posgrado_interes', 'area_posgrado_interes'],
-  'titulados.financiamiento.general': ['financiamiento_posgrado_estimado', 'nivel_posgrado_interes'],
-  'titulados.competencias.brechas': ['valoracion_formacion_1', 'valoracion_formacion_2', 'valoracion_formacion_3'],
-  'empleadores.resumen.contratacion': ['tipo_organizacion', 'tamano_organizacion', 'contrato_titulados_ultimos_5_anios'],
-  'empleadores.valoracion.carrera': ['valoracion_formacion_1', 'valoracion_formacion_2', 'valoracion_relacion_1'],
-  'empleadores.competencias.brechas': ['valoracion_formacion_1', 'valoracion_formacion_5', 'valoracion_relacion_3'],
-}
+import type { ReportCohortPoint, ReportEmployerDashboard, ReportFilters, ReportSimulationConfig } from './reportTypes'
+import { simulationCategories } from '@/features/analitica/simulation/simulationUtils'
 
 function filterQuery(domain: DatasetDomain, filters: ReportFilters | undefined) {
   if (!filters) return ''
@@ -34,17 +25,68 @@ function filterQuery(domain: DatasetDomain, filters: ReportFilters | undefined) 
 
 export async function loadReportSummaries(modules: ReportModuleDefinition[], datasetIds: Partial<Record<DatasetDomain, string>>, filters: Partial<Record<DatasetDomain, ReportFilters>> = {}) {
   const result = new Map<DatasetDomain, ReportSummary>()
-  await Promise.all((['TITULADOS', 'EMPLEADORES'] as DatasetDomain[]).map(async (domain) => {
+  const loaded = await Promise.all((['TITULADOS', 'EMPLEADORES'] as DatasetDomain[]).map(async (domain) => {
     const datasetId = datasetIds[domain]
-    const fields = [...new Set(modules.filter((module) => module.domain === domain).flatMap((module) => fieldsByModule[module.id] ?? []))]
-    if (!datasetId || fields.length === 0) return
+    const fields = [...new Set(modules.filter((module) => module.domain === domain).flatMap((module) => module.fields ?? []))]
+    if (!datasetId || fields.length === 0) return null
     const endpoint = domain === 'TITULADOS' ? 'titulados' : 'employers'
     const summary = await apiRequest<ReportSummary>(`/analytics/report/${endpoint}/summary?datasetId=${encodeURIComponent(datasetId)}&fields=${encodeURIComponent(fields.join(','))}${filterQuery(domain, filters[domain])}`)
-    result.set(domain, summary)
+    return { domain, summary }
   }))
+  loaded.forEach((item) => { if (item) result.set(item.domain, item.summary) })
   return result
 }
 
 export function fieldsForModule(module: ReportModuleDefinition) {
-  return fieldsByModule[module.id] ?? []
+  return module.fields ?? []
+}
+
+export async function loadReportCohorts(datasetIds: Partial<Record<DatasetDomain, string>>, filters: Partial<Record<DatasetDomain, ReportFilters>> = {}) {
+  if (!datasetIds.TITULADOS) return undefined
+  const response = await apiRequest<{ cohortPoints: ReportCohortPoint[] }>(`/analytics/titulados/employment/profile?datasetId=${encodeURIComponent(datasetIds.TITULADOS)}${filterQuery('TITULADOS', filters.TITULADOS)}`)
+  return response.cohortPoints
+}
+
+export async function loadReportEmployerDashboard(datasetIds: Partial<Record<DatasetDomain, string>>, filters: Partial<Record<DatasetDomain, ReportFilters>> = {}) {
+  if (!datasetIds.EMPLEADORES) return undefined
+  return apiRequest<ReportEmployerDashboard>(`/analytics/employers/dashboard?datasetId=${encodeURIComponent(datasetIds.EMPLEADORES)}${filterQuery('EMPLEADORES', filters.EMPLEADORES)}`)
+}
+
+export async function loadReportComparisons(datasetIds: Partial<Record<DatasetDomain, string>>) {
+  if (!datasetIds.TITULADOS || !datasetIds.EMPLEADORES) return undefined
+  return apiRequest<{ competencias: ReportComparison[] }>(`/analytics/comparison/competencies?tituladosDatasetId=${encodeURIComponent(datasetIds.TITULADOS)}&empleadoresDatasetId=${encodeURIComponent(datasetIds.EMPLEADORES)}&alfa=0.05`)
+}
+
+export async function loadReportSimulation(datasetIds: Partial<Record<DatasetDomain, string>>, config: ReportSimulationConfig) {
+  if (!datasetIds.TITULADOS) return undefined
+  const segment = config.segment === 'all' ? '' : `&gender=${encodeURIComponent(config.segment)}`
+  const summary = await apiRequest<{ distributions: Record<string, { validCount: number; counts: Record<string, number> }> }>(`/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetIds.TITULADOS)}&fields=${encodeURIComponent(config.variable)}${segment}`)
+  const distribution = summary.distributions[config.variable]
+  if (!distribution || distribution.validCount === 0) return undefined
+  const categories = simulationCategories(config.variable, distribution.counts)
+  const total = categories.reduce((sum, category) => sum + (distribution.counts[category] ?? 0), 0)
+  return apiRequest<Simulation>('/analytics/simulation/multinomial', {
+    method: 'POST',
+    body: JSON.stringify({
+      categories,
+      probabilities: categories.map((category) => (distribution.counts[category] ?? 0) / total),
+      observedCounts: categories.map((category) => distribution.counts[category] ?? 0),
+      sampleSize: config.sampleSize,
+      repetitions: config.repetitions,
+      seed: config.seed,
+    }),
+  })
+}
+
+export async function loadReportCompetences(datasetIds: Partial<Record<DatasetDomain, string>>, filters: Partial<Record<DatasetDomain, ReportFilters>> = {}) {
+  const result = new Map<DatasetDomain, ReportCompetence[]>()
+  const loaded = await Promise.all((['TITULADOS', 'EMPLEADORES'] as DatasetDomain[]).map(async (domain) => {
+    const datasetId = datasetIds[domain]
+    if (!datasetId) return null
+    const endpoint = domain === 'TITULADOS' ? 'titulados' : 'employers'
+    const competences = await apiRequest<ReportCompetence[]>(`/analytics/report/${endpoint}/competences?datasetId=${encodeURIComponent(datasetId)}${filterQuery(domain, filters[domain])}`)
+    return { domain, competences }
+  }))
+  loaded.forEach((item) => { if (item) result.set(item.domain, item.competences) })
+  return result
 }

@@ -22,6 +22,46 @@ export type AnalyticsSummaryData = {
   yearMax?: number
 }
 export type ReportSummary = AnalyticsSummaryData & { availableFields: string[] }
+export type ReportCompetence = {
+  code: string
+  name: string
+  group: string
+  validCount: number
+  average: number | null
+  standardDeviation: number | null
+  median: number | null
+  levelCounts: Record<string, number>
+  notObservedCount: number
+}
+export type ReportComparisonGroup = {
+  n: number
+  media: number | null
+  mediana: number | null
+  desviacion: number | null
+  niveles: Record<string, number>
+  noObservado: number
+}
+export type ReportComparison = {
+  code: string
+  name: string
+  group: string
+  titulados: ReportComparisonGroup
+  empleadores: ReportComparisonGroup
+  diferenciaMedias: number | null
+  diferenciaMedianas: number | null
+  prueba: {
+    codigo: string
+    nombre: string
+    aplicable: boolean
+    u: number | null
+    z: number | null
+    pValor: number | null
+    pAjustado: number | null
+    significativa: boolean
+    rBiserial: number | null
+    motivo: string
+  }
+}
 export type AnalyticsSummary = AnalyticsSummaryData & { datasetId: string; surveyType: string }
 
 export function ejecutarChiCuadrado(frecuencias: number[][], alfa: number) {

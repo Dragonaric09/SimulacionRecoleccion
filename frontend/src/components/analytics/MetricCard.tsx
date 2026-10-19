@@ -1,7 +1,10 @@
 import type { LucideIcon } from 'lucide-react'
-import { Minus, TrendingDown, TrendingUp } from 'lucide-react'
+import { Check, FilePlus2, Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from 'cn'
+import { Button } from '@/components/ui/button'
+import { addReportModule, isReportModuleSelected, reportModuleForTitle, REPORT_SELECTION_EVENT } from '@/features/reporting/reportSelection'
+import { useEffect, useState } from 'react'
 
 export type MetricChange = {
   value: number
@@ -23,6 +26,15 @@ export function MetricCard({ label, value, icon: Icon, change, comparison, note,
   note: string
   detail?: string
 }) {
+  const reportModule = reportModuleForTitle(label)
+  const [inReport, setInReport] = useState(() => reportModule ? isReportModuleSelected(reportModule.id) : false)
+  useEffect(() => {
+    if (!reportModule) return
+    const refresh = () => setInReport(isReportModuleSelected(reportModule.id))
+    window.addEventListener(REPORT_SELECTION_EVENT, refresh)
+    window.addEventListener('storage', refresh)
+    return () => { window.removeEventListener(REPORT_SELECTION_EVENT, refresh); window.removeEventListener('storage', refresh) }
+  }, [reportModule])
   const direction = change === null || change.value === 0 ? 'flat' : change.value > 0 ? 'up' : 'down'
   const Trend = direction === 'up' ? TrendingUp : direction === 'down' ? TrendingDown : Minus
   const trendStyle = direction === 'up'
@@ -36,9 +48,7 @@ export function MetricCard({ label, value, icon: Icon, change, comparison, note,
       <CardContent className="flex h-full flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="caption-bold min-w-0 text-ink-600">{label}</p>
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg" style={{ background: '#E1F4F2' }}>
-            <Icon className="size-[18px] text-empleadores" aria-hidden="true" />
-          </span>
+          <div className="flex items-center gap-1"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg" style={{ background: '#E1F4F2' }}><Icon className="size-[18px] text-empleadores" aria-hidden="true" /></span>{reportModule && <Button variant="ghost" size="icon-sm" aria-label={inReport ? `Incluida en el reporte: ${label}` : `Añadir al reporte: ${label}`} onClick={() => { addReportModule(reportModule.id); setInReport(true) }} title={inReport ? 'Incluida en el reporte dinámico' : 'Añadir al reporte dinámico'}>{inReport ? <Check /> : <FilePlus2 />}</Button>}</div>
         </div>
         <p className="display-kpi tabular-nums text-ink-900">{value}</p>
         <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1">

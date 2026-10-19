@@ -22,6 +22,7 @@ import type { Competence, EmploymentProfile } from "./shared/analyticsTypes";
 import { useDatasetContext } from "@/app/DatasetContext";
 import { navigate } from "@/app/navigation";
 import { sentenceCaseLabel } from "./shared/analyticsFormatters";
+import { chartColor, employmentChartPalette } from "./shared/chartTheme";
 
 const fields =
   "situacion_laboral_actual,interes_posgrado,area_posgrado_interes,sector_trabajo,anio_titulacion,es_primer_empleo";
@@ -438,7 +439,7 @@ function PostgraduateCard({
 }
 
 function colorForEmployment(index: number) {
-  return ["#1f6fb5", "#14a39a", "#94a3b8", "#f2a33a"][index % 4];
+  return chartColor(index, employmentChartPalette);
 }
 
 function summaryLaborLabel(label: string) {

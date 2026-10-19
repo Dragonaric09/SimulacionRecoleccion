@@ -5,7 +5,9 @@ import com.simulacionem.analitica.application.dto.CompetenceAverageDto;
 import com.simulacionem.analitica.application.dto.CrossTabulationDto;
 import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
 import com.simulacionem.analitica.application.dto.ReportSummaryDto;
+import com.simulacionem.analitica.application.dto.ReportCompetenceDto;
 import com.simulacionem.analitica.application.service.AnalyticsService;
+import com.simulacionem.analitica.application.service.EmployerDashboardService;
 import com.simulacionem.analitica.application.service.TituladosFilter;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 import java.util.List;
@@ -48,10 +51,21 @@ public class AnalyticsController {
             "tipo_organizacion", "tamano_organizacion", "rubro_organizacion", "departamento_organizacion",
             "presencia_sedes", "contrato_titulados_ultimos_5_anios", "posibilidad_incorporacion",
             "nivel_formacion_demandado", "medio_convocatoria", "cargos_titulados", "valoracion_formacion_1",
-            "valoracion_formacion_5", "valoracion_relacion_3");
+            "valoracion_formacion_2", "valoracion_formacion_3", "valoracion_formacion_4", "valoracion_formacion_5",
+            "valoracion_formacion_6", "valoracion_formacion_7", "valoracion_formacion_8", "valoracion_formacion_9",
+            "valoracion_formacion_10", "valoracion_relacion_1", "valoracion_relacion_2", "valoracion_relacion_3",
+            "valoracion_relacion_4", "valoracion_relacion_5", "valoracion_relacion_6", "valoracion_relacion_7",
+            "valoracion_relacion_8");
     private final AnalyticsService analytics;
+    private final EmployerDashboardService employerDashboard;
 
-    public AnalyticsController(AnalyticsService analytics) { this.analytics = analytics; }
+    public AnalyticsController(AnalyticsService analytics) { this(analytics, null); }
+
+    @Autowired
+    public AnalyticsController(AnalyticsService analytics, EmployerDashboardService employerDashboard) {
+        this.analytics = analytics;
+        this.employerDashboard = employerDashboard;
+    }
 
     @GetMapping("/titulados/summary")
     public AnalyticsSummaryDto tituladosSummary(@RequestParam(required = false) UUID datasetId,
@@ -156,6 +170,22 @@ public class AnalyticsController {
                 allowedFields(fields, ALLOWED_EMPLOYERS_SUMMARY_FIELDS),
                 TituladosFilter.organization(organizationType, organizationSize)),
                 allowedAvailableFields(analytics.availableFields(datasetId, "EMPLEADORES"), ALLOWED_EMPLOYERS_SUMMARY_FIELDS));
+    }
+
+    @GetMapping("/report/titulados/competences")
+    public List<ReportCompetenceDto> reportTituladosCompetences(@RequestParam UUID datasetId,
+                                                                @ModelAttribute TituladosQuery query) {
+        return analytics.competenceGaps(datasetId, query.toFilter()).stream()
+                .map(ReportCompetenceDto::from)
+                .toList();
+    }
+
+    @GetMapping("/report/employers/competences")
+    public List<ReportCompetenceDto> reportEmployersCompetences(@ModelAttribute EmployerQuery query) {
+        if (employerDashboard == null) throw new IllegalStateException("El servicio de empleadores no está configurado");
+        return employerDashboard.dashboard(query.toFilters()).competences().stream()
+                .map(ReportCompetenceDto::from)
+                .toList();
     }
 
     @GetMapping("/employers/valuation")
