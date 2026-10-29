@@ -14,6 +14,7 @@ import { EmptyChart } from './DashboardCharts'
 import type { DashboardCompetence, SizeCompetenceCell } from './dashboardTypes'
 import { MeanBars as SharedMeanBars } from '@/components/analytics/charts'
 import { ChartVariantSelector, useChartVariant } from '@/components/analytics/charts'
+import { TapTooltip } from '@/components/analytics/TapTooltip'
 
 const AXIS_TICK = { fontSize: 12, fill: AXIS_TEXT }
 const LEVEL_KEYS = ['l1', 'l2', 'l3', 'l4', 'l5'] as const
@@ -317,18 +318,22 @@ export function SizeCompetenceHeatmap({
                 const average = cell?.average ?? null
                 const background = average === null ? '#F8FAFC' : likertColor(average)
                 return (
-                  <td
+                  <TapTooltip
                     key={`${row.code}-${column}`}
-                    className="h-11 rounded-md text-center text-sm font-semibold tabular-nums"
-                    style={{
-                      background,
-                      color: average === null ? '#94A3B8' : contrastTextColor(background),
-                      minWidth: getColumnWidth(sizeLabel(column)),
-                    }}
-                    title={`${row.label} · ${sizeLabel(column)}: ${average === null ? 'sin valoraciones' : `media ${formatDecimal(average, 2)} (n = ${cell?.answered ?? 0})`}`}
+                    content={<div className="grid gap-0.5"><strong>{row.label}</strong><span>{sizeLabel(column)}</span><span>{average === null ? 'Sin valoraciones' : `Media: ${formatDecimal(average, 2)} de 5 · n = ${formatCount(cell?.answered ?? 0)}`}</span><span className="text-muted-foreground">El color representa el promedio en la escala de suficiencia.</span></div>}
                   >
-                    {average === null ? '—' : formatDecimal(average, 1)}
-                  </td>
+                    <td
+                      tabIndex={0}
+                      className="h-11 cursor-help rounded-md text-center text-sm font-semibold tabular-nums"
+                      style={{
+                        background,
+                        color: average === null ? '#94A3B8' : contrastTextColor(background),
+                        minWidth: getColumnWidth(sizeLabel(column)),
+                      }}
+                    >
+                      {average === null ? '—' : formatDecimal(average, 1)}
+                    </td>
+                  </TapTooltip>
                 )
               })}
             </tr>
