@@ -28,20 +28,22 @@ export function LikertStackedBars({
           {row.label && <div className="mb-1 truncate text-xs text-ink-700">{row.label}</div>}
           <div className="flex overflow-hidden rounded-md" style={{ height }}>
             {row.segments.map((segment, index) => (
-              <div
-                key={segment.key}
-                className="flex min-w-0 items-center justify-center px-1 text-[11px] font-semibold"
-                style={{
-                  width: `${segment.value}%`,
-                  backgroundColor: colors[index % colors.length],
-                  color: segment.value >= 8 ? '#fff' : 'transparent',
-                }}
-                title={`${segment.label}: ${segment.count ?? ''} (${segment.value.toFixed(1).replace('.', ',')} %)`}
-              >
-                {showValues && segment.value >= 8
-                  ? `${segment.count ?? ''} (${segment.value.toFixed(1).replace('.', ',')} %)`
-                  : ''}
-              </div>
+              <TapTooltip key={segment.key} content={<div className="grid gap-0.5"><strong>{segment.label}</strong><span>{segment.count ?? '—'} respuestas · {segment.value.toFixed(1).replace('.', ',')} %</span></div>}>
+                <div
+                  tabIndex={0}
+                  aria-label={`${segment.label}: ${segment.count ?? 'sin dato'} respuestas, ${segment.value.toFixed(1).replace('.', ',')} %`}
+                  className="flex min-w-0 cursor-help items-center justify-center px-1 text-[11px] font-semibold"
+                  style={{
+                    width: `${segment.value}%`,
+                    backgroundColor: colors[index % colors.length],
+                    color: segment.value >= 8 ? '#fff' : 'transparent',
+                  }}
+                >
+                  {showValues && segment.value >= 8
+                    ? `${segment.count ?? ''} (${segment.value.toFixed(1).replace('.', ',')} %)`
+                    : ''}
+                </div>
+              </TapTooltip>
             ))}
           </div>
         </div>
@@ -49,3 +51,4 @@ export function LikertStackedBars({
     </div>
   )
 }
+import { TapTooltip } from '../TapTooltip'

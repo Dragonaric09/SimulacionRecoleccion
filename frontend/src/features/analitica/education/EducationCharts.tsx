@@ -280,7 +280,6 @@ export function OrdinalColumnsCard({
                 <div
                   className="w-full max-w-12 rounded-t bg-titulados"
                   style={{ height: `${Math.max(count ? 10 : 2, (count * 78) / max)}px` }}
-                  title={`${label}: ${count}`}
                 />
                 <span className="w-full text-center text-[10px] leading-tight text-ink-600">
                   {label}

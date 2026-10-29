@@ -2,6 +2,7 @@ import * as React from "react"
 import { cn } from "cn"
 import * as RechartsPrimitive from "recharts"
 import type { TooltipValueType } from "recharts"
+import { useTooltipViewportFit } from "@/components/analytics/charts/useTooltipViewportFit"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
@@ -55,6 +56,7 @@ function ChartContainer({
 }) {
   const uniqueId = React.useId()
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`
+  const tooltipViewport = useTooltipViewportFit<HTMLDivElement>()
 
   return (
     <ChartContext.Provider value={{ config }}>
@@ -66,6 +68,10 @@ function ChartContainer({
           className
         )}
         {...props}
+        ref={tooltipViewport.containerRef}
+        onPointerEnter={tooltipViewport.onPointerEnter}
+        onPointerMove={tooltipViewport.onPointerMove}
+        onPointerLeave={tooltipViewport.onPointerLeave}
       >
         <ChartStyle id={chartId} config={config} />
         <RechartsPrimitive.ResponsiveContainer
@@ -111,7 +117,16 @@ ${colorConfig
   )
 }
 
-const ChartTooltip = RechartsPrimitive.Tooltip
+function ChartTooltip(props: React.ComponentProps<typeof RechartsPrimitive.Tooltip>) {
+  return (
+    <RechartsPrimitive.Tooltip
+      {...props}
+      // Si se acerca al borde de la vista del gráfico, lo coloca al otro lado del punto.
+      reverseDirection={props.reverseDirection ?? { x: true, y: true }}
+      wrapperStyle={{ zIndex: 20, ...props.wrapperStyle }}
+    />
+  )
+}
 
 function ChartTooltipContent({
   active,
@@ -188,7 +203,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+        "grid min-w-[8rem] max-w-[min(14rem,calc(100vw-1.5rem))] items-start gap-1.5 whitespace-normal break-words rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
         className
       )}
     >

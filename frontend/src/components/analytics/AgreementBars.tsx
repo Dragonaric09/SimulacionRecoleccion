@@ -1,4 +1,5 @@
 import { contrastTextColor } from '@/lib/utils'
+import { TapTooltip } from './TapTooltip'
 import { AGREEMENT_SCALE, NEUTRAL_GRAY, NO_KNOW_LABEL } from '@/features/empleadores/instrumento'
 
 export type AgreementRowData = {
@@ -54,13 +55,17 @@ function AgreementRow({ row }: { row: AgreementRowData }) {
         {AGREEMENT_SCALE.map((level) => {
           const count = row.counts[level.value] ?? 0
           return count > 0 ? (
-            <Segment key={level.value} width={(count * 100) / total} color={level.color} count={count} />
+            <TapTooltip key={level.value} content={<div className="grid gap-0.5"><strong>{level.value}</strong><span>{count} respuestas · {((count * 100) / total).toFixed(1).replace('.', ',')} %</span><span className="text-muted-foreground">Base válida de esta afirmación: n = {row.validCount}</span></div>}>
+              <Segment width={(count * 100) / total} color={level.color} count={count} />
+            </TapTooltip>
           ) : null
         })}
         {noKnow > 0 && (
           <>
             <span className="w-2 shrink-0" aria-hidden="true" />
-            <Segment width={(noKnow * 100) / total} color={NEUTRAL_GRAY} count={noKnow} />
+            <TapTooltip content={<div className="grid gap-0.5"><strong>{NO_KNOW_LABEL}</strong><span>{noKnow} respuestas · {((noKnow * 100) / total).toFixed(1).replace('.', ',')} %</span><span className="text-muted-foreground">Base válida de esta afirmación: n = {row.validCount}</span></div>}>
+              <Segment width={(noKnow * 100) / total} color={NEUTRAL_GRAY} count={noKnow} />
+            </TapTooltip>
           </>
         )}
       </div>
@@ -71,6 +76,8 @@ function AgreementRow({ row }: { row: AgreementRowData }) {
 function Segment({ width, color, count }: { width: number; color: string; count: number }) {
   return (
     <span
+      tabIndex={0}
+      aria-label={`${count} respuestas`}
       className="flex items-center justify-center text-xs font-semibold tabular-nums"
       style={{ width: `${width}%`, backgroundColor: color, color: contrastTextColor(color) }}
     >

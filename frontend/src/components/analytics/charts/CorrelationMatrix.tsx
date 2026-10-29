@@ -59,19 +59,11 @@ export function CorrelationMatrix({
                           }`
 
                     return (
-                      <td
-                        key={columnIndex}
-                        className="h-9 rounded-sm text-center tabular-nums"
-                        style={{
-                          background: colorScale(value),
-                          color: value !== null && Math.abs(value) > 0.65 ? '#FFFFFF' : '#0F172A',
-                        }}
-                        title={`n = ${sampleSize}${
-                          pValue !== null ? ` · p = ${formatPValue(pValue)}` : ''
-                        }`}
-                      >
-                        {formattedValue}
-                      </td>
+                      <TapTooltip key={columnIndex} content={<div className="grid gap-0.5"><strong>{rowLabel} × {labels[columnIndex]}</strong><span>{correlationLabel}: {value === null ? 'no disponible' : value.toFixed(2).replace('.', ',')}</span><span>n = {sampleSize}{pValue !== null ? ` · p = ${formatPValue(pValue)}` : ''}</span><span className="text-muted-foreground">El color indica la dirección e intensidad de la relación.</span></div>}>
+                        <td tabIndex={0} className="h-9 cursor-help rounded-sm text-center tabular-nums" style={{ background: colorScale(value), color: value !== null && Math.abs(value) > 0.65 ? '#FFFFFF' : '#0F172A' }}>
+                          {formattedValue}
+                        </td>
+                      </TapTooltip>
                     )
                   })}
                 </tr>
@@ -107,3 +99,4 @@ function defaultCorrelationColor(value: number | null) {
     ? `rgba(31, 111, 181, ${0.12 + normalized * 0.7})`
     : `rgba(228, 87, 46, ${0.12 + Math.abs(normalized) * 0.7})`
 }
+import { TapTooltip } from '../TapTooltip'

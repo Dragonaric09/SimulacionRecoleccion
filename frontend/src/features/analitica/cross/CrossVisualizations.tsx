@@ -6,7 +6,9 @@ import type { ResultadoPruebaAsociacion } from "../api";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useChartContainerWidth } from "@/components/analytics/charts/useChartContainerSize";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TapTooltip } from "@/components/analytics/TapTooltip";
 
 function booleanLabel(value: string) {
   if (value.toLowerCase() === "true") return "Sí";
@@ -358,6 +360,7 @@ export function CrossBars({
   totalResponses?: number;
   action?: ReactNode;
 }) {
+  const { ref, width: chartWidth } = useChartContainerWidth<HTMLDivElement>();
   const colors = [
     "#1f6fb5",
     "#7db1dd",
@@ -395,7 +398,8 @@ export function CrossBars({
           {action}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
+        <div ref={ref} className="space-y-4">
         {cross.rowCategories.map((row) => {
           const totalRow = rowTotal(row);
           return (
@@ -419,27 +423,43 @@ export function CrossBars({
                       const value = cross.counts[row]?.[column] ?? 0;
                       if (value <= 0) return null;
                       const width = (value * 100) / totalRow;
+                      const label = valueLabel(row, column, value);
+                      const actualSegmentWidth = (value / maxRowTotal) * chartWidth;
+                      const labelCanFit = actualSegmentWidth >= label.length * 6 + 8;
                       return (
-                        <div
+                        <TapTooltip
                           key={column}
-                          className="flex min-w-0 items-center justify-center px-1 text-[10px] font-semibold"
-                          style={{
-                            width: width + "%",
-                            backgroundColor: colors[index % colors.length],
-                            color: contrastTextColor(colors[index % colors.length]),
-                          }}
-                          title={
-                            booleanLabel(column) +
-                            ": " +
-                            valueLabel(row, column, value)
+                          side="bottom"
+                          content={
+                            <div className="grid gap-0.5">
+                              <strong>{booleanLabel(column)}</strong>
+                              <span>
+                                {metric === "rowPercent"
+                                  ? `${valueLabel(row, column, value)} · `
+                                  : ""}
+                                {value} de {totalRow} respuestas de «{booleanLabel(row)}»
+                              </span>
+                              <span className="text-muted-foreground">
+                                {rowPercent(row, column).toFixed(1).replace(".", ",")} % de esta categoría
+                              </span>
+                            </div>
                           }
                         >
-                          <span className="truncate">
-                            {width >= 10
-                              ? valueLabel(row, column, value)
-                              : ""}
-                          </span>
-                        </div>
+                          <div
+                            tabIndex={0}
+                            aria-label={`${booleanLabel(row)}; ${booleanLabel(column)}: ${valueLabel(row, column, value)}`}
+                            className="flex min-w-0 cursor-help items-center justify-center px-1 text-[10px] font-semibold"
+                            style={{
+                              width: width + "%",
+                              backgroundColor: colors[index % colors.length],
+                              color: contrastTextColor(colors[index % colors.length]),
+                            }}
+                          >
+                            <span className="truncate">
+                              {labelCanFit ? label : ""}
+                            </span>
+                          </div>
+                        </TapTooltip>
                       );
                     })}
                   </div>
@@ -462,6 +482,7 @@ export function CrossBars({
               {booleanLabel(column)}
             </span>
           ))}
+        </div>
         </div>
       </CardContent>
     </Card>

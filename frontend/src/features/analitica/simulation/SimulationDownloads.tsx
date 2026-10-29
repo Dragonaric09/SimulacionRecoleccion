@@ -42,6 +42,9 @@ export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
       <DownloadMenu
         title={run ? `Simulación de ${run.variableLabel}` : "Simulación"}
         disabled={!run}
+        triggerText="Exportar simulación"
+        triggerVariant="outline"
+        triggerSize="sm"
         options={run ? [
           { label: pdfLoading ? "Preparando PDF…" : "Previsualizar PDF", help: "Revisar el mismo PDF que se descargará", disabled: pdfLoading, onSelect: () => openPdf(run) },
           { label: "Excel (.xlsx)", help: "Tabla comparativa + hoja de parámetros", onSelect: () => exportSimulationExcel(run) },

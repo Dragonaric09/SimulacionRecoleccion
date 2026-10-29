@@ -1,6 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { FileDown } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { DownloadMenu } from './DownloadMenu'
 
 export type PrintDomain = 'TITULADOS' | 'EMPLEADORES'
 
@@ -65,19 +64,15 @@ export function PrintButton({
   kind?: 'completo' | 'cruce' | 'simulacion'
   disabled?: boolean
 }) {
+  const domainLabel = domain === 'TITULADOS' ? 'Titulados' : 'Empleadores'
   return (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
+    <DownloadMenu
+      title={domainLabel}
+      options={[{ label: 'Descargar PDF', help: `Informe de ${domainLabel}`, onSelect: () => printAnalyticsPdf(domain, kind) }]}
       disabled={disabled}
-      onClick={() => printAnalyticsPdf(domain, kind)}
-      aria-label={`Descargar PDF de ${domain === 'TITULADOS' ? 'Titulados' : 'Empleadores'}`}
-    >
-      <FileDown />
-      {/* El mismo texto en todas las secciones: el informe corresponde siempre a la sección abierta. */}
-      <span className="hidden sm:inline">Descargar PDF</span>
-      <span className="sm:hidden">PDF</span>
-    </Button>
+      triggerVariant="outline"
+      triggerSize="sm"
+      triggerText={<><span className="hidden sm:inline">Descargar PDF</span><span className="sm:hidden">PDF</span></>}
+    />
   )
 }
