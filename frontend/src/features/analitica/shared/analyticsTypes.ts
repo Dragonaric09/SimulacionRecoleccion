@@ -36,7 +36,9 @@ export type Simulation = {
     observedCount: number;
     observedPercentage: number;
     simulatedMean: number;
+    /** Percentil 2,5 de las réplicas. */
     lower95: number;
+    /** Percentil 97,5 de las réplicas. */
     upper95: number;
     standardDeviation: number;
     replicaPercentages?: number[];
@@ -44,6 +46,39 @@ export type Simulation = {
     median?: number;
     thirdQuartile?: number;
   }[];
+};
+
+/** Escenario ajustado contra el base simulados con la misma semilla (números aleatorios comunes). */
+export type SimulationComparison = {
+  base: Simulation;
+  scenario: Simulation;
+  differences: {
+    category: string;
+    /** Diferencia media escenario − base, en puntos porcentuales. */
+    meanDifference: number;
+    /** Percentiles 2,5 y 97,5 de la diferencia réplica a réplica. */
+    lower95: number;
+    upper95: number;
+    /** Porcentaje de réplicas en que el escenario supera o queda debajo del base. */
+    shareHigher: number;
+    shareLower: number;
+  }[];
+};
+
+/** Escenario con nombre guardado en el servidor y compartido por todos. */
+export type SavedSimulationScenario = {
+  id: string;
+  name: string;
+  description: string | null;
+  variable: string;
+  segment: string;
+  categories: string[];
+  probabilities: number[];
+  sampleSize: number;
+  repetitions: number;
+  seed: number;
+  datasetId: string | null;
+  createdAt: string;
 };
 
 export type EmploymentProfile = {

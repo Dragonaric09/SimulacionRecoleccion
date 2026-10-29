@@ -96,3 +96,21 @@ export function parseSimulationInteger(value: string, fallback: number) {
   const parsed = Number(value);
   return Number.isInteger(parsed) ? parsed : fallback;
 }
+
+/**
+ * Pesos de un escenario guardado sobre las categorías presentes en los datos actuales. Las probabilidades se
+ * escalan al total observado para que los controles de ajuste sigan en la misma escala; una categoría guardada
+ * que no aparece en los datos se informa y su peso se reparte de nuevo al normalizar.
+ */
+export function scenarioWeights(
+  saved: { categories: string[]; probabilities: number[] },
+  categories: string[],
+  observedTotal: number,
+) {
+  const byIdentity = new Map(saved.categories.map((category, index) => [simulationCategoryIdentity(category), saved.probabilities[index] ?? 0]));
+  const present = new Set(categories.map(simulationCategoryIdentity));
+  const missing = saved.categories.filter((category, index) => !present.has(simulationCategoryIdentity(category)) && (saved.probabilities[index] ?? 0) > 0);
+  const scale = Math.max(observedTotal, 1);
+  const weights = Object.fromEntries(categories.map((category) => [category, (byIdentity.get(simulationCategoryIdentity(category)) ?? 0) * scale]));
+  return { weights, missing };
+}

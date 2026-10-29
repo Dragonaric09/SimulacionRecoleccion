@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
 import { apiRequest } from "@/api/client";
 import type { AnalyticsSummary } from "../api";
-import type { Simulation } from "../shared/analyticsTypes";
+import type { SavedSimulationScenario, Simulation, SimulationComparison } from "../shared/analyticsTypes";
 import { useDatasets } from "../shared/AnalyticsPrimitives";
 import { usePersistentState } from "@/lib/usePersistentState";
 import type { SimulationRun } from "./SimulationDownloads";
 import {
   parseSimulationInteger,
+  scenarioWeights,
   simulationCategories,
   simulationCategoryLabel,
   simulationVariableLabel,
@@ -40,6 +41,10 @@ export function useSimulationScenario() {
     });
   }, [weightsKey]);
   const [result, setResult] = useState<Simulation | null>(null);
+  const [comparison, setComparison] = useState<SimulationComparison | null>(null);
+  // Escenario guardado que espera los datos de su variable y segmento para convertirse en pesos.
+  const pendingScenarioRef = useRef<SavedSimulationScenario | null>(null);
+  const [scenarioNotice, setScenarioNotice] = useState<string | null>(null);
   const [scenarioPercentages, setScenarioPercentages] = useState<Record<string, number> | null>(null);
   const [executedRun, setExecutedRun] = useState<SimulationRun | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,6 +60,7 @@ export function useSimulationScenario() {
   useEffect(() => {
     if (!datasetId) return;
     setResult(null);
+    setComparison(null);
     setScenarioPercentages(null);
     setExecutedRun(null);
     setError(null);
@@ -64,10 +70,19 @@ export function useSimulationScenario() {
     )
       .then((next) => {
         setSummary(next);
+        const pending = pendingScenarioRef.current;
+        const distribution = next.distributions[variable];
+        if (pending && pending.variable === variable && pending.segment === segment && distribution) {
+          pendingScenarioRef.current = null;
+          applySavedWeights(pending, distribution.counts);
+          return;
+        }
         // Pesos guardados de este dataset, variable y segmento; si no hay, el escenario parte de lo observado.
         setWeightsState(loadWeights(weightsKey));
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)));
+    // applySavedWeights solo escribe estado y almacenamiento; no debe volver a disparar la consulta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datasetId, variable, segment, weightsKey]);
 
   const currentResult = result && executedRun
@@ -77,6 +92,35 @@ export function useSimulationScenario() {
     ? result
     : null;
   const currentExecutedRun = currentResult ? executedRun : null;
+  const currentComparison = currentResult && comparison?.scenario === currentResult ? comparison : null;
+
+  /** Convierte las probabilidades guardadas en pesos sobre las categorías presentes en los datos. */
+  function applySavedWeights(saved: SavedSimulationScenario, counts: Record<string, number>) {
+    const categories = simulationCategories(saved.variable, counts);
+    const { weights: next, missing } = scenarioWeights(saved, categories, Object.values(counts).reduce((sum, value) => sum + value, 0));
+    setWeights(next);
+    setScenarioNotice(missing.length
+      ? `«${saved.name}» incluye categorías que no aparecen en estos datos y se omitieron: ${missing.map(simulationCategoryLabel).join(", ")}.`
+      : null);
+  }
+
+  /** Aplica un escenario guardado: variable, segmento, parámetros y probabilidades. */
+  const applyScenario = (saved: SavedSimulationScenario) => {
+    setSampleSize(saved.sampleSize);
+    setSampleSizeInput(String(saved.sampleSize));
+    setRepetitions(saved.repetitions);
+    setRepetitionsInput(String(saved.repetitions));
+    setSeed(saved.seed);
+    setSeedInput(String(saved.seed));
+    const distribution = summary?.distributions[saved.variable];
+    if (saved.variable === variable && saved.segment === segment && distribution) {
+      applySavedWeights(saved, distribution.counts);
+      return;
+    }
+    pendingScenarioRef.current = saved;
+    setVariable(saved.variable);
+    setSegment(saved.segment);
+  };
 
   const run = useCallback(async () => {
     if (!parametersValid || !datasetId) {
@@ -94,6 +138,8 @@ export function useSimulationScenario() {
     const nextScenarioPercentages = adjusted
       ? Object.fromEntries(categories.map((category, index) => [category, (observedWeights[index] * 100) / total]))
       : null;
+    const observedCounts = categories.map((category) => distribution.counts[category] ?? 0);
+    const observedSum = observedCounts.reduce((sum, value) => sum + value, 0);
     simulationAbortRef.current?.abort();
     const controller = new AbortController();
     simulationAbortRef.current = controller;
@@ -101,20 +147,32 @@ export function useSimulationScenario() {
     setLoading(true);
     setError(null);
     try {
-      const nextResult = await apiRequest<Simulation>("/analytics/simulation/multinomial", {
+      const probabilities = observedWeights.map((value) => value / total);
+      // Un escenario ajustado se simula junto al base con la misma semilla: la diferencia entre ambos
+      // refleja el cambio de probabilidades y no el azar de los sorteos.
+      const nextComparison = adjusted && observedSum > 0
+        ? await apiRequest<SimulationComparison>("/analytics/simulation/compare", {
+          method: "POST",
+          body: JSON.stringify({
+            categories,
+            baseProbabilities: observedCounts.map((value) => value / observedSum),
+            scenarioProbabilities: probabilities,
+            observedCounts,
+            sampleSize,
+            repetitions,
+            seed,
+          }),
+          signal: controller.signal,
+        })
+        : null;
+      const nextResult = nextComparison?.scenario ?? await apiRequest<Simulation>("/analytics/simulation/multinomial", {
         method: "POST",
-        body: JSON.stringify({
-          categories,
-          probabilities: observedWeights.map((value) => value / total),
-          observedCounts: categories.map((category) => distribution.counts[category] ?? 0),
-          sampleSize,
-          repetitions,
-          seed,
-        }),
+        body: JSON.stringify({ categories, probabilities, observedCounts, sampleSize, repetitions, seed }),
         signal: controller.signal,
       });
       if (requestId !== simulationRequestRef.current) return;
       setResult(nextResult);
+      setComparison(nextComparison);
       setScenarioPercentages(nextScenarioPercentages);
       setExecutedRun({
         result: nextResult,
@@ -129,6 +187,7 @@ export function useSimulationScenario() {
         categoryLabel: simulationCategoryLabel,
         weights: { ...weights },
         scenarioPercentages: nextScenarioPercentages,
+        comparison: nextComparison,
         segment,
       });
     } catch (cause) {
@@ -170,6 +229,10 @@ export function useSimulationScenario() {
     setSeedInput,
     setSeed,
     result: currentResult,
+    comparison: currentComparison,
+    applyScenario,
+    scenarioNotice,
+    clearScenarioNotice: () => setScenarioNotice(null),
     scenarioPercentages,
     executedRun: currentExecutedRun,
     loading,

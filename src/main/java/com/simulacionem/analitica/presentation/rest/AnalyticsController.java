@@ -12,8 +12,6 @@ import com.simulacionem.analitica.application.service.TituladosFilter;
 import com.simulacionem.analitica.application.service.TituladosCrossService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,9 +21,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.NoSuchElementException;
 import java.util.Map;
-import java.util.Random;
-import java.util.ArrayList;
-import java.util.stream.IntStream;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -33,10 +28,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @RestController
 @RequestMapping("/api/analytics")
 public class AnalyticsController {
-    /** Límites de la simulación, iguales a los de la pantalla de escenarios. */
-    static final int MAX_SIMULATION_SAMPLE = 10_000;
-    static final int MAX_SIMULATION_REPETITIONS = 5_000;
-
     private final AnalyticsService analytics;
     private final TituladosCrossService tituladosCrosses;
 
@@ -174,102 +165,6 @@ public class AnalyticsController {
                                             @RequestParam String columnField,
                                             @ModelAttribute TituladosQuery query) {
         return tituladosCrosses.cross(datasetId, query.toFilter(), rowField, columnField);
-    }
-
-    @PostMapping("/simulation/multinomial")
-    public SimulationResult simulation(@RequestBody SimulationRequest request) {
-        if (request.categories() == null || request.probabilities() == null
-                || request.categories().size() != request.probabilities().size()
-                || request.categories().isEmpty() || request.sampleSize() < 1
-                || request.repetitions() < 1) {
-            throw new IllegalArgumentException("Las categorías, probabilidades, tamaño y repeticiones son obligatorios y válidos");
-        }
-        // Los mismos límites que la interfaz, validados también aquí para acotar el trabajo del servidor (H-03).
-        if (request.sampleSize() > MAX_SIMULATION_SAMPLE || request.repetitions() > MAX_SIMULATION_REPETITIONS) {
-            throw new IllegalArgumentException("El tamaño de muestra admite hasta " + MAX_SIMULATION_SAMPLE
-                    + " y las réplicas hasta " + MAX_SIMULATION_REPETITIONS);
-        }
-        // Un elemento nulo producía NullPointerException y un 500 (H-04).
-        if (request.probabilities().stream().anyMatch(java.util.Objects::isNull)
-                || request.categories().stream().anyMatch(java.util.Objects::isNull)) {
-            throw new IllegalArgumentException("Las categorías y probabilidades no pueden tener valores vacíos");
-        }
-        double total = request.probabilities().stream().mapToDouble(Double::doubleValue).sum();
-        if (request.probabilities().stream().anyMatch(value -> value < 0) || Math.abs(total - 1.0) > 0.0001) {
-            throw new IllegalArgumentException("Las probabilidades deben ser no negativas y sumar 1");
-        }
-        Random random = new Random(request.seed());
-        double[] sums = new double[request.categories().size()];
-        double[] squares = new double[request.categories().size()];
-        List<List<Double>> replicaPercentages = new ArrayList<>();
-        List<SimulationDraw> firstDraws = new ArrayList<>();
-        double[] cumulative = new double[request.probabilities().size()];
-        double running = 0;
-        for (int i = 0; i < request.probabilities().size(); i++) {
-            running += request.probabilities().get(i);
-            cumulative[i] = running;
-        }
-        for (int repetition = 0; repetition < request.repetitions(); repetition++) {
-            int[] counts = new int[request.categories().size()];
-            for (int draw = 0; draw < request.sampleSize(); draw++) {
-                double value = random.nextDouble();
-                int category = IntStream.range(0, cumulative.length).filter(index -> value <= cumulative[index]).findFirst().orElse(cumulative.length - 1);
-                counts[category]++;
-                if (repetition == 0 && firstDraws.size() < 10) firstDraws.add(new SimulationDraw(round(value), request.categories().get(category)));
-            }
-            for (int i = 0; i < counts.length; i++) {
-                if (replicaPercentages.size() <= i) replicaPercentages.add(new ArrayList<>());
-                replicaPercentages.get(i).add(round(counts[i] * 100.0 / request.sampleSize()));
-            }
-            for (int i = 0; i < counts.length; i++) { sums[i] += counts[i] * 100.0 / request.sampleSize(); squares[i] += Math.pow(counts[i] * 100.0 / request.sampleSize(), 2); }
-        }
-        List<SimulationCategory> result = new ArrayList<>();
-        long observedTotal = request.observedCounts() == null ? 0L
-                : request.observedCounts().stream().mapToLong(Long::longValue).sum();
-        for (int i = 0; i < request.categories().size(); i++) {
-            double mean = sums[i] / request.repetitions();
-            double deviation = request.repetitions() > 1 ? Math.sqrt((squares[i] - request.repetitions() * mean * mean) / (request.repetitions() - 1)) : 0;
-            List<Double> replicas = replicaPercentages.get(i);
-            double q1 = percentile(replicas, 0.25);
-            double median = percentile(replicas, 0.50);
-            double q3 = percentile(replicas, 0.75);
-            long observedCount = request.observedCounts() != null && i < request.observedCounts().size()
-                    ? request.observedCounts().get(i) : 0L;
-            double observedPercentage = observedTotal > 0
-                    ? observedCount * 100.0 / observedTotal
-                    : request.probabilities().get(i) * 100;
-            result.add(new SimulationCategory(request.categories().get(i), observedCount,
-                    round(observedPercentage), round(mean),
-                    round(Math.max(0, mean - 1.96 * deviation)),
-                    round(Math.min(100, mean + 1.96 * deviation)), round(deviation), replicas,
-                    round(q1), round(median), round(q3)));
-        }
-        List<Double> cumulativeRounded = new ArrayList<>();
-        for (double value : cumulative) cumulativeRounded.add(round(value));
-        return new SimulationResult(request.sampleSize(), request.repetitions(), request.seed(), result, cumulativeRounded, firstDraws);
-    }
-
-    public record SimulationRequest(List<String> categories, List<Double> probabilities, List<Long> observedCounts,
-                                    int sampleSize, int repetitions, long seed) { }
-    public record SimulationCategory(String category, long observedCount, double observedPercentage,
-                                     double simulatedMean, double lower95, double upper95,
-                                     double standardDeviation, List<Double> replicaPercentages,
-                                     double firstQuartile, double median, double thirdQuartile) { }
-    public record SimulationDraw(double random, String category) { }
-    public record SimulationResult(int sampleSize, int repetitions, long seed, List<SimulationCategory> categories,
-                                   List<Double> cumulativeProbabilities, List<SimulationDraw> firstDraws) { }
-
-    private double round(double value) { return Math.round(value * 100.0) / 100.0; }
-
-    private double percentile(List<Double> values, double probability) {
-        if (values.isEmpty()) return 0;
-        List<Double> sorted = values.stream().sorted().toList();
-        double position = probability * (sorted.size() - 1);
-        int lower = (int) Math.floor(position);
-        int upper = (int) Math.ceil(position);
-        if (lower == upper) return sorted.get(lower);
-        double fraction = position - lower;
-        return sorted.get(lower) + fraction * (sorted.get(upper) - sorted.get(lower));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

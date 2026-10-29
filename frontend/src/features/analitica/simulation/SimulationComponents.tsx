@@ -78,7 +78,7 @@ export function SimulationDistribution({ result, observedTotal, variable }: { re
                   La base observada es de {observedTotal} respuestas. Se simulan {result.sampleSize} personas en {result.repetitions.toLocaleString("es-BO")} réplicas con la semilla {result.seed}.
                 </p>
                 <p className="mt-2 text-xs leading-relaxed text-ink-600">
-                  El rango del 95 % describe la variación de los sorteos simulados; no es un intervalo de confianza sobre la población.
+                  El rango del 95 % va del percentil 2,5 al 97,5 de las réplicas: describe la variación de los sorteos simulados, no es un intervalo de confianza sobre la población.
                 </p>
               </>
             }

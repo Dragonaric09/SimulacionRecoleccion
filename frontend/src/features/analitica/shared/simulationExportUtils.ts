@@ -1,4 +1,4 @@
-import type { Simulation } from "./analyticsTypes";
+import type { Simulation, SimulationComparison } from "./analyticsTypes";
 import { createSimulationChartSvg, createSimulationHistogramSvgs, simulationChartUsesBoxplot, simulationChartUsesPie } from "../simulation/SimulationECharts";
 import { simulationDelta } from "../simulation/simulationUtils";
 
@@ -15,6 +15,8 @@ export type SimulationExportData = {
   categoryLabel: (category: string) => string;
   segment?: string;
   variable?: string;
+  /** Escenario ajustado contra el base con la misma semilla, cuando hay ajustes. */
+  comparison?: SimulationComparison | null;
 };
 
 type PdfMakeModule = typeof import("pdfmake/build/pdfmake");
@@ -123,6 +125,30 @@ function rows(data: SimulationExportData) {
   return [headers, ...body, total];
 }
 
+function points(value: number) {
+  return `${value > 0 ? "+" : ""}${value.toFixed(1).replace(".", ",")} pp`;
+}
+
+/** Escenario contra base con réplicas emparejadas; vacío cuando no hay ajustes. */
+function againstBaseRows(data: SimulationExportData) {
+  const comparison = data.comparison;
+  if (!comparison) return [];
+  return [
+    ["Categoría", "Base (media)", "Escenario (media)", "Δ media", "Rango 95 % de Δ", "Réplicas en que sube", "Réplicas en que baja"],
+    ...comparison.differences.map((difference, index) => [
+      data.categoryLabel(difference.category),
+      percent(comparison.base.categories[index]?.simulatedMean ?? 0),
+      percent(comparison.scenario.categories[index]?.simulatedMean ?? 0),
+      points(difference.meanDifference),
+      `[${points(difference.lower95)} ; ${points(difference.upper95)}]`,
+      percent(difference.shareHigher),
+      percent(difference.shareLower),
+    ]),
+  ];
+}
+
+const COMPARISON_NOTE = "Base y escenario se simulan con la misma semilla (números aleatorios comunes): cada réplica del escenario se compara con la misma réplica del base. Si el rango de Δ no incluye el 0, el cambio aparece en casi todas las réplicas.";
+
 export function exportSimulationCsv(data: SimulationExportData) {
   const metadata = [
     ["Variable", data.variableLabel],
@@ -156,6 +182,19 @@ export async function exportSimulationExcel(data: SimulationExportData) {
     };
   }));
   XLSX.utils.book_append_sheet(workbook, worksheet, "Comparativa");
+  const againstBase = againstBaseRows(data);
+  if (againstBase.length > 0) {
+    const sheet = XLSX.utils.aoa_to_sheet([...againstBase, [], [COMPARISON_NOTE]]);
+    sheet["!cols"] = againstBase[0].map((header, index) => ({ wch: index === 0 ? 28 : Math.max(16, header.length + 2) }));
+    againstBase.forEach((row, rowIndex) => row.forEach((_, columnIndex) => {
+      sheet[XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex })].s = {
+        fill: { fgColor: { rgb: rowIndex === 0 ? "E2E8F0" : "FFFFFF" } },
+        font: { bold: rowIndex === 0, color: "172033" },
+        alignment: { horizontal: columnIndex === 0 ? "left" : "right", vertical: "center", wrapText: rowIndex === 0 },
+      };
+    }));
+    XLSX.utils.book_append_sheet(workbook, sheet, "Contra base");
+  }
   const hasScenarioPercentages = data.scenarioPercentages != null;
   const parameters = [
     ["Parámetro", "Valor"],
@@ -239,6 +278,13 @@ async function createSimulationPdf(data: SimulationExportData) {
     if (index + 1 < histogramSvgs.length) columns.push(histogramBlock(index + 1));
     histogramRows.push({ columns, columnGap: 16, unbreakable: true });
   }
+  const againstBase = againstBaseRows(data);
+  const comparisonBlock = againstBase.length > 0 ? [
+    { text: "Escenario contra base", style: "title", margin: [0, 18, 0, 5] },
+    text("Diferencia escenario − base por categoría, con los mismos sorteos en ambos.", "subtitle"),
+    { table: { headerRows: 1, dontBreakRows: true, widths: ["*", 70, 70, 60, 120, 80, 80], body: againstBase.map((row, rowIndex) => rowIndex === 0 ? row.map((value) => text(value, "tableHeader")) : row) }, layout: "lightHorizontalLines" },
+    text(COMPARISON_NOTE, "note"),
+  ] : [];
   const probabilityHeader = [text(`Probabilidades ${hasScenarioPercentages ? "observadas y usadas" : "observadas"}`, "panelTitle"), ""];
   const definition = {
     info: { title: `Simulación de escenarios: ${data.variableLabel}`, author: "Simulación" },
@@ -266,7 +312,8 @@ async function createSimulationPdf(data: SimulationExportData) {
       { text: "Tabla comparativa", style: "title", pageBreak: "before" },
       text("Frecuencias, diferencias, medianas y rangos de todas las categorías.", "subtitle"),
       { table: { headerRows: 1, dontBreakRows: true, widths: ["*", 58, 58, ...(hasScenarioPercentages ? [70] : []), 66, 66, 64, 108, 70], body: tableBody }, layout: "lightHorizontalLines" },
-      { text: ["El rango del 95 % es el intervalo en que cayeron el 95 % de las réplicas. No es un intervalo de confianza.\n", `Semilla: ${data.result.seed}. Permite repetir exactamente el resultado.`], style: "note" },
+      { text: ["El rango del 95 % va del percentil 2,5 al 97,5 de las réplicas: ahí cayó el 95 % central de los resultados simulados. No es un intervalo de confianza.\n", `Semilla: ${data.result.seed}. Permite repetir exactamente el resultado.`], style: "note" },
+      ...comparisonBlock,
       ...(histogramRows.length > 0 ? [
         { text: "Distribución de réplicas", style: "title", margin: [0, 18, 0, 5] },
         text("Detalle de las réplicas simuladas para cada categoría del boxplot.", "subtitle"),

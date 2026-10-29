@@ -81,6 +81,7 @@ import {
   SimulationHowItWorks,
   SimulationWeights,
 } from './simulation/SimulationComponents'
+import { SimulationSavedScenarios, SimulationScenarioComparison } from './simulation/SimulationScenarios'
 import { simulationCategories } from './simulation/simulationUtils'
 import { SimulationDownloadMenu } from './simulation/SimulationDownloads'
 import { useSimulationScenario } from './simulation/useSimulationScenario'
@@ -1597,6 +1598,10 @@ export function SimulationPage() {
     setSeedInput,
     setSeed,
     result,
+    comparison,
+    applyScenario,
+    scenarioNotice,
+    clearScenarioNotice,
     scenarioPercentages,
     executedRun,
     error,
@@ -1613,6 +1618,7 @@ export function SimulationPage() {
   const observedBase = currentDistribution?.validCount ?? 0
   const selectScenario = (value: string) => {
     setScenarioName(value)
+    clearScenarioNotice()
     if (!currentDistribution || value === 'Observado') {
       setWeights({})
       return
@@ -1688,7 +1694,7 @@ export function SimulationPage() {
         onChange={setDatasetId}
         loading={datasetsLoading}
       />
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
         <Card className="h-fit rounded-xl border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="title-card">Parámetros de la simulación</CardTitle>
@@ -1758,6 +1764,15 @@ export function SimulationPage() {
                 </SelectContent>
               </Select>
             </label>
+            <SimulationSavedScenarios
+              variable={variable}
+              run={executedRun}
+              onApply={(saved) => {
+                setScenarioName('Personalizado')
+                applyScenario(saved)
+              }}
+            />
+            {scenarioNotice && <p className="text-xs text-amber-700">{scenarioNotice}</p>}
             {currentDistribution && (
               <div className="rounded-lg border border-border-line p-3 text-xs">
                 <p className="mb-2 font-semibold text-ink-800">Mover puntos</p>
@@ -1923,7 +1938,7 @@ export function SimulationPage() {
             </p>
           </CardContent>
         </Card>
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           {result ? (
             <SimulationDistribution
               result={result}
@@ -1938,6 +1953,15 @@ export function SimulationPage() {
               title="Calculando simulación"
               description="La distribución se generará automáticamente con su rango del 95 % de las repeticiones."
             />
+          )}
+          {comparison ? (
+            <SimulationScenarioComparison comparison={comparison} />
+          ) : (
+            result && (
+              <p className="rounded-lg border border-dashed border-border-line p-3 text-xs text-ink-600">
+                Ajusta las probabilidades, mueve puntos o aplica un escenario guardado para compararlo contra el escenario base (lo observado) con los mismos sorteos.
+              </p>
+            )
           )}
         </div>
       </div>
