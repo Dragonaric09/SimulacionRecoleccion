@@ -123,6 +123,7 @@ function ChartTooltip(props: React.ComponentProps<typeof RechartsPrimitive.Toolt
       {...props}
       // Si se acerca al borde de la vista del gráfico, lo coloca al otro lado del punto.
       reverseDirection={props.reverseDirection ?? { x: true, y: true }}
+      wrapperStyle={{ zIndex: 20, ...props.wrapperStyle }}
     />
   )
 }

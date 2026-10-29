@@ -133,20 +133,17 @@ export function StatementRanking({
             </div>
             <div className="grid h-4 grid-cols-2">
               <div className="flex justify-end border-r border-ink-400">
-                <div
-                  style={{ width: `${pct(item.disagreement)}%`, background: AGREEMENT.disagree }}
-                  title={`${AGREEMENT_SHORT.disagree}: ${formatPercent(pct(item.disagreement))}`}
-                />
+                <TapTooltip content={<div className="grid gap-0.5"><strong>{AGREEMENT_SHORT.disagree}</strong><span>{item.disagreement} respuestas · {formatPercent(pct(item.disagreement))}</span><span className="text-muted-foreground">Porcentaje sobre {answered} respuestas válidas a esta afirmación.</span></div>}>
+                  <div tabIndex={0} aria-label={`${AGREEMENT_SHORT.disagree}: ${formatPercent(pct(item.disagreement))}`} className="cursor-help" style={{ width: `${pct(item.disagreement)}%`, background: AGREEMENT.disagree }} />
+                </TapTooltip>
               </div>
               <div className="flex">
-                <div
-                  style={{ width: `${pct(item.partial)}%`, background: AGREEMENT.partly }}
-                  title={`${AGREEMENT_SHORT.partial}: ${formatPercent(pct(item.partial))}`}
-                />
-                <div
-                  style={{ width: `${pct(item.full)}%`, background: AGREEMENT.agree }}
-                  title={`${AGREEMENT_SHORT.full}: ${formatPercent(pct(item.full))}`}
-                />
+                <TapTooltip content={<div className="grid gap-0.5"><strong>{AGREEMENT_SHORT.partial}</strong><span>{item.partial} respuestas · {formatPercent(pct(item.partial))}</span><span className="text-muted-foreground">Porcentaje sobre {answered} respuestas válidas a esta afirmación.</span></div>}>
+                  <div tabIndex={0} aria-label={`${AGREEMENT_SHORT.partial}: ${formatPercent(pct(item.partial))}`} className="cursor-help" style={{ width: `${pct(item.partial)}%`, background: AGREEMENT.partly }} />
+                </TapTooltip>
+                <TapTooltip content={<div className="grid gap-0.5"><strong>{AGREEMENT_SHORT.full}</strong><span>{item.full} respuestas · {formatPercent(pct(item.full))}</span><span className="text-muted-foreground">Porcentaje sobre {answered} respuestas válidas a esta afirmación.</span></div>}>
+                  <div tabIndex={0} aria-label={`${AGREEMENT_SHORT.full}: ${formatPercent(pct(item.full))}`} className="cursor-help" style={{ width: `${pct(item.full)}%`, background: AGREEMENT.agree }} />
+                </TapTooltip>
               </div>
             </div>
             <span className="text-right font-semibold tabular-nums text-ink-900">

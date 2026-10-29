@@ -125,7 +125,7 @@ function AppLayoutContent({ route }: Props) {
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border-line bg-surface/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border-line bg-surface/95 px-4 backdrop-blur sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"

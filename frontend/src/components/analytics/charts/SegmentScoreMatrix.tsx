@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { TapTooltip } from '../TapTooltip'
 
 export type SegmentScoreDimension = { key: string; label: string }
 export type SegmentScoreGroup = {
@@ -105,12 +106,13 @@ function SegmentScoreSectionRows({
               strong
             />
             {dimensions.map((dimension) => (
-              <ScoreCell
-                key={dimension.key}
-                score={group.dimensions[dimension.key] ?? null}
-                scoreColor={scoreColor}
-                formatScore={formatScore}
-              />
+              <TapTooltip key={dimension.key} content={<div className="grid gap-0.5"><strong>{dimension.label} · {group.category}</strong><span>{group.dimensions[dimension.key] == null ? 'Sin respuestas válidas' : `Puntaje: ${formatScore(group.dimensions[dimension.key] as number)} de 100`}</span><span>Grupo: n = {group.n}</span><span className="text-muted-foreground">Acuerdo total = 100, parcial = 50, desacuerdo = 0; «No sabe» no se incluye.</span></div>}>
+                <ScoreCell
+                  score={group.dimensions[dimension.key] ?? null}
+                  scoreColor={scoreColor}
+                  formatScore={formatScore}
+                />
+              </TapTooltip>
             ))}
           </tr>
         )

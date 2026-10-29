@@ -66,7 +66,13 @@ export function CompetenceLevelBars({ competences }: { competences: DashboardCom
               labelFormatter={(value) => String(value)}
               formatter={(value, name, item) => {
                 const index = LEVEL_KEYS.indexOf(name as (typeof LEVEL_KEYS)[number])
-                return `${formatPercent(Number(value))} · ${formatCount(Number(item.payload[`n${index + 1}`]))}`
+                return (
+                  <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1">
+                    <span className="min-w-0 text-muted-foreground">{SUFFICIENCY_SCALE[index]?.label ?? 'Nivel'}</span>
+                    <span className="text-right font-mono font-medium tabular-nums">{formatPercent(Number(value))}</span>
+                    <span className="col-span-2 text-muted-foreground">Respuestas: n = {formatCount(Number(item.payload[`n${index + 1}`]))}</span>
+                  </div>
+                )
               }}
             />
           }

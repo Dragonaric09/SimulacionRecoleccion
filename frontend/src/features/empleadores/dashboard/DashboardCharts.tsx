@@ -29,6 +29,16 @@ import {
 
 const AXIS_TICK = { fontSize: 12, fill: AXIS_TEXT }
 
+function TooltipSeriesRow({ label, value, detail }: { label: string; value: string; detail?: string }) {
+  return (
+    <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1">
+      <span className="min-w-0 text-muted-foreground">{label}</span>
+      <span className="text-right font-mono font-medium tabular-nums">{value}</span>
+      {detail && <span className="col-span-2 text-muted-foreground">{detail}</span>}
+    </div>
+  )
+}
+
 /**
  * Etiqueta de categoría que respeta el ancho del eje: parte el texto en hasta dos líneas y recorta con «…» lo que
  * no entra. Antes el eje tenía un ancho fijo (hasta 250 px) y en un celular dejaba sin espacio a las barras.
@@ -132,7 +142,29 @@ export function TimelineChart({
           content={
             <ChartTooltipContent
               labelFormatter={(value) => formatBucket(String(value))}
-              formatter={(value) => formatCount(Number(value))}
+              formatter={(value, _name, item) => {
+                const isCumulative = item.dataKey === 'cumulative'
+                const count = Number(value)
+                const total = points[points.length - 1]?.cumulative ?? 0
+                return (
+                  <div className="grid w-full grid-cols-[1fr_auto] gap-x-3 gap-y-1">
+                    <span className="text-muted-foreground">
+                      {isCumulative
+                        ? 'Acumulado hasta la fecha'
+                        : granularity === 'week' ? 'Respuestas de la semana' : 'Respuestas del día'}
+                    </span>
+                    <span className="text-right font-mono font-medium tabular-nums">{formatCount(count)}</span>
+                    {isCumulative && total > 0 && (
+                      <>
+                        <span className="text-muted-foreground">Del total</span>
+                        <span className="text-right font-mono tabular-nums">
+                          {formatPercent((count / total) * 100)}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )
+              }}
             />
           }
         />
@@ -331,9 +363,15 @@ export function BalanceBars({
           content={
             <ChartTooltipContent
               labelFormatter={(value) => String(value)}
-              formatter={(value, _name, item) =>
-                `${formatPercent(Math.abs(Number(value)))} · n = ${formatCount(item.payload.base)}`
-              }
+              formatter={(value, _name, item) => {
+                const key = String(item.dataKey)
+                const labels: Record<string, string> = {
+                  agree: 'Totalmente de acuerdo',
+                  partly: 'Parcialmente de acuerdo',
+                  disagree: 'Totalmente en desacuerdo',
+                }
+                return <TooltipSeriesRow label={labels[key] ?? key} value={formatPercent(Math.abs(Number(value)))} detail={`Base: n = ${formatCount(Number(item.payload.base))}`} />
+              }}
             />
           }
         />
@@ -471,7 +509,13 @@ export function HiringMatrixBars({
         />
         <ChartTooltip
           cursor={{ fill: '#F1F5F9' }}
-          content={<ChartTooltipContent formatter={(value) => formatCount(Number(value))} />}
+          content={<ChartTooltipContent formatter={(value, _name, item) => {
+            const key = String(item.dataKey)
+            const labels: Record<string, string> = { yes: 'Contrató en 5 años', no: 'No contrató', unknown: 'Sin respuesta' }
+            const row = item.payload as { yes?: number; no?: number; unknown?: number }
+            const base = Number(row.yes ?? 0) + Number(row.no ?? 0) + Number(row.unknown ?? 0)
+            return <TooltipSeriesRow label={labels[key] ?? key} value={formatCount(Number(value))} detail={`Base de esta categoría: n = ${formatCount(base)}`} />
+          }} />}
         />
         <Legend
           verticalAlign="top"
@@ -569,7 +613,11 @@ export function GroupBalanceBars({
         <ReferenceLine y={0} stroke={AXIS_TEXT} />
         <ChartTooltip
           content={
-            <ChartTooltipContent formatter={(value) => `${formatDecimal(Number(value), 1)} pts`} />
+            <ChartTooltipContent formatter={(value, _name, item) => {
+              const key = String(item.dataKey)
+              const labels: Record<string, string> = { yes: 'Contrató', no: 'No contrató' }
+              return <TooltipSeriesRow label={labels[key] ?? key} value={`${formatDecimal(Number(value), 1)} pts`} />
+            }} />
           }
         />
         <Legend

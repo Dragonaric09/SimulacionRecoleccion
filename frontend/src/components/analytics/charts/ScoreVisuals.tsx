@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+import { TapTooltip } from '../TapTooltip'
 export type ScoreAgreementSegment = { key: string; label: string; value: number; color: string }
 
 export function AgreementStackedBar({
@@ -13,11 +14,21 @@ export function AgreementStackedBar({
       {segments.map(
         (segment) =>
           segment.value > 0 && (
-            <div
+            <TapTooltip
               key={segment.key}
-              style={{ width: `${segment.value}%`, background: segment.color }}
-              title={`${segment.label}: ${formatPercent(segment.value)}`}
-            />
+              content={
+                <div className="grid gap-0.5">
+                  <strong>{segment.label}</strong>
+                  <span>{formatPercent(segment.value)} de las respuestas válidas</span>
+                  <span className="text-muted-foreground">Proporción de organizaciones que eligió esta opción.</span>
+                </div>
+              }
+            >
+              <div
+                aria-label={`${segment.label}: ${formatPercent(segment.value)}`}
+                style={{ width: `${segment.value}%`, background: segment.color }}
+              />
+            </TapTooltip>
           ),
       )}
     </div>
@@ -81,15 +92,26 @@ export function ScoreBadge({
   format?: (value: number) => string
 }) {
   return (
-    <span
-      className="flex h-11 min-w-14 shrink-0 items-center justify-center rounded-md px-2 text-lg font-semibold tabular-nums"
-      style={{
-        background: color,
-        color: score !== null && (score < 18 || score > 82) ? '#FFFFFF' : '#0F172A',
-      }}
+    <TapTooltip
+      content={
+        <div className="grid gap-0.5">
+          <strong>Puntaje de la dimensión</strong>
+          <span>{score === null ? 'Sin datos suficientes' : `${format(score)} de 100`}</span>
+          <span className="text-muted-foreground">Promedio de las afirmaciones: acuerdo total = 100, parcial = 50, desacuerdo = 0. «No sabe» no se incluye.</span>
+        </div>
+      }
     >
-      {score === null ? '—' : format(score)}
-    </span>
+      <span
+        tabIndex={0}
+        className="flex h-11 min-w-14 shrink-0 cursor-help items-center justify-center rounded-md px-2 text-lg font-semibold tabular-nums"
+        style={{
+          background: color,
+          color: score !== null && (score < 18 || score > 82) ? '#FFFFFF' : '#0F172A',
+        }}
+      >
+        {score === null ? '—' : format(score)}
+      </span>
+    </TapTooltip>
   )
 }
 

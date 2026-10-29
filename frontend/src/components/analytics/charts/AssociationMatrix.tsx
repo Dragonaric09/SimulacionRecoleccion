@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { TapTooltip } from '../TapTooltip'
 
 export type AssociationMatrixRow = {
   label: string
@@ -54,19 +55,24 @@ export function AssociationMatrix({
               <tr key={row.label}>
                 <td className="font-medium text-ink-900">{row.label}</td>
                 {row.cells.map((cell, index) => (
-                  <td
+                  <TapTooltip
                     key={`${row.label}-${index}`}
-                    className="h-12 rounded-sm text-center tabular-nums"
-                    style={{
-                      background: cellColor(cell.percent, index),
-                      color: cell.percent > 55 ? '#FFFFFF' : '#0F172A',
-                    }}
+                    content={<div className="grid gap-0.5"><strong>{row.label} × {columns[index]}</strong><span>{cell.count} {unitLabel} ({cell.percent.toFixed(1).replace('.', ',')} %)</span><span className="text-muted-foreground">Porcentaje calculado dentro de la fila · n = {row.total}</span></div>}
                   >
-                    <div className="font-semibold">{cell.count}</div>
-                    <div className="text-[10px] opacity-80">
-                      {cell.percent.toFixed(0).replace('.', ',')} %
-                    </div>
-                  </td>
+                    <td
+                      tabIndex={0}
+                      className="h-12 cursor-help rounded-sm text-center tabular-nums"
+                      style={{
+                        background: cellColor(cell.percent, index),
+                        color: cell.percent > 55 ? '#FFFFFF' : '#0F172A',
+                      }}
+                    >
+                      <div className="font-semibold">{cell.count}</div>
+                      <div className="text-[10px] opacity-80">
+                        {cell.percent.toFixed(0).replace('.', ',')} %
+                      </div>
+                    </td>
+                  </TapTooltip>
                 ))}
                 <td className="text-right tabular-nums text-ink-600">{row.total}</td>
               </tr>

@@ -44,7 +44,7 @@ export function ChartCard({
 }) {
   return (
     <Card
-      className={cn('chart-card relative h-full gap-0 overflow-visible border border-border-line py-0 shadow-sm hover:z-10 focus-within:z-10', className)}
+      className={cn('chart-card relative h-full gap-0 overflow-visible border border-border-line py-0 shadow-sm', className)}
     >
       <CardHeader className="flex flex-row items-start justify-between gap-3 px-5 pt-5">
         <div className="min-w-0 space-y-1">
