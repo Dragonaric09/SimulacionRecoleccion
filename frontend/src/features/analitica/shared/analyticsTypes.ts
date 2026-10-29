@@ -21,6 +21,9 @@ export type Cross = {
   counts: Record<string, Record<string, number>>;
   percentages: Record<string, Record<string, number>>;
   smallSample: boolean;
+  multipleResponse?: boolean;
+  rowBases?: Record<string, number>;
+  columnBases?: Record<string, number>;
 };
 
 /** Métrica de las celdas del cruce; «residual» es el residuo estandarizado ajustado (solo en la tabla). */

@@ -33,7 +33,7 @@ import { usePersistentState } from '@/lib/usePersistentState'
 import { useTituladosFilterQuery } from '../shared/tituladosFilterStorage'
 import { EmployerFilterToolbar } from '@/features/empleadores/EmployerFilterToolbar'
 import { describeEmployerFilters, useEmployerFilters } from '@/features/empleadores/employerData'
-import { AssociationTestCard } from '@/features/empleadores/valuation/AssociationTest'
+import { AssociationTestCard, MultipleResponseTestsCard } from '@/features/empleadores/valuation/AssociationTest'
 import {
   LEVEL_LABELS,
   LEVEL_SHORT,
@@ -398,20 +398,28 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                   }
                 >
                   <p className="caption-bold text-ink-600">OPCIONES DE CÁLCULO</p>
-                  <label className="flex items-center gap-2">
-                    <Checkbox
-                      checked={includeTotals}
-                      onCheckedChange={(checked) => setIncludeTotals(checked === true)}
-                    />
-                    <span>Incluir marginales (totales)</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <Checkbox
-                      checked={colorHeatmap}
-                      onCheckedChange={(checked) => setColorHeatmap(checked === true)}
-                    />
-                    <span>Colorear mapa de calor</span>
-                  </label>
+                  {metric === 'residual' ? (
+                    <p className="text-xs leading-relaxed text-ink-600">
+                      El residuo aplica automáticamente su escala de color divergente. Los totales y el mapa de calor se habilitan para conteos y porcentajes.
+                    </p>
+                  ) : (
+                    <>
+                      <label className="flex items-center gap-2">
+                        <Checkbox
+                          checked={includeTotals}
+                          onCheckedChange={(checked) => setIncludeTotals(checked === true)}
+                        />
+                        <span>Incluir marginales (totales)</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <Checkbox
+                          checked={colorHeatmap}
+                          onCheckedChange={(checked) => setColorHeatmap(checked === true)}
+                        />
+                        <span>Colorear mapa de calor</span>
+                      </label>
+                    </>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -511,11 +519,15 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
           {cross && analysisCross && (
             <div className="print-hide space-y-3">
               <CrossAnalysisMeta result={analysisCross} />
-              <AssociationTestCard
-                result={analysisCross.test}
-                rowLabel={`Filas: ${rowLabel}`}
-                columnLabel={`Columnas: ${columnLabel}`}
-              />
+              {employerCross?.cross.multipleResponse ? (
+                <MultipleResponseTestsCard tests={employerCross.optionTests} />
+              ) : (
+                <AssociationTestCard
+                  result={analysisCross.test}
+                  rowLabel={`Filas: ${rowLabel}`}
+                  columnLabel={`Columnas: ${columnLabel}`}
+                />
+              )}
             </div>
           )}
           {cross && (
@@ -559,11 +571,15 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                 />
               </div>
               {analysisCross && (
-                <AssociationTestCard
-                  result={analysisCross.test}
-                  rowLabel={`Filas: ${rowLabel}`}
-                  columnLabel={`Columnas: ${columnLabel}`}
-                />
+                employerCross?.cross.multipleResponse ? (
+                  <MultipleResponseTestsCard tests={employerCross.optionTests} />
+                ) : (
+                  <AssociationTestCard
+                    result={analysisCross.test}
+                    rowLabel={`Filas: ${rowLabel}`}
+                    columnLabel={`Columnas: ${columnLabel}`}
+                  />
+                )
               )}
               <div className="cross-pdf-footer border-t border-surface-container-high pt-2 text-xs text-ink-600">
                 <p>

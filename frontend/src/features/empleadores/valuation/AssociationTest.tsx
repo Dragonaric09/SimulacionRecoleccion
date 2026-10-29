@@ -81,6 +81,51 @@ export function AssociationTestCard({ result, rowLabel, columnLabel }: {
   )
 }
 
+export function MultipleResponseTestsCard({ tests }: {
+  tests: { option: string; test: AssociationResult; holmPValue: number | null; significantAfterCorrection: boolean }[]
+}) {
+  const applicable = tests.filter((item) => item.holmPValue !== null)
+  return (
+    <section className="association-test rounded-lg border border-border-line bg-white p-4 text-sm shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="title-card">Asociación por opción · ajuste de Holm</h3>
+          <p className="mt-1 text-xs text-ink-600">Cada canal se contrasta como seleccionado / no seleccionado. Los p-valores se ajustan por las opciones evaluadas.</p>
+        </div>
+        <Badge tone="neutral">{applicable.length} de {tests.length} aplicables</Badge>
+      </div>
+      {applicable.length ? (
+        <ul className="mt-3 divide-y divide-border-line">
+          {tests.map(({ option, test, holmPValue, significantAfterCorrection }) => (
+            <li key={option} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2">
+              <div className="min-w-0">
+                <p className="font-medium text-ink-900">{option}</p>
+                <p className="text-xs text-ink-600">{test.nombrePrueba} · n = {formatCount(test.n)}</p>
+              </div>
+              {holmPValue !== null ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs tabular-nums text-ink-700">p ajustado = {formatP(holmPValue)}</span>
+                  <Badge tone={significantAfterCorrection ? 'success' : 'neutral'}>
+                    {significantAfterCorrection ? 'Significativa' : 'No significativa'}
+                  </Badge>
+                </div>
+              ) : (
+                <TapTooltip content={test.motivo}>
+                  <span className="cursor-help text-xs text-ink-500 underline decoration-dotted">Prueba no aplicable</span>
+                </TapTooltip>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 rounded-md bg-surface-container-low p-3 text-sm text-ink-700">
+          No hay pruebas por opción aplicables con esta base. Los conteos y porcentajes descriptivos sí se muestran.
+        </p>
+      )}
+    </section>
+  )
+}
+
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">

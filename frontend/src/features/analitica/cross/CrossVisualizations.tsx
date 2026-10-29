@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Badge } from "@/components/analytics/Badge";
 import { contrastTextColor } from "@/lib/utils";
 import type { Cross, CrossMetric, Tone } from "../shared/analyticsTypes";
-import { CROSS_COLORS, RESIDUAL_THRESHOLD, booleanLabel, crossResidual, formatResidual } from "../shared/crossExportUtils";
+import { CROSS_COLORS, RESIDUAL_THRESHOLD, booleanLabel, crossBarSeries, crossBarSeriesValue, crossResidual, formatResidual } from "../shared/crossExportUtils";
 import type { ResultadoPruebaAsociacion } from "../api";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -167,10 +167,14 @@ export function CrossTable({
     return cross.counts[rawRow]?.[rawColumn] ?? 0;
   };
   const columnTotal = (column: string) => displayRows.reduce((sum, row) => sum + rawCellValue(row, column), 0);
-  const rowTotal = (row: string) => displayColumns.reduce((sum, column) => sum + rawCellValue(row, column), 0);
+  const selectionTotal = (row: string) => displayColumns.reduce((sum, column) => sum + rawCellValue(row, column), 0);
+  const rowTotal = (row: string) => cross.multipleResponse
+    ? (swapAxes ? cross.columnBases?.[row] : cross.rowBases?.[row]) ?? selectionTotal(row)
+    : selectionTotal(row);
   const share = (value: number, total: number) => (total ? (value * 100) / total : 0);
-  const residualMode = metric === "residual";
-  const showTotals = includeTotals && !residualMode;
+  const residualUnavailable = metric === "residual" && cross.multipleResponse;
+  const residualMode = metric === "residual" && !cross.multipleResponse;
+  const showTotals = includeTotals && !residualMode && !cross.multipleResponse;
   const cellValue = (row: string, column: string) =>
     metric === "count"
       ? rawCellValue(row, column)
@@ -178,12 +182,12 @@ export function CrossTable({
         ? share(rawCellValue(row, column), rowTotal(row))
         : metric === "columnPercent"
           ? share(rawCellValue(row, column), columnTotal(column))
-          : crossResidual(cross, swapAxes ? column : row, swapAxes ? row : column);
+          : residualUnavailable ? 0 : crossResidual(cross, swapAxes ? column : row, swapAxes ? row : column);
   const max = Math.max(1, ...displayRows.flatMap((row) => displayColumns.map((column) => Math.abs(cellValue(row, column)))));
   const formatValue = (value: number) =>
-    metric === "count" ? value.toLocaleString("es-BO") : residualMode ? formatResidual(value) : percentText(value);
+    metric === "count" ? value.toLocaleString("es-BO") : residualUnavailable ? "—" : residualMode ? formatResidual(value) : percentText(value);
   const metricLabel =
-    metric === "count" ? "Frecuencia absoluta" : metric === "rowPercent" ? "% por fila" : metric === "columnPercent" ? "% por columna" : "Residuo ajustado";
+    metric === "count" ? "Frecuencia absoluta" : metric === "rowPercent" ? "% por fila" : metric === "columnPercent" ? "% por columna" : residualUnavailable ? "Residuo no aplicable" : "Residuo ajustado";
   const marginalPercent = (value: number) => percentText(share(value, cross.validCount));
   const heat = (intensity: number) => `rgba(${HEAT_RGB[tone]},${0.08 + intensity * 0.75})`;
   // Residuos: escala divergente fija hasta ±3 (o el máximo observado), azul si sobra, rojo si falta.
@@ -208,7 +212,7 @@ export function CrossTable({
           <div className="min-w-0">
             <CardTitle className="title-card">{displayRowLabel} × {displayColumnLabel}</CardTitle>
             <CardDescription>
-              {metricLabel} · n = {cross.validCount}
+            {metricLabel} · n = {cross.validCount}
               {totalResponses != null ? ` de ${totalResponses}` : ""}
               {cross.smallSample ? " · muestra reducida" : ""}
               {" · "}
@@ -359,6 +363,12 @@ export function CrossTable({
         {observedSmallSampleSummary(cross) && (
           <p className="mt-3 text-xs text-amber-800">{observedSmallSampleSummary(cross)}</p>
         )}
+        {cross.multipleResponse && (
+          <p className="mt-3 text-xs text-ink-600">Respuesta múltiple: los conteos son selecciones y pueden solaparse; los porcentajes por fila usan personas como base. No se calculan totales ni residuos globales.</p>
+        )}
+        {residualUnavailable && (
+          <p className="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">Los residuos ajustados requieren categorías excluyentes. Para esta respuesta múltiple se muestran conteos y porcentajes descriptivos.</p>
+        )}
       </CardContent>
     </Card>
   );
@@ -378,19 +388,16 @@ export function CrossBars({
   const { ref, width: chartWidth } = useChartContainerWidth<HTMLDivElement>();
   const colors = CROSS_COLORS;
   const total = cross.validCount || 1;
-  const rowTotal = (row: string) =>
+  const multipleResponse = Boolean(cross.multipleResponse);
+  const rowIsMultiple = multipleResponse && cross.rowField === "medio_convocatoria";
+  const series = crossBarSeries(cross);
+  const rowTotal = (row: string) => cross.rowBases?.[row] ??
     cross.columnCategories.reduce(
       (sum, column) => sum + (cross.counts[row]?.[column] ?? 0),
       0,
     );
   const maxRowTotal = Math.max(1, ...cross.rowCategories.map(rowTotal));
-  const rowPercent = (row: string, column: string) =>
-    cross.percentages[row]?.[column] ?? 0;
-  const valueLabel = (row: string, column: string, value: number) =>
-    metric === "rowPercent"
-      ? `${rowPercent(row, column).toFixed(1).replace(".", ",")} %`
-      : String(value);
-  const subtitle =
+  const subtitle = multipleResponse ? "% de personas dentro de cada grupo" :
     metric === "rowPercent" ? "% por fila · perfiles al 100 %" : "Frecuencia absoluta";
   return (
     <Card className="min-w-0 overflow-visible">
@@ -402,6 +409,7 @@ export function CrossBars({
           <CardDescription className="shrink-0 text-right">
             {subtitle} · n = {cross.validCount}
             {totalResponses != null ? ` de ${totalResponses}` : ""}
+            {multipleResponse && <span className="block text-[10px]">Las opciones se solapan; los conteos no suman personas únicas.</span>}
           </CardDescription>
           {action}
         </div>
@@ -414,34 +422,50 @@ export function CrossBars({
             <div key={row} className="space-y-1.5">
               <div className="flex items-center justify-between gap-3 text-xs">
                 <span className="min-w-0 truncate font-medium text-ink-900" title={booleanLabel(row)}>
-                  {booleanLabel(row)} (n = {totalRow})
+                  {booleanLabel(row)} ({rowIsMultiple ? "personas" : "n"} = {totalRow})
                 </span>
-                <span className="shrink-0 text-ink-600">
-                  {((totalRow * 100) / total).toFixed(1).replace(".", ",")} % del
-                  total
-                </span>
+                {!rowIsMultiple && <span className="shrink-0 text-ink-600">{((totalRow * 100) / total).toFixed(1).replace(".", ",")} % del total de personas</span>}
               </div>
-              {totalRow > 0 ? (
+              {multipleResponse ? (
+                <div className="space-y-1.5">
+                  {series.map((item, index) => {
+                    const value = crossBarSeriesValue(cross, row, item);
+                    const percentage = totalRow ? (value * 100) / totalRow : 0;
+                    const color = colors[index % colors.length];
+                    return (
+                      <div key={item.label} className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_3.5rem] items-center gap-2 text-[11px]">
+                        <span className="truncate text-ink-700">{booleanLabel(item.label)}</span>
+                        <TapTooltip side="bottom" content={<div className="grid gap-0.5"><strong>{booleanLabel(item.label)}</strong><span>{value} de {totalRow} personas · {percentage.toFixed(1).replace(".", ",")} %</span></div>}>
+                          <div tabIndex={0} aria-label={`${booleanLabel(row)}: ${booleanLabel(item.label)}, ${value} personas, ${percentage.toFixed(1)} por ciento`} className="h-5 cursor-help overflow-hidden rounded-sm bg-surface-container-high">
+                            <div className="flex h-full items-center px-1 text-[10px] font-semibold" style={{ width: `${Math.min(100, percentage)}%`, backgroundColor: color, color: contrastTextColor(color) }}>{percentage >= 12 ? `${percentage.toFixed(0)} %` : ""}</div>
+                          </div>
+                        </TapTooltip>
+                        <span className="text-right tabular-nums text-ink-600">{value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : totalRow > 0 ? (
                 <Progress
                   // Con % por fila cada barra ocupa el 100 %: se comparan los perfiles de las categorías.
                   value={metric === "rowPercent" ? 100 : (totalRow * 100) / maxRowTotal}
                   className="bg-surface-container-high"
                 >
                   <div className="flex h-full w-full">
-                    {cross.columnCategories.map((column, index) => {
-                      const value = cross.counts[row]?.[column] ?? 0;
+                    {series.map((item, index) => {
+                      const value = crossBarSeriesValue(cross, row, item);
                       if (value <= 0) return null;
                       const width = (value * 100) / totalRow;
-                      const label = valueLabel(row, column, value);
+                      const label = metric === "rowPercent" ? `${((value * 100) / totalRow).toFixed(1).replace(".", ",")} %` : String(value);
                       const actualSegmentWidth = (value / (metric === "rowPercent" ? totalRow : maxRowTotal)) * chartWidth;
                       const labelCanFit = actualSegmentWidth >= label.length * 6 + 8;
                       return (
                         <TapTooltip
-                          key={column}
+                          key={item.label}
                           side="bottom"
                           content={
                             <div className="grid gap-0.5">
-                              <strong>{booleanLabel(column)}</strong>
+                              <strong>{booleanLabel(item.label)}</strong>
                               <span>
                                 {metric === "rowPercent"
                                   ? `${valueLabel(row, column, value)} · `
@@ -449,14 +473,14 @@ export function CrossBars({
                                 {value} de {totalRow} respuestas de «{booleanLabel(row)}»
                               </span>
                               <span className="text-muted-foreground">
-                                {rowPercent(row, column).toFixed(1).replace(".", ",")} % de esta categoría
+                                {((value * 100) / totalRow).toFixed(1).replace(".", ",")} % de esta categoría
                               </span>
                             </div>
                           }
                         >
                           <div
                             tabIndex={0}
-                            aria-label={`${booleanLabel(row)}; ${booleanLabel(column)}: ${valueLabel(row, column, value)}`}
+                            aria-label={`${booleanLabel(row)}; ${booleanLabel(item.label)}: ${label}`}
                             className="flex min-w-0 cursor-help items-center justify-center px-1 text-[10px] font-semibold"
                             style={{
                               width: width + "%",
@@ -482,13 +506,13 @@ export function CrossBars({
           );
         })}
         <div className="flex flex-wrap gap-x-4 gap-y-2 border-t border-surface-container-high pt-3 text-[11px] text-ink-600">
-          {cross.columnCategories.map((column, index) => (
-            <span key={column} className="flex items-center gap-1">
+          {series.map((item, index) => (
+            <span key={item.label} className="flex items-center gap-1">
               <i
                 className="size-2 rounded-sm"
                 style={{ backgroundColor: colors[index % colors.length] }}
               />
-              {booleanLabel(column)}
+              {booleanLabel(item.label)}
             </span>
           ))}
         </div>

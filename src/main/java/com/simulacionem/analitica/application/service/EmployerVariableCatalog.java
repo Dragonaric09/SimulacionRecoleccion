@@ -19,8 +19,8 @@ public final class EmployerVariableCatalog {
 
     private EmployerVariableCatalog() { }
 
-    /** Nivel de medición. BINARIA es nominal con dos categorías. */
-    public enum Level { NOMINAL, BINARIA, ORDINAL }
+    /** Nivel de medición. BINARIA es nominal con dos categorías; MULTIPLE admite selecciones que se solapan. */
+    public enum Level { NOMINAL, BINARIA, ORDINAL, MULTIPLE }
 
     /**
      * @param expression expresión SQL fija sobre {@code s} (survey_response) y {@code e} (employer_response)
@@ -129,11 +129,11 @@ public final class EmployerVariableCatalog {
                 "e.demanded_training_level",
                 List.of("Licenciatura", "Diplomado", "Especialidad", "Maestría", "Doctorado", "Post- doctorado"),
                 BAR_SCALE, "Nivel académico exigido para contratar, de menor a mayor."));
-        list.add(new Variable("medio_convocatoria", "Medio de convocatoria", hiring, Level.NOMINAL, "e.channel",
+        list.add(new Variable("medio_convocatoria", "Medio de convocatoria", hiring, Level.MULTIPLE, "e.channel",
                 List.of("Medios escritos y audiovisuales", "Internet y Redes sociales",
                         "Postulación competitiva (convocatorias públicas y privadas)", "Oferta profesional personal",
                         "Recomendación de terceros", "Otros"),
-                BAR_SORTED, "Canal por el que la organización convoca profesionales."));
+                "Barras horizontales independientes por canal", "Canales que la organización puede seleccionar en conjunto."));
         list.add(new Variable("cargo_maximo", "Cargo de mayor nivel de los titulados", hiring, Level.ORDINAL,
                 "CASE e.top_position_rank WHEN 1 THEN 'Apoyo / asistencia' WHEN 2 THEN 'Técnico' WHEN 3 THEN 'Analista'"
                         + " WHEN 4 THEN 'Especialista' WHEN 5 THEN 'Supervisión / coordinación' WHEN 6 THEN 'Jefatura o gerencia' END",

@@ -24,7 +24,7 @@ export type AssociationResult = {
   esperadaMinima: number | null
 }
 
-export type MeasurementLevel = 'NOMINAL' | 'BINARIA' | 'ORDINAL'
+export type MeasurementLevel = 'NOMINAL' | 'BINARIA' | 'ORDINAL' | 'MULTIPLE'
 
 /** Variable del catálogo de empleadores (/analytics/employers/catalog). */
 export type EmployerVariable = {
@@ -41,10 +41,11 @@ export const LEVEL_LABELS: Record<MeasurementLevel, string> = {
   NOMINAL: 'Nominal',
   BINARIA: 'Nominal (2 categorías)',
   ORDINAL: 'Ordinal',
+  MULTIPLE: 'Respuesta múltiple',
 }
 
 /** Etiqueta corta para selectores. */
-export const LEVEL_SHORT: Record<MeasurementLevel, string> = { NOMINAL: 'Nominal', BINARIA: 'Dicotómica', ORDINAL: 'Ordinal' }
+export const LEVEL_SHORT: Record<MeasurementLevel, string> = { NOMINAL: 'Nominal', BINARIA: 'Dicotómica', ORDINAL: 'Ordinal', MULTIPLE: 'Múltiple' }
 
 /** Respuesta de /analytics/employers/cross. */
 export type EmployerCross = {
@@ -58,12 +59,16 @@ export type EmployerCross = {
     counts: Record<string, Record<string, number>>
     percentages: Record<string, Record<string, number>>
     smallSample: boolean
+    multipleResponse?: boolean
+    rowBases?: Record<string, number>
+    columnBases?: Record<string, number>
   }
   row: EmployerVariable
   column: EmployerVariable
   excluded: number
   chart: string
   test: AssociationResult
+  optionTests: { option: string; test: AssociationResult; holmPValue: number | null; significantAfterCorrection: boolean }[]
 }
 
 export type ValuationSummary = {

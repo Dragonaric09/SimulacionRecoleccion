@@ -412,6 +412,7 @@ public class PruebaAsociacionService {
             case NOMINAL -> "Nominal";
             case BINARIA -> "Nominal (2 categorías)";
             case ORDINAL -> "Ordinal";
+            case MULTIPLE -> "Respuesta múltiple";
         };
     }
 
