@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { SmallSampleNotice } from '@/components/analytics/ChartCard'
 import { KpiCard } from '@/components/analytics/KpiCard'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { CompetenceGroupTabs } from '@/features/analitica/competence/CompetenceGroupTabs'
 import { CompetenceQuestionChart } from '@/features/analitica/competence/CompetenceQuestionChart'
 import type { Competence } from '@/features/analitica/shared/analyticsTypes'
 import { useDatasets } from '@/features/analitica/shared/AnalyticsPrimitives'
@@ -107,13 +108,14 @@ export function EmpleadoresBrechasPage() {
 
       {data && respondents > 0 && (
         <Tabs value={tab} onValueChange={(value) => setTab(value as GroupKey)}>
-          <TabsList className="w-full justify-start">
-            {GROUP_TABS.map((group) => (
-              <TabsTrigger key={group.key} value={group.key}>
-                {group.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <CompetenceGroupTabs
+            tone="empleadores"
+            tabs={GROUP_TABS.map((group) => ({
+              key: group.key,
+              label: group.label,
+              count: orderedRows(all, group.match).filter((item) => item.average !== null).length,
+            }))}
+          />
           {GROUP_TABS.map((group) => {
             const rows = orderedRows(all, group.match)
             const scoredRows = rows.filter((item) => item.average !== null)

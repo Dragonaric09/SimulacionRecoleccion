@@ -46,7 +46,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs } from '@/components/ui/tabs'
+import { CompetenceGroupTabs } from './competence/CompetenceGroupTabs'
 import type { AnalyticsSummary, CategoryDistribution } from './api'
 import type { CohortChartPoint, Domain, EmploymentProfile, Tone } from './shared/analyticsTypes'
 import { DatasetSelect, PageHeading } from './shared/AnalyticsPrimitives'
@@ -1333,6 +1334,17 @@ export function CompetencePage({
     highest,
     tabs,
   } = useCompetencePage(domain)
+  // Pestañas con el número de competencias de cada grupo; las que no tienen datos quedan deshabilitadas.
+  const groupTabs = tabs.map((tab) => {
+    const group = tabGroup(tab.key)
+    const available =
+      Boolean(group) || (domain === 'TITULADOS' && (tab.key === 'satisfaccion' || tab.key === 'malla'))
+    return {
+      ...tab,
+      count: group ? items.filter((item) => item.group === group).length : undefined,
+      disabled: !available,
+    }
+  })
   if (printAll && domain === 'TITULADOS')
     return (
       <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -1401,13 +1413,7 @@ export function CompetencePage({
             if (group) setActiveGroup(group)
           }}
         >
-          <TabsList variant="line" className="w-full justify-start">
-            {tabs.map((tab) => (
-              <TabsTrigger key={tab.key} value={tab.key}>
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <CompetenceGroupTabs tabs={groupTabs} tone={tone} />
         </Tabs>
         {activeTab === 'satisfaccion' ? (
           domain === 'TITULADOS' ? (
@@ -1473,22 +1479,7 @@ export function CompetencePage({
               if (group) setActiveGroup(group)
             }}
           >
-            <TabsList variant="line" className="w-full justify-start">
-              {tabs.map((tab) => {
-                const group = tabGroup(tab.key)
-                const available =
-                  Boolean(group) ||
-                  (domain === 'TITULADOS' && (tab.key === 'satisfaccion' || tab.key === 'malla'))
-                return (
-                  <TabsTrigger key={tab.key} value={tab.key} disabled={!available}>
-                    {tab.label}
-                    {!available && (
-                      <span className="text-[10px] uppercase tracking-wide">Próximamente</span>
-                    )}
-                  </TabsTrigger>
-                )
-              })}
-            </TabsList>
+            <CompetenceGroupTabs tabs={groupTabs} tone={tone} />
           </Tabs>
           {!tabGroup(activeTab) ? (
             <StatusPanel

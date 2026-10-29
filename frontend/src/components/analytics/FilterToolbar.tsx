@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { RotateCcw, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { AnalyticsSummary } from "@/features/analitica/api";
 import { loadTituladosFilterQuery, saveTituladosFilterQuery } from "@/features/analitica/shared/tituladosFilterStorage";
 
@@ -47,7 +49,6 @@ export function FilterToolbar({ summary, onQueryChange, count, onReset }: { summ
 function TituladosFilterToolbar({ summary, onQueryChange }: { summary: AnalyticsSummary; onQueryChange?: (query: string) => void }) {
   const [filters, setFilters] = useState<TituladosFilterState>({ ...EMPTY_MULTI });
   const [initialized, setInitialized] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
   const minYear = summary.yearMin ?? undefined;
   const maxYear = summary.yearMax ?? undefined;
   useEffect(() => {
@@ -78,10 +79,9 @@ function TituladosFilterToolbar({ summary, onQueryChange }: { summary: Analytics
   const reset = () => update({ yearFrom: minYear, yearTo: maxYear, ...EMPTY_MULTI });
   const yearReady = minYear !== undefined && maxYear !== undefined;
   const rangeLabel = yearReady && filters.yearFrom !== undefined && filters.yearTo !== undefined ? `${filters.yearFrom} – ${filters.yearTo}` : "Todos los años";
-  const selectionLabel = (values: string[]) => values.length === 0 ? "Todos" : values.length === 1 ? values[0] : `${values.length} seleccionados`;
   const hasActiveFilters = (yearReady && (filters.yearFrom !== minYear || filters.yearTo !== maxYear)) || MULTI_FILTERS.some((filter) => filters[filter.key].length > 0);
   const countIsReduced = summary.validResponses < summary.totalResponses;
-  return <div className="filter-toolbar mx-auto flex w-full max-w-[1440px] flex-wrap items-end gap-x-2 gap-y-2 p-3">
+  return <div className="filter-toolbar mx-auto flex w-full max-w-[1440px] flex-wrap items-end gap-x-2 gap-y-2 p-3 [--filter-accent:var(--primary)]">
     <div className="flex h-10 w-[64px] shrink-0 items-center gap-1.5 text-sm font-medium text-ink-900"><SlidersHorizontal className="h-4 w-4 text-primary" />Filtros</div>
     <div className="grid h-14 w-[220px] shrink-0 gap-1">
       <div className="flex h-4 items-center justify-between text-xs text-ink-600"><span>Año de titulación</span><strong className="font-semibold text-ink-900">{rangeLabel}</strong></div>
@@ -94,9 +94,6 @@ function TituladosFilterToolbar({ summary, onQueryChange }: { summary: Analytics
       <FilterMenu
         key={filter.key}
         label={filter.label}
-        value={selectionLabel(filters[filter.key])}
-        open={open === filter.key}
-        onOpen={() => setOpen(open === filter.key ? null : filter.key)}
         options={[...filter.options]}
         selected={filters[filter.key]}
         onToggle={(value) => toggle(filter.key, value)}
@@ -106,11 +103,97 @@ function TituladosFilterToolbar({ summary, onQueryChange }: { summary: Analytics
     <div className="min-w-0 flex-1" />
     <span className={`shrink-0 whitespace-nowrap text-[11px] ${countIsReduced ? "font-semibold text-primary" : "text-ink-600"}`}>Mostrando <strong>{summary.validResponses}</strong> de {summary.totalResponses} respuestas</span>
     <Button type="button" variant="ghost" size="sm" disabled={!hasActiveFilters} onClick={reset} className={`shrink-0 whitespace-nowrap px-0 text-xs ${hasActiveFilters ? "text-primary hover:text-primary" : "text-ink-400"}`}><RotateCcw className="mr-1 h-3.5 w-3.5" />Limpiar filtros</Button>
+    <ActiveFilterChips
+      groups={MULTI_FILTERS.map((filter) => ({ key: filter.key, label: filter.label, values: filters[filter.key] }))}
+      onRemove={(key, value) => toggle(key as MultiKey, value)}
+    />
   </div>;
 }
 
-export function FilterMenu({ label, value, open, onOpen, options, selected, onToggle, onClear }: { label: string; value: string; open: boolean; onOpen: () => void; options: string[]; selected: string[]; onToggle: (value: string) => void; onClear: () => void }) {
-  return <div className="relative w-[170px] shrink-0"><button type="button" className="grid h-14 w-full gap-1 text-left" onClick={onOpen} aria-expanded={open}><span className="h-4 text-xs text-ink-600">{label}</span><span className="flex h-10 min-w-0 items-center rounded-md border border-surface-container-high bg-white px-3 text-sm text-ink-900" title={value}><span className="truncate">{value}</span></span></button>
-    {open && <div className="absolute z-20 mt-1 max-h-80 w-72 overflow-y-auto rounded-md border border-surface-container-high bg-white p-3 shadow-lg"><div className="grid gap-2">{options.map((option) => <label key={option} className="flex items-center gap-2 text-sm"><Checkbox checked={selected.includes(option)} onCheckedChange={() => onToggle(option)} />{option}</label>)}</div><Button type="button" variant="ghost" size="sm" className="mt-2 px-0" onClick={onClear}>Limpiar</Button></div>}
+export type FilterTone = "titulados" | "empleadores";
+const ACCENT: Record<FilterTone, string> = {
+  titulados: "[--filter-accent:var(--primary)]",
+  empleadores: "[--filter-accent:var(--empleadores)]",
+};
+
+/** A partir de este número de opciones el menú ofrece un buscador. */
+const SEARCH_THRESHOLD = 8;
+
+/**
+ * Filtro de selección múltiple, único en el sistema (titulados y empleadores). El tono fija el color de acento
+ * (--filter-accent) en el botón y en el menú, que se dibuja fuera de la barra y no hereda sus variables.
+ */
+export function FilterMenu({ label, options, selected, onToggle, onClear, tone = "titulados" }: { label: string; options: string[]; selected: string[]; onToggle: (value: string) => void; onClear: () => void; tone?: FilterTone }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const active = selected.length > 0;
+  // Se respeta el orden del formulario: el botón muestra la primera opción elegida y cuántas más hay.
+  const ordered = options.filter((option) => selected.includes(option));
+  const value = ordered[0] ?? "Todos";
+  const summary = ordered.length > 1 ? `${ordered.length} seleccionados: ${ordered.join(", ")}` : value;
+  const normalized = (text: string) => text.toLocaleLowerCase("es-BO").normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const visible = search ? options.filter((option) => normalized(option).includes(normalized(search))) : options;
+  return <Popover open={open} onOpenChange={(next) => { setOpen(next); if (!next) setSearch(""); }}>
+    <div className={`grid w-[calc(50%-6px)] min-w-0 shrink-0 gap-1 sm:w-[170px] ${ACCENT[tone]}`}>
+      <span className="h-4 truncate text-xs leading-4 text-ink-600" title={label}>{label}</span>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${label}: ${summary}`}
+          data-active={active || undefined}
+          className="group/filter flex h-10 w-full min-w-0 items-center gap-2 rounded-lg border border-surface-container-high bg-white px-3 text-left text-sm text-ink-900 shadow-xs transition-colors hover:border-ink-400 focus-visible:ring-3 focus-visible:ring-(--filter-accent)/25 focus-visible:outline-none aria-expanded:border-(--filter-accent) data-active:border-(--filter-accent)/60 data-active:bg-(--filter-accent)/5 data-active:font-medium data-active:text-(--filter-accent)"
+          title={summary}
+        >
+          <span className="min-w-0 flex-1 truncate">{value}</span>
+          {ordered.length > 1 && <span className="shrink-0 rounded-full bg-(--filter-accent) px-1.5 text-[11px] leading-5 font-semibold text-white tabular-nums">+{ordered.length - 1}</span>}
+          <ChevronDown className="size-4 shrink-0 text-ink-500 transition-transform group-aria-expanded/filter:rotate-180" />
+        </button>
+      </PopoverTrigger>
+    </div>
+    <PopoverContent align="start" className={`w-72 gap-0 p-0 ${ACCENT[tone]}`}>
+      <div className="flex items-center justify-between gap-2 border-b border-border-line px-3 py-2">
+        <span className="text-sm font-semibold text-ink-900">{label}</span>
+        <span className="text-xs text-ink-600">{active ? `${selected.length} de ${options.length}` : "Todos"}</span>
+      </div>
+      {options.length >= SEARCH_THRESHOLD && (
+        <div className="border-b border-border-line p-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-ink-500" />
+            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar opción" aria-label={`Buscar en ${label}`} className="h-8 pl-8 text-sm" />
+          </div>
+        </div>
+      )}
+      <div className="max-h-72 overflow-y-auto p-1" role="group" aria-label={label}>
+        {visible.map((option) => {
+          const checked = selected.includes(option);
+          return <label key={option} className={`flex cursor-pointer items-start gap-2.5 rounded-md px-2 py-2 text-sm transition-colors hover:bg-surface-container-low ${checked ? "font-medium text-ink-900" : "text-ink-700"}`}>
+            <Checkbox checked={checked} onCheckedChange={() => onToggle(option)} className="mt-0.5 data-checked:border-(--filter-accent) data-checked:bg-(--filter-accent)" />
+            <span className="min-w-0 leading-snug">{option}</span>
+          </label>;
+        })}
+        {visible.length === 0 && <p className="px-2 py-3 text-center text-xs text-ink-600">Ninguna opción coincide con «{search}».</p>}
+      </div>
+      <div className="flex items-center justify-between gap-2 border-t border-border-line px-2 py-1.5">
+        <Button type="button" variant="ghost" size="sm" disabled={!active} onClick={onClear} className="text-xs text-ink-600">Quitar selección</Button>
+        <Button type="button" size="sm" onClick={() => setOpen(false)} className="bg-(--filter-accent) text-xs text-white hover:bg-(--filter-accent)/90">Listo</Button>
+      </div>
+    </PopoverContent>
+  </Popover>;
+}
+
+/** Selecciones activas como chips removibles, debajo de la barra de filtros. */
+export function ActiveFilterChips({ groups, onRemove }: { groups: { key: string; label: string; values: string[] }[]; onRemove: (key: string, value: string) => void }) {
+  const active = groups.filter((group) => group.values.length > 0);
+  if (active.length === 0) return null;
+  return <div className="flex w-full flex-wrap items-center gap-1.5 border-t border-border-line pt-2">
+    {active.flatMap((group) => group.values.map((value) => (
+      <span key={`${group.key}-${value}`} className="inline-flex max-w-full items-center gap-1 rounded-full border border-(--filter-accent)/30 bg-(--filter-accent)/8 py-0.5 pr-0.5 pl-2.5 text-xs text-ink-900">
+        <span className="text-ink-600">{group.label}:</span>
+        <span className="truncate font-medium">{value}</span>
+        <button type="button" onClick={() => onRemove(group.key, value)} aria-label={`Quitar ${group.label}: ${value}`} className="grid size-5 shrink-0 place-items-center rounded-full text-ink-500 transition-colors hover:bg-(--filter-accent)/15 hover:text-ink-900">
+          <X className="size-3" />
+        </button>
+      </span>
+    )))}
   </div>;
 }

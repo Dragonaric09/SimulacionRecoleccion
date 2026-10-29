@@ -23,7 +23,8 @@ export type Cross = {
   smallSample: boolean;
 };
 
-export type CrossMetric = "count" | "rowPercent" | "columnPercent";
+/** Métrica de las celdas del cruce; «residual» es el residuo estandarizado ajustado (solo en la tabla). */
+export type CrossMetric = "count" | "rowPercent" | "columnPercent" | "residual";
 
 export type Simulation = {
   sampleSize: number;

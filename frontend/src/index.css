@@ -563,6 +563,20 @@
     break-inside: avoid;
     page-break-inside: avoid;
   }
+  /* En papel no hay desplazamiento: la tabla del cruce se ajusta al ancho de la página. */
+  .cross-table-scroll {
+    overflow: visible !important;
+  }
+  .cross-table-scroll th,
+  .cross-table-scroll td {
+    position: static !important;
+    box-shadow: none !important;
+  }
+  .cross-table-scroll th > div,
+  .cross-table-scroll td > div {
+    width: auto !important;
+    -webkit-line-clamp: unset !important;
+  }
   .print-page > div > .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     align-items: stretch !important;

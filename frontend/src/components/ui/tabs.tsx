@@ -28,6 +28,9 @@ const tabsListVariants = cva(
       variant: {
         default: "bg-muted",
         line: "gap-1 bg-transparent",
+        /* Control segmentado: el acento sale de --tabs-accent (titulados o empleadores). */
+        segmented:
+          "max-w-full flex-wrap justify-start gap-1 rounded-xl border border-border-line bg-white p-1 shadow-xs group-data-horizontal/tabs:h-auto",
       },
     },
     defaultVariants: { variant: "default" },
@@ -61,6 +64,8 @@ function TabsTrigger({
         "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-sm font-medium whitespace-nowrap text-ink-600 transition-all group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-titulados focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-1 has-data-[icon=inline-start]:pl-1 dark:text-muted-foreground dark:hover:text-titulados group-data-[variant=default]/tabs-list:data-active:shadow-sm group-data-[variant=line]/tabs-list:data-active:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
         "data-active:bg-transparent data-active:text-titulados dark:data-active:border-input dark:data-active:bg-transparent dark:data-active:text-titulados",
+        "group-data-[variant=segmented]/tabs-list:h-10 group-data-[variant=segmented]/tabs-list:flex-none group-data-[variant=segmented]/tabs-list:gap-2 group-data-[variant=segmented]/tabs-list:rounded-lg group-data-[variant=segmented]/tabs-list:px-4 group-data-[variant=segmented]/tabs-list:hover:bg-surface-container-low group-data-[variant=segmented]/tabs-list:hover:text-ink-900 group-data-[variant=segmented]/tabs-list:focus-visible:ring-(--tabs-accent)/30",
+        "group-data-[variant=segmented]/tabs-list:data-active:bg-(--tabs-accent) group-data-[variant=segmented]/tabs-list:data-active:font-semibold group-data-[variant=segmented]/tabs-list:data-active:text-white group-data-[variant=segmented]/tabs-list:data-active:shadow-sm group-data-[variant=segmented]/tabs-list:data-active:hover:bg-(--tabs-accent) group-data-[variant=segmented]/tabs-list:data-active:hover:text-white",
         "after:absolute after:bg-titulados after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
         className,
       )}

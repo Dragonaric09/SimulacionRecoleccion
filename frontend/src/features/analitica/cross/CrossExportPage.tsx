@@ -220,7 +220,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
           active={employerFilters.active}
         />
       )}
-      <div className="cross-screen-grid grid items-start gap-5 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+      <div className="cross-screen-grid grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(260px,300px)_minmax(0,1fr)]">
         <div className="cross-screen-controls space-y-5">
           <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
@@ -250,8 +250,9 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                 </TooltipProvider>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <label className="label-default grid gap-1">
+            {/* Por debajo de xl el panel va encima de los resultados y reparte sus controles en dos columnas. */}
+            <CardContent className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+              <label className="label-default grid min-w-0 content-start gap-1">
                 Filas
                 <Select value={rowField} onValueChange={setRowField}>
                   <SelectTrigger className="w-full min-w-0">
@@ -286,7 +287,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                   </SelectContent>
                 </Select>
               </label>
-              <label className="label-default grid gap-1">
+              <label className="label-default grid min-w-0 content-start gap-1">
                 Columnas
                 <Select value={columnField} onValueChange={setColumnField}>
                   <SelectTrigger className="w-full min-w-0">
@@ -322,7 +323,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                 </Select>
               </label>
               {domain === 'TITULADOS' && (
-                <div className="space-y-2 border-t border-border-line pt-3">
+                <div className="space-y-2 border-t border-border-line pt-3 sm:col-span-2 xl:col-span-1">
                   <p className="caption-bold text-ink-600">ANÁLISIS SUGERIDOS</p>
                   <p className="text-xs text-ink-600">
                     El tipo mostrado es el esperado por el nivel de las variables; se confirma con
@@ -348,7 +349,8 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                   </div>
                 </div>
               )}
-              <div className="space-y-3 border-t border-border-line pt-3 text-xs text-ink-600">
+              <div className="grid gap-3 border-t border-border-line pt-3 text-xs text-ink-600 sm:col-span-2 sm:grid-cols-2 xl:col-span-1 xl:grid-cols-1">
+                <div className="space-y-3">
                 <p className="caption-bold text-ink-600">MÉTRICA DE CELDA</p>
                 <RadioGroup
                   value={metric}
@@ -369,6 +371,15 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                         <RadioGroupItem value="columnPercent" />
                         <span>% por columna</span>
                       </label>
+                      <label className="flex items-start gap-2">
+                        <RadioGroupItem value="residual" className="mt-0.5" />
+                        <span>
+                          Residuo ajustado
+                          <span className="block text-[11px] text-ink-500">
+                            Qué combinaciones tienen más o menos casos de los esperados
+                          </span>
+                        </span>
+                      </label>
                     </>
                   )}
                   {activeView === 'bars' && (
@@ -378,9 +389,12 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                     </label>
                   )}
                 </RadioGroup>
+                </div>
                 <div
                   className={
-                    activeView === 'table' ? 'space-y-2 border-t border-border-line pt-3' : 'hidden'
+                    activeView === 'table'
+                      ? 'space-y-2 border-t border-border-line pt-3 sm:border-t-0 sm:pt-0 xl:border-t xl:pt-3'
+                      : 'hidden'
                   }
                 >
                   <p className="caption-bold text-ink-600">OPCIONES DE CÁLCULO</p>
@@ -408,7 +422,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
             value={activeView}
             onValueChange={(view) => {
               setActiveView(view as 'table' | 'bars')
-              if (view === 'bars' && metric === 'columnPercent') {
+              if (view === 'bars' && (metric === 'columnPercent' || metric === 'residual')) {
                 setMetric('count')
               }
             }}
@@ -462,6 +476,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                 includeTotals={includeTotals}
                 colorHeatmap={colorHeatmap}
                 metric={metric}
+                tone={tone}
                 rowLabel={rowLabel}
                 columnLabel={columnLabel}
                 action={
@@ -532,6 +547,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                 includeTotals={includeTotals}
                 colorHeatmap={colorHeatmap}
                 metric={metric}
+                tone={tone}
                 rowLabel={rowLabel}
                 columnLabel={columnLabel}
               />
@@ -656,5 +672,5 @@ function CrossDownloadMenu({
 const isText = (value: unknown): value is string => typeof value === 'string' && value.length > 0
 const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean'
 const isMetric = (value: unknown): value is CrossMetric =>
-  value === 'count' || value === 'rowPercent' || value === 'columnPercent'
+  value === 'count' || value === 'rowPercent' || value === 'columnPercent' || value === 'residual'
 const isView = (value: unknown): value is 'table' | 'bars' => value === 'table' || value === 'bars'

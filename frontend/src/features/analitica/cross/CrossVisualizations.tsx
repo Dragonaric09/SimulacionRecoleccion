@@ -1,23 +1,14 @@
 import type { ReactNode } from "react";
 import { Badge } from "@/components/analytics/Badge";
 import { contrastTextColor } from "@/lib/utils";
-import type { Cross, CrossMetric } from "../shared/analyticsTypes";
+import type { Cross, CrossMetric, Tone } from "../shared/analyticsTypes";
+import { CROSS_COLORS, RESIDUAL_THRESHOLD, booleanLabel, crossResidual, formatResidual } from "../shared/crossExportUtils";
 import type { ResultadoPruebaAsociacion } from "../api";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useChartContainerWidth } from "@/components/analytics/charts/useChartContainerSize";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TapTooltip } from "@/components/analytics/TapTooltip";
-
-function booleanLabel(value: string) {
-  if (value.toLowerCase() === "true") return "Sí";
-  if (value.toLowerCase() === "false") return "No";
-  const normalized = value.trim().replace(/\s+/g, " ").toLocaleLowerCase("es-BO");
-  if (!normalized) return normalized;
-  const sentence = normalized.charAt(0).toLocaleUpperCase("es-BO") + normalized.slice(1);
-  return sentence.replace(/\bia\b/gi, "IA").replace(/\bdevops\b/gi, "DevOps").replace(/\b(modular|presencial|virtual)\(/gi, "$1 (");
-}
 
 const formatDecimal = (value: number, digits: number) => value.toFixed(digits).replace(".", ",");
 
@@ -133,6 +124,16 @@ export function ChiSquareCard({
   );
 }
 
+/** Color base del mapa de calor según la sección. */
+const HEAT_RGB: Record<Tone, string> = { titulados: "31,111,181", empleadores: "20,163,154" };
+
+const percentText = (value: number) => `${value.toFixed(1).replace(".", ",")} %`;
+
+/**
+ * Tabla de contingencia. Se adapta a cualquier número de categorías: la columna de categorías queda fija al
+ * desplazar horizontalmente, los encabezados largos se ajustan por palabras (hasta tres líneas, con el texto
+ * completo al pasar el cursor) y cada celda ofrece conteo, % de fila y % de columna en su detalle.
+ */
 export function CrossTable({
   cross,
   totalResponses,
@@ -143,6 +144,7 @@ export function CrossTable({
   columnLabel = "Columnas",
   action,
   swapAxes = false,
+  tone = "titulados",
 }: {
   cross: Cross;
   totalResponses?: number;
@@ -153,6 +155,7 @@ export function CrossTable({
   columnLabel?: string;
   action?: ReactNode;
   swapAxes?: boolean;
+  tone?: Tone;
 }) {
   const displayRows = swapAxes ? cross.columnCategories : cross.rowCategories;
   const displayColumns = swapAxes ? cross.rowCategories : cross.columnCategories;
@@ -163,52 +166,41 @@ export function CrossTable({
     const rawColumn = swapAxes ? row : column;
     return cross.counts[rawRow]?.[rawColumn] ?? 0;
   };
-  const columnTotal = (column: string) =>
-    displayRows.reduce(
-      (sum, row) => sum + rawCellValue(row, column),
-      0,
-    );
-  const rowTotal = (row: string) =>
-    displayColumns.reduce(
-      (sum, column) => sum + rawCellValue(row, column),
-      0,
-    );
-  const columnPercent = (row: string, column: string) => {
-    const total = columnTotal(column);
-    return total ? (rawCellValue(row, column) * 100) / total : 0;
-  };
+  const columnTotal = (column: string) => displayRows.reduce((sum, row) => sum + rawCellValue(row, column), 0);
+  const rowTotal = (row: string) => displayColumns.reduce((sum, column) => sum + rawCellValue(row, column), 0);
+  const share = (value: number, total: number) => (total ? (value * 100) / total : 0);
+  const residualMode = metric === "residual";
+  const showTotals = includeTotals && !residualMode;
   const cellValue = (row: string, column: string) =>
     metric === "count"
       ? rawCellValue(row, column)
       : metric === "rowPercent"
-        ? (cross.percentages[swapAxes ? column : row]?.[swapAxes ? row : column] ?? 0)
-        : columnPercent(row, column);
-  const max = Math.max(
-    1,
-    ...displayRows.flatMap((row) =>
-      displayColumns.map((column) => cellValue(row, column)),
-    ),
-  );
+        ? share(rawCellValue(row, column), rowTotal(row))
+        : metric === "columnPercent"
+          ? share(rawCellValue(row, column), columnTotal(column))
+          : crossResidual(cross, swapAxes ? column : row, swapAxes ? row : column);
+  const max = Math.max(1, ...displayRows.flatMap((row) => displayColumns.map((column) => Math.abs(cellValue(row, column)))));
   const formatValue = (value: number) =>
-    metric === "count"
-      ? String(value)
-      : `${value.toFixed(1).replace(".", ",")} %`;
+    metric === "count" ? value.toLocaleString("es-BO") : residualMode ? formatResidual(value) : percentText(value);
   const metricLabel =
-    metric === "count"
-      ? "Frecuencia absoluta (conteos)"
-      : metric === "rowPercent"
-        ? "% por fila"
-        : "% por columna";
-  const marginalPercent = (value: number) =>
-    cross.validCount
-      ? `${((value * 100) / cross.validCount).toFixed(1).replace(".", ",")} %`
-      : "0,0%";
-  const labelColumnWidth = Math.min(
-    44,
-    Math.max(28, 58 - displayColumns.length * 5),
-  );
-  const valueColumnCount = displayColumns.length + (includeTotals ? 1 : 0);
-  const valueColumnWidth = (100 - labelColumnWidth) / valueColumnCount;
+    metric === "count" ? "Frecuencia absoluta" : metric === "rowPercent" ? "% por fila" : metric === "columnPercent" ? "% por columna" : "Residuo ajustado";
+  const marginalPercent = (value: number) => percentText(share(value, cross.validCount));
+  const heat = (intensity: number) => `rgba(${HEAT_RGB[tone]},${0.08 + intensity * 0.75})`;
+  // Residuos: escala divergente fija hasta ±3 (o el máximo observado), azul si sobra, rojo si falta.
+  const residualScale = Math.max(3, max);
+  // Bajo el umbral el color es tenue; al superarlo pasa a un tono claramente más intenso.
+  const residualColor = (value: number) => {
+    const size = Math.abs(value);
+    const alpha =
+      size < RESIDUAL_THRESHOLD
+        ? 0.04 + (size / RESIDUAL_THRESHOLD) * 0.22
+        : 0.45 + Math.min(1, (size - RESIDUAL_THRESHOLD) / Math.max(0.5, residualScale - RESIDUAL_THRESHOLD)) * 0.4;
+    return `rgba(${value >= 0 ? "31,111,181" : "214,69,65"},${alpha})`;
+  };
+  const cellBackground = (value: number) => (residualMode ? residualColor(value) : colorHeatmap ? heat(value / max) : undefined);
+  // Celdas de la columna fija: fondo opaco para que los valores no se vean por debajo al desplazar.
+  const stickyCell = "sticky left-0 z-10 border-r border-border-line shadow-[4px_0_6px_-4px_rgb(15_23_42/0.12)]";
+  const headCell = "border-b border-border-line bg-surface-container-low p-2 align-bottom text-xs font-semibold text-ink-700";
   return (
     <Card className="min-w-0 overflow-visible">
       <CardHeader>
@@ -216,139 +208,162 @@ export function CrossTable({
           <div className="min-w-0">
             <CardTitle className="title-card">{displayRowLabel} × {displayColumnLabel}</CardTitle>
             <CardDescription>
-              {metricLabel.replace(" (conteos)", "")} · n = {cross.validCount}
+              {metricLabel} · n = {cross.validCount}
               {totalResponses != null ? ` de ${totalResponses}` : ""}
               {cross.smallSample ? " · muestra reducida" : ""}
+              {" · "}
+              {displayRows.length} × {displayColumns.length} categorías
             </CardDescription>
           </div>
           {action}
         </div>
       </CardHeader>
-      <CardContent className="min-w-0 overflow-x-auto">
-        <Table className="min-w-[620px] table-fixed text-sm">
-          <colgroup>
-            <col style={{ width: `${labelColumnWidth}%` }} />
-            {displayColumns.map((column) => (
-              <col
-                key={column}
-                style={{ width: `${valueColumnWidth}%` }}
-              />
-            ))}
-            {includeTotals && <col style={{ width: `${valueColumnWidth}%` }} />}
-          </colgroup>
-          <TableHeader>
-            <TableRow className="bg-surface-container-low hover:bg-surface-container-low">
-              <TableHead rowSpan={2} className="min-w-[210px] whitespace-nowrap p-2 text-left align-middle">
-                {displayRowLabel}
-              </TableHead>
-              <TableHead colSpan={displayColumns.length} className="p-2 text-center">
-                {displayColumnLabel}
-              </TableHead>
-              {includeTotals && <TableHead rowSpan={2} className="w-20 break-words p-2 text-right align-middle">Total fila</TableHead>}
-            </TableRow>
-            <TableRow className="bg-surface-container-low hover:bg-surface-container-low">
-              {displayColumns.map((column) => (
-                <TableHead
-                  key={column}
-                  className="whitespace-normal break-words p-2 text-right leading-tight"
-                >
-                  {booleanLabel(column)}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {displayRows.map((row) => (
-              <TableRow key={row} className="border-t hover:bg-transparent">
-                <TableCell className="min-w-[210px] whitespace-nowrap p-2 font-medium">
-                  {booleanLabel(row)}
-                </TableCell>
-                {displayColumns.map((column) => {
-                  const value = cellValue(row, column);
-                  const intensity = value / max;
-                  return (
-                    <TableCell
-                      key={column}
-                      className="tabular-nums p-2 text-right font-medium transition-[background-color,color] duration-300 ease-out"
-                      style={
-                        colorHeatmap
-                          ? {
-                              backgroundColor: `rgba(31,111,181,${0.08 + intensity * 0.75})`,
-                              color: contrastTextColor(
-                                `rgba(31,111,181,${0.08 + intensity * 0.75})`,
-                              ),
-                            }
-                          : undefined
-                      }
-                    >
-                      {formatValue(value)}
-                    </TableCell>
-                  );
-                })}
-                {includeTotals && (
-                  <TableCell className="tabular-nums bg-surface-container-low p-2 text-right font-semibold">
-                    {metric === "count"
-                      ? rowTotal(row)
-                      : metric === "rowPercent"
-                        ? "100,0%"
-                        : marginalPercent(rowTotal(row))}
-                  </TableCell>
+      <CardContent className="min-w-0">
+        <div
+          className="cross-table-scroll max-w-full overflow-x-auto rounded-lg border border-border-line focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+          tabIndex={0}
+          role="region"
+          aria-label={`Tabla de ${displayRowLabel} por ${displayColumnLabel}`}
+        >
+          <table className="w-full border-separate border-spacing-0 text-sm">
+            <thead>
+              <tr>
+                <th rowSpan={2} scope="col" className={`${headCell} ${stickyCell} bg-surface-container-low text-left align-bottom`}>
+                  <div className="w-36 sm:w-52">{displayRowLabel}</div>
+                </th>
+                <th colSpan={displayColumns.length} scope="colgroup" className={`${headCell} border-l-0 text-center`}>
+                  {displayColumnLabel}
+                </th>
+                {showTotals && (
+                  <th rowSpan={2} scope="col" className={`${headCell} border-l border-border-line text-right`}>
+                    <div className="min-w-16">Total fila</div>
+                  </th>
                 )}
-              </TableRow>
-            ))}
-            {includeTotals && (
-              <TableRow className="border-t-2 bg-surface-container-low font-semibold hover:bg-surface-container-low">
-                <TableCell className="whitespace-nowrap p-2">
-                  Total columna
-                </TableCell>
+              </tr>
+              <tr>
                 {displayColumns.map((column) => (
-                  <TableCell
-                    key={column}
-                    className="tabular-nums p-2 text-right"
-                  >
-                    {metric === "count"
-                      ? columnTotal(column)
-                      : metric === "columnPercent"
-                        ? "100,0%"
-                        : marginalPercent(columnTotal(column))}
-                  </TableCell>
+                  <th key={column} scope="col" className={`${headCell} text-right font-medium`} title={booleanLabel(column)}>
+                    <div className="ml-auto line-clamp-3 w-24 text-balance break-normal hyphens-auto whitespace-normal leading-tight sm:w-28" lang="es">
+                      {booleanLabel(column)}
+                    </div>
+                  </th>
                 ))}
-                <TableCell className="tabular-nums p-2 text-right">
-                  {metric === "count" ? cross.validCount : "100,0%"}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        {colorHeatmap && (
+              </tr>
+            </thead>
+            <tbody>
+              {displayRows.map((row) => {
+                const totalRow = rowTotal(row);
+                return (
+                  <tr key={row} className="group/row">
+                    <th scope="row" className={`${stickyCell} border-b border-border-line bg-white p-2 text-left font-medium text-ink-900 group-hover/row:bg-surface-container-low`}>
+                      <div className="w-36 leading-snug whitespace-normal sm:w-52">{booleanLabel(row)}</div>
+                    </th>
+                    {displayColumns.map((column) => {
+                      const value = cellValue(row, column);
+                      const count = rawCellValue(row, column);
+                      const background = cellBackground(value);
+                      const notable = residualMode && Math.abs(value) >= RESIDUAL_THRESHOLD;
+                      return (
+                        <td
+                          key={column}
+                          className={`border-b border-border-line p-0 text-right tabular-nums transition-[background-color,color] duration-300 ease-out group-hover/row:bg-surface-container-low/60 ${notable ? "font-bold" : "font-medium"}`}
+                          style={background ? { backgroundColor: background, color: contrastTextColor(background) } : undefined}
+                        >
+                          <TapTooltip
+                            side="top"
+                            content={
+                              <div className="grid gap-0.5 text-xs">
+                                <strong className="text-ink-900">{booleanLabel(row)}</strong>
+                                <span className="text-ink-600">{booleanLabel(column)}</span>
+                                <span className="mt-1 tabular-nums">
+                                  {count.toLocaleString("es-BO")} respuestas · {percentText(share(count, totalRow))} de la fila ·{" "}
+                                  {percentText(share(count, columnTotal(column)))} de la columna
+                                </span>
+                                {residualMode && (
+                                  <span className="tabular-nums text-ink-600">
+                                    Residuo ajustado {formatResidual(value)}
+                                    {notable ? (value > 0 ? " · más casos de los esperados" : " · menos casos de los esperados") : " · dentro de lo esperado"}
+                                  </span>
+                                )}
+                              </div>
+                            }
+                          >
+                            <span
+                              tabIndex={0}
+                              aria-label={`${booleanLabel(row)}, ${booleanLabel(column)}: ${formatValue(value)}`}
+                              className="block cursor-help px-2 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset"
+                            >
+                              {formatValue(value)}
+                            </span>
+                          </TapTooltip>
+                        </td>
+                      );
+                    })}
+                    {showTotals && (
+                      <td className="border-b border-l border-border-line bg-surface-container-low p-2 text-right font-semibold tabular-nums">
+                        {metric === "count" ? totalRow.toLocaleString("es-BO") : metric === "rowPercent" ? "100,0 %" : marginalPercent(totalRow)}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+              {showTotals && (
+                <tr className="font-semibold">
+                  <th scope="row" className={`${stickyCell} border-t-2 border-t-border-line bg-surface-container-low p-2 text-left`}>
+                    Total columna
+                  </th>
+                  {displayColumns.map((column) => (
+                    <td key={column} className="border-t-2 border-border-line bg-surface-container-low p-2 text-right tabular-nums">
+                      {metric === "count"
+                        ? columnTotal(column).toLocaleString("es-BO")
+                        : metric === "columnPercent"
+                          ? "100,0 %"
+                          : marginalPercent(columnTotal(column))}
+                    </td>
+                  ))}
+                  <td className="border-t-2 border-l border-border-line bg-surface-container-low p-2 text-right tabular-nums">
+                    {metric === "count" ? cross.validCount.toLocaleString("es-BO") : "100,0 %"}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 text-xs text-ink-600">
+          Toca o pasa el cursor sobre una celda para ver su conteo, % de fila y % de columna.
+          {displayColumns.length > 4 ? " Desliza la tabla hacia los lados: la columna de categorías queda fija." : ""}
+        </p>
+        {residualMode && (
+          <div className="mt-4 space-y-2 border-t border-surface-container-high pt-3 text-xs text-ink-600">
+            <div className="flex items-center justify-between gap-3">
+              <span>Menos casos de los esperados</span>
+              <span>Más casos de los esperados</span>
+            </div>
+            <div className="h-2 rounded-full" style={{ background: `linear-gradient(to right, ${residualColor(-residualScale)}, ${residualColor(0)}, ${residualColor(residualScale)})` }} />
+            <p>
+              El residuo ajustado compara cada celda con lo esperado si las dos variables fueran independientes. En negrita, |r| ≥ 1,96: la
+              combinación se aparta de la independencia (≈ 5 %). Con muchas celdas alguna puede superar el umbral por azar; léelo junto con la
+              prueba de asociación.
+            </p>
+          </div>
+        )}
+        {colorHeatmap && !residualMode && (
           <div className="mt-4 border-t border-surface-container-high pt-3 text-xs text-ink-600">
             <div className="flex items-center justify-between">
-              <span>Escala de {metricLabel}</span>
-              <span>
-                0 ·{" "}
-                {metric === "count"
-                  ? max
-                  : `${max.toFixed(1).replace(".", ",")} %`}
-              </span>
+              <span>Escala de {metricLabel.toLowerCase()}</span>
+              <span>0 · {formatValue(max)}</span>
             </div>
-            <div
-              className="mt-1 h-2 rounded-full"
-              style={{
-                background:
-                  "linear-gradient(to right, rgba(31,111,181,0.08), rgba(31,111,181,0.83))",
-              }}
-            />
+            <div className="mt-1 h-2 rounded-full" style={{ background: `linear-gradient(to right, ${heat(0)}, ${heat(1)})` }} />
           </div>
         )}
         {observedSmallSampleSummary(cross) && (
-          <p className="mt-3 text-xs text-amber-800">
-            {observedSmallSampleSummary(cross)}
-          </p>
+          <p className="mt-3 text-xs text-amber-800">{observedSmallSampleSummary(cross)}</p>
         )}
       </CardContent>
     </Card>
   );
 }
+
 export function CrossBars({
   cross,
   metric,
@@ -361,14 +376,7 @@ export function CrossBars({
   action?: ReactNode;
 }) {
   const { ref, width: chartWidth } = useChartContainerWidth<HTMLDivElement>();
-  const colors = [
-    "#1f6fb5",
-    "#7db1dd",
-    "#173f67",
-    "#8b5bd1",
-    "#ed552f",
-    "#18a39a",
-  ];
+  const colors = CROSS_COLORS;
   const total = cross.validCount || 1;
   const rowTotal = (row: string) =>
     cross.columnCategories.reduce(
@@ -383,7 +391,7 @@ export function CrossBars({
       ? `${rowPercent(row, column).toFixed(1).replace(".", ",")} %`
       : String(value);
   const subtitle =
-    metric === "rowPercent" ? "% por fila" : "Frecuencia absoluta";
+    metric === "rowPercent" ? "% por fila · perfiles al 100 %" : "Frecuencia absoluta";
   return (
     <Card className="min-w-0 overflow-visible">
       <CardHeader>
@@ -405,7 +413,7 @@ export function CrossBars({
           return (
             <div key={row} className="space-y-1.5">
               <div className="flex items-center justify-between gap-3 text-xs">
-                <span className="min-w-0 truncate font-medium text-ink-900">
+                <span className="min-w-0 truncate font-medium text-ink-900" title={booleanLabel(row)}>
                   {booleanLabel(row)} (n = {totalRow})
                 </span>
                 <span className="shrink-0 text-ink-600">
@@ -415,7 +423,8 @@ export function CrossBars({
               </div>
               {totalRow > 0 ? (
                 <Progress
-                  value={(totalRow * 100) / maxRowTotal}
+                  // Con % por fila cada barra ocupa el 100 %: se comparan los perfiles de las categorías.
+                  value={metric === "rowPercent" ? 100 : (totalRow * 100) / maxRowTotal}
                   className="bg-surface-container-high"
                 >
                   <div className="flex h-full w-full">
@@ -424,7 +433,7 @@ export function CrossBars({
                       if (value <= 0) return null;
                       const width = (value * 100) / totalRow;
                       const label = valueLabel(row, column, value);
-                      const actualSegmentWidth = (value / maxRowTotal) * chartWidth;
+                      const actualSegmentWidth = (value / (metric === "rowPercent" ? totalRow : maxRowTotal)) * chartWidth;
                       const labelCanFit = actualSegmentWidth >= label.length * 6 + 8;
                       return (
                         <TapTooltip

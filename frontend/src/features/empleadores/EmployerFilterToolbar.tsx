@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import { RotateCcw, SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { FilterMenu } from '@/components/analytics/FilterToolbar'
+import { ActiveFilterChips, FilterMenu } from '@/components/analytics/FilterToolbar'
 import { EMPLOYER_FILTERS, type EmployerFilterKey, type EmployerFilters } from './employerData'
 
 /** Barra de filtros única de la sección Empleadores: perfil de la organización y situación de contratación. */
@@ -13,12 +12,10 @@ export function EmployerFilterToolbar({ filters, onToggle, onClear, active, vali
   validCount?: number
   totalCount?: number
 }) {
-  const [open, setOpen] = useState<string | null>(null)
-  const selectionLabel = (values: string[]) => (values.length === 0 ? 'Todos' : values.length === 1 ? values[0] : `${values.length} seleccionados`)
   const reduced = validCount !== undefined && totalCount !== undefined && validCount < totalCount
 
   return (
-    <div className="filter-toolbar flex flex-wrap items-end gap-x-3 gap-y-2 rounded-lg border border-border-line bg-white p-3 shadow-sm">
+    <div className="filter-toolbar flex flex-wrap items-end gap-x-3 gap-y-2 rounded-lg border border-border-line bg-white p-3 shadow-sm [--filter-accent:var(--empleadores)]">
       <div className="flex h-10 items-center gap-1.5 text-sm font-medium text-ink-900">
         <SlidersHorizontal className="h-4 w-4 text-empleadores" />
         Filtros
@@ -27,9 +24,7 @@ export function EmployerFilterToolbar({ filters, onToggle, onClear, active, vali
         <FilterMenu
           key={key}
           label={label}
-          value={selectionLabel(filters[key])}
-          open={open === key}
-          onOpen={() => setOpen(open === key ? null : key)}
+          tone="empleadores"
           options={options}
           selected={filters[key]}
           onToggle={(value) => onToggle(key, value)}
@@ -53,6 +48,10 @@ export function EmployerFilterToolbar({ filters, onToggle, onClear, active, vali
         <RotateCcw className="mr-1 h-3.5 w-3.5" />
         Limpiar filtros
       </Button>
+      <ActiveFilterChips
+        groups={EMPLOYER_FILTERS.map(({ key, label }) => ({ key, label, values: filters[key] }))}
+        onRemove={(key, value) => onToggle(key as EmployerFilterKey, value)}
+      />
     </div>
   )
 }
