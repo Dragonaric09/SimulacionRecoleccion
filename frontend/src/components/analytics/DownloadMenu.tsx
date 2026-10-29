@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ComponentProps, type ReactNode } from 'react'
 import { Download, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -21,12 +21,19 @@ export function DownloadMenu({
   options,
   disabled = false,
   className,
+  triggerText,
+  triggerVariant = 'ghost',
+  triggerSize = 'icon-sm',
 }: {
   /** Qué se descarga, para el nombre accesible del botón. */
   title: string
   options: DownloadOption[]
   disabled?: boolean
   className?: string
+  /** Etiqueta visible opcional para aclarar qué acción ofrece el menú. */
+  triggerText?: ReactNode
+  triggerVariant?: ComponentProps<typeof Button>['variant']
+  triggerSize?: ComponentProps<typeof Button>['size']
 }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -49,8 +56,8 @@ export function DownloadMenu({
     return (
       <Button
         type="button"
-        variant="ghost"
-        size="icon-sm"
+        variant={triggerVariant}
+        size={triggerSize}
         className={cn('download-action', className)}
         aria-label={only ? triggerLabel : `Descargar: ${title}`}
         title={only?.help ?? only?.label}
@@ -59,6 +66,7 @@ export function DownloadMenu({
         data-chart-export-exclude
       >
         {icon}
+        {triggerText && <span>{triggerText}</span>}
       </Button>
     )
   }
@@ -68,14 +76,15 @@ export function DownloadMenu({
       <PopoverTrigger asChild>
         <Button
           type="button"
-          variant="ghost"
-          size="icon-sm"
+          variant={triggerVariant}
+          size={triggerSize}
           className={cn('download-action', className)}
           aria-label={triggerLabel}
           disabled={disabled || busy || available.length === 0}
           data-chart-export-exclude
         >
           {icon}
+          {triggerText && <span>{triggerText}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64 gap-0 p-1.5" data-chart-export-exclude>

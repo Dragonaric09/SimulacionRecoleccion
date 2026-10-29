@@ -1,6 +1,8 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from 'cn'
 import { formatCount, formatDateTime, formatDecimal } from './dashboardFormat'
@@ -57,16 +59,17 @@ export function ResponsesTable({ data, loading, sort, onSort, page, pageSize, on
             Campos no personales. Orden y paginación en el servidor, para datasets de cualquier tamaño.
           </CardDescription>
         </div>
-        <label className="flex items-center gap-2 text-xs text-ink-600">
+        <div className="flex items-center gap-2 text-xs text-ink-600">
           Filas por página
-          <select
-            className="h-8 rounded-md border border-border-line bg-white px-2 text-sm text-ink-900"
-            value={pageSize}
-            onChange={(event) => onPageSize(Number(event.target.value))}
-          >
-            {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
-          </select>
-        </label>
+          <Select value={String(pageSize)} onValueChange={(value) => onPageSize(Number(value))}>
+            <SelectTrigger size="sm" aria-label="Filas por página">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              {PAGE_SIZES.map((size) => <SelectItem key={size} value={String(size)}>{size}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent className="px-0 pb-0 pt-4">
         <div className="overflow-x-auto">
@@ -83,14 +86,16 @@ export function ResponsesTable({ data, loading, sort, onSort, page, pageSize, on
                       aria-sort={ariaSort}
                       className={cn('px-4 py-2.5 font-medium', column.align === 'right' ? 'text-right' : 'text-left')}
                     >
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => onSort(column.key)}
-                        className={cn('inline-flex items-center gap-1 hover:text-ink-900', active && 'text-ink-900')}
+                        className={cn('h-auto gap-1 px-0 py-0 font-medium hover:bg-transparent hover:text-ink-900', active && 'text-ink-900')}
                       >
                         {column.label}
                         <Icon className="size-3.5 opacity-70" aria-hidden="true" />
-                      </button>
+                      </Button>
                     </TableHead>
                   )
                 })}
@@ -123,17 +128,33 @@ export function ResponsesTable({ data, loading, sort, onSort, page, pageSize, on
           <span className="tabular-nums text-ink-600" aria-live="polite">
             {loading && !data ? 'Cargando respuestas…' : `Mostrando ${formatCount(from)}–${formatCount(to)} de ${formatCount(total)} respuestas`}
           </span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 0 || loading} onClick={() => onPage(page - 1)} aria-label="Página anterior">
-              <ChevronLeft />
-            </Button>
-            <span className="min-w-24 text-center tabular-nums text-ink-600">
-              Página {formatCount(page + 1)} de {formatCount(pageCount)}
-            </span>
-            <Button variant="outline" size="sm" disabled={page + 1 >= pageCount || loading} onClick={() => onPage(page + 1)} aria-label="Página siguiente">
-              <ChevronRight />
-            </Button>
-          </div>
+          <Pagination className="mx-0 w-auto justify-end">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(event) => { event.preventDefault(); if (page > 0 && !loading) onPage(page - 1) }}
+                  aria-disabled={page <= 0 || loading}
+                  className={page <= 0 || loading ? 'pointer-events-none opacity-50' : undefined}
+                  text=""
+                />
+              </PaginationItem>
+              <PaginationItem>
+                <span className="min-w-24 text-center tabular-nums text-ink-600">
+                  Página {formatCount(page + 1)} de {formatCount(pageCount)}
+                </span>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(event) => { event.preventDefault(); if (page + 1 < pageCount && !loading) onPage(page + 1) }}
+                  aria-disabled={page + 1 >= pageCount || loading}
+                  className={page + 1 >= pageCount || loading ? 'pointer-events-none opacity-50' : undefined}
+                  text=""
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       </CardContent>
     </Card>
