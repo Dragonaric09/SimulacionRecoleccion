@@ -50,6 +50,7 @@ public class TituladosCrossService {
         List<String> columns = ordered(column, source.columnCategories());
         Map<String, Map<String, Long>> counts = new LinkedHashMap<>();
         Map<String, Map<String, Double>> percentages = new LinkedHashMap<>();
+        long total = 0;
         for (String rowCategory : rows) {
             Map<String, Long> rowCounts = new LinkedHashMap<>();
             Map<String, Double> rowPercentages = new LinkedHashMap<>();
@@ -61,8 +62,10 @@ public class TituladosCrossService {
             }
             counts.put(rowCategory, rowCounts);
             percentages.put(rowCategory, rowPercentages);
+            total += rowTotal;
         }
-        return new CrossTabulationDto(source.datasetId(), source.rowField(), source.columnField(), source.validCount(),
+        // La base es la tabla que realmente se analiza: las categorías excluidas cuentan como excluidas.
+        return new CrossTabulationDto(source.datasetId(), source.rowField(), source.columnField(), total,
                 rows, columns, counts, percentages, source.smallSample());
     }
 
@@ -70,9 +73,25 @@ public class TituladosCrossService {
         if (variable.level() == Level.ORDINAL && "remuneracion_rango".equals(variable.key())) {
             return present.stream().sorted(Comparator.comparingInt(TituladosCrossService::salaryLowerBound)).toList();
         }
-        List<String> categories = new ArrayList<>(variable.categories().stream().filter(present::contains).toList());
-        present.stream().filter(category -> !categories.contains(category)).sorted(Comparator.naturalOrder()).forEach(categories::add);
+        // Se empareja con la escala sin distinguir mayúsculas ni tildes («Totalmente de Acuerdo» del formulario).
+        List<String> categories = new ArrayList<>();
+        for (String scaleCategory : variable.categories()) {
+            present.stream()
+                    .filter(category -> comparable(category).equals(comparable(scaleCategory)) && !categories.contains(category))
+                    .findFirst()
+                    .ifPresent(categories::add);
+        }
+        // En una variable ordinal, una categoría fuera de la escala no tiene posición: queda fuera del cruce y se
+        // informa como excluida. Ordenarla alfabéticamente invertía la escala y alteraba ρ (H-01, TIT-018).
+        if (variable.level() != Level.ORDINAL) {
+            present.stream().filter(category -> !categories.contains(category)).sorted(Comparator.naturalOrder()).forEach(categories::add);
+        }
         return categories;
+    }
+
+    private static String comparable(String value) {
+        return java.text.Normalizer.normalize(value, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").toLowerCase(java.util.Locale.ROOT).replaceAll("\\s+", " ").trim();
     }
 
     private static int salaryLowerBound(String category) {

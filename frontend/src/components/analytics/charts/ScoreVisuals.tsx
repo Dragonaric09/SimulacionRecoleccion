@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 export type ScoreAgreementSegment = { key: string; label: string; value: number; color: string }
 
 export function AgreementStackedBar({

@@ -17,17 +17,18 @@ import {
   useChartVariant,
   type CategoricalChartVariant,
 } from '@/components/analytics/charts'
+import { useTituladosFilterQuery } from './tituladosFilterStorage'
 
 /* Este módulo agrupa primitives y su hook para mantener una única implementación compartida. */
 /* eslint-disable react-refresh/only-export-components */
 
 export function useDatasets(domain: Domain) {
-  const { datasets: datasetGroups, activeIds, setActiveDataset } = useDatasetContext()
+  const { datasets: datasetGroups, activeIds, setActiveDataset, loading } = useDatasetContext()
   return {
     datasets: datasetGroups[domain],
     datasetId: activeIds[domain],
     setDatasetId: (id?: string) => setActiveDataset(domain, id),
-    loading: false,
+    loading,
   }
 }
 
@@ -155,7 +156,7 @@ export function DatasetAnalyticsPage({
   const tone: Tone = domain === 'TITULADOS' ? 'titulados' : 'empleadores'
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets(domain)
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
-  const [filterQuery, setFilterQuery] = useState('')
+  const [filterQuery, setFilterQuery] = useTituladosFilterQuery(domain === 'TITULADOS' ? datasetId : undefined)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -202,7 +203,7 @@ export function DatasetAnalyticsPage({
       {error && (
         <StatusPanel kind="warning" title="No se pudo cargar la pantalla" description={error} />
       )}
-      {!loading && !error && !summary && (
+      {!datasetsLoading && !datasetId && !loading && !error && !summary && (
         <StatusPanel
           kind="info"
           title={`Sin dataset de ${domain.toLowerCase()}`}

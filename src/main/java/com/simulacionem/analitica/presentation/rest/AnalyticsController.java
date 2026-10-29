@@ -33,6 +33,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @RestController
 @RequestMapping("/api/analytics")
 public class AnalyticsController {
+    /** Límites de la simulación, iguales a los de la pantalla de escenarios. */
+    static final int MAX_SIMULATION_SAMPLE = 10_000;
+    static final int MAX_SIMULATION_REPETITIONS = 5_000;
+
     private final AnalyticsService analytics;
     private final TituladosCrossService tituladosCrosses;
 
@@ -179,6 +183,16 @@ public class AnalyticsController {
                 || request.categories().isEmpty() || request.sampleSize() < 1
                 || request.repetitions() < 1) {
             throw new IllegalArgumentException("Las categorías, probabilidades, tamaño y repeticiones son obligatorios y válidos");
+        }
+        // Los mismos límites que la interfaz, validados también aquí para acotar el trabajo del servidor (H-03).
+        if (request.sampleSize() > MAX_SIMULATION_SAMPLE || request.repetitions() > MAX_SIMULATION_REPETITIONS) {
+            throw new IllegalArgumentException("El tamaño de muestra admite hasta " + MAX_SIMULATION_SAMPLE
+                    + " y las réplicas hasta " + MAX_SIMULATION_REPETITIONS);
+        }
+        // Un elemento nulo producía NullPointerException y un 500 (H-04).
+        if (request.probabilities().stream().anyMatch(java.util.Objects::isNull)
+                || request.categories().stream().anyMatch(java.util.Objects::isNull)) {
+            throw new IllegalArgumentException("Las categorías y probabilidades no pueden tener valores vacíos");
         }
         double total = request.probabilities().stream().mapToDouble(Double::doubleValue).sum();
         if (request.probabilities().stream().anyMatch(value -> value < 0) || Math.abs(total - 1.0) > 0.0001) {

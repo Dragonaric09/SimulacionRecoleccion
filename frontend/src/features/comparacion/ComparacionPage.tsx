@@ -3,78 +3,22 @@ import { apiRequest } from "@/api/client";
 import { navigate } from "@/app/navigation";
 import { useDatasetContext } from "@/app/DatasetContext";
 import { Badge } from "@/components/analytics/Badge";
+import { ChartCard } from "@/components/analytics/ChartCard";
 import { StatusPanel } from "@/components/analytics/StatusPanel";
+import { TapTooltip } from "@/components/analytics/TapTooltip";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeading } from "@/features/analitica/shared/AnalyticsPrimitives";
-
-type Grupo = {
-  n: number;
-  media: number | null;
-  mediana: number | null;
-  desviacion: number | null;
-  niveles: Record<string, number>;
-  noObservado: number;
-};
-
-type Prueba = {
-  codigo: "MANN_WHITNEY" | "MANN_WHITNEY_PERMUTACION" | "NO_APLICABLE";
-  nombre: string;
-  aplicable: boolean;
-  u: number | null;
-  z: number | null;
-  pValor: number | null;
-  pAjustado: number | null;
-  significativa: boolean;
-  rBiserial: number | null;
-  motivo: string;
-};
-
-type Competencia = {
-  code: string;
-  name: string;
-  group: "HARD_SKILL" | "SOFT_SKILL";
-  titulados: Grupo;
-  empleadores: Grupo;
-  diferenciaMedias: number | null;
-  diferenciaMedianas: number | null;
-  prueba: Prueba;
-};
-
-type Comparacion = {
-  tituladosDatasetId: string;
-  tituladosDataset: string;
-  empleadoresDatasetId: string;
-  empleadoresDataset: string;
-  alfa: number;
-  ajusteMultiple: string;
-  competencias: Competencia[];
-};
-
-const TITULADOS_COLOR = "var(--titulados)";
-const EMPLEADORES_COLOR = "var(--empleadores)";
-
-const decimal = (value: number | null | undefined, digits = 2) =>
-  value == null ? "—" : value.toFixed(digits).replace(".", ",");
-
-const signed = (value: number | null | undefined) =>
-  value == null ? "—" : `${value > 0 ? "+" : ""}${decimal(value)}`;
-
-const pValue = (value: number | null | undefined) =>
-  value == null ? "—" : value < 0.001 ? "< 0,001" : decimal(value, 3);
-
-function effectSize(r: number | null) {
-  if (r == null) return "—";
-  const magnitude = Math.abs(r);
-  return magnitude < 0.1 ? "despreciable" : magnitude < 0.3 ? "pequeño" : magnitude < 0.5 ? "mediano" : "grande";
-}
+import { downloadCsv } from "@/features/empleadores/employerData";
+import { GapBarsChart, MeansDumbbellChart } from "./ComparisonCharts";
+import { decimal, effectSize, groupLabel, pValue, signed, type Comparison, type ComparisonCompetence } from "./comparisonTypes";
 
 export function ComparacionPage() {
-  const { datasets, activeIds } = useDatasetContext();
+  const { datasets, activeIds, loading: datasetsLoading } = useDatasetContext();
   const tituladosId = activeIds.TITULADOS;
   const empleadoresId = activeIds.EMPLEADORES;
-  const [data, setData] = useState<Comparacion | null>(null);
+  const [data, setData] = useState<Comparison | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,22 +27,27 @@ export function ComparacionPage() {
       setData(null);
       return;
     }
-    let cancelled = false;
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
-    apiRequest<Comparacion>(
+    apiRequest<Comparison>(
       `/analytics/comparison/competencies?tituladosDatasetId=${encodeURIComponent(tituladosId)}&empleadoresDatasetId=${encodeURIComponent(empleadoresId)}&alfa=0.05`,
+      { signal: controller.signal },
     )
-      .then((result) => { if (!cancelled) setData(result); })
-      .catch((cause) => { if (!cancelled) { setData(null); setError(cause instanceof Error ? cause.message : String(cause)); } })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .then((result) => { if (!controller.signal.aborted) setData(result); })
+      .catch((cause) => {
+        if (controller.signal.aborted) return;
+        setData(null);
+        setError(cause instanceof Error ? cause.message : String(cause));
+      })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, [tituladosId, empleadoresId]);
 
-  const missing = [
-    !datasets.TITULADOS.length && "titulados",
-    !datasets.EMPLEADORES.length && "empleadores",
-  ].filter(Boolean) as string[];
+  // Mientras se cargan los datasets no se afirma que falten datos (antes aparecía «Faltan datos» un instante).
+  const missing = datasetsLoading
+    ? []
+    : ([!datasets.TITULADOS.length && "titulados", !datasets.EMPLEADORES.length && "empleadores"].filter(Boolean) as string[]);
 
   const competencias = data?.competencias ?? [];
   const tested = competencias.filter((item) => item.prueba.aplicable);
@@ -106,6 +55,7 @@ export function ComparacionPage() {
   const largestGap = competencias
     .filter((item) => item.diferenciaMedias != null)
     .sort((a, b) => Math.abs(b.diferenciaMedias ?? 0) - Math.abs(a.diferenciaMedias ?? 0))[0];
+  const loadingData = loading || (datasetsLoading && !data);
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5">
@@ -125,7 +75,7 @@ export function ComparacionPage() {
         </StatusPanel>
       ) : (
         <>
-          {loading && <StatusPanel kind="loading" title="Calculando comparación" description="Aplicando la prueba U de Mann-Whitney en cada competencia." />}
+          {loadingData && <StatusPanel kind="loading" title="Calculando comparación" description="Aplicando la prueba U de Mann-Whitney en cada competencia." />}
           {error && <StatusPanel kind="warning" title="No se pudo calcular la comparación" description={error} />}
           {data && !loading && (
             <>
@@ -140,39 +90,29 @@ export function ComparacionPage() {
                 <Kpi label="Datasets" value="2" detail={`${data.tituladosDataset} · ${data.empleadoresDataset}`} />
               </section>
 
-              <Card className="rounded-xl border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="title-card">Medias por competencia</CardTitle>
-                  <CardDescription>
-                    Cada fila une la media de titulados con la de empleadores; la línea es la brecha. Las competencias marcadas difieren de forma estadísticamente significativa.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <Legend />
-                  {(["HARD_SKILL", "SOFT_SKILL"] as const).map((group) => {
-                    const items = competencias.filter((item) => item.group === group);
-                    if (!items.length) return null;
-                    return (
-                      <div key={group} className="space-y-3">
-                        <p className="caption-bold uppercase tracking-wider text-ink-600">
-                          {group === "HARD_SKILL" ? "Competencias técnicas" : "Competencias transversales"}
-                        </p>
-                        {items.map((item) => <DumbbellRow key={item.code} item={item} />)}
-                      </div>
-                    );
-                  })}
-                  <ScaleAxis />
-                </CardContent>
-              </Card>
+              <div className="grid gap-5 xl:grid-cols-2">
+                <ChartCard
+                  title="Medias por competencia"
+                  help="Cada fila une la media de titulados (autopercepción) con la de empleadores (nivel observado) en la escala 1–5; el segmento gris es la brecha. ◆ marca las competencias que difieren de forma significativa tras el ajuste de Holm. Toque o pase el cursor por una fila para ver n, Δ y p."
+                  onExportCsv={() => exportMeans(data)}
+                >
+                  <MeansDumbbellChart items={competencias} />
+                </ChartCard>
+                <ChartCard
+                  title="Brecha por competencia (empleadores − titulados)"
+                  help="Diferencia de medias, de la más negativa a la más positiva. Negativo: los empleadores observan menos de lo que los titulados perciben en sí mismos. El color indica si la diferencia es significativa (Holm, α = 0,05)."
+                  onExportCsv={() => exportMeans(data)}
+                >
+                  <GapBarsChart items={competencias} />
+                </ChartCard>
+              </div>
 
-              <Card className="rounded-xl border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="title-card">Prueba por competencia</CardTitle>
-                  <CardDescription>
-                    Δ = empleadores − titulados. Un valor negativo indica que los empleadores observan un nivel menor al que los titulados perciben en sí mismos.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
+              <ChartCard
+                title="Prueba por competencia"
+                help="Δ = empleadores − titulados. p ajustado con Holm sobre las competencias con prueba aplicable. Efecto: r biserial por rangos, de −1 a 1."
+                onExportCsv={() => exportTests(data)}
+              >
+                <div className="overflow-x-auto">
                   <Table className="min-w-[900px] text-sm">
                     <TableHeader>
                       <TableRow className="bg-surface-container-low hover:bg-surface-container-low">
@@ -201,26 +141,24 @@ export function ComparacionPage() {
                             {signed(item.diferenciaMedias)}
                           </TableCell>
                           <TableCell className="p-2 text-right tabular-nums">{signed(item.diferenciaMedianas)}</TableCell>
-                          <TableCell className="p-2 text-xs" title={item.prueba.motivo}>{item.prueba.nombre}</TableCell>
+                          <TableCell className="p-2 text-xs">
+                            <TapTooltip content={item.prueba.motivo}>
+                              <button type="button" className="cursor-help text-left underline decoration-dotted underline-offset-2">{item.prueba.nombre}</button>
+                            </TapTooltip>
+                          </TableCell>
                           <TableCell className="p-2 text-right tabular-nums">{pValue(item.prueba.pValor)}</TableCell>
                           <TableCell className="p-2 text-right tabular-nums">{pValue(item.prueba.pAjustado)}</TableCell>
                           <TableCell className="p-2 text-right tabular-nums">
                             {decimal(item.prueba.rBiserial)}
                             {item.prueba.rBiserial != null && <span className="block text-[11px] text-ink-600">{effectSize(item.prueba.rBiserial)}</span>}
                           </TableCell>
-                          <TableCell className="p-2">
-                            {!item.prueba.aplicable
-                              ? <Badge tone="neutral" title={item.prueba.motivo}>No aplicable</Badge>
-                              : item.prueba.significativa
-                                ? <Badge tone="warning">Difieren</Badge>
-                                : <Badge tone="success">Sin diferencia</Badge>}
-                          </TableCell>
+                          <TableCell className="p-2"><ResultBadge item={item} /></TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
-                </CardContent>
-              </Card>
+                </div>
+              </ChartCard>
 
               <Card className="rounded-xl border-0 shadow-sm">
                 <CardHeader>
@@ -241,80 +179,66 @@ export function ComparacionPage() {
   );
 }
 
+function ResultBadge({ item }: { item: ComparisonCompetence }) {
+  if (!item.prueba.aplicable) {
+    return (
+      <TapTooltip content={item.prueba.motivo}>
+        <button type="button" className="cursor-help"><Badge tone="neutral">No aplicable</Badge></button>
+      </TapTooltip>
+    );
+  }
+  return item.prueba.significativa ? <Badge tone="warning">Difieren</Badge> : <Badge tone="success">Sin diferencia</Badge>;
+}
+
 function Kpi({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
     <Card className="gap-1 rounded-xl border-0 py-4 shadow-sm">
       <CardContent className="space-y-1 px-4">
         <p className="caption-meta">{label}</p>
         <p className="display-kpi tabular-nums text-ink-900">{value}</p>
-        <p className="truncate text-xs text-ink-600" title={detail}>{detail}</p>
+        {/* El detalle se muestra completo: truncado solo era legible con el cursor encima. */}
+        <p className="break-words text-xs text-ink-600">{detail}</p>
       </CardContent>
     </Card>
   );
 }
 
-function Legend() {
-  return (
-    <div className="flex flex-wrap gap-4 text-xs text-ink-600">
-      <span className="flex items-center gap-1.5"><i className="size-3 rounded-full" style={{ backgroundColor: TITULADOS_COLOR }} /> Titulados (autopercepción)</span>
-      <span className="flex items-center gap-1.5"><i className="size-3 rounded-full" style={{ backgroundColor: EMPLEADORES_COLOR }} /> Empleadores (nivel observado)</span>
-      <span className="flex items-center gap-1.5"><Badge tone="warning">Difieren</Badge> p ajustado &lt; α</span>
-    </div>
-  );
+function exportMeans(data: Comparison) {
+  downloadCsv("comparacion-medias-por-competencia.csv", [
+    ["Competencia", "Grupo", "Media titulados", "n titulados", "Media empleadores", "n empleadores", "Δ medias (E − T)", "Significativa (Holm)"],
+    ...data.competencias.map((item) => [
+      item.name,
+      groupLabel(item.group),
+      decimal(item.titulados.media),
+      item.titulados.n,
+      decimal(item.empleadores.media),
+      item.empleadores.n,
+      signed(item.diferenciaMedias),
+      !item.prueba.aplicable ? "No aplicable" : item.prueba.significativa ? "Sí" : "No",
+    ]),
+  ]);
 }
 
-/** Posición horizontal (0–100 %) de un valor de la escala 1–5. */
-const position = (value: number) => ((value - 1) / 4) * 100;
-
-function DumbbellRow({ item }: { item: Competencia }) {
-  const t = item.titulados.media;
-  const e = item.empleadores.media;
-  const both = t != null && e != null;
-  const tooltip = `Titulados ${decimal(t)} · Empleadores ${decimal(e)} · Δ ${signed(item.diferenciaMedias)}`;
-  return (
-    <div className="grid items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(160px,260px)_1fr]" title={tooltip}>
-      <div className="flex min-w-0 items-center gap-2 text-sm">
-        <span className="truncate text-ink-900">{item.name}</span>
-        {item.prueba.significativa && <Badge tone="warning">Difieren</Badge>}
-      </div>
-      <div className="relative h-6">
-        <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-surface-container-high" />
-        {both && (
-          <div
-            className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-ink-600/30"
-            style={{ left: `${position(Math.min(t, e))}%`, width: `${Math.abs(position(e) - position(t))}%` }}
-          />
-        )}
-        {t != null && <Dot value={t} color={TITULADOS_COLOR} label={`Titulados: ${decimal(t)}`} />}
-        {e != null && <Dot value={e} color={EMPLEADORES_COLOR} label={`Empleadores: ${decimal(e)}`} />}
-      </div>
-    </div>
-  );
-}
-
-function Dot({ value, color, label }: { value: number; color: string; label: string }) {
-  return (
-    <span
-      aria-label={label}
-      className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
-      style={{ left: `${position(value)}%`, backgroundColor: color }}
-    />
-  );
-}
-
-function ScaleAxis() {
-  return (
-    <div className="grid gap-x-4 sm:grid-cols-[minmax(160px,260px)_1fr]">
-      <span className="hidden sm:block" />
-      <div className="relative h-8 border-t border-surface-container-high text-[11px] text-ink-600">
-        {[1, 2, 3, 4, 5].map((tick) => (
-          <span key={tick} className="absolute top-1 -translate-x-1/2 text-center" style={{ left: `${position(tick)}%` }}>
-            {tick}
-            {tick === 1 && <span className="block">Muy insuf.</span>}
-            {tick === 5 && <span className="block">Muy suf.</span>}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
+function exportTests(data: Comparison) {
+  downloadCsv("comparacion-prueba-por-competencia.csv", [
+    ["Titulados", data.tituladosDataset, "Empleadores", data.empleadoresDataset, "α", decimal(data.alfa), "Ajuste", data.ajusteMultiple],
+    [],
+    ["Competencia", "Media titulados", "n titulados", "Media empleadores", "n empleadores", "No observado (empleadores)", "Δ medias", "Δ medianas", "Prueba", "p", "p ajustado", "r biserial", "Resultado", "Motivo"],
+    ...data.competencias.map((item) => [
+      item.name,
+      decimal(item.titulados.media),
+      item.titulados.n,
+      decimal(item.empleadores.media),
+      item.empleadores.n,
+      item.empleadores.noObservado,
+      signed(item.diferenciaMedias),
+      signed(item.diferenciaMedianas),
+      item.prueba.nombre,
+      pValue(item.prueba.pValor),
+      pValue(item.prueba.pAjustado),
+      decimal(item.prueba.rBiserial),
+      !item.prueba.aplicable ? "No aplicable" : item.prueba.significativa ? "Difieren" : "Sin diferencia",
+      item.prueba.motivo,
+    ]),
+  ]);
 }

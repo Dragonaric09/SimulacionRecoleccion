@@ -6,7 +6,7 @@ import { StatusPanel } from '@/components/analytics/StatusPanel'
 import { useDatasets } from '@/features/analitica/shared/AnalyticsPrimitives'
 import { EmployerFilterToolbar } from './EmployerFilterToolbar'
 import { EmployerPageHeader, NoEmployerDataPanel } from './EmployerPageHeader'
-import { useEmployerFilters } from './employerData'
+import { downloadCsv, useEmployerFilters } from './employerData'
 import { useEmployerApi } from './useEmployerApi'
 import { DEMANDED_LEVEL_ORDER, ORGANIZATION_SIZE_ORDER } from './instrumento'
 import {
@@ -26,10 +26,13 @@ import { CategoricalQuestionChart } from '@/components/analytics/charts'
 import { probabilityLabel, SIZE_SHORT_LABEL, valuationLabel } from './dashboard/labels'
 import type {
   CountItem,
+  DashboardCompetence,
   DashboardKpi,
   Distribution,
   EmployerDashboard,
   ResponsePage,
+  SizeCompetenceCell,
+  TimePoint,
   ValuationStat,
 } from './dashboard/dashboardTypes'
 import { CATEGORY_COLORS, EMPLOYER } from './dashboard/chartTheme'
@@ -261,6 +264,7 @@ export function EmpleadoresDashboardPage() {
                 }
                 n={respondents}
                 help="Número de respuestas en cada intervalo (barras) y acumulado de respuestas (línea), según la fecha de envío."
+                onExportCsv={() => exportTimeline(data.timeline)}
               >
                 <TimelineQuestionChart
                   points={data.timeline}
@@ -274,6 +278,7 @@ export function EmpleadoresDashboardPage() {
                 title="Tipo de organización"
                 n={data.organizationType.answered}
                 help="Organizaciones públicas o privadas, sobre quienes respondieron la pregunta."
+                onExportCsv={() => exportItems('tipo-organizacion', data.organizationType.items)}
               >
                 <CategoricalQuestionChart
                   items={data.organizationType.items}
@@ -291,6 +296,7 @@ export function EmpleadoresDashboardPage() {
                 title="Tamaño de la organización"
                 n={data.organizationSize.answered}
                 help="Número de funcionarios, en el orden de la escala de Micro a Grande."
+                onExportCsv={() => exportItems('tamano-organizacion', inOrder(data.organizationSize, ORGANIZATION_SIZE_ORDER))}
               >
                 <CategoricalQuestionChart
                   items={inOrder(
@@ -313,6 +319,7 @@ export function EmpleadoresDashboardPage() {
                 title="Nivel de formación que demanda"
                 n={data.demandedLevel.answered}
                 help="Nivel académico o de actualización que la organización exige para contratar, de menor a mayor."
+                onExportCsv={() => exportItems('nivel-formacion-demandado', inOrder(data.demandedLevel, DEMANDED_LEVEL_ORDER))}
               >
                 <CategoricalQuestionChart
                   items={inOrder(data.demandedLevel, DEMANDED_LEVEL_ORDER)}
@@ -331,6 +338,7 @@ export function EmpleadoresDashboardPage() {
                 title="Medio de convocatoria"
                 n={data.channel.answered}
                 help="Medio por el que la organización convoca a profesionales. Base: quienes respondieron la pregunta."
+                onExportCsv={() => exportItems('medio-convocatoria', data.channel.items)}
               >
                 <CategoricalQuestionChart
                   items={ranked(data.channel.items)}
@@ -350,6 +358,7 @@ export function EmpleadoresDashboardPage() {
                 title="Balance de acuerdo por afirmación"
                 n={Math.max(0, ...data.valuations.map((v) => v.agree + v.partly + v.disagree))}
                 help="Porcentaje de acuerdo (derecha) y desacuerdo (izquierda) sobre quienes contestaron la escala. «No sabe» no entra. El índice neto es acuerdo menos desacuerdo, de -100 a 100."
+                onExportCsv={() => exportBalance(balanceRows)}
               >
                 <BalanceQuestionChart
                   rows={balanceRows}
@@ -362,6 +371,7 @@ export function EmpleadoresDashboardPage() {
                 title="Contratación según probabilidad de contratar"
                 n={data.hiringProbability.answered}
                 help="Cada barra es una respuesta sobre la probabilidad de contratar; el color indica si la organización contrató en los últimos 5 años."
+                onExportCsv={() => exportHiring(hiringRows)}
               >
                 <HiringQuestionChart
                   rows={hiringRows}
@@ -374,6 +384,7 @@ export function EmpleadoresDashboardPage() {
               <ChartCard
                 title="Índice neto de acuerdo según contratación"
                 help="Acuerdo menos desacuerdo (sobre la escala, sin «No sabe») por grupo de afirmaciones y según si la organización contrató."
+                onExportCsv={() => exportGroupBalance(groupRows)}
               >
                 <GroupBalanceQuestionChart
                   rows={groupRows}
@@ -385,6 +396,7 @@ export function EmpleadoresDashboardPage() {
               <ChartCard
                 title="Niveles de suficiencia por competencia"
                 help="Porcentaje de respuestas en cada nivel de la escala 1 (muy insuficiente) a 5 (muy suficiente). «No observado» no entra."
+                onExportCsv={() => exportCompetenceLevels(data.competences)}
               >
                 <CompetenceLevelQuestionChart
                   competences={data.competences}
@@ -397,6 +409,7 @@ export function EmpleadoresDashboardPage() {
               <ChartCard
                 title="Media por competencia"
                 help="Media de la escala 1 a 5 por competencia, de mayor a menor. No incluye «No observado»."
+                onExportCsv={() => exportCompetenceMeans(data.competences)}
               >
                 <CompetenceMeanQuestionChart
                   competences={data.competences}
@@ -408,6 +421,7 @@ export function EmpleadoresDashboardPage() {
               <ChartCard
                 title="Media por tamaño y competencia"
                 help="Cada celda es la media de la escala 1 a 5 de las organizaciones de ese tamaño para esa competencia."
+                onExportCsv={() => exportSizeCompetence(data.sizeCompetence)}
               >
                 <SizeCompetenceQuestionChart
                   cells={data.sizeCompetence}
@@ -424,6 +438,7 @@ export function EmpleadoresDashboardPage() {
                 title="Rubro o sector principal"
                 n={data.sector.answered}
                 help="Rubro principal de la organización donde trabajan titulados. Base: quienes respondieron la pregunta."
+                onExportCsv={() => exportItems('rubro', data.sector.items)}
               >
                 <CategoricalQuestionChart
                   items={ranked(data.sector.items)}
@@ -442,6 +457,7 @@ export function EmpleadoresDashboardPage() {
                 title="Cargos que ocupan los titulados"
                 n={data.positions.answered}
                 help="Cargos marcados por la organización. Una organización puede marcar varios: el porcentaje usa como base a quienes respondieron."
+                onExportCsv={() => exportItems('cargos', data.positions.items)}
               >
                 <CategoricalQuestionChart
                   items={ranked(data.positions.items)}
@@ -462,6 +478,7 @@ export function EmpleadoresDashboardPage() {
                 title="Departamento"
                 n={data.department.answered}
                 help="Departamento donde se ubica la organización. Base: quienes respondieron la pregunta."
+                onExportCsv={() => exportItems('departamento', data.department.items)}
               >
                 <CategoricalQuestionChart
                   items={ranked(data.department.items)}
@@ -480,6 +497,7 @@ export function EmpleadoresDashboardPage() {
                 title="Presencia de sedes"
                 n={data.branch.answered}
                 help="Alcance territorial de la organización según sus sedes."
+                onExportCsv={() => exportItems('presencia-sedes', data.branch.items)}
               >
                 <CategoricalQuestionChart
                   items={ranked(data.branch.items)}
@@ -498,6 +516,7 @@ export function EmpleadoresDashboardPage() {
                 title="Contratación en los últimos 5 años"
                 n={data.hiring.answered}
                 help="Si la organización contrató ingenieros de la Carrera en los últimos 5 años."
+                onExportCsv={() => exportItems('contratacion-5-anios', data.hiring.items)}
               >
                 <CategoricalQuestionChart
                   items={ranked(data.hiring.items)}
@@ -538,4 +557,80 @@ export function EmpleadoresDashboardPage() {
 function Panel({ span = 1, children }: { span?: 1 | 2 | 3; children: ReactNode }) {
   const spanClass = span === 2 ? 'lg:col-span-2' : span === 3 ? 'lg:col-span-3' : ''
   return <div className={spanClass}>{children}</div>
+}
+
+/* ---------------------------------------------------------------- exportación CSV de cada tarjeta */
+
+function exportItems(name: string, items: CountItem[]) {
+  downloadCsv(`empleadores-${name}.csv`, [
+    ['Categoría', 'Respuestas', '% sobre quienes respondieron'],
+    ...items.map((item) => [item.label, item.count, formatDecimal(item.percent, 2)]),
+  ])
+}
+
+function exportTimeline(points: TimePoint[]) {
+  downloadCsv('empleadores-respuestas-en-el-tiempo.csv', [
+    ['Inicio del intervalo', 'Respuestas', 'Acumulado'],
+    ...points.map((point) => [point.bucket, point.count, point.cumulative]),
+  ])
+}
+
+function exportBalance(rows: { label: string; agree: number; partly: number; disagree: number; netIndex: number | null; base: number }[]) {
+  downloadCsv('empleadores-balance-de-acuerdo.csv', [
+    ['Afirmación', '% Totalmente de acuerdo', '% Parcialmente de acuerdo', '% Totalmente en desacuerdo', 'Índice neto', 'n'],
+    ...rows.map((row) => [
+      row.label,
+      formatDecimal(row.agree, 2),
+      formatDecimal(row.partly, 2),
+      formatDecimal(Math.abs(row.disagree), 2),
+      row.netIndex === null ? '' : formatDecimal(row.netIndex, 2),
+      row.base,
+    ]),
+  ])
+}
+
+function exportHiring(rows: { label: string; yes: number; no: number; unknown: number }[]) {
+  downloadCsv('empleadores-contratacion-segun-probabilidad.csv', [
+    ['Posibilidad de contratar', 'Contrató en 5 años', 'No contrató', 'Sin respuesta'],
+    ...rows.map((row) => [row.label, row.yes, row.no, row.unknown]),
+  ])
+}
+
+function exportGroupBalance(rows: { group: string; yes: number | null; no: number | null }[]) {
+  downloadCsv('empleadores-indice-neto-segun-contratacion.csv', [
+    ['Grupo de afirmaciones', 'Índice neto (contrató)', 'Índice neto (no contrató)'],
+    ...rows.map((row) => [
+      row.group,
+      row.yes === null ? '' : formatDecimal(row.yes, 2),
+      row.no === null ? '' : formatDecimal(row.no, 2),
+    ]),
+  ])
+}
+
+function exportCompetenceLevels(competences: DashboardCompetence[]) {
+  const levels = ['1', '2', '3', '4', '5']
+  downloadCsv('empleadores-niveles-por-competencia.csv', [
+    ['Competencia', ...levels.map((level) => `Nivel ${level}`), 'No observado', 'n'],
+    ...competences.map((item) => [item.name, ...levels.map((level) => item.levels[level] ?? 0), item.notObserved, item.answered]),
+  ])
+}
+
+function exportCompetenceMeans(competences: DashboardCompetence[]) {
+  downloadCsv('empleadores-media-por-competencia.csv', [
+    ['Competencia', 'Media', 'Desviación estándar', 'Mediana', 'n'],
+    ...competences.map((item) => [
+      item.name,
+      item.average === null ? '' : formatDecimal(item.average, 2),
+      item.standardDeviation === null ? '' : formatDecimal(item.standardDeviation, 2),
+      item.median === null ? '' : formatDecimal(item.median, 1),
+      item.answered,
+    ]),
+  ])
+}
+
+function exportSizeCompetence(cells: SizeCompetenceCell[]) {
+  downloadCsv('empleadores-media-por-tamano-y-competencia.csv', [
+    ['Tamaño', 'Competencia', 'Media', 'n'],
+    ...cells.map((cell) => [cell.size, cell.name, cell.average === null ? '' : formatDecimal(cell.average, 2), cell.answered]),
+  ])
 }

@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SpringBootTest(classes = SimulacionEmApplication.class)
 @ActiveProfiles("dev")
@@ -41,8 +42,13 @@ class CsvImportServiceTest {
     @Test
     void validaEImportaLosDosCsvRealesSinGuardarDatosPersonales() throws IOException {
         Path data = Path.of("data");
-        ImportReportDto titulados = importFile(data.resolve("ENCUESTA DE OPINIÓN A TITULADOS DE INGENIERÍA EN SISTEMAS  (respuestas) - Respuestas de formulario 1 (1).csv"));
-        ImportReportDto empleadores = importFile(data.resolve("Empleadores - Respuestas de formulario.csv"));
+        Path tituladosCsv = data.resolve("ENCUESTA DE OPINIÓN A TITULADOS DE INGENIERÍA EN SISTEMAS  (respuestas) - Respuestas de formulario 1 (1).csv");
+        Path empleadoresCsv = data.resolve("Empleadores - Respuestas de formulario.csv");
+        // data/ no se versiona (respuestas reales): sin esos archivos la prueba se omite y se informa como omitida.
+        assumeTrue(Files.exists(tituladosCsv) && Files.exists(empleadoresCsv),
+                "Requiere los CSV privados en data/; no están en esta copia del repositorio");
+        ImportReportDto titulados = importFile(tituladosCsv);
+        ImportReportDto empleadores = importFile(empleadoresCsv);
 
         assertThat(titulados.surveyType()).isEqualTo("TITULADOS");
         assertThat(titulados.rowsRead()).isEqualTo(8);

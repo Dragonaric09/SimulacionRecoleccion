@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
 import { apiRequest } from "@/api/client";
 import type { AnalyticsSummary } from "../api";
 import type { Simulation } from "../shared/analyticsTypes";
 import { useDatasets } from "../shared/AnalyticsPrimitives";
+import { usePersistentState } from "@/lib/usePersistentState";
 import type { SimulationRun } from "./SimulationDownloads";
 import {
   parseSimulationInteger,
@@ -14,15 +15,30 @@ import {
 export function useSimulationScenario() {
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets("TITULADOS");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
-  const [variable, setVariable] = useState("genero");
-  const [segment, setSegment] = useState("all");
-  const [weights, setWeights] = useState<Record<string, number>>({});
-  const [sampleSize, setSampleSize] = useState(100);
-  const [sampleSizeInput, setSampleSizeInput] = useState("100");
-  const [repetitions, setRepetitions] = useState(1000);
-  const [repetitionsInput, setRepetitionsInput] = useState("1000");
-  const [seed, setSeed] = useState(42);
-  const [seedInput, setSeedInput] = useState("42");
+  // Los parámetros del escenario se conservan al recargar la página.
+  const [variable, setVariable] = usePersistentState("simulacionem.simulation.variable", "genero", isText);
+  const [segment, setSegment] = usePersistentState("simulacionem.simulation.segment", "all", isText);
+  const [weights, setWeightsState] = useState<Record<string, number>>({});
+  const [sampleSize, setSampleSize] = usePersistentState("simulacionem.simulation.sampleSize", 100, isInteger);
+  const [sampleSizeInput, setSampleSizeInput] = useState(() => String(sampleSize));
+  const [repetitions, setRepetitions] = usePersistentState("simulacionem.simulation.repetitions", 1000, isInteger);
+  const [repetitionsInput, setRepetitionsInput] = useState(() => String(repetitions));
+  const [seed, setSeed] = usePersistentState("simulacionem.simulation.seed", 42, isInteger);
+  const [seedInput, setSeedInput] = useState(() => String(seed));
+  const weightsKey = datasetId ? `simulacionem.simulation.weights.${datasetId}.${variable}.${segment}` : null;
+  const setWeights = useCallback((next: SetStateAction<Record<string, number>>) => {
+    setWeightsState((current) => {
+      const value = typeof next === "function" ? next(current) : next;
+      if (weightsKey) {
+        try {
+          localStorage.setItem(weightsKey, JSON.stringify(value));
+        } catch {
+          /* sin almacenamiento: los pesos solo viven en la pantalla */
+        }
+      }
+      return value;
+    });
+  }, [weightsKey]);
   const [result, setResult] = useState<Simulation | null>(null);
   const [scenarioPercentages, setScenarioPercentages] = useState<Record<string, number> | null>(null);
   const [executedRun, setExecutedRun] = useState<SimulationRun | null>(null);
@@ -48,10 +64,11 @@ export function useSimulationScenario() {
     )
       .then((next) => {
         setSummary(next);
-        setWeights({});
+        // Pesos guardados de este dataset, variable y segmento; si no hay, el escenario parte de lo observado.
+        setWeightsState(loadWeights(weightsKey));
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)));
-  }, [datasetId, variable, segment]);
+  }, [datasetId, variable, segment, weightsKey]);
 
   const currentResult = result && executedRun
     && executedRun.datasetId === datasetId
@@ -120,7 +137,7 @@ export function useSimulationScenario() {
     } finally {
       if (requestId === simulationRequestRef.current) setLoading(false);
     }
-  }, [datasetId, datasets, parametersValid, repetitions, sampleSize, seed, summary, variable, weights]);
+  }, [datasetId, datasets, parametersValid, repetitions, sampleSize, seed, segment, summary, variable, weights]);
 
   useEffect(() => {
     if (!summary?.distributions[variable] || !datasetId || !parametersValid) return;
@@ -162,4 +179,22 @@ export function useSimulationScenario() {
     seedValid,
     parseInteger: parseSimulationInteger,
   };
+}
+
+const isText = (value: unknown): value is string => typeof value === "string" && value.length > 0;
+const isInteger = (value: unknown): value is number => typeof value === "number" && Number.isInteger(value);
+
+function loadWeights(key: string | null): Record<string, number> {
+  if (!key) return {};
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(key) ?? "{}");
+    if (!parsed || typeof parsed !== "object") return {};
+    return Object.fromEntries(
+      Object.entries(parsed as Record<string, unknown>).filter(
+        (entry): entry is [string, number] => typeof entry[1] === "number" && Number.isFinite(entry[1]) && entry[1] >= 0,
+      ),
+    );
+  } catch {
+    return {};
+  }
 }

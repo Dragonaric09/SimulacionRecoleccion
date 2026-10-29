@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useRef, useState } from "react";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import * as echarts from "echarts/core";
@@ -96,9 +97,9 @@ function normalizeEchartsSvgTextForPdf(svg: string) {
     /<text([^>]*?)transform="translate\(\s*([-0-9.e]+)(?:\s+|,)\s*([-0-9.e]+)\s*\)"([^>]*?)>([\s\S]*?)<\/text>/g,
     (_match, before: string, x: string, y: string, after: string, content: string) => {
       const attributes = `${before}${after}`;
-      const anchor = attributes.match(/text-anchor="([^\"]+)"/)?.[1] ?? "start";
-      const fill = attributes.match(/fill="([^\"]+)"/)?.[1] ?? "#334155";
-      const fontSize = attributes.match(/font-size:([0-9.]+)px/)?.[1] ?? attributes.match(/font-size="([^\"]+)"/)?.[1] ?? "11";
+      const anchor = attributes.match(/text-anchor="([^"]+)"/)?.[1] ?? "start";
+      const fill = attributes.match(/fill="([^"]+)"/)?.[1] ?? "#334155";
+      const fontSize = attributes.match(/font-size:([0-9.]+)px/)?.[1] ?? attributes.match(/font-size="([^"]+)"/)?.[1] ?? "11";
       const tspans = [...content.matchAll(/<tspan\b[^>]*>([\s\S]*?)<\/tspan>/gi)].map((item) => item[1]);
       // La leyenda ya tiene coordenadas x/y válidas. Las etiquetas de pie y
       // otros textos transformados necesitan pasar a x/y explícitos para que

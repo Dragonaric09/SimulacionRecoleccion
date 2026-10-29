@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Badge } from "@/components/analytics/Badge";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { TapTooltip } from "@/components/analytics/TapTooltip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -63,27 +63,30 @@ export function SimulationDistribution({ result, observedTotal, variable }: { re
   return (
     <Card className="rounded-xl border-0 shadow-sm">
       <CardHeader>
-        <div className="flex items-center justify-between gap-3">
-          <div>
+        {/* flex-wrap: en un celular el badge pasa debajo del título en lugar de salirse de la pantalla. */}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
             <CardTitle className="title-card">Observado contra escenario</CardTitle>
             <CardDescription>Distribución de {simulationVariableLabel(variable ?? "")} con media simulada y rango del 95 % de las réplicas.</CardDescription>
           </div>
-          <HoverCard openDelay={150} closeDelay={100}>
-            <HoverCardTrigger asChild>
-              <span className="cursor-help">
-                <Badge tone="neutral">Base observada: {observedTotal} · Simulado: {result.sampleSize} personas × {result.repetitions.toLocaleString("es-BO")} réplicas</Badge>
-              </span>
-            </HoverCardTrigger>
-            <HoverCardContent side="bottom" align="end">
-              <p className="font-semibold text-ink-900">Cómo leer esta simulación</p>
-              <p className="mt-1 text-xs leading-relaxed text-ink-600">
-                La base observada es de {observedTotal} respuestas. Se simulan {result.sampleSize} personas en {result.repetitions.toLocaleString("es-BO")} réplicas con la semilla {result.seed}.
-              </p>
-              <p className="mt-2 text-xs leading-relaxed text-ink-600">
-                El rango del 95 % describe la variación de los sorteos simulados; no es un intervalo de confianza sobre la población.
-              </p>
-            </HoverCardContent>
-          </HoverCard>
+          <TapTooltip
+            side="bottom"
+            content={
+              <>
+                <p className="font-semibold text-ink-900">Cómo leer esta simulación</p>
+                <p className="mt-1 text-xs leading-relaxed text-ink-600">
+                  La base observada es de {observedTotal} respuestas. Se simulan {result.sampleSize} personas en {result.repetitions.toLocaleString("es-BO")} réplicas con la semilla {result.seed}.
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-ink-600">
+                  El rango del 95 % describe la variación de los sorteos simulados; no es un intervalo de confianza sobre la población.
+                </p>
+              </>
+            }
+          >
+            <button type="button" className="max-w-full cursor-help text-left">
+              <Badge tone="neutral" className="h-auto min-h-6 max-w-full whitespace-normal py-0.5 text-left">Base observada: {observedTotal} · Simulado: {result.sampleSize} personas × {result.repetitions.toLocaleString("es-BO")} réplicas</Badge>
+            </button>
+          </TapTooltip>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

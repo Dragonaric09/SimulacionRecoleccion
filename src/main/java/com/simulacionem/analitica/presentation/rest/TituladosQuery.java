@@ -15,6 +15,10 @@ public record TituladosQuery(Integer yearFrom, Integer yearTo,
                              List<String> organizationType, List<String> organizationSize) {
 
     TituladosFilter toFilter() {
+        // Un rango invertido devolvería una base vacía que parece un resultado real (TIT-014).
+        if (yearFrom != null && yearTo != null && yearFrom > yearTo) {
+            throw new IllegalArgumentException("El año inicial no puede ser posterior al año final");
+        }
         return new TituladosFilter(yearFrom, yearTo, laborStatus, sector, gender, ageRange, postgraduateInterest,
                 organizationType, organizationSize);
     }

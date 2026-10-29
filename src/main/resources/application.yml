@@ -20,3 +20,6 @@ server:
     port: ${PORT:${SERVER_PORT:8081}}
     # Detrás del proxy de Render, las URLs y redirecciones deben salir con el esquema y host públicos.
     forward-headers-strategy: framework
+    error:
+      # Las respuestas de error no exponen trazas internas, tampoco en desarrollo con devtools (TRA-010).
+      include-stacktrace: never

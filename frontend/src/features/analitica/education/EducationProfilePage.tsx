@@ -17,11 +17,12 @@ import {
 import { ChartVariantSelector, useChartVariant } from '@/components/analytics/charts'
 import { ChartCardActions } from '@/components/analytics/ChartCard'
 import { downloadDistributionCsv } from '../shared/analyticsExport'
+import { useTituladosFilterQuery } from '../shared/tituladosFilterStorage'
 
 export function EducationProfilePage({ printAll = false }: { printAll?: boolean } = {}) {
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets('TITULADOS')
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
-  const [filterQuery, setFilterQuery] = useState('')
+  const [filterQuery, setFilterQuery] = useTituladosFilterQuery(datasetId)
   const [activeTab, setActiveTab] = useState('cursado')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -67,7 +68,7 @@ export function EducationProfilePage({ printAll = false }: { printAll?: boolean 
       {error && (
         <StatusPanel kind="warning" title="No se pudo cargar formación" description={error} />
       )}
-      {!loading && !error && !summary && (
+      {!datasetsLoading && !datasetId && !loading && !error && !summary && (
         <StatusPanel
           kind="info"
           title="Sin dataset de titulados"

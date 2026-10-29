@@ -247,7 +247,11 @@ public class TituladosSql {
         for (int i = 0; i < values.size(); i++) {
             String value = normalize(values.get(i));
             if (value.equals("sin respuesta")) {
-                clauses.add(normalizedExpression + " = ''");
+                // La columna queda NULL cuando la pregunta no aplica: NULL = '' nunca es verdadero.
+                clauses.add("coalesce(" + normalizedExpression + ", '') = ''");
+            } else if (value.equals("sin clasificar")) {
+                // Etiqueta con que se muestra el valor del formulario «No trabaja».
+                clauses.add(normalizedExpression + " IN ('no trabaja', 'no trabajo', 'sin clasificar')");
             } else {
                 String parameter = name + i;
                 clauses.add(normalizedExpression + " LIKE '%' || :" + parameter + " || '%'");

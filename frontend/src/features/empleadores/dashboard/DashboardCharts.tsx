@@ -22,8 +22,58 @@ import { AGREEMENT, AXIS_TEXT, CATEGORY_COLORS, EMPLOYER, GRID, NEUTRAL } from '
 import { RankedBars as SharedRankedBars } from '@/components/analytics/charts'
 import { DonutChart as SharedDonutChart } from '@/components/analytics/charts'
 import { ChartVariantSelector, useChartVariant } from '@/components/analytics/charts'
+import {
+  responsiveLabelWidth,
+  useChartContainerWidth,
+} from '@/components/analytics/charts/useChartContainerSize'
 
 const AXIS_TICK = { fontSize: 12, fill: AXIS_TEXT }
+
+/**
+ * Etiqueta de categoría que respeta el ancho del eje: parte el texto en hasta dos líneas y recorta con «…» lo que
+ * no entra. Antes el eje tenía un ancho fijo (hasta 250 px) y en un celular dejaba sin espacio a las barras.
+ */
+function WrappedCategoryTick({
+  x,
+  y,
+  payload,
+  width,
+}: {
+  x?: number
+  y?: number
+  payload?: { value: string }
+  width: number
+}) {
+  const text = String(payload?.value ?? '')
+  const charsPerLine = Math.max(8, Math.floor(width / 6.6))
+  const lines: string[] = []
+  let current = ''
+  for (const word of text.split(/\s+/)) {
+    const candidate = current ? `${current} ${word}` : word
+    if (candidate.length <= charsPerLine || !current) current = candidate
+    else {
+      lines.push(current)
+      current = word
+    }
+  }
+  if (current) lines.push(current)
+  const shown = lines.slice(0, 2)
+  if (lines.length > 2 || (shown[1] ?? '').length > charsPerLine) {
+    shown[1] = `${(shown[1] ?? '').slice(0, charsPerLine - 1).trimEnd()}…`
+  }
+  if (shown[0].length > charsPerLine) shown[0] = `${shown[0].slice(0, charsPerLine - 1)}…`
+  const offset = shown.length === 2 ? -6 : 0
+  return (
+    <text x={x} y={(y ?? 0) + offset} textAnchor="end" fill={AXIS_TEXT} fontSize={12}>
+      <title>{text}</title>
+      {shown.map((line, index) => (
+        <tspan key={index} x={x} dx={-4} dy={index === 0 ? 4 : 14}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  )
+}
 
 export function EmptyChart({ text = 'Sin respuestas para esta pregunta.' }: { text?: string }) {
   return <p className="flex h-40 items-center justify-center text-sm text-ink-600">{text}</p>
@@ -240,13 +290,16 @@ export function BalanceBars({
     base: number
   }[]
 }) {
+  const { ref, width } = useChartContainerWidth()
   if (rows.length === 0) return <EmptyChart />
+  const labelWidth = responsiveLabelWidth(width, 250)
   const config = {
     partly: { label: 'Parcialmente de acuerdo', color: AGREEMENT.partly },
     agree: { label: 'Totalmente de acuerdo', color: AGREEMENT.agree },
     disagree: { label: 'Totalmente en desacuerdo', color: AGREEMENT.disagree },
   } satisfies ChartConfig
   return (
+    <div ref={ref} className="w-full min-w-0">
     <ChartContainer config={config} className="w-full" style={{ height: rows.length * 34 + 56 }}>
       <BarChart
         data={rows}
@@ -266,11 +319,11 @@ export function BalanceBars({
         <YAxis
           type="category"
           dataKey="label"
-          width={250}
+          width={labelWidth}
           tickLine={false}
           axisLine={false}
           interval={0}
-          tick={AXIS_TICK}
+          tick={<WrappedCategoryTick width={labelWidth} />}
         />
         <ReferenceLine x={0} stroke={AXIS_TEXT} strokeWidth={1} />
         <ChartTooltip
@@ -306,6 +359,7 @@ export function BalanceBars({
         />
       </BarChart>
     </ChartContainer>
+    </div>
   )
 }
 
@@ -392,13 +446,16 @@ export function HiringMatrixBars({
 }: {
   rows: { label: string; yes: number; no: number; unknown: number }[]
 }) {
+  const { ref, width } = useChartContainerWidth()
   if (rows.length === 0) return <EmptyChart />
+  const labelWidth = responsiveLabelWidth(width, 150)
   const config = {
     yes: { label: 'Contrató en 5 años', color: EMPLOYER },
     no: { label: 'No contrató', color: AGREEMENT.partly },
     unknown: { label: 'Sin respuesta', color: NEUTRAL },
   } satisfies ChartConfig
   return (
+    <div ref={ref} className="w-full min-w-0">
     <ChartContainer config={config} className="w-full" style={{ height: rows.length * 46 + 56 }}>
       <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 4 }}>
         <CartesianGrid horizontal={false} stroke={GRID} />
@@ -406,10 +463,11 @@ export function HiringMatrixBars({
         <YAxis
           type="category"
           dataKey="label"
-          width={150}
+          width={labelWidth}
           tickLine={false}
           axisLine={false}
-          tick={AXIS_TICK}
+          interval={0}
+          tick={<WrappedCategoryTick width={labelWidth} />}
         />
         <ChartTooltip
           cursor={{ fill: '#F1F5F9' }}
@@ -425,6 +483,7 @@ export function HiringMatrixBars({
         <Bar dataKey="unknown" stackId="hiring" fill={NEUTRAL} barSize={20} radius={[0, 4, 4, 0]} />
       </BarChart>
     </ChartContainer>
+    </div>
   )
 }
 

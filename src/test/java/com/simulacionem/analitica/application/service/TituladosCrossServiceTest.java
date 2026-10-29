@@ -41,6 +41,28 @@ class TituladosCrossServiceTest {
         assertThat(result.excluded()).isEqualTo(4);
     }
 
+    /**
+     * Regresión H-01 / TIT-018: el orden ordinal sale de la escala, no del alfabeto. Edad y valoración global
+     * crecen juntas (30 respuestas, ρ = 1); «Totalmente de Acuerdo» con mayúscula pertenece a la escala y una
+     * categoría ajena a ella queda fuera del cruce y se cuenta como excluida.
+     */
+    @Test
+    void usaLaEscalaOrdinalYExcluyeCategoriasAjenas() {
+        CrossTabulationDto source = cross("edad_rango", "satisfaccion_formacion",
+                List.of("27 - 30 años", "19 - 22 años", "23 - 26 años"),
+                List.of("De acuerdo", "Totalmente de Acuerdo", "En desacuerdo", "Algo satisfecho"),
+                new long[][]{{0, 10, 0, 2}, {0, 0, 10, 1}, {10, 0, 0, 0}});
+
+        TituladosCrossDto result = analyze("edad_rango", "satisfaccion_formacion", source);
+
+        assertThat(result.cross().rowCategories()).containsExactly("19 - 22 años", "23 - 26 años", "27 - 30 años");
+        assertThat(result.cross().columnCategories()).containsExactly("En desacuerdo", "De acuerdo", "Totalmente de Acuerdo");
+        assertThat(result.cross().validCount()).isEqualTo(30);
+        assertThat(result.excluded()).isEqualTo(3 + 4);
+        assertThat(result.test().codigo()).isEqualTo("SPEARMAN");
+        assertThat(result.test().efecto()).isEqualTo(1.0);
+    }
+
     private TituladosCrossDto analyze(String row, String column, CrossTabulationDto cross) {
         when(analytics.crossForAnalysis(eq(datasetId), eq(row), eq(column), any()))
                 .thenReturn(new AnalyticsService.CrossAnalysisScope(cross, cross.validCount() + 4));

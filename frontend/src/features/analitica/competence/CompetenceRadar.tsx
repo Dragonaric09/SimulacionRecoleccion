@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart } from 'recharts'
 import { formatDecimal } from '../shared/analyticsFormatters'
+import { useChartContainerWidth } from '@/components/analytics/charts/useChartContainerSize'
 
 export function CompetenceRadar({
   items,
@@ -21,6 +22,10 @@ export function CompetenceRadar({
   actions?: ReactNode
 }) {
   const plotted = items.slice(0, 8)
+  // En un celular las etiquetas de los extremos quedaban fuera del gráfico: radio menor y etiquetas en dos líneas.
+  const { ref: containerRef, width } = useChartContainerWidth()
+  const narrow = width > 0 && width < 460
+  const labelChars = narrow ? 12 : 22
   const chartData = plotted.map((item) => ({
     subject: `${radarLabel(item.name)} (${formatDecimal(item.average)})`,
     average: item.average,
@@ -30,9 +35,9 @@ export function CompetenceRadar({
     average: { label: 'Media observada', color },
   }
   const renderRadarChart = (fixed = false) => (
-    <RadarChart {...(fixed ? { width: 460, height: 320 } : {})} data={chartData} outerRadius="60%">
+    <RadarChart {...(fixed ? { width: 460, height: 320 } : {})} data={chartData} outerRadius={!fixed && narrow ? '46%' : '60%'}>
       <PolarGrid stroke="#cbd5e1" strokeDasharray="2 2" />
-      <PolarAngleAxis dataKey="subject" tick={<RadarTick />} />
+      <PolarAngleAxis dataKey="subject" tick={<RadarTick maxChars={fixed ? 22 : labelChars} />} />
       <PolarRadiusAxis domain={[0, 5]} tick={false} axisLine={false} />
       <Radar
         name="Media observada"
@@ -50,7 +55,7 @@ export function CompetenceRadar({
     <>
       {plotted.length ? (
         <div className="flex min-w-0 flex-col items-center">
-          <div className="radar-responsive-chart flex w-full justify-center">
+          <div ref={containerRef} className="radar-responsive-chart flex w-full justify-center">
             <ChartContainer
               config={chartConfig}
               className="mx-auto h-[380px] w-full max-w-[520px] aspect-auto"
@@ -199,11 +204,12 @@ type RadarTickProps = {
   y?: number
   textAnchor?: 'start' | 'middle' | 'end'
   payload?: { value?: string }
+  maxChars?: number
 }
 
-function RadarTick({ x = 0, y = 0, textAnchor = 'middle', payload }: RadarTickProps) {
+function RadarTick({ x = 0, y = 0, textAnchor = 'middle', payload, maxChars = 22 }: RadarTickProps) {
   const value = String(payload?.value ?? '')
-  if (value.length <= 22) {
+  if (value.length <= maxChars) {
     return (
       <text x={x} y={y} textAnchor={textAnchor} fill="#0f172a" fontSize={10} fontWeight={600}>
         {value}

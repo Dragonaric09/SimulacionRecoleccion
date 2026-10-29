@@ -32,7 +32,7 @@ export function OrdinalColumns({
   return (
     <div ref={ref} className="w-full min-w-0">
       <ChartContainer config={config} className="h-[220px] w-full">
-        <BarChart data={items} margin={{ top: 24, right: 8, bottom: compact ? 44 : 30, left: 0 }}>
+        <BarChart data={items} margin={{ top: 24, right: 8, bottom: compact ? 44 : 30, left: compact ? 32 : 0 }}>
           <CartesianGrid vertical={false} stroke="#E2E8F0" />
           <XAxis
             dataKey="label"

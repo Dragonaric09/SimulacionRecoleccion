@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState, useRef } from 'react'
-import { ArrowLeftRight, Download } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { ArrowLeftRight } from 'lucide-react'
 import { apiRequest } from '@/api/client'
 import { FilterToolbar } from '@/components/analytics/FilterToolbar'
 import { StatusPanel } from '@/components/analytics/StatusPanel'
@@ -28,6 +28,9 @@ import {
   exportCrossPng,
 } from '../shared/crossExportUtils'
 import { printAnalyticsPdf } from '@/components/analytics/PrintButton'
+import { DownloadMenu } from '@/components/analytics/DownloadMenu'
+import { usePersistentState } from '@/lib/usePersistentState'
+import { useTituladosFilterQuery } from '../shared/tituladosFilterStorage'
 import { EmployerFilterToolbar } from '@/features/empleadores/EmployerFilterToolbar'
 import { describeEmployerFilters, useEmployerFilters } from '@/features/empleadores/employerData'
 import { AssociationTestCard } from '@/features/empleadores/valuation/AssociationTest'
@@ -81,26 +84,29 @@ const TITULADOS_ANALYSIS_PRESETS = [
 export function CrossExportPage({ domain }: { domain: Domain }) {
   const tone: Tone = domain === 'TITULADOS' ? 'titulados' : 'empleadores'
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets(domain)
-  const [rowField, setRowField] = useState(
-    domain === 'TITULADOS' ? 'situacion_laboral_actual' : 'tipo_organizacion',
-  )
-  const [columnField, setColumnField] = useState(
-    domain === 'TITULADOS' ? 'interes_posgrado' : 'tamano_organizacion',
-  )
+  // La configuración del cruce se conserva al recargar, por sección (titulados / empleadores).
+  const settingsKey = `simulacionem.cross.${domain}`
+  const defaultRow = domain === 'TITULADOS' ? 'situacion_laboral_actual' : 'tipo_organizacion'
+  const defaultColumn = domain === 'TITULADOS' ? 'interes_posgrado' : 'tamano_organizacion'
+  const [rowField, setRowField] = usePersistentState(`${settingsKey}.row`, defaultRow, isText)
+  const [columnField, setColumnField] = usePersistentState(`${settingsKey}.column`, defaultColumn, isText)
   const [cross, setCross] = useState<Cross | null>(null)
   const [employerCatalog, setEmployerCatalog] = useState<EmployerVariable[]>([])
   const [employerCross, setEmployerCross] = useState<EmployerCross | null>(null)
   const [tituladosCatalog, setTituladosCatalog] = useState<EmployerVariable[]>([])
   const [tituladosCross, setTituladosCross] = useState<TituladosCross | null>(null)
   const [filterSummary, setFilterSummary] = useState<AnalyticsSummary | null>(null)
-  const [filterQuery, setFilterQuery] = useState('')
+  const [tituladosQuery, setTituladosQuery] = useTituladosFilterQuery(
+    domain === 'TITULADOS' ? datasetId : undefined,
+  )
   const employerFilters = useEmployerFilters(datasetId)
-  const [includeTotals, setIncludeTotals] = useState(true)
-  const [metric, setMetric] = useState<CrossMetric>('count')
-  const [colorHeatmap, setColorHeatmap] = useState(false)
+  const filterQuery = domain === 'EMPLEADORES' ? employerFilters.query : tituladosQuery
+  const [includeTotals, setIncludeTotals] = usePersistentState(`${settingsKey}.totals`, true, isBoolean)
+  const [metric, setMetric] = usePersistentState<CrossMetric>(`${settingsKey}.metric`, 'count', isMetric)
+  const [colorHeatmap, setColorHeatmap] = usePersistentState(`${settingsKey}.heatmap`, false, isBoolean)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [activeView, setActiveView] = useState<'table' | 'bars'>('table')
+  const [activeView, setActiveView] = usePersistentState<'table' | 'bars'>(`${settingsKey}.view`, 'table', isView)
   const fields = domain === 'TITULADOS' ? tituladosCatalog : employerCatalog
   const fieldGroups = Array.from(new Set(fields.map((field) => field.group))).map((group) => ({
     group,
@@ -110,6 +116,8 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     if (!datasetId || rowField === columnField) return
     setLoading(true)
     setError(null)
+    // Sin esto, mientras carga se veía la tabla anterior con las etiquetas de las variables nuevas.
+    setCross(null)
     setEmployerCross(null)
     setTituladosCross(null)
     try {
@@ -137,9 +145,6 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
       if (!signal.aborted) setLoading(false)
     }
   }, [datasetId, rowField, columnField, filterQuery, domain])
-  useEffect(() => {
-    if (domain === 'EMPLEADORES') setFilterQuery(employerFilters.query)
-  }, [domain, employerFilters.query])
   useEffect(() => {
     const controller = new AbortController()
     const endpoint =
@@ -170,6 +175,13 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
     return () => controller.abort()
   }, [datasetId, domain, filterQuery])
   const catalog = domain === 'EMPLEADORES' ? employerCatalog : tituladosCatalog
+  // Una variable guardada que ya no está en el catálogo vuelve a la opción por defecto.
+  useEffect(() => {
+    if (catalog.length === 0) return
+    const known = new Set(catalog.map((variable) => variable.key))
+    if (!known.has(rowField)) setRowField(known.has(defaultRow) ? defaultRow : catalog[0].key)
+    if (!known.has(columnField)) setColumnField(known.has(defaultColumn) ? defaultColumn : catalog[1]?.key ?? catalog[0].key)
+  }, [catalog, rowField, columnField, defaultRow, defaultColumn, setRowField, setColumnField])
   const catalogLabel = (key: string) =>
     catalog.find((variable) => variable.key === key)?.label ?? labelFor(key)
   const rowLabel = catalogLabel(rowField)
@@ -199,7 +211,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
         onChange={setDatasetId}
         loading={datasetsLoading}
       />
-      {filterSummary && <FilterToolbar summary={filterSummary} onQueryChange={setFilterQuery} />}
+      {filterSummary && <FilterToolbar summary={filterSummary} onQueryChange={setTituladosQuery} />}
       {domain === 'EMPLEADORES' && (
         <EmployerFilterToolbar
           filters={employerFilters.filters}
@@ -602,90 +614,47 @@ function CrossDownloadMenu({
   datasetName: string
   filters: string
 }) {
-  const menuRef = useRef<HTMLDetailsElement>(null)
-  useEffect(() => {
-    const closeWhenClickingOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current?.open &&
-        event.target instanceof Node &&
-        !menuRef.current.contains(event.target)
-      ) {
-        menuRef.current.open = false
-      }
-    }
-    document.addEventListener('mousedown', closeWhenClickingOutside)
-    return () => document.removeEventListener('mousedown', closeWhenClickingOutside)
-  }, [])
-  const download = (format: 'csv' | 'xlsx' | 'png' | 'pdf') => {
-    if (format === 'csv') exportCrossCsv(cross, metric, includeTotals, rowLabel)
-    if (format === 'xlsx')
-      void exportCrossExcel(
-        cross,
-        metric,
-        includeTotals,
-        colorHeatmap,
-        { dataset: datasetName, filters },
-        rowLabel,
-        columnLabel,
-      )
-    if (format === 'png')
-      exportCrossPng(cross, metric, includeTotals, colorHeatmap, activeView, rowLabel, columnLabel)
-    if (format === 'pdf') void printAnalyticsPdf(domain, 'cruce')
-    if (menuRef.current) menuRef.current.open = false
-  }
   return (
-    <div className="flex shrink-0 flex-col items-end gap-1">
-      <details ref={menuRef} className="relative">
-        <summary className="flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted">
-          <Download className="size-4" /> Descargar <span aria-hidden="true">▾</span>
-        </summary>
-        <div className="absolute right-0 z-30 mt-2 w-64 rounded-lg border border-border-line bg-white p-1.5 shadow-lg">
-          <CrossDownloadOption
-            label="Tabla CSV"
-            help="Matriz tal como se ve"
-            onClick={() => download('csv')}
-          />
-          <CrossDownloadOption
-            label="Excel (.xlsx)"
-            help="Matriz + hoja de parámetros"
-            onClick={() => download('xlsx')}
-          />
-          <CrossDownloadOption
-            label="Imagen PNG"
-            help={activeView === 'table' ? 'Tabla tal como se ve' : 'Solo el gráfico de barras'}
-            onClick={() => download('png')}
-          />
-          <CrossDownloadOption
-            label="PDF de esta vista"
-            help="Tabla y barras · A4 horizontal"
-            onClick={() => download('pdf')}
-          />
-        </div>
-      </details>
-    </div>
+    <DownloadMenu
+      title={`${rowLabel} × ${columnLabel}`}
+      options={[
+        {
+          label: 'Tabla CSV',
+          help: 'Matriz tal como se ve',
+          onSelect: () => exportCrossCsv(cross, metric, includeTotals, rowLabel),
+        },
+        {
+          label: 'Excel (.xlsx)',
+          help: 'Matriz + hoja de parámetros',
+          onSelect: () =>
+            exportCrossExcel(
+              cross,
+              metric,
+              includeTotals,
+              colorHeatmap,
+              { dataset: datasetName, filters },
+              rowLabel,
+              columnLabel,
+            ),
+        },
+        {
+          label: 'Imagen PNG',
+          help: activeView === 'table' ? 'Tabla tal como se ve' : 'Solo el gráfico de barras',
+          onSelect: () =>
+            exportCrossPng(cross, metric, includeTotals, colorHeatmap, activeView, rowLabel, columnLabel),
+        },
+        {
+          label: 'PDF de esta vista',
+          help: 'Tabla y barras · A4 horizontal',
+          onSelect: () => printAnalyticsPdf(domain, 'cruce'),
+        },
+      ]}
+    />
   )
 }
 
-function CrossDownloadOption({
-  label,
-  help,
-  disabled = false,
-  onClick,
-}: {
-  label: string
-  help: string
-  disabled?: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className="flex w-full flex-col items-start rounded-md px-2.5 py-2 text-left hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-45"
-    >
-      <span className="text-sm font-medium text-ink-900">{label}</span>
-      <span className="text-xs text-ink-600">{help}</span>
-    </button>
-  )
-}
+const isText = (value: unknown): value is string => typeof value === 'string' && value.length > 0
+const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean'
+const isMetric = (value: unknown): value is CrossMetric =>
+  value === 'count' || value === 'rowPercent' || value === 'columnPercent'
+const isView = (value: unknown): value is 'table' | 'bars' => value === 'table' || value === 'bars'

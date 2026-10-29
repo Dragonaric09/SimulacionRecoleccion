@@ -25,6 +25,7 @@ import {
   PageHeading,
   useDatasets,
 } from '../shared/AnalyticsPrimitives'
+import { useTituladosFilterQuery } from '../shared/tituladosFilterStorage'
 
 type TituladosCross = {
   cross: Cross
@@ -44,7 +45,7 @@ const FINANCING_COLUMNS = [
 export function FinancingCompletePage({ printAll = false }: { printAll?: boolean } = {}) {
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets('TITULADOS')
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
-  const [filterQuery, setFilterQuery] = useState('')
+  const [filterQuery, setFilterQuery] = useTituladosFilterQuery(datasetId)
   const [analysis, setAnalysis] = useState<TituladosCross | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -111,7 +112,7 @@ export function FinancingCompletePage({ printAll = false }: { printAll?: boolean
       {error && (
         <StatusPanel kind="warning" title="No se pudo cargar financiamiento" description={error} />
       )}
-      {!loading && !error && !summary && (
+      {!datasetsLoading && !datasetId && !loading && !error && !summary && (
         <StatusPanel
           kind="info"
           title="Sin dataset de titulados"

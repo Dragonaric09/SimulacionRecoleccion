@@ -2,6 +2,7 @@ import { Badge } from '@/components/analytics/Badge'
 import { formatCount, formatDecimal } from '../dashboard/dashboardFormat'
 import type { AssociationResult } from './valuationTypes'
 import { formatP } from './valuationFormat'
+import { TapTooltip } from '@/components/analytics/TapTooltip'
 
 function formatStatistic(result: AssociationResult) {
   if (result.estadistico === null) return null
@@ -14,11 +15,19 @@ function formatStatistic(result: AssociationResult) {
 export function AssociationBadge({ result }: { result: AssociationResult | null }) {
   if (!result) return null
   if (!result.aplicable) {
-    return <span className="caption-meta text-ink-500" title={result.motivo}>Prueba no aplicable (n = {formatCount(result.n)})</span>
+    return (
+      <TapTooltip content={result.motivo}>
+        <button type="button" className="caption-meta cursor-help text-left text-ink-500 underline decoration-dotted underline-offset-2">
+          Prueba no aplicable (n = {formatCount(result.n)})
+        </button>
+      </TapTooltip>
+    )
   }
   return (
-    <span className="inline-flex flex-wrap items-center gap-1.5 text-xs text-ink-700" title={result.motivo}>
-      <span className="font-semibold">{result.nombrePrueba}</span>
+    <span className="inline-flex flex-wrap items-center gap-1.5 text-xs text-ink-700">
+      <TapTooltip content={result.motivo}>
+        <button type="button" className="cursor-help font-semibold underline decoration-dotted underline-offset-2">{result.nombrePrueba}</button>
+      </TapTooltip>
       <span>· p = {formatP(result.pValor)}</span>
       {result.efecto !== null && result.efectoNombre !== result.nombrePrueba && <span>· {result.efectoNombre} = {formatDecimal(result.efecto, 2)}</span>}
       {result.efecto !== null && result.efectoNombre === result.nombrePrueba && <span>· ρ = {formatDecimal(Math.abs(result.efecto) < 0.005 ? 0 : result.efecto, 2)}</span>}

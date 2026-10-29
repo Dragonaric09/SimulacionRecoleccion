@@ -30,6 +30,7 @@ class AnalyticsServiceStatisticsTest {
     void ignoraValoresNulosAlConstruirPerfilDeEmpleabilidad() {
         UUID datasetId = UUID.randomUUID();
         DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getSurveyType()).thenReturn("TITULADOS");
         when(dataset.getId()).thenReturn(datasetId);
         Map<String, Object> incomplete = new HashMap<>();
         incomplete.put("anio_titulacion", null);
@@ -58,6 +59,7 @@ class AnalyticsServiceStatisticsTest {
     void excluyeNoObservadoYUsaDesviacionMuestral() {
         UUID datasetId = UUID.randomUUID();
         DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getSurveyType()).thenReturn("TITULADOS");
         CompetenceCatalogEntity competence = mock(CompetenceCatalogEntity.class);
         CompetenceRatingEntity observed = mock(CompetenceRatingEntity.class);
         CompetenceRatingEntity notObserved = mock(CompetenceRatingEntity.class);
@@ -92,6 +94,7 @@ class AnalyticsServiceStatisticsTest {
     void normalizaRangosDeEdadYConservaLaBaseCompleta() {
         UUID datasetId = UUID.randomUUID();
         DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getSurveyType()).thenReturn("TITULADOS");
         when(dataset.getId()).thenReturn(datasetId);
         List<SurveyResponseEntity> rows = List.of(
                 new SurveyResponseEntity(dataset, "TITULADOS", 1, "VALIDA", Map.of("edad_rango", "19 - 22 años")),
@@ -118,6 +121,7 @@ class AnalyticsServiceStatisticsTest {
     void normalizaPosDoctoradoSegunLaEtiquetaDelFormulario() {
         UUID datasetId = UUID.randomUUID();
         DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getSurveyType()).thenReturn("TITULADOS");
         when(dataset.getId()).thenReturn(datasetId);
         SurveyResponseEntity response = new SurveyResponseEntity(dataset, "TITULADOS", 1, "VALIDA",
                 Map.of("tiene_formacion_complementaria", true, "formacion_complementaria_nivel", "Pos Doctorado"));
@@ -140,6 +144,7 @@ class AnalyticsServiceStatisticsTest {
     void agrupaVariantesDeAreasDeTrabajoAntesDeContarlas() {
         UUID datasetId = UUID.randomUUID();
         DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getSurveyType()).thenReturn("TITULADOS");
         when(dataset.getId()).thenReturn(datasetId);
         List<SurveyResponseEntity> rows = List.of(
                 new SurveyResponseEntity(dataset, "TITULADOS", 1, "VALIDA",
@@ -168,6 +173,7 @@ class AnalyticsServiceStatisticsTest {
     void interpretaLaValoracionGlobalComoEscalaDeAcuerdoOrdenada() {
         UUID datasetId = UUID.randomUUID();
         DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getSurveyType()).thenReturn("TITULADOS");
         when(dataset.getId()).thenReturn(datasetId);
         List<SurveyResponseEntity> rows = List.of(
                 new SurveyResponseEntity(dataset, "TITULADOS", 1, "VALIDA",
@@ -198,6 +204,7 @@ class AnalyticsServiceStatisticsTest {
     void filtroTodosConservaLasDoceRespuestasValidas() {
         UUID datasetId = UUID.randomUUID();
         DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getSurveyType()).thenReturn("TITULADOS");
         when(dataset.getId()).thenReturn(datasetId);
         List<SurveyResponseEntity> rows = IntStream.rangeClosed(1, 12)
                 .mapToObj(index -> new SurveyResponseEntity(dataset, "TITULADOS", index, "VALIDA",
@@ -214,5 +221,47 @@ class AnalyticsServiceStatisticsTest {
 
         assertThat(summary.totalResponses()).isEqualTo(12);
         assertThat(summary.validResponses()).isEqualTo(12);
+    }
+
+    /** Regresión: «Sin clasificar» (respuesta «No trabaja») y «Sin respuesta» también se pueden filtrar. */
+    @Test
+    void elFiltroDeSectorCubreATodasLasPersonas() {
+        UUID datasetId = UUID.randomUUID();
+        DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getSurveyType()).thenReturn("TITULADOS");
+        when(dataset.getId()).thenReturn(datasetId);
+        List<SurveyResponseEntity> rows = List.of(
+                new SurveyResponseEntity(dataset, "TITULADOS", 1, "VALIDA", Map.of("genero", "Mujer", "sector_trabajo", "Público")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 2, "VALIDA", Map.of("genero", "Mujer", "sector_trabajo", "No trabaja")),
+                new SurveyResponseEntity(dataset, "TITULADOS", 3, "VALIDA", Map.of("genero", "Hombre")));
+        DatasetImportRepository datasets = mock(DatasetImportRepository.class);
+        SurveyResponseRepository responses = mock(SurveyResponseRepository.class);
+        when(datasets.findById(datasetId)).thenReturn(Optional.of(dataset));
+        when(responses.findByDataset_IdAndResponseStatus(datasetId, "VALIDA")).thenReturn(rows);
+        AnalyticsService service = new AnalyticsService(datasets, responses, mock(CompetenceRatingRepository.class));
+
+        java.util.function.Function<String, Long> count = sector -> service.summary(datasetId, "TITULADOS", List.of("genero"),
+                new com.simulacionem.analitica.application.service.TituladosFilter(null, null, List.of(), List.of(sector))).validResponses();
+
+        assertThat(count.apply("Público")).isEqualTo(1);
+        assertThat(count.apply("Sin clasificar")).isEqualTo(1);
+        assertThat(count.apply("No trabaja")).isEqualTo(1);
+        assertThat(count.apply("Sin respuesta")).isEqualTo(1);
+    }
+
+    /** Regresión H-05: una ruta de titulados no responde con un dataset de empleadores. */
+    @Test
+    void rechazaUnDatasetDeOtraEncuesta() {
+        UUID datasetId = UUID.randomUUID();
+        DatasetImportEntity dataset = mock(DatasetImportEntity.class);
+        when(dataset.getSurveyType()).thenReturn("EMPLEADORES");
+        when(dataset.getId()).thenReturn(datasetId);
+        DatasetImportRepository datasets = mock(DatasetImportRepository.class);
+        when(datasets.findById(datasetId)).thenReturn(Optional.of(dataset));
+        AnalyticsService service = new AnalyticsService(datasets, mock(SurveyResponseRepository.class), mock(CompetenceRatingRepository.class));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.summary(datasetId, "TITULADOS", List.of("genero")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no corresponde a titulados");
     }
 }

@@ -334,11 +334,19 @@ public class AnalyticsService {
         return status;
     }
 
+    /**
+     * {@code value} llega ya canonizado por {@link #value}: «No trabaja» se muestra como «Sin clasificar».
+     * «Sin respuesta» selecciona a quienes no tienen sector (no trabajan en una organización); así las opciones
+     * del filtro cubren a todas las personas.
+     */
     private boolean sectorMatches(String value, String selected) {
         String actual = normalize(value);
         String expected = normalize(selected);
+        if (expected.equals("sin respuesta")) return actual.isBlank();
         if (actual.isBlank()) return false;
-        if (expected.equals("no trabaja")) return actual.contains("no trabaja") || actual.contains("no trabajo");
+        if (expected.equals("no trabaja") || expected.equals("sin clasificar")) {
+            return actual.matches("no trabaja|no trabajo|sin clasificar");
+        }
         return actual.equals(expected) || actual.contains(expected);
     }
 
@@ -560,8 +568,16 @@ public class AnalyticsService {
     public record CrossAnalysisScope(CrossTabulationDto cross, long validResponses) { }
 
     private DatasetImportEntity resolveDataset(UUID id, String type) {
-        if (id != null)
-            return datasets.findById(id).orElseThrow();
+        if (id != null) {
+            DatasetImportEntity dataset = datasets.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("El dataset solicitado no existe o fue eliminado"));
+            // Un ID explícito de otra encuesta no debe responder por la ruta de esta (H-05).
+            if (type != null && !type.equals(dataset.getSurveyType())) {
+                throw new IllegalArgumentException("El dataset no corresponde a "
+                        + ("TITULADOS".equals(type) ? "titulados" : "empleadores"));
+            }
+            return dataset;
+        }
         return datasets.findAll().stream().filter(d -> type == null || type.equals(d.getSurveyType()))
                 .reduce((a, b) -> b)
                 .orElseThrow(

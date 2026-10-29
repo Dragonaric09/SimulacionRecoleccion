@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { AnalyticsSummary } from "@/features/analitica/api";
+import { loadTituladosFilterQuery, saveTituladosFilterQuery } from "@/features/analitica/shared/tituladosFilterStorage";
 
 /* Opciones con las etiquetas del formulario de titulados (form/form_export_titulados00.json). */
 const LABOR_STATUS_OPTIONS = ["Trabaja en una organización", "Emprendimiento propio", "Actualmente no trabaja", "Sin respuesta"];
-const SECTOR_OPTIONS = ["Público", "Privado", "Independiente", "ONG", "No trabaja"];
+/* «Sin clasificar» agrupa la respuesta «No trabaja» del formulario; «Sin respuesta», a quienes no tienen sector
+   porque no trabajan en una organización. Con ambas, las opciones cubren a todas las personas. */
+const SECTOR_OPTIONS = ["Público", "Privado", "Independiente", "ONG", "Sin clasificar", "Sin respuesta"];
 const GENDER_OPTIONS = ["Hombre", "Mujer"];
 const AGE_RANGE_OPTIONS = ["15 - 18 años", "19 - 22 años", "23 - 26 años", "27 - 30 años", "31 - 34 años", "35 años o más", "Sin respuesta"];
 const POSTGRADUATE_INTEREST_OPTIONS = ["Sí", "No", "Sin respuesta"];
@@ -48,16 +51,13 @@ function TituladosFilterToolbar({ summary, onQueryChange }: { summary: Analytics
   const minYear = summary.yearMin ?? undefined;
   const maxYear = summary.yearMax ?? undefined;
   useEffect(() => {
-    let saved: string | null = null;
-    try {
-      saved = localStorage.getItem(`simulacionem.tituladosFilters.${summary.datasetId}`);
-    } catch {
-      saved = null;
-    }
+    const saved = loadTituladosFilterQuery(summary.datasetId);
     const params = saved ? new URLSearchParams(saved.replace(/^&/, "")) : null;
     const savedFrom = params?.get("yearFrom");
     const savedTo = params?.get("yearTo");
-    const multi = Object.fromEntries(MULTI_FILTERS.map((filter) => [filter.key, params?.getAll(filter.param) ?? []])) as unknown as Record<MultiKey, string[]>;
+    // Solo valores vigentes del filtro; «No trabaja» (opción anterior de sector) pasa a «Sin clasificar».
+    const restored = (filter: (typeof MULTI_FILTERS)[number]) => [...new Set((params?.getAll(filter.param) ?? []).map((value) => (filter.key === "sectors" && value === "No trabaja" ? "Sin clasificar" : value)))].filter((value) => (filter.options as readonly string[]).includes(value));
+    const multi = Object.fromEntries(MULTI_FILTERS.map((filter) => [filter.key, restored(filter)])) as unknown as Record<MultiKey, string[]>;
     setFilters({ yearFrom: savedFrom ? Number(savedFrom) : minYear, yearTo: savedTo ? Number(savedTo) : maxYear, ...multi });
     setInitialized(true);
   }, [summary.datasetId, minYear, maxYear]);
@@ -69,11 +69,7 @@ function TituladosFilterToolbar({ summary, onQueryChange }: { summary: Analytics
     if (!initialized) return;
     const timer = window.setTimeout(() => {
       onQueryChange?.(query);
-      try {
-        localStorage.setItem(`simulacionem.tituladosFilters.${summary.datasetId}`, query);
-      } catch {
-        /* sin almacenamiento: los filtros solo viven en la pantalla */
-      }
+      saveTituladosFilterQuery(summary.datasetId, query);
     }, 250);
     return () => window.clearTimeout(timer);
   }, [initialized, query, onQueryChange, summary.datasetId]);

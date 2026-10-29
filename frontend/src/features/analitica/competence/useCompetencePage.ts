@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import type { Domain, Tone } from "../shared/analyticsTypes";
 import { useDatasets } from "../shared/AnalyticsPrimitives";
 import { useCompetenceData } from "./useCompetenceData";
+import { useTituladosFilterQuery } from "../shared/tituladosFilterStorage";
 
 export function useCompetencePage(domain: Domain) {
   const tone: Tone = domain === "TITULADOS" ? "titulados" : "empleadores";
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets(domain);
-  const [filterQuery, setFilterQuery] = useState("");
+  const [tituladosQuery, setFilterQuery] = useTituladosFilterQuery(domain === "TITULADOS" ? datasetId : undefined);
+  const filterQuery = domain === "TITULADOS" ? tituladosQuery : "";
   const [activeGroup, setActiveGroup] = useState("");
   const [activeTab, setActiveTab] = useState("hard");
   const { items, satisfaction, curriculum, loading, error } = useCompetenceData(domain, datasetId, filterQuery);

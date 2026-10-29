@@ -1,4 +1,5 @@
 import { AgreementStackedBar, type ScoreAgreementSegment, ScoreBadge } from './ScoreVisuals'
+import { TapTooltip } from '../TapTooltip'
 
 export type ScoreDimensionData = {
   key: string
@@ -45,13 +46,16 @@ export function ScoreDimensionCard({
     },
   ]
   return (
-    <article
-      className="dimension-card flex flex-col gap-3 rounded-lg border border-border-line bg-white p-4"
-      title={dimension.description}
-    >
+    <article className="dimension-card flex flex-col gap-3 rounded-lg border border-border-line bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="body-medium text-ink-900">{dimension.label}</h3>
+          <h3 className="body-medium text-ink-900">
+            <TapTooltip content={dimension.description}>
+              <button type="button" className="cursor-help text-left underline decoration-dotted decoration-ink-400 underline-offset-2">
+                {dimension.label}
+              </button>
+            </TapTooltip>
+          </h3>
           <p className="caption-meta text-ink-500">
             {dimension.itemCount} {dimension.itemCount === 1 ? 'afirmación' : 'afirmaciones'} · n ={' '}
             {formatCount(dimension.respondents)}

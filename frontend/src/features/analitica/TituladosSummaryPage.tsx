@@ -16,18 +16,19 @@ import type { Competence, EmploymentProfile } from './shared/analyticsTypes'
 import { useDatasetContext } from '@/app/DatasetContext'
 import { navigate } from '@/app/navigation'
 import { sentenceCaseLabel } from './shared/analyticsFormatters'
+import { useTituladosFilterQuery } from './shared/tituladosFilterStorage'
 
 const fields =
   'situacion_laboral_actual,interes_posgrado,area_posgrado_interes,sector_trabajo,anio_titulacion,es_primer_empleo'
 
 export function TituladosSummaryPage({ printAll = false }: { printAll?: boolean } = {}) {
-  const { activeIds, setActiveDataset } = useDatasetContext()
+  const { activeIds, setActiveDataset, loading: datasetsLoading } = useDatasetContext()
   const datasetId = activeIds.TITULADOS
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
   const [satisfaction, setSatisfaction] = useState<AnalyticsSummary | null>(null)
   const [competences, setCompetences] = useState<Competence[]>([])
   const [profile, setProfile] = useState<EmploymentProfile | null>(null)
-  const [filterQuery, setFilterQuery] = useState('')
+  const [filterQuery, setFilterQuery] = useTituladosFilterQuery(datasetId)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
@@ -121,7 +122,7 @@ export function TituladosSummaryPage({ printAll = false }: { printAll?: boolean 
       {!loading && error && (
         <StatusPanel kind="warning" title="No se pudo cargar el resumen" description={error} />
       )}
-      {!loading && !error && !summary && (
+      {!datasetsLoading && !datasetId && !loading && !error && !summary && (
         <StatusPanel
           kind="info"
           title="Sin dataset de titulados"

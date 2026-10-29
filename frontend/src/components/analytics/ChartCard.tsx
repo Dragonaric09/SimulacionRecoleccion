@@ -1,8 +1,7 @@
-import { useState, type MouseEvent, type ReactNode } from 'react'
-import { Download, ImageDown, Info } from 'lucide-react'
+import { useRef, type ReactNode } from 'react'
+import { Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from 'cn'
 import {
   formatDistributionTooltip,
@@ -11,6 +10,8 @@ import {
   type VisualizationTooltipDatum,
 } from './visualizationTooltip'
 import { chartDownloadFormat, downloadChartPng } from './chartDownload'
+import { DownloadMenu, type DownloadOption } from './DownloadMenu'
+import { TapTooltip } from './TapTooltip'
 
 /**
  * Tarjeta de gráfico: título descriptivo, «n = X» (personas que respondieron esa pregunta),
@@ -77,95 +78,80 @@ export function ChartCardActions({
   onExportCsv?: () => void
   onExportChart?: () => void
 }) {
-  const [downloading, setDownloading] = useState(false)
   if (!help && !onExportCsv && !onExportChart) return null
-  const handlePrimaryDownload = async (event: MouseEvent<HTMLButtonElement>) => {
-    if (chartDownloadFormat === 'csv') {
-      onExportCsv?.()
-      return
-    }
-
-    if (onExportChart) {
-      onExportChart()
-      return
-    }
-
-    const card = event.currentTarget.closest<HTMLElement>('[data-slot="card"]')
+  const exportCardPng = async (trigger: HTMLElement | null) => {
+    const card = trigger?.closest<HTMLElement>('[data-slot="card"]')
     if (!card) return
-    setDownloading(true)
     try {
       await downloadChartPng(card, title)
     } catch (cause) {
       console.error(`No se pudo descargar el PNG de «${title}».`, cause)
       window.alert('No se pudo preparar el PNG. Revise la consola del navegador para más detalles.')
-    } finally {
-      setDownloading(false)
     }
   }
-  const hasPrimaryDownload =
-    chartDownloadFormat === 'csv'
-      ? Boolean(onExportCsv)
-      : Boolean(help || onExportCsv || onExportChart)
   return (
-    <TooltipProvider>
-      <div className="flex shrink-0 items-center gap-0.5" data-chart-export-exclude>
-        {help && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Cómo interpretar: ${title}`}
-              >
-                <Info />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs text-left">{help}</TooltipContent>
-          </Tooltip>
-        )}
-        {hasPrimaryDownload && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Descargar ${
-                  chartDownloadFormat === 'png' ? 'visualización PNG' : 'datos CSV'
-                }: ${title}`}
-                onClick={(event) => void handlePrimaryDownload(event)}
-                disabled={downloading}
-              >
-                <Download />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {chartDownloadFormat === 'png'
-                ? 'Descargar la visualización actual (PNG)'
-                : 'Descargar los datos de esta visualización (CSV)'}
-            </TooltipContent>
-          </Tooltip>
-        )}
-        {onExportChart && chartDownloadFormat === 'csv' && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Descargar visualización actual: ${title}`}
-                onClick={onExportChart}
-              >
-                <ImageDown />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Descargar la visualización actual (PNG)</TooltipContent>
-          </Tooltip>
-        )}
-      </div>
-    </TooltipProvider>
+    <div className="flex shrink-0 items-center gap-0.5" data-chart-export-exclude>
+      {help && <HelpHint title={title} help={help} />}
+      <ChartDownload
+        title={title}
+        onExportCsv={onExportCsv}
+        onExportChart={onExportChart}
+        onExportCardPng={exportCardPng}
+      />
+    </div>
   )
 }
 
-/** Tooltip para una marca concreta (barra, segmento o celda) de una visualización. */
+/** Ícono (i) con la definición de lo que mide la visualización; se abre con el cursor o al tocarlo. */
+export function HelpHint({ title, help }: { title: string; help: ReactNode }) {
+  return (
+    <TapTooltip content={help}>
+      <Button variant="ghost" size="icon-sm" aria-label={`Cómo interpretar: ${title}`}>
+        <Info />
+      </Button>
+    </TapTooltip>
+  )
+}
+
+/**
+ * Descarga de una tarjeta con el mismo ícono que el resto del sistema. Ofrece los datos (CSV) y la imagen (PNG)
+ * cuando ambos existen; el formato preferido por la compilación (VITE_ANALYTICS_CHART_DOWNLOAD_FORMAT) va primero.
+ */
+function ChartDownload({
+  title,
+  onExportCsv,
+  onExportChart,
+  onExportCardPng,
+}: {
+  title: string
+  onExportCsv?: () => void
+  onExportChart?: () => void
+  onExportCardPng: (trigger: HTMLElement | null) => Promise<void>
+}) {
+  const anchor = useRef<HTMLSpanElement>(null)
+  const csv: DownloadOption | null = onExportCsv
+    ? { label: 'Datos CSV', help: 'Los datos de esta visualización', onSelect: onExportCsv }
+    : null
+  const png: DownloadOption | null =
+    onExportChart || chartDownloadFormat === 'png'
+      ? {
+          label: 'Imagen PNG',
+          help: 'La visualización tal como se ve',
+          onSelect: () => (onExportChart ? onExportChart() : onExportCardPng(anchor.current)),
+        }
+      : null
+  const options = (chartDownloadFormat === 'png' ? [png, csv] : [csv, png]).filter(
+    (option): option is DownloadOption => option !== null,
+  )
+  if (options.length === 0) return null
+  return (
+    <span ref={anchor} className="inline-flex">
+      <DownloadMenu title={title} options={options} />
+    </span>
+  )
+}
+
+/** Detalle de una marca concreta (barra, segmento o celda): con el cursor o al tocarla. */
 export function DataPointTooltip({
   content,
   children,
@@ -173,14 +159,7 @@ export function DataPointTooltip({
   content: ReactNode
   children: ReactNode
 }) {
-  return (
-    <TooltipProvider delayDuration={120}>
-      <Tooltip>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent className="max-w-xs text-left">{content}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  )
+  return <TapTooltip content={content}>{children}</TapTooltip>
 }
 
 /**

@@ -6,11 +6,12 @@ import { DatasetSelect, PageHeading, useDatasets } from '../shared/AnalyticsPrim
 import { countMatching } from './employmentHelpers'
 import { useTituladosEmploymentAnalytics } from './useTituladosEmploymentAnalytics'
 import { EmploymentTabContent } from '../RestAnalyticPages'
+import { useTituladosFilterQuery } from '../shared/tituladosFilterStorage'
 
 export function EmploymentProfilePage({ printAll = false }: { printAll?: boolean } = {}) {
   const { datasets, datasetId, setDatasetId, loading: datasetsLoading } = useDatasets('TITULADOS')
   const [activeTab, setActiveTab] = useState('perfil')
-  const [filterQuery, setFilterQuery] = useState('')
+  const [filterQuery, setFilterQuery] = useTituladosFilterQuery(datasetId)
   const {
     summary,
     profile,
@@ -76,7 +77,7 @@ export function EmploymentProfilePage({ printAll = false }: { printAll?: boolean
       {error && (
         <StatusPanel kind="warning" title="No se pudo cargar el perfil" description={error} />
       )}
-      {!loading && !error && !summary && (
+      {!datasetsLoading && !datasetId && !loading && !error && !summary && (
         <StatusPanel
           kind="info"
           title="Sin dataset de titulados"

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   DEPARTMENT_OPTIONS,
   HIRED_OPTIONS,
@@ -83,19 +83,14 @@ export function loadEmployerFilters(datasetId?: string): EmployerFilters {
 
 /** Estado de filtros por dataset. La persistencia local es solo una comodidad: si falla, la pantalla sigue funcionando. */
 export function useEmployerFilters(datasetId?: string) {
-  const [filters, setFilters] = useState<EmployerFilters>(NO_EMPLOYER_FILTERS)
-
-  useEffect(() => {
-    if (!datasetId) {
-      setFilters(NO_EMPLOYER_FILTERS)
-      return
-    }
-    try {
-      setFilters(restore(JSON.parse(localStorage.getItem(storageKey(datasetId)) ?? 'null') as Partial<EmployerFilters> | null))
-    } catch {
-      setFilters(NO_EMPLOYER_FILTERS)
-    }
-  }, [datasetId])
+  // Los filtros guardados se leen de forma síncrona: la primera consulta tras recargar ya sale filtrada
+  // (antes se restauraban en un efecto y esa consulta inicial iba sin filtros, aunque la barra los mostrara).
+  const [state, setState] = useState(() => ({ id: datasetId, filters: loadEmployerFilters(datasetId) }))
+  const filters = state.id === datasetId ? state.filters : loadEmployerFilters(datasetId)
+  const setFilters = useCallback(
+    (next: EmployerFilters) => setState({ id: datasetId, filters: next }),
+    [datasetId],
+  )
 
   /* Se guarda solo al cambiar un filtro: guardar en un efecto escribiría el estado anterior en el dataset nuevo. */
   const commit = useCallback((next: EmployerFilters) => {
@@ -106,7 +101,7 @@ export function useEmployerFilters(datasetId?: string) {
     } catch {
       /* sin almacenamiento disponible: los filtros solo viven en la pantalla */
     }
-  }, [datasetId])
+  }, [datasetId, setFilters])
 
   const toggle = useCallback((key: EmployerFilterKey, value: string) => {
     const current = filters

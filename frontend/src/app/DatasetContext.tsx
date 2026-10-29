@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { apiRequest } from "@/api/client";
 import type { DatasetSummary } from "@/features/encuesta/api";
@@ -9,6 +10,8 @@ type DatasetContextValue = {
   activeIds: Record<DatasetDomain, string | undefined>;
   setActiveDataset: (domain: DatasetDomain, id?: string) => void;
   refreshDatasets: () => void;
+  /** true hasta recibir la primera lista: evita mostrar «sin dataset» mientras se consulta. */
+  loading: boolean;
 };
 
 const DatasetContext = createContext<DatasetContextValue | null>(null);
@@ -16,6 +19,7 @@ const DatasetContext = createContext<DatasetContextValue | null>(null);
 export function DatasetProvider({ children }: { children: ReactNode }) {
   const [allDatasets, setAllDatasets] = useState<DatasetSummary[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [activeIds, setActiveIds] = useState<Record<DatasetDomain, string | undefined>>(() => ({
     TITULADOS:
       localStorage.getItem("simulacionem.activeDatasetId.TITULADOS") ??
@@ -25,7 +29,10 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   }));
 
   useEffect(() => {
-    apiRequest<DatasetSummary[]>("/datasets").then(setAllDatasets).catch(() => setAllDatasets([]));
+    apiRequest<DatasetSummary[]>("/datasets")
+      .then(setAllDatasets)
+      .catch(() => setAllDatasets([]))
+      .finally(() => setLoading(false));
   }, [refreshKey]);
 
   useEffect(() => {
@@ -64,7 +71,7 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <DatasetContext.Provider value={{ datasets, activeIds, setActiveDataset, refreshDatasets: () => setRefreshKey((key) => key + 1) }}>
+    <DatasetContext.Provider value={{ datasets, activeIds, setActiveDataset, refreshDatasets: () => setRefreshKey((key) => key + 1), loading }}>
       {children}
     </DatasetContext.Provider>
   );

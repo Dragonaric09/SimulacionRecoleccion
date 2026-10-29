@@ -17,6 +17,7 @@ import {
   ScoreLegend as SharedScoreLegend,
   SegmentScoreMatrix,
 } from '@/components/analytics/charts'
+import { TapTooltip } from '@/components/analytics/TapTooltip'
 
 /**
  * Visualizaciones de la valoración por dimensiones. Son HTML y CSS (sin Recharts): se ven igual en pantalla y en
@@ -120,10 +121,12 @@ export function StatementRanking({
           <div
             key={item.key}
             className="statement-row grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_56px_56px] items-center gap-3 text-xs"
-            title={STATEMENTS.get(item.key)}
           >
             <div className="min-w-0">
-              <p className="truncate font-medium text-ink-900">{item.label}</p>
+              {/* El enunciado completo se abre con el cursor o al tocar la etiqueta. */}
+              <TapTooltip content={STATEMENTS.get(item.key) ?? item.label}>
+                <button type="button" className="block w-full cursor-help truncate text-left font-medium text-ink-900">{item.label}</button>
+              </TapTooltip>
               <p className="truncate text-[11px] text-ink-500">
                 {dimensionLabel.get(item.dimension) ?? ''}
               </p>
