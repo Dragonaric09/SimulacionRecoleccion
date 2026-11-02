@@ -468,7 +468,7 @@ export function CrossBars({
                               <strong>{booleanLabel(item.label)}</strong>
                               <span>
                                 {metric === "rowPercent"
-                                  ? `${valueLabel(row, column, value)} · `
+                                  ? `${label} · `
                                   : ""}
                                 {value} de {totalRow} respuestas de «{booleanLabel(row)}»
                               </span>

@@ -15,6 +15,9 @@ export type Competence = {
 };
 
 export type Cross = {
+  /** Variables del cruce tal como las devuelve la API (CrossTabulationDto). */
+  rowField?: string;
+  columnField?: string;
   validCount: number;
   rowCategories: string[];
   columnCategories: string[];
