@@ -81,13 +81,9 @@ export function ChartCardActions({
   if (!help && !onExportCsv && !onExportChart) return null
   const exportCardPng = async (trigger: HTMLElement | null) => {
     const card = trigger?.closest<HTMLElement>('[data-slot="card"]')
-    if (!card) return
-    try {
-      await downloadChartPng(card, title)
-    } catch (cause) {
-      console.error(`No se pudo descargar el PNG de «${title}».`, cause)
-      window.alert('No se pudo preparar el PNG. Revise la consola del navegador para más detalles.')
-    }
+    if (!card) throw new Error('No se encontró la tarjeta de la visualización')
+    // Si falla, el menú de descarga muestra el aviso (antes era un window.alert).
+    await downloadChartPng(card, title)
   }
   return (
     <div className="flex shrink-0 items-center gap-0.5" data-chart-export-exclude>

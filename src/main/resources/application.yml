@@ -6,8 +6,9 @@ spring:
   servlet:
     multipart:
       # Respuestas de encuestas grandes: el límite por defecto de Spring (1 MB) rechaza archivos reales.
-      max-file-size: 200MB
-      max-request-size: 200MB
+      # En desarrollo admite las pruebas de volumen (50 000 filas); producción usa un límite menor (application-prod.yml).
+      max-file-size: ${UPLOAD_MAX_SIZE:200MB}
+      max-request-size: ${UPLOAD_MAX_SIZE:200MB}
   jpa:
     open-in-view: false
     hibernate:

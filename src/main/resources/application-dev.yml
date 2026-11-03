@@ -1,9 +1,12 @@
 spring:
+  # Las credenciales locales se leen del archivo .env de la raíz (no versionado); ver .env.example.
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     # reWriteBatchedInserts agrupa los INSERT por lotes en un solo mensaje al servidor (importaciones grandes).
     url: jdbc:postgresql://localhost:${DB_PORT:5433}/simulacionem?reWriteBatchedInserts=true
-    username: simulacionem_dev
-    password: dev_password_2026
+    username: ${DB_USER:simulacionem_dev}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate

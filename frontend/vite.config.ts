@@ -5,6 +5,12 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  optimizeDeps: {
+    // Librerías que se cargan con import() solo al importar o exportar. Si Vite las descubre recién en ese
+    // momento, vuelve a optimizar dependencias con la página abierta y la carga falla con «504 Outdated Optimize
+    // Dep». Declaradas aquí, quedan listas al arrancar el servidor.
+    include: ['xlsx-js-style', 'pdfmake/build/pdfmake', 'pdfmake/build/vfs_fonts', 'html-to-image'],
+  },
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },

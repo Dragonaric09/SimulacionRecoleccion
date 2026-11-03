@@ -1,6 +1,12 @@
 # Perfil de producción (Render). Se activa con SPRING_PROFILES_ACTIVE=prod, que el Dockerfile ya define.
 # Ninguna credencial tiene valor por defecto: si falta una variable, la aplicación no arranca.
 spring:
+  servlet:
+    multipart:
+      # La app es pública y sin inicio de sesión, y el importador lee el archivo completo en memoria: un límite
+      # alto deja a cualquiera agotar la memoria del servicio. 20 MB cubre de sobra una encuesta real (miles de filas).
+      max-file-size: ${UPLOAD_MAX_SIZE:20MB}
+      max-request-size: ${UPLOAD_MAX_SIZE:20MB}
   datasource:
     # Variables tomadas del panel de la base de datos en Render (Hostname, Port, Database, Username, Password).
     # reWriteBatchedInserts agrupa los INSERT de las importaciones grandes.

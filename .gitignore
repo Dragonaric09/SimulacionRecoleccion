@@ -24,3 +24,7 @@ frontend/.vite/
 /data/*
 
 docs
+
+# La raíz solo tiene atajos hacia frontend/; su lockfile no aporta nada
+/package-lock.json
+/node_modules/

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Database, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,8 +19,18 @@ import {
 } from './navigation'
 import { PlaceholderPage } from './PlaceholderPage'
 import { PrintButton } from '@/components/analytics/PrintButton'
-import { EmployerReportHost } from '@/features/empleadores/report/EmployerReportHost'
-import { TituladosReportHost } from '@/features/titulados/report/TituladosReportHost'
+
+// Los informes imprimibles solo se usan al pedir el PDF: se descargan con su sección, no en el archivo principal.
+const EmployerReportHost = lazy(() =>
+  import('@/features/empleadores/report/EmployerReportHost').then((m) => ({
+    default: m.EmployerReportHost,
+  })),
+)
+const TituladosReportHost = lazy(() =>
+  import('@/features/titulados/report/TituladosReportHost').then((m) => ({
+    default: m.TituladosReportHost,
+  })),
+)
 
 type Props = { route: NavigationItem }
 
@@ -211,8 +221,10 @@ function AppLayoutContent({ route }: Props) {
             >
               <PlaceholderPage route={route} />
             </div>
-            {route.section === 'empleadores' && <EmployerReportHost />}
-            {route.section === 'titulados' && <TituladosReportHost />}
+            <Suspense fallback={null}>
+              {route.section === 'empleadores' && <EmployerReportHost />}
+              {route.section === 'titulados' && <TituladosReportHost />}
+            </Suspense>
           </main>
         </div>
       </div>
@@ -225,15 +237,30 @@ function AppLayoutContent({ route }: Props) {
  * impacto que el importador registra para la pregunta ausente; `emptyWhen` lista las preguntas sin las cuales la
  * sección entera queda vacía.
  */
-const SECTION_NOTICES: Record<string, { domains: DatasetDomain[]; sections: string[]; emptyWhen?: string[] }> = {
+const SECTION_NOTICES: Record<
+  string,
+  { domains: DatasetDomain[]; sections: string[]; emptyWhen?: string[] }
+> = {
   '/titulados/resumen': { domains: ['TITULADOS'], sections: ['Resumen general'] },
-  '/titulados/perfil-empleabilidad': { domains: ['TITULADOS'], sections: ['Perfil de empleabilidad'] },
+  '/titulados/perfil-empleabilidad': {
+    domains: ['TITULADOS'],
+    sections: ['Perfil de empleabilidad'],
+  },
   '/titulados/formacion-continua': { domains: ['TITULADOS'], sections: ['Formación continua'] },
   '/titulados/financiamiento': { domains: ['TITULADOS'], sections: ['Financiamiento'] },
-  '/titulados/brechas-competencias': { domains: ['TITULADOS'], sections: ['Brechas de competencias'] },
+  '/titulados/brechas-competencias': {
+    domains: ['TITULADOS'],
+    sections: ['Brechas de competencias'],
+  },
   '/titulados/cruces-exportacion': { domains: ['TITULADOS'], sections: ['Cruces'] },
-  '/titulados/simulacion-escenarios': { domains: ['TITULADOS'], sections: ['Simulación de escenarios'] },
-  '/empleadores/resumen-contratacion': { domains: ['EMPLEADORES'], sections: ['Resumen y contratación'] },
+  '/titulados/simulacion-escenarios': {
+    domains: ['TITULADOS'],
+    sections: ['Simulación de escenarios'],
+  },
+  '/empleadores/resumen-contratacion': {
+    domains: ['EMPLEADORES'],
+    sections: ['Resumen y contratación'],
+  },
   '/empleadores/valoracion-carrera': {
     domains: ['EMPLEADORES'],
     sections: ['Valoración de la Carrera'],
@@ -252,7 +279,13 @@ const SECTION_NOTICES: Record<string, { domains: DatasetDomain[]; sections: stri
   },
 }
 
-function SectionDataNotice({ path, activeIds }: { path: string; activeIds: Partial<Record<DatasetDomain, string>> }) {
+function SectionDataNotice({
+  path,
+  activeIds,
+}: {
+  path: string
+  activeIds: Partial<Record<DatasetDomain, string>>
+}) {
   const notice = SECTION_NOTICES[path]
   if (!notice) return null
   return (

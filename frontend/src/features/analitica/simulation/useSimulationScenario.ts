@@ -57,8 +57,20 @@ export function useSimulationScenario() {
   const seedValid = Number.isInteger(seed);
   const parametersValid = sampleSizeValid && repetitionsValid && seedValid;
 
+  /** Convierte las probabilidades guardadas en pesos sobre las categorías presentes en los datos. */
+  const applySavedWeights = useCallback((saved: SavedSimulationScenario, counts: Record<string, number>) => {
+    const categories = simulationCategories(saved.variable, counts);
+    const { weights: next, missing } = scenarioWeights(saved, categories, Object.values(counts).reduce((sum, value) => sum + value, 0));
+    setWeights(next);
+    setScenarioNotice(missing.length
+      ? `«${saved.name}» incluye categorías que no aparecen en estos datos y se omitieron: ${missing.map(simulationCategoryLabel).join(", ")}.`
+      : null);
+  }, [setWeights]);
+
   useEffect(() => {
     if (!datasetId) return;
+    // Una respuesta que llega después de cambiar de variable o segmento se descarta: no debe pisar los datos nuevos.
+    const controller = new AbortController();
     setResult(null);
     setComparison(null);
     setScenarioPercentages(null);
@@ -67,6 +79,7 @@ export function useSimulationScenario() {
     const gender = segment === "all" ? "" : `&gender=${encodeURIComponent(segment)}`;
     apiRequest<AnalyticsSummary>(
       `/analytics/titulados/summary?datasetId=${encodeURIComponent(datasetId)}&fields=${encodeURIComponent(variable)}${gender}`,
+      { signal: controller.signal },
     )
       .then((next) => {
         setSummary(next);
@@ -80,10 +93,13 @@ export function useSimulationScenario() {
         // Pesos guardados de este dataset, variable y segmento; si no hay, el escenario parte de lo observado.
         setWeightsState(loadWeights(weightsKey));
       })
-      .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)));
-    // applySavedWeights solo escribe estado y almacenamiento; no debe volver a disparar la consulta.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [datasetId, variable, segment, weightsKey]);
+      .catch((cause) => {
+        if (cause instanceof DOMException && cause.name === "AbortError") return;
+        setError(cause instanceof Error ? cause.message : String(cause));
+      });
+    // applySavedWeights cambia solo cuando cambia weightsKey, que ya está en la lista: no agrega consultas.
+    return () => controller.abort();
+  }, [datasetId, variable, segment, weightsKey, applySavedWeights]);
 
   const currentResult = result && executedRun
     && executedRun.datasetId === datasetId
@@ -93,16 +109,6 @@ export function useSimulationScenario() {
     : null;
   const currentExecutedRun = currentResult ? executedRun : null;
   const currentComparison = currentResult && comparison?.scenario === currentResult ? comparison : null;
-
-  /** Convierte las probabilidades guardadas en pesos sobre las categorías presentes en los datos. */
-  function applySavedWeights(saved: SavedSimulationScenario, counts: Record<string, number>) {
-    const categories = simulationCategories(saved.variable, counts);
-    const { weights: next, missing } = scenarioWeights(saved, categories, Object.values(counts).reduce((sum, value) => sum + value, 0));
-    setWeights(next);
-    setScenarioNotice(missing.length
-      ? `«${saved.name}» incluye categorías que no aparecen en estos datos y se omitieron: ${missing.map(simulationCategoryLabel).join(", ")}.`
-      : null);
-  }
 
   /** Aplica un escenario guardado: variable, segmento, parámetros y probabilidades. */
   const applyScenario = (saved: SavedSimulationScenario) => {

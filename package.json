@@ -1,0 +1,12 @@
+{
+  "name": "simulacionem",
+  "private": true,
+  "description": "Atajos de la raíz: el frontend vive en frontend/. «npm install» aquí instala sus dependencias.",
+  "scripts": {
+    "postinstall": "npm --prefix frontend install",
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "dev:db": "docker compose up -d"
+  }
+}

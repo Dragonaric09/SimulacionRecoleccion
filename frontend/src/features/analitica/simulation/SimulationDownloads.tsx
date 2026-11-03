@@ -52,10 +52,7 @@ export function SimulationDownloadMenu({ run }: { run: SimulationRun | null }) {
           {
             label: "Imagen PNG",
             help: "Gráfico de rangos",
-            onSelect: () => exportSimulationPng(run).catch((error: unknown) => {
-              console.error("No se pudo generar el PNG de simulación", error);
-              setPdfError("No se pudo generar la imagen PNG. Revisa la consola para más detalles.");
-            }),
+            onSelect: () => exportSimulationPng(run),
           },
         ] : [{ label: "Descargar", help: "Esperando los datos para calcular la simulación", disabled: true, onSelect: () => undefined }]}
       />
