@@ -115,7 +115,9 @@ public class AnalyticsController {
     public AnalyticsSummaryDto tituladosFinancing(@RequestParam(required = false) UUID datasetId,
                                                   @ModelAttribute TituladosQuery query) {
         return analytics.summary(datasetId, "TITULADOS", List.of(
-                "financiamiento_posgrado_estimado", "nivel_posgrado_interes"), query.toFilter());
+                "financiamiento_posgrado_estimado", "nivel_posgrado_interes", "modalidad_posgrado",
+                // Financiamiento de la formación ya cursada: la sección lo muestra si el archivo no trae el estimado.
+                "financiamiento_posgrado_cursado", "formacion_complementaria_nivel"), query.toFilter());
     }
 
     @GetMapping("/employers/summary")

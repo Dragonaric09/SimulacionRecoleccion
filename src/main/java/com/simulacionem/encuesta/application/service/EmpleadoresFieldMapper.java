@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.simulacionem.encuesta.application.service.FieldMappingSupport.applyMappings;
 import static com.simulacionem.encuesta.application.service.FieldMappingSupport.clean;
@@ -116,23 +117,79 @@ final class EmpleadoresFieldMapper implements SurveyFieldMapper {
 
     @Override
     public List<FieldMappingSupport.MappingIssue> validate(Map<String, Object> values, int rowNumber) {
+        return validate(values, rowNumber, null);
+    }
+
+    /**
+     * Una fila solo se rechaza si no trae ninguna respuesta analizable. Las preguntas que el archivo no incluye
+     * (otra versión del formulario, por ejemplo sin la cuadrícula de competencias) no generan avisos por fila:
+     * se informan una vez para todo el archivo. {@code presentKeys} null equivale a «el archivo trae todas».
+     */
+    @Override
+    public List<FieldMappingSupport.MappingIssue> validate(Map<String, Object> values, int rowNumber, Set<String> presentKeys) {
         List<FieldMappingSupport.MappingIssue> issues = new ArrayList<>();
         boolean hasCompetence = values.keySet().stream().anyMatch(key -> key.startsWith("competence:"));
-        if (!values.containsKey("tipo_organizacion") || !values.containsKey("tamano_organizacion") || !hasCompetence) {
+        boolean hasValuation = VALUATIONS.stream().anyMatch(valuation -> values.containsKey(valuation.key()));
+        boolean hasProfile = values.containsKey("tipo_organizacion") || values.containsKey("tamano_organizacion");
+        boolean hasHiring = values.containsKey("contrato_titulados_ultimos_5_anios") || values.containsKey("posibilidad_incorporacion");
+        if (!hasProfile && !hasCompetence && !hasValuation && !hasHiring) {
             issues.add(issue(rowNumber, "ERROR", "RESPUESTA_INCOMPLETA",
-                    "Faltan el tipo o tamaño de la organización o las competencias valoradas; la fila no entra al análisis"));
+                    "La fila no tiene respuestas analizables (perfil de la organización, contratación, valoraciones ni competencias)"));
+            return issues;
+        }
+        if (!hasProfile) {
+            issues.add(issue(rowNumber, "ADVERTENCIA", "PERFIL_INCOMPLETO",
+                    "Sin tipo ni tamaño de la organización: la fila no aparece en los gráficos por perfil"));
+        }
+        boolean competencesInFile = presentKeys == null || presentKeys.stream().anyMatch(key -> key.startsWith("competence:"));
+        if (competencesInFile && !hasCompetence) {
+            issues.add(issue(rowNumber, "ADVERTENCIA", "COMPETENCIAS_VACIAS", "Sin competencias valoradas en esta fila"));
         }
         for (String key : CORE_FIELDS) {
-            if (!values.containsKey(key)) {
+            if ((presentKeys == null || presentKeys.contains(key)) && !values.containsKey(key)) {
                 issues.add(issue(rowNumber, "ADVERTENCIA", "CAMPO_VACIO", "Sin respuesta en «" + key + "»"));
             }
         }
-        long missingValuations = VALUATIONS.stream().filter(valuation -> !values.containsKey(valuation.key())).count();
+        // Una respuesta fuera de la escala de acuerdo no entra al puntaje: se avisa en lugar de perderla en silencio.
+        for (Valuation valuation : VALUATIONS) {
+            Object answer = values.get(valuation.key());
+            if (answer != null && !AGREEMENT_OPTIONS.contains(normalize(String.valueOf(answer)))) {
+                issues.add(issue(rowNumber, "ADVERTENCIA", "VALOR_FUERA_DE_ESCALA", "«" + answer + "» no es una opción de la escala"
+                        + " de acuerdo (Totalmente de acuerdo, Parcialmente de acuerdo, Totalmente desacuerdo, No sabe); no entra al puntaje"));
+            }
+        }
+        List<Valuation> expected = VALUATIONS.stream()
+                .filter(valuation -> presentKeys == null || presentKeys.contains(valuation.key())).toList();
+        long missingValuations = expected.stream().filter(valuation -> !values.containsKey(valuation.key())).count();
         if (missingValuations > 0) {
             issues.add(issue(rowNumber, "ADVERTENCIA", "VALORACION_VACIA",
-                    missingValuations + " de " + VALUATIONS.size() + " afirmaciones de valoración sin respuesta"));
+                    missingValuations + " de " + expected.size() + " afirmaciones de valoración sin respuesta"));
         }
         return issues;
+    }
+
+    /** Opciones de la escala de acuerdo de la cuadrícula de valoración, normalizadas. */
+    private static final Set<String> AGREEMENT_OPTIONS = Set.of(
+            "totalmente de acuerdo", "parcialmente de acuerdo", "totalmente desacuerdo", "no sabe");
+
+    /** Preguntas que alimentan secciones completas; si el archivo no las trae, la importación lo advierte. */
+    private static final List<ExpectedQuestion> EXPECTED = List.of(
+            new ExpectedQuestion("Tipo de organización", "Resumen y contratación, filtros y Cruces", List.of("tipo de organización")),
+            new ExpectedQuestion("Tamaño de la organización", "Resumen y contratación, filtros y Cruces", List.of("tamaño de la organización")),
+            new ExpectedQuestion("Rubro o sector principal", "Resumen y contratación, filtros y Cruces", List.of("rubro o sector principal")),
+            new ExpectedQuestion("Departamento de la organización", "Resumen y contratación (gráfico y filtro por departamento) y Cruces", List.of("departamento")),
+            new ExpectedQuestion("Presencia de sedes", "Resumen y contratación (presencia de sedes) y Cruces", List.of("presencia de sedes")),
+            new ExpectedQuestion("Año de inicio de operaciones", "Cruces (antigüedad de la organización)", List.of("año de inicio de operaciones")),
+            new ExpectedQuestion("Contratación de titulados en los últimos 5 años", "Resumen y contratación", List.of("ha contratado ingenieros")),
+            new ExpectedQuestion("Competencias valoradas (técnicas y transversales)",
+                    "Brechas de competencias, Comparación de competencias, Resumen y contratación (indicador de competencias) y Cruces",
+                    List.of("competencias tecnicas", "competencias transversales")),
+            new ExpectedQuestion("Afirmaciones de valoración de la Carrera", "Valoración de la Carrera",
+                    List.of("brinda confianza a nuestra organizacion", "mantiene vinculos con organizaciones")));
+
+    @Override
+    public List<ExpectedQuestion> expectedQuestions() {
+        return EXPECTED;
     }
 
     @Override

@@ -16,13 +16,16 @@ export function useCompetencePage(domain: Domain) {
   useEffect(() => {
     if (!items.length) {
       setActiveGroup("");
+      // Sin competencias en el archivo, titulados abre en «Satisfacción y pertinencia», que sí puede tener datos;
+      // antes la pantalla ocultaba todas las pestañas y parecía vacía.
+      if (!loading && domain === "TITULADOS") setActiveTab((tab) => (tab === "hard" || tab === "soft" ? "satisfaccion" : tab));
       return;
     }
     const firstHard = items.find((item) => item.group.toLowerCase().includes("hard"));
     const firstSoft = items.find((item) => item.group.toLowerCase().includes("soft"));
     setActiveTab(firstHard ? "hard" : firstSoft ? "soft" : "hard");
     setActiveGroup((firstHard ?? firstSoft ?? items[0])?.group ?? "");
-  }, [items]);
+  }, [items, loading, domain]);
 
   const groups = useMemo(() => [...new Set(items.map((item) => item.group))], [items]);
   const tabGroup = (tab: string) =>

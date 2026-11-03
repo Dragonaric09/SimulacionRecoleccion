@@ -36,7 +36,9 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
             new FieldMappingDefinition("cargo_actual", "cargo que desempeña en su actual trabajo", MappingKind.TEXT),
             new FieldMappingDefinition("departamento_trabajo", "departamento de bolivia", MappingKind.TEXT),
             new FieldMappingDefinition("medio_obtencion_empleo", "a través de qué medio obtuvo el trabajo", MappingKind.TEXT),
+            // El formulario original trae la errata «peritnentes a sus formación»; la exportación de MS Forms, «son pertinentes a su formación».
             new FieldMappingDefinition("pertinencia_trabajo_formacion", "peritnentes a sus formación", MappingKind.LIKERT),
+            new FieldMappingDefinition("pertinencia_trabajo_formacion", "son pertinentes a su formación", MappingKind.LIKERT),
             new FieldMappingDefinition("satisfaccion_formacion", "de manera global", MappingKind.LIKERT),
             new FieldMappingDefinition("concordancia_formacion_requerimientos", "existe concordancia entre", MappingKind.LIKERT),
             new FieldMappingDefinition("formacion_complementaria_nivel", "programa de formación complementaria de mayor nivel", MappingKind.TEXT),
@@ -58,6 +60,7 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
             new FieldMappingDefinition("financiamiento_emprendimiento", "requerido financiamiento externo para su negocio", MappingKind.TEXT),
             new FieldMappingDefinition("satisfaccion_emprendimiento", "rendimiento actual de su negocio", MappingKind.LIKERT),
             new FieldMappingDefinition("importancia_formacion_emprendimiento", "importancia de ingeniería de sistemas", MappingKind.LIKERT),
+            new FieldMappingDefinition("importancia_formacion_emprendimiento", "importante considera que fue su formación", MappingKind.LIKERT),
             new FieldMappingDefinition("razon_no_trabaja", "razón por la que actualmente no trabaja", MappingKind.TEXT),
             new FieldMappingDefinition("tiene_formacion_complementaria", "ha realizado o se encuentra realizando", MappingKind.BOOLEAN),
             new FieldMappingDefinition("interes_posgrado", "estaría interesado en realizar estudios", MappingKind.BOOLEAN),
@@ -76,6 +79,7 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
     public Map<String, Object> map(List<String> headers, CSVRecord record, List<FieldMappingSupport.MappingIssue> issues) {
         Map<String, Object> values = FieldMappingSupport.baseValues(headers, record);
         applyMappings(values, headers, record, DEFINITIONS, issues);
+        canonicalizeSector(values);
         canonicalizeEducationLevel(values);
         inferLaborStatusWhenMissing(values);
         if (!isUnemployed(headers, record)) {
@@ -85,6 +89,31 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
         }
         applyBranchGuards(values);
         return values;
+    }
+
+    /**
+     * Sector público/privado. Algunas versiones del formulario lo preguntan como «sector en el que trabaja» y otras
+     * como «el trabajo en el que se encuentra, ¿a qué sector corresponde?»; si solo existe la segunda, alimenta
+     * también el sector laboral que usan los filtros y los cruces. Las respuestas en mayúsculas se uniforman.
+     */
+    private void canonicalizeSector(Map<String, Object> values) {
+        for (String key : List.of("sector_trabajo", "sector_trabajo_actual")) {
+            Object raw = values.get(key);
+            if (raw != null) values.put(key, canonicalSector(String.valueOf(raw)));
+        }
+        if (!values.containsKey("sector_trabajo") && values.containsKey("sector_trabajo_actual")) {
+            values.put("sector_trabajo", values.get("sector_trabajo_actual"));
+        }
+    }
+
+    private static String canonicalSector(String value) {
+        return switch (FieldMappingSupport.matchable(value)) {
+            case "publico" -> "Público";
+            case "privado" -> "Privado";
+            case "independiente" -> "Independiente";
+            case "ong" -> "ONG";
+            default -> value.trim();
+        };
     }
 
     private void canonicalizeEducationLevel(Map<String, Object> values) {
@@ -118,10 +147,12 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
 
         boolean unemployed = status.contains("no trabaja") || status.contains("no trabajo")
                 || status.contains("desemple") || status.contains("busqueda");
-        boolean firstEmployment = Boolean.TRUE.equals(values.get("es_primer_empleo"));
         boolean previousWork = Boolean.TRUE.equals(values.get("experiencia_laboral_previa"));
         if (unemployed) values.remove("es_primer_empleo");
-        if (!(firstEmployment || (unemployed && previousWork))) {
+        // El tiempo hasta el primer empleo y la cantidad de empleos solo se descartan en quien nunca trabajó. Antes
+        // se exigía que el empleo actual fuera el primero, pero en la versión de MS Forms la pregunta se hace a
+        // todas las personas que trabajaron y así se perdían respuestas válidas (65 de 101 en el archivo del docente).
+        if (unemployed && !previousWork) {
             values.remove("tiempo_primer_empleo");
             values.remove("cantidad_empleos");
         }
@@ -147,5 +178,43 @@ final class TituladosFieldMapper implements SurveyFieldMapper {
     @Override
     public List<GridMappingDefinition> gridDefinitions() {
         return GRID_DEFINITIONS;
+    }
+
+    /** Preguntas que alimentan secciones completas; si el archivo no las trae, la importación lo advierte. */
+    private static final List<ExpectedQuestion> EXPECTED = List.of(
+            new ExpectedQuestion("Edad", "Resumen general, filtro por edad, Cruces y Simulación de escenarios",
+                    List.of("edad que tiene actualmente")),
+            new ExpectedQuestion("Género", "Resumen general, filtro por género, Cruces y Simulación de escenarios",
+                    List.of("género")),
+            new ExpectedQuestion("Año de titulación", "Perfil de empleabilidad (cohortes por año), filtro por año de titulación, Cruces y Simulación de escenarios (segmento de titulación)",
+                    List.of("año de titulación")),
+            new ExpectedQuestion("Competencias técnicas y transversales", "Brechas de competencias (hard y soft skills) y Comparación de competencias",
+                    List.of("competencias tecnicas", "competencias transversales")),
+            new ExpectedQuestion("Nivel de posgrado de interés", "Financiamiento, Formación continua, Cruces y Simulación de escenarios",
+                    List.of("nivel de posgrado le interesa")),
+            new ExpectedQuestion("Modalidad preferida de posgrado", "Financiamiento, Formación continua, Cruces y Simulación de escenarios",
+                    List.of("modalidad preferida")),
+            new ExpectedQuestion("Cómo financiaría sus estudios de posgrado", "Financiamiento, Cruces y Simulación de escenarios",
+                    List.of("cómo financiaría sus estudios")),
+            new ExpectedQuestion("Situación laboral actual", "Resumen general y Perfil de empleabilidad",
+                    List.of("situación laboral actual")),
+            new ExpectedQuestion("Remuneración mensual", "Perfil de empleabilidad y Cruces",
+                    List.of("remuneración promedio mensual")),
+            new ExpectedQuestion("Sector de trabajo (público o privado)", "Filtro de sector y Cruces",
+                    List.of("sector en el que trabaja", "trabajo en el que se encuentra")),
+            new ExpectedQuestion("Valoración global de la formación", "Brechas de competencias (satisfacción y pertinencia)",
+                    List.of("de manera global")),
+            new ExpectedQuestion("Concordancia formación–requerimientos", "Brechas de competencias (satisfacción y pertinencia)",
+                    List.of("existe concordancia entre")),
+            new ExpectedQuestion("Pertinencia del trabajo con la formación", "Brechas de competencias (satisfacción y pertinencia)",
+                    List.of("peritnentes a sus formación", "pertinentes a su formación")),
+            new ExpectedQuestion("Interés en posgrado", "Formación continua y Simulación de escenarios",
+                    List.of("estaría interesado en realizar estudios")),
+            new ExpectedQuestion("Asignaturas útiles y poco útiles", "Brechas de competencias (malla y asignaturas)",
+                    List.of("asignaturas cursadas en la carrera")));
+
+    @Override
+    public List<ExpectedQuestion> expectedQuestions() {
+        return EXPECTED;
     }
 }

@@ -210,7 +210,7 @@ export function CargarDatosPage() {
             <UploadCloud className={`size-5 ${surveyAccent.text}`} />
             Archivo de respuestas
           </CardTitle>
-          <CardDescription>Archivo CSV (UTF-8) o Excel (.xlsx) exportado desde Google Forms</CardDescription>
+          <CardDescription>Archivo CSV (UTF-8) o Excel (.xlsx) exportado desde Google Forms o Microsoft Forms</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <input
@@ -328,7 +328,12 @@ function ImportReportView({
   expectedType: SurveyType;
 }) {
   const typeMismatch = report.surveyType !== expectedType;
-  const groupedIssues = groupIssues(report.issues);
+  // Las preguntas ausentes se muestran aparte, como aviso destacado; el resto queda en la lista de incidencias.
+  const missingQuestions = report.issues.filter((issue) => issue.code === "PREGUNTA_AUSENTE");
+  const incompleteFormat = report.issues.some((issue) => issue.code === "FORMATO_INCOMPLETO");
+  const groupedIssues = groupIssues(
+    report.issues.filter((issue) => issue.code !== "PREGUNTA_AUSENTE" && issue.code !== "FORMATO_INCOMPLETO"),
+  );
   return (
     <Card className="rounded-xl border-0 shadow-sm">
       <CardHeader>
@@ -365,6 +370,19 @@ function ImportReportView({
             </div>
           ))}
         </div>
+        {incompleteFormat && (
+          <StatusPanel
+            kind="warning"
+            title="Formato inconsistente con el instrumento"
+            description={`El archivo no trae ${missingQuestions.length === 1 ? "una pregunta" : `${missingQuestions.length} preguntas`} del formulario. Se importó lo disponible, pero algunas secciones o gráficas no mostrarán información:`}
+          >
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+              {missingQuestions.map((issue) => (
+                <li key={issue.message}>{issue.message}</li>
+              ))}
+            </ul>
+          </StatusPanel>
+        )}
         {groupedIssues.length > 0 && (
           <div className="space-y-2">
             <p className="label-default text-ink-600">Incidencias detectadas</p>
@@ -575,6 +593,16 @@ function formatIssueCode(value: string) {
     FILA_DESALINEADA: "Fila desalineada",
     FECHA_NO_RECONOCIDA: "Fecha no reconocida",
     NUMERO_NO_RECONOCIDO: "Número no reconocido",
+    FORMATO_INCOMPLETO: "Formato incompleto",
+    PREGUNTA_AUSENTE: "Pregunta ausente en el archivo",
+    PERFIL_INCOMPLETO: "Perfil de la organización incompleto",
+    COMPETENCIAS_VACIAS: "Competencias sin respuesta",
+    RESPUESTA_INCOMPLETA: "Fila sin respuestas analizables",
+    COLUMNAS_DESCARTADAS: "Columnas descartadas",
+    COLUMNA_DESCARTADA_CON_TEXTO: "Columna descartada con texto",
+    COLUMNA_SIN_RESPUESTAS: "Pregunta sin respuestas",
+    INSTRUMENTO_NO_RECONOCIDO: "Archivo que no corresponde al instrumento",
+    VALOR_FUERA_DE_ESCALA: "Valor fuera de la escala",
   };
   return labels[value] ?? formatTechnicalLabel(value);
 }

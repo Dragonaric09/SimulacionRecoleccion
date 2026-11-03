@@ -76,6 +76,22 @@ public class DatasetController {
                 .toList();
     }
 
+    /**
+     * Preguntas del instrumento que el archivo no traía. Las pantallas las usan para avisar que una sección queda
+     * vacía por falta de información y no por un fallo del sistema; es una consulta liviana aunque el archivo
+     * tenga miles de incidencias por fila.
+     */
+    @GetMapping("/{id}/missing-questions")
+    public List<ImportIssueDto> missingQuestions(@PathVariable UUID id) {
+        if (!datasets.existsById(id)) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND, "Dataset no encontrado");
+        }
+        return issues.findByDataset_IdAndIssueCodeOrderByIdAsc(id, "PREGUNTA_AUSENTE").stream()
+                .map(issue -> new ImportIssueDto(issue.getSourceRowNumber(), issue.getSourceColumnIndex(),
+                        issue.getSourceColumnName(), issue.getSeverity(), issue.getIssueCode(), issue.getMessage()))
+                .toList();
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {

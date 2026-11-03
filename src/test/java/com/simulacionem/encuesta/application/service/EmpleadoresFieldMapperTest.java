@@ -69,12 +69,14 @@ class EmpleadoresFieldMapperTest {
     }
 
     @Test
-    void unaFilaSinCompetenciasQuedaFueraDelAnalisis() throws Exception {
+    void unaFilaSinCompetenciasSeAdvierteSinRechazarla() throws Exception {
         Fixture fixture = fixture();
         Map<String, Object> values = mapper.map(fixture.headers(), fixture.records().get(1), new ArrayList<>());
 
+        // El resto de sus respuestas (perfil, contratación, valoraciones) sigue siendo analizable.
         assertThat(mapper.validate(values, 3))
-                .anyMatch(issue -> issue.severity().equals("ERROR") && issue.code().equals("RESPUESTA_INCOMPLETA"));
+                .noneMatch(issue -> issue.severity().equals("ERROR"))
+                .anyMatch(issue -> issue.code().equals("COMPETENCIAS_VACIAS"));
     }
 
     @Test

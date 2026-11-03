@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DatasetProvider, useDatasetContext, type DatasetDomain } from './DatasetContext'
+import { MissingDataNotice } from '@/components/analytics/MissingDataNotice'
 import {
   isDomainSection,
   navigation,
@@ -198,6 +199,7 @@ function AppLayoutContent({ route }: Props) {
                   </p>
                 </section>
               )}
+            <SectionDataNotice path={route.path} activeIds={activeIds} />
             <div
               className={
                 route.path.includes('cruces-exportacion')
@@ -215,6 +217,50 @@ function AppLayoutContent({ route }: Props) {
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * Secciones que dependen de preguntas que un formulario puede no traer. El texto de cada sección coincide con el
+ * impacto que el importador registra para la pregunta ausente; `emptyWhen` lista las preguntas sin las cuales la
+ * sección entera queda vacía.
+ */
+const SECTION_NOTICES: Record<string, { domains: DatasetDomain[]; sections: string[]; emptyWhen?: string[] }> = {
+  '/titulados/resumen': { domains: ['TITULADOS'], sections: ['Resumen general'] },
+  '/titulados/perfil-empleabilidad': { domains: ['TITULADOS'], sections: ['Perfil de empleabilidad'] },
+  '/titulados/formacion-continua': { domains: ['TITULADOS'], sections: ['Formación continua'] },
+  '/titulados/financiamiento': { domains: ['TITULADOS'], sections: ['Financiamiento'] },
+  '/titulados/brechas-competencias': { domains: ['TITULADOS'], sections: ['Brechas de competencias'] },
+  '/titulados/cruces-exportacion': { domains: ['TITULADOS'], sections: ['Cruces'] },
+  '/titulados/simulacion-escenarios': { domains: ['TITULADOS'], sections: ['Simulación de escenarios'] },
+  '/empleadores/resumen-contratacion': { domains: ['EMPLEADORES'], sections: ['Resumen y contratación'] },
+  '/empleadores/valoracion-carrera': {
+    domains: ['EMPLEADORES'],
+    sections: ['Valoración de la Carrera'],
+    emptyWhen: ['Afirmaciones de valoración'],
+  },
+  '/empleadores/brechas-competencias': {
+    domains: ['EMPLEADORES'],
+    sections: ['Brechas de competencias'],
+    emptyWhen: ['Competencias valoradas'],
+  },
+  '/empleadores/cruces-exportacion': { domains: ['EMPLEADORES'], sections: ['Cruces'] },
+  '/comparacion/titulados-empleadores': {
+    domains: ['TITULADOS', 'EMPLEADORES'],
+    sections: ['Comparación de competencias'],
+    emptyWhen: ['Competencias'],
+  },
+}
+
+function SectionDataNotice({ path, activeIds }: { path: string; activeIds: Partial<Record<DatasetDomain, string>> }) {
+  const notice = SECTION_NOTICES[path]
+  if (!notice) return null
+  return (
+    <MissingDataNotice
+      datasetIds={notice.domains.map((domain) => activeIds[domain])}
+      sections={notice.sections}
+      emptyWhen={notice.emptyWhen}
+    />
   )
 }
 

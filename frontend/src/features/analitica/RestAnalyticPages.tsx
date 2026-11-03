@@ -1469,7 +1469,7 @@ export function CompetencePage({
           description="Selecciona o importa un dataset para mostrar la tabla."
         />
       )}
-      {items.length > 0 && (
+      {(items.length > 0 || (domain === 'TITULADOS' && (satisfaction || curriculum))) && (
         <>
           <Tabs
             value={activeTab}

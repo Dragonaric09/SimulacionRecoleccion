@@ -38,13 +38,35 @@ final class FieldMappingSupport {
                               List<FieldMappingDefinition> definitions, List<MappingIssue> issues) {
         for (FieldMappingDefinition definition : definitions) {
             switch (definition.kind()) {
-                case TEXT, CATEGORY, LIKERT, MULTI_CATEGORY -> putKnown(values, headers, record, definition.key(), definition.headerFragment());
+                case TEXT, CATEGORY, LIKERT -> putKnown(values, headers, record, definition.key(), definition.headerFragment());
+                case MULTI_CATEGORY -> putMultiple(values, headers, record, definition.key(), definition.headerFragment());
                 case BOOLEAN -> normalizeBoolean(values, headers, record, definition.key(), definition.headerFragment());
                 case NUMBER -> normalizeNumber(values, headers, record, definition.key(), definition.headerFragment(), issues);
                 case LABOR_STATUS -> normalizeLaborStatus(values, headers, record, definition.headerFragment());
             }
         }
     }
+
+    /**
+     * Casillas de verificación. MS Forms exporta algunas como arreglo JSON (["Desarrollo","Computo"]); se
+     * guardan con el separador «; » que usa el resto del sistema para respuestas múltiples.
+     */
+    static void putMultiple(Map<String, Object> values, List<String> headers, CSVRecord record, String key, String fragment) {
+        String value = firstValue(headers, record, fragment);
+        if (value == null) return;
+        if (value.startsWith("[") && value.endsWith("]")) {
+            List<String> options = new java.util.ArrayList<>();
+            java.util.regex.Matcher quoted = JSON_STRING.matcher(value);
+            while (quoted.find()) {
+                String option = clean(quoted.group(1).replace("\\\"", "\""));
+                if (option != null) options.add(option);
+            }
+            if (!options.isEmpty()) value = String.join("; ", options);
+        }
+        values.put(key, value);
+    }
+
+    private static final java.util.regex.Pattern JSON_STRING = java.util.regex.Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"");
 
     static void normalizeBoolean(Map<String, Object> values, List<String> headers, CSVRecord record, String key, String fragment) {
         String value = firstValue(headers, record, fragment);
@@ -80,14 +102,33 @@ final class FieldMappingSupport {
                 .replace("á", "a").replace("é", "e").replace("í", "i")
                 .replace("ó", "o").replace("ú", "u");
         if (Set.of("no aplica", "no corresponde", "n/a", "na", "no sabe", "no responde", "sin respuesta", "-").contains(normalized)) return;
-        try {
-            String numeric = value.replace(',', '.').replaceFirst("[^0-9.+-].*$", "");
-            values.put(key, Double.parseDouble(numeric));
-        } catch (NumberFormatException ex) {
+        Double parsed = yearsOrNumber(normalized);
+        if (parsed != null) {
+            values.put(key, parsed);
+        } else {
             issues.add(new MappingIssue((int) record.getRecordNumber() + 1, indexOf(headers, fragment) + 1, fragment, value,
                     "ADVERTENCIA", "NUMERO_NO_RECONOCIDO",
                     "La respuesta «" + value + "» no es numérica para «" + fragment + "» y se omitirá del cálculo"));
         }
+    }
+
+    private static final java.util.regex.Pattern FIRST_NUMBER = java.util.regex.Pattern.compile("\\d+(?:[.,]\\d+)?");
+
+    /**
+     * Número de una respuesta abierta de tiempo, en años: «3», «2,5», «1 año», «6 meses» (0,5), «Unos 3 meses».
+     * «Ninguno», «nada» o «nunca» sin cifras valen 0. Devuelve null si no hay una cantidad reconocible.
+     */
+    static Double yearsOrNumber(String normalized) {
+        java.util.regex.Matcher number = FIRST_NUMBER.matcher(normalized);
+        if (!number.find()) {
+            return normalized.matches(".*\\b(ningun[oa]?|nada|nunca|cero)\\b.*") ? 0.0 : null;
+        }
+        double value = Double.parseDouble(number.group().replace(',', '.'));
+        String unit = normalized.substring(number.end());
+        if (unit.matches("\\s*mes.*")) return Math.round(value / 12 * 100) / 100.0;
+        if (unit.matches("\\s*semana.*")) return Math.round(value / 52 * 100) / 100.0;
+        if (unit.matches("\\s*dia.*")) return Math.round(value / 365 * 100) / 100.0;
+        return value;
     }
 
     static String firstValue(List<String> headers, CSVRecord record, String fragment) {
@@ -111,11 +152,13 @@ final class FieldMappingSupport {
         return -1;
     }
 
+    /** Recorte con el espacio duro (U+00A0) de MS Forms convertido en espacio normal. */
     static String clean(String value) {
         if (value == null) return null;
-        String result = value.trim();
+        String result = value.replace(' ', ' ').trim();
         return result.isEmpty() ? null : result;
     }
+
 
     /**
      * Datos personales o de identificación que nunca se analizan ni se muestran: correo, nombres,

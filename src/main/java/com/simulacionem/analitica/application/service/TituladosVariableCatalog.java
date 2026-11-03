@@ -41,6 +41,10 @@ public final class TituladosVariableCatalog {
                     "Barras horizontales ordenadas", "Sector declarado por la persona titulada."),
             variable("tiene_formacion_complementaria", "Formación complementaria", "Formación", Level.BINARIA,
                     List.of("Sí", "No"), "Dona o barras de dos categorías", "Si realizó o cursa formación complementaria."),
+            variable("formacion_complementaria_nivel", "Nivel de formación complementaria cursada", "Formación", Level.ORDINAL,
+                    POSTGRADUATE, "Columnas en el orden académico", "Programa de mayor nivel concluido o en curso, de Diplomado a Posdoctorado."),
+            variable("financiamiento_posgrado_cursado", "Financiamiento de la formación cursada", "Formación", Level.NOMINAL, List.of(),
+                    "Barras horizontales ordenadas", "Fuente con la que financió el programa de formación complementaria que cursó."),
             variable("interes_posgrado", "Interés en posgrado", "Formación", Level.BINARIA,
                     List.of("Sí", "No"), "Dona o barras de dos categorías", "Intención declarada de cursar posgrado."),
             variable("nivel_posgrado_interes", "Nivel de posgrado de interés", "Formación", Level.ORDINAL,
@@ -65,7 +69,7 @@ public final class TituladosVariableCatalog {
             variable("satisfaccion_emprendimiento", "Satisfacción con el emprendimiento", "Emprendimiento", Level.ORDINAL,
                     List.of("Insatisfecho", "Algo satisfecho", "Satisfecho"), "Columnas en el orden de satisfacción", "Satisfacción declarada por quienes tienen emprendimiento."),
             variable("importancia_formacion_emprendimiento", "Importancia de la formación en el emprendimiento", "Emprendimiento", Level.ORDINAL,
-                    List.of("No es importante", "Importante", "Muy importante"), "Columnas en el orden de importancia",
+                    List.of("No es importante", "Poco importante", "Importante", "Muy importante"), "Columnas en el orden de importancia",
                     "Importancia atribuida a la formación para el emprendimiento.")
     );
 

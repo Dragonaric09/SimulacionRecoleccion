@@ -387,18 +387,9 @@ public class AnalyticsService {
                 || normalized.contains("busqueda") || normalized.contains("desemple");
     }
 
-    private boolean isFirstEmployment(SurveyResponseEntity response) {
-        String value = value(response, "es_primer_empleo");
-        if (value == null) value = value(response, "primera_experiencia_laboral");
-        if (value == null) return false;
-        String normalized = value.toLowerCase(Locale.ROOT).trim();
-        return normalized.equals("true") || normalized.equals("si") || normalized.equals("sí");
-    }
-
-    /** Sección 10: S9=Sí para ocupados, o S8=SI para desempleados con trabajo previo. */
+    /** Personas que han trabajado alguna vez: todas salvo quien no trabaja y nunca tuvo un empleo. */
     private boolean isFirstEmploymentBranch(SurveyResponseEntity response) {
-        if (isOccupied(response)) return isFirstEmployment(response);
-        return isUnemployed(response) && affirmative(value(response, "experiencia_laboral_previa"));
+        return !isUnemployed(response) || affirmative(value(response, "experiencia_laboral_previa"));
     }
 
     private boolean isEntrepreneur(SurveyResponseEntity response) {

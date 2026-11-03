@@ -131,11 +131,31 @@ public class CsvImportService {
                 return failure("TIPO_NO_RECONOCIDO", "No se pudo identificar si el CSV corresponde a titulados o empleadores");
             }
             String type = detected.name();
-            List<String> headers = rawHeaders.stream().map(this::clean).toList();
+            List<String> fileHeaders = rawHeaders.stream().map(this::clean).toList();
+            // Paso único de discriminación: las columnas que no son respuestas (calificación de MS Forms) se
+            // descartan aquí y el resto del proceso solo ve encabezados analizables (null en las descartadas).
+            SourceFormat format = SourceFormat.analyze(fileHeaders);
+            List<String> headers = format.analyzableHeaders();
+
+            SurveyFieldMapper mapper = fieldMapperFactory.forType(detected);
+            List<SurveyFieldMapper.ExpectedQuestion> expected = mapper.expectedQuestions();
+            long present = expected.stream().filter(question -> question.presentIn(headers)).count();
+            if (!expected.isEmpty() && present * 2 < expected.size()) {
+                return failure("INSTRUMENTO_NO_RECONOCIDO", "El archivo solo trae " + present + " de las " + expected.size()
+                        + " preguntas base del instrumento de " + detected.name().toLowerCase(Locale.ROOT)
+                        + ". No corresponde al formulario o le faltan demasiadas columnas para analizarlo.");
+            }
 
             Tally tally = new Tally();
-            addHeaderIssues(headers, tally);
-            int timestampColumn = indexOf(headers, "marca temporal");
+            String discarded = format.discardSummary();
+            if (discarded != null) {
+                tally.add(new Issue(null, null, null, null, "ADVERTENCIA", "COLUMNAS_DESCARTADAS", discarded));
+            }
+            addHeaderIssues(headers, format, tally);
+            addMissingQuestionIssues(expected, headers, tally);
+            Set<String> presentKeys = presentKeys(type, headers);
+            int[] answersByColumn = new int[headers.size()];
+            int timestampColumn = timestampColumn(headers);
             boolean[] personalColumns = personalColumns(headers);
 
             DatasetImportEntity dataset = null;
@@ -143,15 +163,21 @@ public class CsvImportService {
             if (persist) {
                 dataset = datasetImports.saveAndFlush(new DatasetImportEntity(type, fileName, "VALIDANDO"));
                 dataset.setSourceFileSha256(sha256);
-                saveColumnMappings(dataset, headers, type);
+                saveColumnMappings(dataset, fileHeaders, format, type);
                 competenceIds = competenceIds();
             }
 
             List<ResponseRow> batch = new ArrayList<>(persist ? BATCH_SIZE : 0);
             for (CSVRecord record : parser) {
-                RowResult row = readRow(type, headers, timestampColumn, personalColumns, record, rawHeaders.size());
+                RowResult row = readRow(type, headers, timestampColumn, personalColumns, record, rawHeaders.size(), presentKeys);
                 tally.addRow(row);
                 tally.addAll(row.issues());
+                for (int column : format.unexpectedContent(record)) {
+                    tally.add(new Issue(row.rowNumber(), column + 1, fileHeaders.get(column), clean(record.get(column)), "ADVERTENCIA",
+                            "COLUMNA_DESCARTADA_CON_TEXTO", "La columna de calificación «" + fileHeaders.get(column)
+                            + "» trae texto y no un puntaje; se descartó igual. Revisa si contiene respuestas."));
+                }
+                countAnswers(headers, record, answersByColumn);
                 if (persist) {
                     batch.add(toResponseRow(type, row, competenceIds));
                     if (batch.size() >= BATCH_SIZE) {
@@ -161,6 +187,7 @@ public class CsvImportService {
                 }
             }
 
+            addEmptyColumnIssues(type, headers, answersByColumn, tally);
             String status = tally.errors > 0 ? "CON_ERRORES" : (tally.warnings > 0 ? "CON_ADVERTENCIAS" : "LISTO");
             if (persist) {
                 writer.writeResponses(dataset.getId(), type, batch);
@@ -182,7 +209,7 @@ public class CsvImportService {
     }
 
     private RowResult readRow(String type, List<String> headers, int timestampColumn, boolean[] personalColumns,
-                              CSVRecord record, int expectedColumns) {
+                              CSVRecord record, int expectedColumns, Set<String> presentKeys) {
         int rowNumber = (int) record.getRecordNumber() + 1;
         List<Issue> rowIssues = new ArrayList<>();
         if (record.size() != expectedColumns) {
@@ -190,7 +217,7 @@ public class CsvImportService {
                     "La fila no tiene la misma cantidad de columnas que el encabezado"));
         }
         Map<String, Object> raw = rawValues(headers, personalColumns, record);
-        Map<String, Object> values = normalizedValues(type, headers, record, rowIssues);
+        Map<String, Object> values = normalizedValues(type, headers, record, rowIssues, presentKeys);
 
         OffsetDateTime submittedAt = null;
         String timestamp = timestampColumn >= 0 && timestampColumn < record.size() ? clean(record.get(timestampColumn)) : null;
@@ -200,18 +227,19 @@ public class CsvImportService {
                 submittedAt = parsed.atZone(SOURCE_ZONE).toOffsetDateTime();
                 values.put("submitted_at", submittedAt.toString());
             } catch (DateTimeParseException ex) {
-                rowIssues.add(new Issue(rowNumber, timestampColumn + 1, "Marca temporal", timestamp, "ADVERTENCIA",
+                rowIssues.add(new Issue(rowNumber, timestampColumn + 1, headers.get(timestampColumn), timestamp, "ADVERTENCIA",
                         "FECHA_NO_RECONOCIDA", "La fecha no se pudo convertir; se conserva el valor original"));
             }
         }
         return new RowResult(rowNumber, raw, values, submittedAt, rowIssues);
     }
 
-    private void addHeaderIssues(List<String> headers, Tally tally) {
+    private void addHeaderIssues(List<String> headers, SourceFormat format, Tally tally) {
         Map<String, Integer> occurrences = new LinkedHashMap<>();
         Set<String> warned = new HashSet<>();
         for (int i = 0; i < headers.size(); i++) {
             String header = headers.get(i);
+            if (format.isDiscarded(i)) continue;
             if (header == null) {
                 tally.add(new Issue(null, i + 1, null, null, "ERROR", "COLUMNA_SIN_NOMBRE", "Existe una columna sin nombre"));
                 continue;
@@ -224,14 +252,75 @@ public class CsvImportService {
         }
     }
 
-    private void saveColumnMappings(DatasetImportEntity dataset, List<String> headers, String type) {
+    /**
+     * Preguntas del instrumento que el archivo no incluye. Se informan una vez, con las secciones afectadas, y
+     * el archivo se importa igual: el sistema analiza lo que trae y avisa lo que no podrá mostrar.
+     */
+    private void addMissingQuestionIssues(List<SurveyFieldMapper.ExpectedQuestion> expected, List<String> headers, Tally tally) {
+        List<SurveyFieldMapper.ExpectedQuestion> missing = expected.stream()
+                .filter(question -> !question.presentIn(headers)).toList();
+        if (missing.isEmpty()) return;
+        tally.add(new Issue(null, null, null, null, "ADVERTENCIA", "FORMATO_INCOMPLETO",
+                "El formato del archivo no coincide por completo con el instrumento: faltan " + missing.size()
+                        + (missing.size() == 1 ? " pregunta" : " preguntas")
+                        + ". Se importa lo disponible, pero algunas secciones o gráficas pueden quedar vacías o incompletas."));
+        for (SurveyFieldMapper.ExpectedQuestion question : missing) {
+            tally.add(new Issue(null, null, question.question(), null, "ADVERTENCIA", "PREGUNTA_AUSENTE",
+                    "El archivo no incluye «" + question.question() + "». Sin datos en: " + question.impact() + "."));
+        }
+    }
+
+    private void countAnswers(List<String> headers, CSVRecord record, int[] answersByColumn) {
+        for (int i = 0; i < headers.size() && i < record.size(); i++) {
+            if (headers.get(i) != null && clean(record.get(i)) != null) answersByColumn[i]++;
+        }
+    }
+
+    /**
+     * Columnas analizables que llegaron sin ninguna respuesta: la pregunta existe en el archivo pero sus gráficas
+     * quedarán vacías. Se informa una vez por columna.
+     */
+    private void addEmptyColumnIssues(String type, List<String> headers, int[] answersByColumn, Tally tally) {
+        if (tally.rowsRead == 0) return;
+        for (int i = 0; i < headers.size(); i++) {
+            String header = headers.get(i);
+            if (header == null || answersByColumn[i] > 0 || internalKey(type, header) == null) continue;
+            tally.add(new Issue(null, i + 1, header, null, "ADVERTENCIA", "COLUMNA_SIN_RESPUESTAS",
+                    "La pregunta «" + header + "» no tiene ninguna respuesta en el archivo; sus gráficas quedarán vacías."));
+        }
+    }
+
+    /** Claves internas de las columnas del archivo (las de identificación y los metadatos de MS Forms no cuentan). */
+    private Set<String> presentKeys(String type, List<String> headers) {
+        Set<String> keys = new HashSet<>();
+        for (String header : headers) {
+            String key = internalKey(type, header);
+            if (key != null) keys.add(key);
+        }
+        return keys;
+    }
+
+    /**
+     * Columna de fecha de envío: «Marca temporal» de Google Forms o, en MS Forms, «Hora de finalización» (el
+     * momento en que se envió) y si no existe «Hora de inicio».
+     */
+    private int timestampColumn(List<String> headers) {
+        for (String fragment : List.of("marca temporal", "hora de finalizacion", "hora de inicio")) {
+            int index = indexOf(headers, fragment);
+            if (index >= 0) return index;
+        }
+        return -1;
+    }
+
+    private void saveColumnMappings(DatasetImportEntity dataset, List<String> headers, SourceFormat format, String type) {
         for (int i = 0; i < headers.size(); i++) {
             String header = headers.get(i) == null ? "(sin nombre)" : headers.get(i);
             boolean personal = personal(header.toLowerCase(Locale.ROOT));
-            String internalKey = internalKey(type, header);
+            boolean discarded = format.isDiscarded(i);
+            String internalKey = discarded ? null : internalKey(type, header);
             mappings.save(new DatasetColumnMappingEntity(dataset, i + 1, header,
                     internalKey, dataType(internalKey), personal,
-                    personal ? "EXCLUDED" : (internalKey == null ? "UNMAPPED" : "MAPPED")));
+                    personal || discarded ? "EXCLUDED" : (internalKey == null ? "UNMAPPED" : "MAPPED")));
         }
     }
 
@@ -423,13 +512,14 @@ public class CsvImportService {
         }
     }
 
-    private Map<String, Object> normalizedValues(String surveyType, List<String> headers, CSVRecord record, List<Issue> rowIssues) {
+    private Map<String, Object> normalizedValues(String surveyType, List<String> headers, CSVRecord record, List<Issue> rowIssues,
+                                                 Set<String> presentKeys) {
         SurveyFieldMapper mapper = fieldMapperFactory.forType(SurveyType.valueOf(surveyType));
         List<FieldMappingSupport.MappingIssue> mappingIssues = new ArrayList<>();
         Map<String, Object> values = mapper.map(headers, record, mappingIssues);
         mappingIssues.forEach(issue -> rowIssues.add(toIssue(issue)));
         addDerivedValues(values, headers, record, mapper.gridDefinitions());
-        mapper.validate(values, (int) record.getRecordNumber() + 1).forEach(issue -> rowIssues.add(toIssue(issue)));
+        mapper.validate(values, (int) record.getRecordNumber() + 1, presentKeys).forEach(issue -> rowIssues.add(toIssue(issue)));
         return values;
     }
 
@@ -528,7 +618,8 @@ public class CsvImportService {
         if (lower.contains("rubro de la empresa")) return "rubro_empresa";
         if (lower.contains("trabajo en el que se encuentra")) return "sector_trabajo_actual";
         if (lower.contains("antiguedad tiene en su actual trabajo")) return "antiguedad_trabajo";
-        if (lower.contains("peritnentes a sus formación") || lower.contains("pertinentes a su formación")) return "pertinencia_trabajo_formacion";
+        if (lower.contains("peritnentes a sus formación") || lower.contains("pertinentes a su formación")
+                || lower.contains("pertinentes a su formacion")) return "pertinencia_trabajo_formacion";
         if (lower.contains("de manera global")) return "satisfaccion_formacion";
         if (lower.contains("existe concordancia entre")) return "concordancia_formacion_requerimientos";
         if (lower.contains("rubro de la organización") || lower.contains("rubro de la organizacion")) return "rubro_trabajo_actual";
@@ -568,7 +659,7 @@ public class CsvImportService {
         if (lower.contains("de manera global")) return "valoracion_formacion_3";
         if (lower.contains("existe concordancia entre")) return "valoracion_formacion_5";
         if (lower.contains("rendimiento actual de su negocio")) return "satisfaccion_emprendimiento";
-        if (lower.contains("importante considera que fue su formacion en ingenieria de sistemas")) {
+        if (lower.contains("importante considera que fue su formacion en ingenieria")) {
             return "importancia_formacion_emprendimiento";
         }
         return null;
@@ -668,7 +759,7 @@ public class CsvImportService {
 
     private String clean(String value) {
         if (value == null) return null;
-        String result = repairMojibake(value).trim();
+        String result = repairMojibake(value).replace('\u00A0', ' ').trim();
         return result.isEmpty() ? null : result;
     }
 

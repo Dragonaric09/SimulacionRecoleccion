@@ -28,7 +28,7 @@ export function CompetenceGroupTabs({ tabs, tone }: { tabs: CompetenceGroupTab[]
                 {tab.count}
               </span>
             )}
-            {tab.disabled && <span className="text-[10px] tracking-wide uppercase">Próximamente</span>}
+            {tab.disabled && <span className="text-[10px] tracking-wide uppercase">Sin datos</span>}
           </TabsTrigger>
         );
       })}
