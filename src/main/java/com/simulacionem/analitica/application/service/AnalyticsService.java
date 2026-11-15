@@ -500,6 +500,62 @@ public class AnalyticsService {
      * categorías y aplica las ramas del cuestionario antes de construir la tabla. Así los niveles ordinales
      * conservan una escala coherente para Spearman, Mann–Whitney y Kruskal–Wallis.
      */
+    /**
+     * Registros de una tabulación exploratoria de titulados: por cada persona del filtro, las categorías de X e Y,
+     * si cada pregunta le corresponde según las ramas del formulario, y el valor de Z (normalizado y original).
+     * Aplica las mismas reglas de filtro, ramas y categorías que los cruces; el cálculo queda en
+     * {@link AnalisisExploratorioService}.
+     */
+    @Transactional(readOnly = true)
+    public ExploratoryRows exploratoryRows(UUID datasetId, TituladosFilter filter, String rowField, String columnField,
+                                           String valueField) {
+        DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
+        List<SurveyResponseEntity> all = validRows(dataset.getId());
+        List<SurveyResponseEntity> filtered = filteredRows(dataset.getId(), all, filter);
+        Integer zColumn = tituladosSql == null ? null : tituladosSql.sourceColumn(dataset.getId(), valueField);
+        List<ExploratoryRow> rows = new ArrayList<>(filtered.size());
+        for (SurveyResponseEntity response : filtered) {
+            Object raw = zColumn == null ? null : response.getNormalizedPayload().get("column_" + zColumn);
+            rows.add(new ExploratoryRow(
+                    analyticValue(response, rowField), fieldApplies(response, rowField),
+                    analyticValue(response, columnField), fieldApplies(response, columnField),
+                    value(response, valueField), fieldApplies(response, valueField),
+                    raw == null ? null : String.valueOf(raw).trim()));
+        }
+        java.util.Set<String> present = new java.util.HashSet<>();
+        for (String field : List.of(rowField, columnField, valueField)) {
+            String stored = "segmento_titulacion".equals(field) ? "anio_titulacion" : field;
+            boolean answered = all.stream().anyMatch(r -> r.getNormalizedPayload().get(stored) != null);
+            if (answered || (tituladosSql != null && tituladosSql.sourceColumn(dataset.getId(), stored) != null)) {
+                present.add(field);
+            }
+        }
+        return new ExploratoryRows(dataset.getId(), all.size(), filtered.size(), rows, present);
+    }
+
+    private String analyticValue(SurveyResponseEntity response, String field) {
+        String text = value(response, field);
+        return isAnalyticValue(text) ? text.trim() : null;
+    }
+
+    /** Si la pregunta le corresponde a la persona según las ramas del formulario (las mismas de los resúmenes). */
+    private boolean fieldApplies(SurveyResponseEntity response, String field) {
+        if ("anios_desempleo".equals(field)) return isUnemployed(response);
+        if ("es_primer_empleo".equals(field)) return isOccupied(response);
+        if (List.of("formacion_complementaria_nivel", "institucion_formacion_complementaria",
+                "financiamiento_posgrado_cursado").contains(field)) {
+            return affirmative(value(response, "tiene_formacion_complementaria"));
+        }
+        return crossFieldBranchAllows(response, field);
+    }
+
+    /** Una fila de la tabulación exploratoria; {@code zValue} es el número ya normalizado y {@code zRaw} el texto original. */
+    public record ExploratoryRow(String x, boolean xApplies, String y, boolean yApplies, String zValue, boolean zApplies,
+                                 String zRaw) { }
+
+    public record ExploratoryRows(UUID datasetId, long totalResponses, long filteredResponses, List<ExploratoryRow> rows,
+                                  java.util.Set<String> presentFields) { }
+
     @Transactional(readOnly = true)
     public CrossAnalysisScope crossForAnalysis(UUID datasetId, String rowField, String columnField, TituladosFilter filter) {
         DatasetImportEntity dataset = resolveDataset(datasetId, "TITULADOS");
@@ -644,6 +700,13 @@ public class AnalyticsService {
                 case "gestion de proyectos" -> "Gestión de proyectos";
                 default -> text;
             };
+        }
+        if ("financiamiento_posgrado_cursado".equals(field)) {
+            // El formulario de MS Forms escribe las opciones en mayúsculas («FINANCIADO CON RECURSOS PROPIOS»).
+            if (normalized.contains("recursos propios")) return "Recursos propios";
+            if (normalized.contains("parcial")) return "Beca parcial";
+            if (normalized.contains("total") && normalized.contains("beca")) return "Beca total";
+            return text;
         }
         if ("financiamiento_posgrado_estimado".equals(field)) {
             return switch (normalized) {

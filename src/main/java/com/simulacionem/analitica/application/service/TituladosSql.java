@@ -26,6 +26,18 @@ public class TituladosSql {
         this.jdbc = jdbc;
     }
 
+    /**
+     * Columna del archivo importado donde está una pregunta, según el mapeo guardado al importar; null si el archivo
+     * no la traía. Permite leer el texto original de la respuesta (por ejemplo, para distinguir un valor numérico
+     * vacío de uno escrito con texto).
+     */
+    public Integer sourceColumn(UUID datasetId, String internalKey) {
+        List<Integer> columns = jdbc.queryForList("SELECT source_column_index FROM dataset_column_mapping"
+                        + " WHERE dataset_id = :datasetId AND internal_key = :key ORDER BY source_column_index LIMIT 1",
+                new MapSqlParameterSource("datasetId", datasetId).addValue("key", internalKey), Integer.class);
+        return columns.isEmpty() ? null : columns.get(0);
+    }
+
     public List<UUID> matchingIds(UUID datasetId, TituladosFilter filter) {
         MapSqlParameterSource params = new MapSqlParameterSource("datasetId", datasetId);
         StringBuilder sql = new StringBuilder("SELECT s.id FROM survey_response s LEFT JOIN titled_response t ON t.response_id = s.id "

@@ -42,6 +42,7 @@ import {
   type EmployerVariable,
 } from '@/features/empleadores/valuation/valuationTypes'
 import { CrossBars, CrossTable } from './CrossVisualizations'
+import { ExploratoryView } from './ExploratoryView'
 
 type TituladosCross = {
   cross: Cross
@@ -106,7 +107,9 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
   const [colorHeatmap, setColorHeatmap] = usePersistentState(`${settingsKey}.heatmap`, false, isBoolean)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [activeView, setActiveView] = usePersistentState<'table' | 'bars'>(`${settingsKey}.view`, 'table', isView)
+  const [storedView, setActiveView] = usePersistentState<CrossView>(`${settingsKey}.view`, 'table', isView)
+  // El análisis exploratorio solo existe para titulados.
+  const activeView: CrossView = storedView === 'exploratory' && domain !== 'TITULADOS' ? 'table' : storedView
   const fields = domain === 'TITULADOS' ? tituladosCatalog : employerCatalog
   const fieldGroups = Array.from(new Set(fields.map((field) => field.group))).map((group) => ({
     group,
@@ -220,8 +223,11 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
           active={employerFilters.active}
         />
       )}
-      <div className="cross-screen-grid grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(260px,300px)_minmax(0,1fr)]">
-        <div className="cross-screen-controls space-y-5">
+      <div
+        className={`cross-screen-grid grid grid-cols-1 items-start gap-5 ${activeView === 'exploratory' ? '' : 'xl:grid-cols-[minmax(260px,300px)_minmax(0,1fr)]'}`}
+      >
+        {/* El análisis exploratorio trae sus propios selectores; la configuración del cruce no le aplica. */}
+        <div className={activeView === 'exploratory' ? 'hidden' : 'cross-screen-controls space-y-5'}>
           <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="title-card flex items-center justify-between">
@@ -429,7 +435,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
           <Tabs
             value={activeView}
             onValueChange={(view) => {
-              setActiveView(view as 'table' | 'bars')
+              setActiveView(view as CrossView)
               if (view === 'bars' && (metric === 'columnPercent' || metric === 'residual')) {
                 setMetric('count')
               }
@@ -438,8 +444,12 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
             <TabsList variant="line" className="w-full justify-start text-xs">
               <TabsTrigger value="table">Tabla</TabsTrigger>
               <TabsTrigger value="bars">Barras comparativas</TabsTrigger>
+              {domain === 'TITULADOS' && <TabsTrigger value="exploratory">Exploratorio</TabsTrigger>}
             </TabsList>
           </Tabs>
+          {activeView === 'exploratory' && <ExploratoryView datasetId={datasetId} filterQuery={filterQuery} />}
+          {activeView !== 'exploratory' && (
+          <>
           {loading && (
             <StatusPanel
               kind="loading"
@@ -529,6 +539,8 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                 />
               )}
             </div>
+          )}
+          </>
           )}
           {cross && (
             <div
@@ -689,4 +701,5 @@ const isText = (value: unknown): value is string => typeof value === 'string' &&
 const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean'
 const isMetric = (value: unknown): value is CrossMetric =>
   value === 'count' || value === 'rowPercent' || value === 'columnPercent' || value === 'residual'
-const isView = (value: unknown): value is 'table' | 'bars' => value === 'table' || value === 'bars'
+type CrossView = 'table' | 'bars' | 'exploratory'
+const isView = (value: unknown): value is CrossView => value === 'table' || value === 'bars' || value === 'exploratory'

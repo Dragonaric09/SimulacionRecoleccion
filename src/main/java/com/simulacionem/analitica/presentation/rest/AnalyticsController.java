@@ -7,6 +7,8 @@ import com.simulacionem.analitica.application.dto.EmployerCrossDto;
 import com.simulacionem.analitica.application.dto.EmploymentProfileDto;
 import com.simulacionem.analitica.application.dto.EmploymentDashboardDto;
 import com.simulacionem.analitica.application.dto.TituladosCrossDto;
+import com.simulacionem.analitica.application.dto.ExploratoryDto;
+import com.simulacionem.analitica.application.service.AnalisisExploratorioService;
 import com.simulacionem.analitica.application.service.AnalyticsService;
 import com.simulacionem.analitica.application.service.TituladosFilter;
 import com.simulacionem.analitica.application.service.TituladosCrossService;
@@ -30,10 +32,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class AnalyticsController {
     private final AnalyticsService analytics;
     private final TituladosCrossService tituladosCrosses;
+    private final AnalisisExploratorioService exploratorio;
 
-    public AnalyticsController(AnalyticsService analytics, TituladosCrossService tituladosCrosses) {
+    public AnalyticsController(AnalyticsService analytics, TituladosCrossService tituladosCrosses,
+                               AnalisisExploratorioService exploratorio) {
         this.analytics = analytics;
         this.tituladosCrosses = tituladosCrosses;
+        this.exploratorio = exploratorio;
     }
 
     @GetMapping("/titulados/summary")
@@ -161,6 +166,26 @@ public class AnalyticsController {
     }
 
     /** Cruce de titulados con la prueba elegida por el nivel de medición de las dos variables. */
+    /** Variables para el análisis exploratorio: categóricas de respuesta única (X, Y) y numéricas (Z). */
+    @GetMapping("/titulados/exploratory/catalog")
+    public Map<String, Object> tituladosExploratoryCatalog() {
+        return Map.of(
+                "categorical", exploratorio.categoricas().stream()
+                        .map(v -> Map.of("key", v.key(), "label", v.label(), "group", v.group(), "level", v.level().name()))
+                        .toList(),
+                "numeric", AnalisisExploratorioService.MEDIDAS);
+    }
+
+    /** Tabulación exploratoria: X × Y con el resumen de Z en cada combinación (descriptiva, sin valor p). */
+    @GetMapping("/titulados/exploratory")
+    public ExploratoryDto tituladosExploratory(@RequestParam UUID datasetId,
+                                               @RequestParam String rowField,
+                                               @RequestParam String columnField,
+                                               @RequestParam String valueField,
+                                               @ModelAttribute TituladosQuery query) {
+        return exploratorio.analizar(datasetId, query.toFilter(), rowField, columnField, valueField);
+    }
+
     @GetMapping("/titulados/cross")
     public TituladosCrossDto tituladosCross(@RequestParam UUID datasetId,
                                             @RequestParam String rowField,
