@@ -33,11 +33,14 @@ type Exploratory = {
   warnings: string[]
 }
 
-/** Configuraciones definidas en la propuesta metodológica. */
+/** Casos E1 y E2 del informe de la Actividad 2 (secciones 6.13 y 6.14). */
 const PRESETS = [
-  { id: 'E1', label: 'E1 · Estado laboral × interés en posgrado', row: 'situacion_laboral_actual', column: 'interes_posgrado', value: 'anios_vida_profesional' },
-  { id: 'E2', label: 'E2 · Área de interés × financiamiento cursado', row: 'area_posgrado_interes', column: 'financiamiento_posgrado_cursado', value: 'anios_vida_profesional' },
+  { id: 'E1', section: '6.13', label: 'Estado laboral × interés en posgrado, según años de vida profesional', row: 'situacion_laboral_actual', column: 'interes_posgrado', value: 'anios_vida_profesional' },
+  { id: 'E2', section: '6.14', label: 'Área de interés × financiamiento cursado, según años de vida profesional', row: 'area_posgrado_interes', column: 'financiamiento_posgrado_cursado', value: 'anios_vida_profesional' },
 ]
+
+/** Mínimo de personas con valor numérico para comparar medias entre grupos en el texto del informe. */
+const MIN_GROUP = 10
 
 const STATE_TEXT: Record<Summary['state'], string> = {
   SIN_OBSERVACIONES: 'Sin observaciones: nadie del filtro tiene esta combinación.',
@@ -50,9 +53,38 @@ const decimal = (value: number | null, digits = 2) =>
   value == null ? '—' : value.toLocaleString('es-BO', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 const percent = (value: number | null) => (value == null ? '—' : `${decimal(value, 1)} %`)
 
+/** Párrafo descriptivo listo para pegar en el informe, con los datos de la tabla actual. */
+function buildReportText(result: Exploratory, preset?: (typeof PRESETS)[number]) {
+  const { config, bases, cells, global } = result
+  const unit = config.unit
+  const ident = preset ? `Caso ${preset.id} del informe (sección ${preset.section})` : 'Análisis multivariable'
+  const lines = [
+    `${ident}: ${config.rowLabel} × ${config.columnLabel}, según ${config.valueLabel.toLowerCase()} (${unit}).`,
+    `Base: ${bases.nXY} personas con respuesta válida en ambas variables y ${bases.nZ} con valor numérico.`,
+  ]
+  const eligible = cells.filter((cell) => cell.summary.m >= MIN_GROUP && cell.summary.mean != null)
+  if (eligible.length >= 2) {
+    const sorted = [...eligible].sort((a, b) => (b.summary.mean ?? 0) - (a.summary.mean ?? 0))
+    const high = sorted[0]
+    const low = sorted[sorted.length - 1]
+    lines.push(
+      `Entre los grupos con al menos ${MIN_GROUP} personas con valor numérico, la media más alta es «${high.row} · ${high.column}» ` +
+        `(${decimal(high.summary.mean)} ${unit}; m = ${high.summary.m}) y la más baja «${low.row} · ${low.column}» ` +
+        `(${decimal(low.summary.mean)} ${unit}; m = ${low.summary.m}).`,
+    )
+  } else {
+    lines.push(`Ningún grupo alcanza ${MIN_GROUP} personas con valor numérico en un número suficiente para comparar medias.`)
+  }
+  if (global.mean != null) {
+    lines.push(`Media total: ${decimal(global.mean)} ${unit} (mediana ${decimal(global.median)}; m = ${global.m}).`)
+  }
+  lines.push('Es descriptivo: muestra diferencias en quienes respondieron, sin valor p. Para afirmar una asociación, contrástala con un cruce de dos variables.')
+  return lines.join(' ')
+}
+
 /**
- * Análisis exploratorio: dos variables categóricas y el resumen de una numérica en cada combinación. Es una
- * descripción de quienes respondieron: no tiene valor p ni prueba asociación.
+ * Análisis multivariable (método prioritario): dos variables categóricas y el resumen de una numérica en cada
+ * combinación. Describe a quienes respondieron: no tiene valor p ni prueba de asociación.
  */
 export function ExploratoryView({ datasetId, filterQuery }: { datasetId?: string; filterQuery: string }) {
   const [catalog, setCatalog] = useState<{ categorical: CategoricalVariable[]; numeric: NumericVariable[] } | null>(null)
@@ -62,6 +94,8 @@ export function ExploratoryView({ datasetId, filterQuery }: { datasetId?: string
   const [result, setResult] = useState<Exploratory | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const activePreset = PRESETS.find((preset) => preset.row === rowField && preset.column === columnField && preset.value === valueField)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -103,6 +137,17 @@ export function ExploratoryView({ datasetId, filterQuery }: { datasetId?: string
   }
   const cellOf = (row: string, column: string) => result?.cells.find((cell) => cell.row === row && cell.column === column)?.summary
 
+  const reportText = result && result.status === 'OK' ? buildReportText(result, activePreset) : ''
+  const copyReport = async () => {
+    try {
+      await navigator.clipboard.writeText(reportText)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
+  }
+
   const exportCsv = () => {
     if (!result) return
     const rows = result.cells.map((cell) => [
@@ -111,7 +156,7 @@ export function ExploratoryView({ datasetId, filterQuery }: { datasetId?: string
     ])
     const g = result.global
     rows.push(['Total (personas)', '', g.n, g.m, g.coverage, g.mean, g.median, g.standardDeviation, g.min, g.max, g.state])
-    downloadAnalyticsCsv(`exploratorio-${result.config.rowLabel}-${result.config.columnLabel}`,
+    downloadAnalyticsCsv(`multivariable-${result.config.rowLabel}-${result.config.columnLabel}`,
       [result.config.rowLabel, result.config.columnLabel, 'n', 'm', 'Cobertura (%)', `Media (${unit})`, `Mediana (${unit})`,
         `Desviación estándar (${unit})`, `Mínimo (${unit})`, `Máximo (${unit})`, 'Estado'], rows)
   }
@@ -139,18 +184,22 @@ export function ExploratoryView({ datasetId, filterQuery }: { datasetId?: string
     <div className="space-y-4">
       <Card className="rounded-xl border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="title-card">Análisis exploratorio</CardTitle>
+          <CardTitle className="title-card flex flex-wrap items-center gap-2">
+            Análisis multivariable
+            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-primary uppercase">Prioritario</span>
+          </CardTitle>
           <CardDescription>
-            Cuántos titulados hay en cada combinación de dos categorías y cómo se distribuye una medida numérica dentro de cada grupo.
+            Tres variables a la vez: dos categorías (filas y columnas) y una medida numérica resumida dentro de cada combinación.
             Describe a quienes respondieron: no es una prueba de hipótesis ni tiene valor p.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
+          <p className="caption-bold text-ink-600">CASOS DEL INFORME DE LA ACTIVIDAD 2</p>
           <div className="flex flex-wrap gap-1.5">
             {PRESETS.map((preset) => (
-              <Button key={preset.id} type="button" variant="outline" size="sm" className="h-auto min-h-7 px-2 py-1 text-xs"
+              <Button key={preset.id} type="button" variant="outline" size="sm" className="h-auto min-h-7 px-2 py-1 text-left text-xs"
                 onClick={() => { setRowField(preset.row); setColumnField(preset.column); setValueField(preset.value) }}>
-                {preset.label}
+                <span className="font-semibold">{preset.id}</span>&nbsp;· {preset.label}
               </Button>
             ))}
           </div>
@@ -184,6 +233,24 @@ export function ExploratoryView({ datasetId, filterQuery }: { datasetId?: string
         <>
           <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
+              <CardTitle className="title-card">Texto para el informe</CardTitle>
+              <CardDescription>
+                Resumen con los datos de esta tabla. Cópialo en la sección del informe que corresponda y revisa las cifras antes de entregar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="rounded-lg bg-surface-container-low p-3 text-sm leading-relaxed text-ink-900">{reportText}</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="button" size="sm" onClick={copyReport}>{copied ? 'Texto copiado' : 'Copiar texto'}</Button>
+                {activePreset && (
+                  <span className="text-xs text-ink-600">Corresponde al caso {activePreset.id}, sección {activePreset.section} del informe.</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border-0 shadow-sm">
+            <CardHeader>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <CardTitle className="title-card">Media de {result.config.valueLabel.toLowerCase()} por grupo</CardTitle>
@@ -191,7 +258,7 @@ export function ExploratoryView({ datasetId, filterQuery }: { datasetId?: string
                     {result.config.rowLabel} × {result.config.columnLabel} · N<sub>XY</sub> = {result.bases.nXY} · N<sub>Z</sub> = {result.bases.nZ} · en {unit}
                   </CardDescription>
                 </div>
-                <DownloadMenu title={`Análisis exploratorio ${result.config.rowLabel} × ${result.config.columnLabel}`}
+                <DownloadMenu title={`Análisis multivariable ${result.config.rowLabel} × ${result.config.columnLabel}`}
                   options={[{ label: 'Tabla CSV', help: 'Conteos y medidas por grupo, sin redondear', onSelect: exportCsv }]} />
               </div>
             </CardHeader>

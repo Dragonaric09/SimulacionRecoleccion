@@ -42,10 +42,12 @@ export function AssociationBadge({ result }: { result: AssociationResult | null 
  * Ficha completa de la prueba: nivel de medición de cada variable, prueba elegida y por qué, cómo se obtuvo el
  * p-valor, tamaño del efecto y las pruebas descartadas.
  */
-export function AssociationTestCard({ result, rowLabel, columnLabel }: {
+export function AssociationTestCard({ result, rowLabel, columnLabel, detail = true }: {
   result: AssociationResult
   rowLabel: string
   columnLabel: string
+  /** Con detail en falso se omiten el método del p-valor, la justificación y las pruebas descartadas. */
+  detail?: boolean
 }) {
   const statistic = formatStatistic(result)
   return (
@@ -62,7 +64,7 @@ export function AssociationTestCard({ result, rowLabel, columnLabel }: {
         <Fact label={rowLabel} value={result.nivelFila} />
         <Fact label={columnLabel} value={result.nivelColumna} />
         <Fact label="Respuestas en el cruce" value={`n = ${formatCount(result.n)}`} />
-        {result.aplicable && <Fact label="p-valor" value={`${formatP(result.pValor)}${result.metodoP ? ` · ${result.metodoP}` : ''}`} />}
+        {result.aplicable && <Fact label="p-valor" value={`${formatP(result.pValor)}${detail && result.metodoP ? ` · ${result.metodoP}` : ''}`} />}
         {statistic && <Fact label="Estadístico" value={statistic} />}
         {result.efecto !== null && (
           <Fact label="Tamaño del efecto" value={`${result.efectoNombre} = ${formatDecimal(result.efecto, 3)}${result.magnitud ? ` · ${result.magnitud}` : ''}`} />
@@ -71,8 +73,8 @@ export function AssociationTestCard({ result, rowLabel, columnLabel }: {
           <Fact label="Celdas con esperada < 5" value={`${result.celdasEsperadasMenores5} de ${result.totalCeldas}`} />
         )}
       </dl>
-      <p className="mt-3 text-ink-700"><span className="font-semibold">Por qué esta prueba: </span>{result.motivo}</p>
-      {result.descartadas.length > 0 && (
+      {detail && <p className="mt-3 text-ink-700"><span className="font-semibold">Por qué esta prueba: </span>{result.motivo}</p>}
+      {detail && result.descartadas.length > 0 && (
         <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-ink-600">
           {result.descartadas.map((reason) => <li key={reason}>{reason}</li>)}
         </ul>

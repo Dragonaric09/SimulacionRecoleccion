@@ -55,31 +55,16 @@ type TituladosCross = {
 
 type AnalyticCross = Pick<TituladosCross, 'row' | 'column' | 'excluded' | 'chart' | 'test'>
 
+/** Cruces de dos variables que sostienen conclusiones del informe de la Actividad 2 (identificadores C1 a C8). */
 const TITULADOS_ANALYSIS_PRESETS = [
-  {
-    label: 'Edad × remuneración',
-    row: 'edad_rango',
-    column: 'remuneracion_rango',
-    test: 'ρ de Spearman',
-  },
-  {
-    label: 'Género × remuneración',
-    row: 'genero',
-    column: 'remuneracion_rango',
-    test: 'U de Mann–Whitney',
-  },
-  {
-    label: 'Sector laboral × remuneración',
-    row: 'sector_trabajo',
-    column: 'remuneracion_rango',
-    test: 'H de Kruskal–Wallis',
-  },
-  {
-    label: 'Estado laboral × posgrado',
-    row: 'situacion_laboral_actual',
-    column: 'interes_posgrado',
-    test: 'χ² o Fisher',
-  },
+  { id: 'C1', label: 'Sector laboral × remuneración', row: 'sector_trabajo', column: 'remuneracion_rango' },
+  { id: 'C10', label: 'Rubro de la organización × remuneración', row: 'rubro_trabajo_actual', column: 'remuneracion_rango' },
+  { id: 'C3', label: 'Formación complementaria × interés en posgrado', row: 'tiene_formacion_complementaria', column: 'interes_posgrado' },
+  { id: 'C4', label: 'Estado laboral × interés en posgrado', row: 'situacion_laboral_actual', column: 'interes_posgrado' },
+  { id: 'C2', label: 'Financiamiento × nivel cursado', row: 'financiamiento_posgrado_cursado', column: 'formacion_complementaria_nivel' },
+  { id: 'C6', label: 'Valoración × concordancia con el mercado', row: 'satisfaccion_formacion', column: 'concordancia_formacion_requerimientos' },
+  { id: 'C8', label: 'Valoración × pertinencia del trabajo', row: 'satisfaccion_formacion', column: 'pertinencia_trabajo_formacion' },
+  { id: 'C7', label: 'Estado laboral × valoración de la formación', row: 'situacion_laboral_actual', column: 'satisfaccion_formacion' },
 ]
 
 export function CrossExportPage({ domain }: { domain: Domain }) {
@@ -204,7 +189,9 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <PageHeading
           title="Cruces de variables"
-          description="Selecciona dos variables: el sistema conserva la escala y aplica la prueba estadística adecuada."
+          description={domain === 'TITULADOS'
+            ? 'Cruces de dos variables con su prueba. El análisis multivariable, método prioritario, está en la pestaña «Análisis multivariable».'
+            : 'Selecciona dos variables: el sistema conserva la escala y aplica la prueba estadística adecuada.'}
           tone={tone}
         />
       </div>
@@ -338,18 +325,17 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                   <div className="flex flex-wrap gap-1.5">
                     {TITULADOS_ANALYSIS_PRESETS.map((preset) => (
                       <Button
-                        key={preset.label}
+                        key={preset.id}
                         type="button"
                         variant="outline"
                         size="sm"
                         className="h-auto min-h-7 px-2 py-1 text-left text-xs"
-                        title={preset.test}
                         onClick={() => {
                           setRowField(preset.row)
                           setColumnField(preset.column)
                         }}
                       >
-                        {preset.label}
+                        <span className="font-semibold">{preset.id}</span>&nbsp;· {preset.label}
                       </Button>
                     ))}
                   </div>
@@ -442,9 +428,14 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
             }}
           >
             <TabsList variant="line" className="w-full justify-start text-xs">
+              {domain === 'TITULADOS' && (
+                <TabsTrigger value="exploratory" className="font-semibold text-primary">
+                  Análisis multivariable
+                  <span className="ml-1.5 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-primary uppercase">Prioritario</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger value="table">Tabla</TabsTrigger>
               <TabsTrigger value="bars">Barras comparativas</TabsTrigger>
-              {domain === 'TITULADOS' && <TabsTrigger value="exploratory">Exploratorio</TabsTrigger>}
             </TabsList>
           </Tabs>
           {activeView === 'exploratory' && <ExploratoryView datasetId={datasetId} filterQuery={filterQuery} />}
@@ -536,6 +527,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                   result={analysisCross.test}
                   rowLabel={`Filas: ${rowLabel}`}
                   columnLabel={`Columnas: ${columnLabel}`}
+                  detail={domain !== 'TITULADOS'}
                 />
               )}
             </div>
@@ -590,6 +582,7 @@ export function CrossExportPage({ domain }: { domain: Domain }) {
                     result={analysisCross.test}
                     rowLabel={`Filas: ${rowLabel}`}
                     columnLabel={`Columnas: ${columnLabel}`}
+                    detail={domain !== 'TITULADOS'}
                   />
                 )
               )}
